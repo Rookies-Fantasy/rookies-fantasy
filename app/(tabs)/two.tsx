@@ -4,7 +4,7 @@ import { View, Text } from "react-native";
 export default function TabTwoScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-base-white">
-      <Text className="font-clash text-pbk-h5">Tab Two</Text>
+      <Text className="text-pbk-h5">Tab Two</Text>
       <View className="my-30 h-16" />
       <EditScreenInfo path="app/(tabs)/two.tsx" />
     </View>
