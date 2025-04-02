@@ -1,10 +1,13 @@
 import EditScreenInfo from "@/components/EditScreenInfo";
-import { View, Text } from "react-native";
+import Typography from "@/components/Typography";
+import { View } from "react-native";
 
 export default function TabOneScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-base-white">
-      <Text className="text-pbk-h5">Tab One</Text>
+      <Typography variant="h5" color="gray-950">
+        Tab One
+      </Typography>
       <View className="my-30 h-16" />
       <EditScreenInfo path="app/(tabs)/index.tsx" />
     </View>
