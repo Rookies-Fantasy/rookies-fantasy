@@ -56,11 +56,11 @@ const Typography = ({
   className = "",
   ...props
 }: TypographyProps) => {
-  const baseClasses = `text-pbk-${variant}`;
+  const variantClass = `text-pbk-${variant}`;
   const colorClass = color ? `text-${color}` : "";
 
   return (
-    <Text className={`${baseClasses} ${colorClass} ${className}`} {...props}>
+    <Text className={`${variantClass} ${colorClass} ${className}`} {...props}>
       {children}
     </Text>
   );
