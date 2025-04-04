@@ -1,26 +1,51 @@
-name: Basic CI
+name: CI Checks
 
 on:
   push:
-  pull_request:
-    types: [opened, reopened]
 
 jobs:
-  basic-checks:
-    name: Basic Checks
+  ci-checks:
+    name: CI Checks
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+      fail-fast: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-
+
+      - name: Cache Expo
+        uses: actions/cache@v4
+        with:
+          path: |
+            .expo
+            ~/.expo
+          key: ${{ runner.os }}-expo-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-expo-${{ matrix.node-version }}-
+
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
         run: npm ci
+
+      # TODO: Add Linter, Formatter, Expo EAS Checks and Builds
 
       - name: Check TypeScript
         run: npm run tsc
