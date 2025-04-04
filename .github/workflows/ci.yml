@@ -1,4 +1,4 @@
-name: Minimal Expo CI
+name: Basic CI
 
 on:
   push:
