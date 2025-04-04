@@ -14,35 +14,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo
+        run: npx expo install
+
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
           path: |
             node_modules
+            .expo
+            ~/.expo
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Cache Expo
-        uses: actions/cache@v4
-        with:
-          path: |
-            .expo
-            ~/.expo
-          key: ${{ runner.os }}-expo-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-expo-
-
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-
-      - name: Install dependencies
-        run: npm ci
-
       # TODO: Add Linter, Formatter, Expo EAS Checks and Builds
-
       - name: Check TypeScript
         run: npm run tsc
 
