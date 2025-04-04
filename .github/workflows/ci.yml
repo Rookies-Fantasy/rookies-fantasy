@@ -10,10 +10,6 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
-      fail-fast: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
