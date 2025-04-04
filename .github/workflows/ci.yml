@@ -19,9 +19,9 @@ jobs:
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}-
+            ${{ runner.os }}-node-
 
       - name: Cache Expo
         uses: actions/cache@v4
@@ -29,14 +29,14 @@ jobs:
           path: |
             .expo
             ~/.expo
-          key: ${{ runner.os }}-expo-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-expo-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-expo-${{ matrix.node-version }}-
+            ${{ runner.os }}-expo-
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: "lts/*"
 
       - name: Install dependencies
         run: npm ci
