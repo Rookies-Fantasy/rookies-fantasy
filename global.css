@@ -1,25 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@layer base {
-  /* Apply Font Families Globally */
-  .text-pbk-h1,
-  .text-pbk-h2,
-  .text-pbk-h3,
-  .text-pbk-h4,
-  .text-pbk-h5,
-  .text-pbk-h6,
-  .text-pbk-sh1,
-  .text-pbk-sh2 {
-    @apply font-clash;
-  }
-
-  .text-pbk-sh3,
-  .text-pbk-bl,
-  .text-pbk-b1,
-  .text-pbk-b2,
-  .text-pbk-b3 {
-    @apply font-manrope;
-  }
-}

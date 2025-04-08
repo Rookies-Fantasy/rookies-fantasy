@@ -1,4 +1,5 @@
 import gluestackPlugin from "@gluestack-ui/nativewind-utils/tailwind-plugin";
+import safelist from "./utils/tailwind.safelist";
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -11,9 +12,19 @@ module.exports = {
   presets: [require("nativewind/preset")],
   safelist: [
     {
-      pattern:
-        /(bg|border|text|stroke|fill)-(primary|secondary|tertiary|error|success|warning|info|typography|outline|background|indicator)-(0|50|100|200|300|400|500|600|700|800|900|950|white|gray|black|error|warning|muted|success|info|light|dark|primary)/,
+      pattern: /text-pbk-(h[1-8]|sh[1-3]|bl|b[1-3])/,
     },
+    {
+      pattern: /text-base-white/,
+    },
+    {
+      pattern: /text-(gray|purple|green|yellow|red)-\d{2,3}/,
+    },
+    {
+      pattern: /font-pbk-(h[1-8]|sh[1-3]|bl|b[1-3])/,
+    },
+    "font-clash",
+    "font-manrope",
   ],
   theme: {
     extend: {
