@@ -1,36 +1,27 @@
 import { View, Text } from "react-native";
-import Typography from "./Typography";
 
 export default function EditScreenInfo({ path }: { path: string }) {
   return (
     <View>
-      <View className="items-center mx-50">
-        <Typography
-          variant="bl"
-          color="gray-950"
-          className="leading-6 text-center"
-        >
+      <View className="mx-50 items-center">
+        <Text className={`pbk-bl text-center leading-6 text-gray-950`}>
           Open up the code for this screen:
-        </Typography>
+        </Text>
 
-        <View className="rounded-xl px-4 my-7">
-          <Typography variant="b1">{path}</Typography>
+        <View className="my-7 rounded-xl px-4">
+          <Text className={`pbk-b1 text-gray-950`}>{path}</Text>
         </View>
 
-        <Typography
-          variant="bl"
-          color="gray-950"
-          className="leading-6 text-center"
-        >
+        <Text className={`pbk-bl text-center leading-6 text-gray-950`}>
           Change any of the text, save the file, and your app will automatically
           update.
-        </Typography>
+        </Text>
       </View>
 
       <View className="mt-15 mx-20 items-center">
-        <Typography variant="b1" color="gray-950" className="text-center">
+        <Text className={`pbk-b1 text-center text-gray-950`}>
           Tap here if your app doesn't automatically update after making changes
-        </Typography>
+        </Text>
       </View>
     </View>
   );
