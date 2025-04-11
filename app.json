@@ -4,12 +4,22 @@
     "slug": "rookies-fantasy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "fonts": [
+      {
+        "asset": "./assets/fonts/ClashDisplay-Bold.ttf",
+        "family": "ClashDisplay-Bold"
+      },
+      {
+        "asset": "./assets/fonts/Manrope-Regular.otf",
+        "family": "Manrope-Regular"
+      }
+    ],
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -18,18 +28,16 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "",
         "backgroundColor": "#ffffff"
       }
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": ""
     },
-    "plugins": [
-      "expo-router"
-    ],
+    "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true
     }
