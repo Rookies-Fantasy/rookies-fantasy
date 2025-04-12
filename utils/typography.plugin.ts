@@ -20,6 +20,12 @@ const typographyPlugin = plugin(function ({ addComponents }) {
     ".pbk-h6": {
       "@apply font-clash text-pbk-h6 font-pbk-h6": {},
     },
+    ".pbk-h7": {
+      "@apply font-clash text-pbk-h7 font-pbk-h7": {},
+    },
+    ".pbk-h8": {
+      "@apply font-clash text-pbk-h8 font-pbk-h8": {},
+    },
     ".pbk-sh1": {
       "@apply font-clash text-pbk-sh1 font-pbk-sh1": {},
     },
