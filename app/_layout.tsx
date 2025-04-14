@@ -1,8 +1,8 @@
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-
+import { StatusBar } from "expo-status-bar";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useFonts } from "expo-font";
@@ -32,10 +32,12 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <GluestackUIProvider>
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+      <GestureHandlerRootView>
+        <StatusBar />
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </GestureHandlerRootView>
     </GluestackUIProvider>
   );
 }
