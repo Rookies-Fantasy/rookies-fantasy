@@ -207,7 +207,7 @@ export default function LoginScreen() {
           </FormControl>
 
           <Text
-            className="pbk-b1 mt-5 text-center text-purple-600"
+            className="pbk-b1 py-5 text-center text-purple-600"
             onPress={() => router.push("/forgotPassword")}
           >
             Forgot password?
