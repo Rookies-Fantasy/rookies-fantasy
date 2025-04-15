@@ -208,7 +208,7 @@ export default function LoginScreen() {
           </FormControl>
 
           <Text
-            className="pbk-b1 py-5 text-center text-purple-600"
+            className="pbk-b1 mt-5 text-center text-purple-600"
             onPress={() => router.push("/forgotPassword")}
           >
             Forgot password?
@@ -220,7 +220,10 @@ export default function LoginScreen() {
             <Divider className="flex-1 bg-gray-800" />
           </View>
 
-          <TouchableOpacity className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920">
+          <TouchableOpacity
+            className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
+            onPress={() => router.push("/signUp")}
+          >
             <GoogleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Google
