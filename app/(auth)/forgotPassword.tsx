@@ -40,7 +40,6 @@ export default function ForgotPasswordScreen() {
     control,
     handleSubmit,
     formState: { errors, isValid },
-    getValues,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: "onSubmit",
@@ -117,7 +116,7 @@ export default function ForgotPasswordScreen() {
                 />
               </VStack>
 
-              {errors.email && (
+              {errors.email && errorMessage && (
                 <FormControlError>
                   <Text className="pbk-b3 text-red-600">
                     {errors.email.message}

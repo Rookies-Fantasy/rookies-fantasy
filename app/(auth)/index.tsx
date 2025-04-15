@@ -46,7 +46,6 @@ export default function LoginScreen() {
     control,
     handleSubmit,
     formState: { errors, isValid },
-    getValues,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: "onSubmit",

@@ -5,7 +5,7 @@ import {
   FormControlError,
   FormControlLabel,
 } from "@/components/ui/form-control";
-import { Input, InputField, InputSlot } from "@/components/ui/input";
+import { Input, InputField } from "@/components/ui/input";
 import { VStack } from "@/components/ui/vstack";
 import { Eye, EyeSlash, WarningCircle, X } from "phosphor-react-native";
 import { Controller, useForm } from "react-hook-form";
@@ -23,7 +23,6 @@ import AppleLogo from "@/assets/icons/apple.svg";
 import * as yup from "yup";
 import { useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Link, LinkText } from "@/components/ui/link";
 
 const schema = yup.object({
   email: yup
@@ -50,7 +49,6 @@ export default function SignUpScreen() {
     control,
     handleSubmit,
     formState: { errors, isValid },
-    getValues,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: "onSubmit",
