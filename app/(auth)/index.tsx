@@ -4,12 +4,10 @@ import {
   KeyboardAvoidingView,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   TouchableWithoutFeedback,
   Keyboard,
-  Alert,
 } from "react-native";
-import { X, Eye, EyeSlash } from "phosphor-react-native";
+import { X, Eye, EyeSlash, WarningCircle } from "phosphor-react-native";
 import { Button } from "@/components/ui/button";
 import { Divider } from "@/components/ui/divider";
 import GoogleLogo from "@/assets/icons/google.svg";
@@ -42,7 +40,7 @@ type FormData = {
 export default function LoginScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [serverError, setServerError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     control,
@@ -53,8 +51,8 @@ export default function LoginScreen() {
     resolver: yupResolver(schema),
     mode: "onSubmit",
     defaultValues: {
-      email: "test@gmail.com",
-      password: "123456",
+      email: "",
+      password: "",
     },
   });
 
@@ -66,7 +64,7 @@ export default function LoginScreen() {
       const loginSuccess = false;
 
       if (!loginSuccess) {
-        setServerError(
+        setErrorMessage(
           "Password is incorrect. Try again or click on Forgot password to reset it.",
         );
       } else {
@@ -75,29 +73,25 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setServerError("An error occurred. Please try again.");
+      setErrorMessage("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePress = () => {
-    Alert.alert("Button Pressed!");
-  };
-
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView className="flex-1 bg-gray-950">
+    <View className="flex-1 bg-gray-950">
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior="padding"
           className="flex-1 flex-col px-6 py-4"
         >
-          <View className="my-8 size-8 items-center justify-center self-end rounded-md border border-gray-900 p-4">
+          <View className="my-16 size-8 items-center justify-center self-end rounded-md border border-gray-900 p-4">
             <X size={20} color="white" weight="bold" />
           </View>
 
           <FormControl
-            isInvalid={!!errors.email || !!errors.password || !!serverError}
+            isInvalid={!!errors.email || !!errors.password || !!errorMessage}
           >
             <VStack space="xl">
               <Text className="pbk-h5 mb-8 text-base-white">Login</Text>
@@ -111,21 +105,29 @@ export default function LoginScreen() {
                   control={control}
                   name="email"
                   render={({ field: { onChange, value } }) => (
-                    <Input className="mb-4 h-12 w-full rounded-md border border-gray-920 px-2 py-2">
+                    <Input
+                      className={`mb-4 min-h-14 w-full rounded-xl border ${errors.email ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                    >
                       <InputField
                         placeholder="Enter email"
                         value={value}
                         autoCapitalize="none"
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          onChange(text);
+                          setErrorMessage("");
+                        }}
                         className="text-base-white placeholder:pbk-b1"
                         placeholderTextColor="gray"
                       />
+                      {errors.email && (
+                        <WarningCircle size={20} color="red" weight="bold" />
+                      )}
                     </Input>
                   )}
                 />
                 {errors.email && (
                   <FormControlError>
-                    <Text className="pbk-b3 text-red-500">
+                    <Text className="pbk-b3 text-red-600">
                       {errors.email.message}
                     </Text>
                   </FormControlError>
@@ -142,7 +144,9 @@ export default function LoginScreen() {
                   control={control}
                   name="password"
                   render={({ field: { onChange, value } }) => (
-                    <Input className="mb-5 flex-row items-center justify-between rounded-md border border-gray-920 px-3 py-2">
+                    <Input
+                      className={`min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password || errorMessage ? "border-red-600" : "border-gray-920"} px-3 py-2`}
+                    >
                       <InputField
                         placeholder="Enter password"
                         className="text-base-white placeholder:pbk-b1"
@@ -152,11 +156,11 @@ export default function LoginScreen() {
                         value={value}
                         onChangeText={(text) => {
                           onChange(text);
-                          setServerError("");
+                          setErrorMessage("");
                         }}
                       />
                       <InputSlot
-                        className="pr-3"
+                        className="flex-row gap-2"
                         onPress={() => setHidePassword(!hidePassword)}
                       >
                         {hidePassword ? (
@@ -164,29 +168,35 @@ export default function LoginScreen() {
                         ) : (
                           <Eye size={20} color="gray" weight="bold" />
                         )}
+                        {(errors.password || errorMessage) && (
+                          <WarningCircle size={20} color="red" weight="bold" />
+                        )}
                       </InputSlot>
                     </Input>
                   )}
                 />
-
-                {errors.password && (
-                  <FormControlError>
-                    <Text className="pbk-b3 text-red-500">
-                      {errors.password.message}
-                    </Text>
-                  </FormControlError>
-                )}
-                {serverError && (
-                  <FormControlError>
-                    <Text className="pbk-b3 text-red-500">{serverError}</Text>
-                  </FormControlError>
-                )}
+                <View className="mb-5">
+                  {errors.password && (
+                    <FormControlError>
+                      <Text className="pbk-b3 text-red-600">
+                        {errors.password.message}
+                      </Text>
+                    </FormControlError>
+                  )}
+                  {errorMessage && (
+                    <FormControlError>
+                      <Text className="pbk-b3 text-red-600">
+                        {errorMessage}
+                      </Text>
+                    </FormControlError>
+                  )}
+                </View>
               </VStack>
               <Button
                 action="primary"
-                disabled={!isValid || !isLoading}
+                disabled={!isValid || isLoading}
                 className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full rounded-md`}
-                onPress={handlePress}
+                onPress={handleSubmit(onSubmit)}
               >
                 <Text
                   className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
@@ -210,21 +220,21 @@ export default function LoginScreen() {
             <Divider className="flex-1 bg-gray-800" />
           </View>
 
-          <TouchableOpacity className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border-gray-900 bg-gray-920">
+          <TouchableOpacity className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920">
             <GoogleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Google
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border-gray-900 bg-gray-920">
+          <TouchableOpacity className="min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920">
             <AppleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Apple
             </Text>
           </TouchableOpacity>
         </KeyboardAvoidingView>
-      </SafeAreaView>
-    </TouchableWithoutFeedback>
+      </TouchableWithoutFeedback>
+    </View>
   );
 }
