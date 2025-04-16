@@ -12,7 +12,7 @@ const ADAPTIVE_ICON = "./assets/images/adaptive-icon.png";
 const SCHEME = "myapp";
 
 export const getDynamicAppConfig = (
-  environment: "development" | "preview" | "production"
+  environment: "development" | "preview" | "production",
 ) => {
   if (environment === "production") {
     return {
@@ -50,7 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const { name, bundleIdentifier, icon, adaptiveIcon, packageName, scheme } =
     getDynamicAppConfig(
       (process.env.APP_ENV as "development" | "preview" | "production") ||
-        "development"
+        "development",
     );
 
   return {
