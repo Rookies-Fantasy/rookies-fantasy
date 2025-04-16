@@ -6,5 +6,6 @@ module.exports = function (api) {
       ["@babel/preset-react"],
       ["nativewind/babel"],
     ],
+    plugins: ["react-native-reanimated/plugin"],
   };
 };
