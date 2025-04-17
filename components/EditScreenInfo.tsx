@@ -1,76 +1,28 @@
-import React from "react";
-import { StyleSheet } from "react-native";
-
-import { MonoText } from "./StyledText";
-import { Text, View } from "./Themed";
-
-import Colors from "@/constants/Colors";
+import { View, Text } from "react-native";
 
 export default function EditScreenInfo({ path }: { path: string }) {
   return (
     <View>
-      <View style={styles.getStartedContainer}>
-        <Text
-          style={styles.getStartedText}
-          lightColor="rgba(0,0,0,0.8)"
-          darkColor="rgba(255,255,255,0.8)"
-        >
+      <View className="mx-50 items-center">
+        <Text className="pbk-bl text-center leading-6 text-gray-950">
           Open up the code for this screen:
         </Text>
 
-        <View
-          style={[styles.codeHighlightContainer, styles.homeScreenFilename]}
-          darkColor="rgba(255,255,255,0.05)"
-          lightColor="rgba(0,0,0,0.05)"
-        >
-          <MonoText>{path}</MonoText>
+        <View className="my-7 rounded-xl px-4">
+          <Text className="pbk-b1 text-gray-950">{path}</Text>
         </View>
 
-        <Text
-          style={styles.getStartedText}
-          lightColor="rgba(0,0,0,0.8)"
-          darkColor="rgba(255,255,255,0.8)"
-        >
+        <Text className="pbk-bl text-center leading-6 text-gray-950">
           Change any of the text, save the file, and your app will automatically
           update.
         </Text>
       </View>
 
-      <View style={styles.helpContainer}>
-        <Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
+      <View className="mt-15 mx-20 items-center">
+        <Text className="pbk-b1 text-center text-gray-950">
           Tap here if your app doesn't automatically update after making changes
         </Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  getStartedContainer: {
-    alignItems: "center",
-    marginHorizontal: 50,
-  },
-  homeScreenFilename: {
-    marginVertical: 7,
-  },
-  codeHighlightContainer: {
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  getStartedText: {
-    fontSize: 17,
-    lineHeight: 24,
-    textAlign: "center",
-  },
-  helpContainer: {
-    marginTop: 15,
-    marginHorizontal: 20,
-    alignItems: "center",
-  },
-  helpLink: {
-    paddingVertical: 15,
-  },
-  helpLinkText: {
-    textAlign: "center",
-  },
-});
