@@ -9,7 +9,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "development"
+        "APP_VARIANT": "development",
+        "EXPO_APPLE_APP_DELEGATE_LANGUAGE": "obj-c"
       },
       "channel": "development",
       "android": {
