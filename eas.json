@@ -10,7 +10,8 @@
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "development",
-        "EXPO_APPLE_APP_DELEGATE_LANGUAGE": "obj-c"
+        "GOOGLE_SERVICE_INFO_PLIST": "./GoogleService-Info-development.plist",
+        "GOOGLE_SERVICES_JSON": "./google-services-development.json"
       },
       "channel": "development",
       "android": {
