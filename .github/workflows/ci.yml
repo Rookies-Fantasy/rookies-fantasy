@@ -22,10 +22,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Setup Expo
-        run: npx expo install -- --legacy-peer-deps
+        run: npx expo install
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -52,6 +52,9 @@ jobs:
 
       - name: Check TypeScript
         run: npm run tsc
+
+      - name: Run Linting
+        run: npx eslint .
 
       - name: Run Tests
         run: npm run test-ci
