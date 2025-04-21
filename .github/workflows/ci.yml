@@ -22,10 +22,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Setup Expo
-        run: npx expo install -- --legacy-peer-deps
+        run: npx expo install
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -38,20 +38,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # TODO: Add Linter, Formatter
-
-      # TODO: Add EAS build steps
-      # - name: Setup EAS
-      #   uses: expo/expo-github-action@v8 [https://github.com/expo/expo-github-action]
-      #   with:
-      #     eas-version: latest
-      #     token: ${{ secrets.EXPO_TOKEN }}
-
-      # - name: Build Preview
-      #   run: eas build --platform all --non-interactive
-
       - name: Check TypeScript
         run: npm run tsc
+
+      - name: Run Linting
+        run: npx eslint .
 
       - name: Run Tests
         run: npm run test-ci
