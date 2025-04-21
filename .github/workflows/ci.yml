@@ -38,18 +38,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # TODO: Add Linter, Formatter
-
-      # TODO: Add EAS build steps
-      # - name: Setup EAS
-      #   uses: expo/expo-github-action@v8 [https://github.com/expo/expo-github-action]
-      #   with:
-      #     eas-version: latest
-      #     token: ${{ secrets.EXPO_TOKEN }}
-
-      # - name: Build Preview
-      #   run: eas build --platform all --non-interactive
-
       - name: Check TypeScript
         run: npm run tsc
 
