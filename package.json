@@ -11,7 +11,8 @@
     "test": "jest --watchAll",
     "test-ci": "jest --ci --runInBand --passWithNoTests",
     "tsc": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "testLint": "eslint . --config ./eslint.config.js"
   },
   "jest": {
     "preset": "jest-expo"
@@ -34,7 +35,6 @@
     "@react-native-firebase/crashlytics": "^21.14.0",
     "@react-navigation/native": "^7.0.14",
     "@reduxjs/toolkit": "^2.7.0",
-    "babel-plugin-module-resolver": "^5.0.2",
     "expo": "~52.0.37",
     "expo-build-properties": "~0.13.2",
     "expo-dev-client": "~5.0.14",
@@ -66,6 +66,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~18.3.12",
+    "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~9.0.2",
     "eslint-config-prettier": "^10.1.2",
