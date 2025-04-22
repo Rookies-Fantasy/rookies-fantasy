@@ -8,6 +8,8 @@ import "@/global.css";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Provider } from "react-redux";
+import { store } from "../state/store";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -35,11 +37,13 @@ function RootLayoutNav() {
     <SafeAreaProvider>
       <GluestackUIProvider>
         <GestureHandlerRootView>
-          <StatusBar style="light" />
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
+          <Provider store={store}>
+            <StatusBar style="light" />
+            <Stack>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(app)" options={{ headerShown: false }} />
+            </Stack>
+          </Provider>
         </GestureHandlerRootView>
       </GluestackUIProvider>
     </SafeAreaProvider>
