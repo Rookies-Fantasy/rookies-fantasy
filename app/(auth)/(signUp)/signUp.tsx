@@ -12,43 +12,12 @@ import {
 } from "react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
 import AppleLogo from "@/assets/icons/apple.svg";
-import * as yup from "yup";
 import { useState } from "react";
-import auth from "@react-native-firebase/auth";
 import { useSignUpForm } from "@/components/SignUpProvider";
-
-const schema = yup.object({
-  email: yup
-    .string()
-    .required("Email is required")
-    .email("Enter a valid email address"),
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(8, "Password must be at least 8 characters"),
-});
-
-type FormData = {
-  email: string;
-  password: string;
-};
 
 export default function SignUpScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-
-  // const {
-  //   control,
-  //   handleSubmit,
-  //   formState: { errors, isValid },
-  // } = useForm<FormData>({
-  //   resolver: yupResolver(schema),
-  //   mode: "onSubmit",
-  //   defaultValues: {
-  //     email: "",
-  //     password: "",
-  //   },
-  // });
 
   const {
     control,

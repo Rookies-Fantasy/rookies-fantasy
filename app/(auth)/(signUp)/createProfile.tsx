@@ -3,19 +3,9 @@ import { Link, Stack } from "expo-router";
 import { View, Text } from "react-native";
 
 export default function CreateProfileScreen() {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-  } = useSignUpForm();
+  const { getValues } = useSignUpForm();
 
   const formData = getValues();
-
-  const onSubmit = (data: any) => {
-    console.log("Step 2 data", data);
-    console.log("All form data: ", formData); // Access data from Step 1 as well
-  };
 
   return (
     <>
