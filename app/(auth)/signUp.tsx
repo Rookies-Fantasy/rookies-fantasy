@@ -1,5 +1,5 @@
 import { Eye, EyeSlash, WarningCircle, X } from "phosphor-react-native";
-import { Controller, useFormState } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { router } from "expo-router";
 import {
   View,
@@ -13,7 +13,24 @@ import {
 import GoogleLogo from "@/assets/icons/google.svg";
 import AppleLogo from "@/assets/icons/apple.svg";
 import { useState } from "react";
-import { useSignUpForm } from "@/components/SignUpProvider";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+
+const schema = yup.object({
+  email: yup
+    .string()
+    .required("Email is required")
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Enter a valid email address"),
+  password: yup
+    .string()
+    .required("Password is required")
+    .min(8, "Password must be at least 88 characters"),
+});
+
+export type SignUpFormProps = {
+  email: string;
+  password: string;
+};
 
 export default function SignUpScreen() {
   const [hidePassword, setHidePassword] = useState(true);
@@ -21,10 +38,16 @@ export default function SignUpScreen() {
 
   const {
     control,
-    formState: { errors }, // `isValid` comes from form state
     handleSubmit,
-  } = useSignUpForm();
-  const { isValid } = useFormState({ control });
+    formState: { errors, isValid },
+  } = useForm<SignUpFormProps>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    mode: "onSubmit",
+  });
 
   const onSubmit = async () => {
     router.push("/(auth)/(signUp)/createProfile");
