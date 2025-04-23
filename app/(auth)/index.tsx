@@ -185,7 +185,7 @@ export default function LoginScreen() {
 
           <TouchableOpacity
             className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
-            onPress={() => router.push("/(auth)/(signUp)/signUp")}
+            onPress={() => router.push("/(auth)/signUp")}
           >
             <GoogleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">

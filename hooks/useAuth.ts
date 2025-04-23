@@ -23,7 +23,7 @@ export const useAuthState = () => {
           if (userData) {
             const currentUser = {
               isLoading: false,
-              uid: user.uid,
+              userId: user.uid,
               username: userData.username || "",
               email: user.email || "",
               displayName: user.displayName || "",

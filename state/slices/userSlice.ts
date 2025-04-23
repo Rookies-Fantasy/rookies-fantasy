@@ -3,7 +3,7 @@ import { RootState } from "../store";
 
 type CurrentUser = {
   isLoading: boolean;
-  userId?: number;
+  userId?: string;
   username?: string;
   email?: string;
   displayName?: string;
@@ -25,7 +25,6 @@ const userSlice = createSlice({
     setUser: (_, action: PayloadAction<CurrentUser>) => {
       return {
         ...action.payload,
-        isLoading: false,
       };
     },
     setLoading: (state, action: PayloadAction<boolean>) => {

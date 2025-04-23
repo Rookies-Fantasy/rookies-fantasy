@@ -15,6 +15,12 @@ import AppleLogo from "@/assets/icons/apple.svg";
 import { useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+} from "@react-native-firebase/auth";
+import { useAppDispatch } from "@/state/hooks";
+import { setUser } from "@/state/slices/userSlice";
 
 const schema = yup.object({
   email: yup
@@ -35,6 +41,8 @@ export type SignUpFormProps = {
 export default function SignUpScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const dispatch = useAppDispatch();
+  const auth = getAuth();
 
   const {
     control,
@@ -49,8 +57,27 @@ export default function SignUpScreen() {
     mode: "onSubmit",
   });
 
-  const onSubmit = async () => {
-    router.push("/(auth)/(signUp)/createProfile");
+  const signUpUser = async (data: SignUpFormProps) => {
+    const { email, password } = data;
+    try {
+      const { user } = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
+      dispatch(
+        setUser({
+          userId: user.uid,
+          email: user.email ?? undefined,
+          isLoading: false,
+        }),
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      router.push("/(auth)/createProfile");
+    }
   };
 
   return (
@@ -151,7 +178,7 @@ export default function SignUpScreen() {
           <TouchableOpacity
             disabled={!isValid}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
-            onPress={handleSubmit(onSubmit)}
+            onPress={handleSubmit(signUpUser)}
           >
             <Text
               className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
