@@ -48,6 +48,7 @@ export default function SignUpScreen() {
     control,
     handleSubmit,
     formState: { errors, isValid },
+    setError,
   } = useForm<SignUpFormProps>({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -73,10 +74,31 @@ export default function SignUpScreen() {
           isLoading: false,
         }),
       );
+
+      router.push("/(auth)/createProfile");
     } catch (error) {
       console.log(error);
-    } finally {
-      router.push("/(auth)/createProfile");
+
+      if (typeof error === "object" && error !== null && "code" in error) {
+        const firebaseError = error as { code: string };
+
+        if (firebaseError.code === "auth/email-already-in-use") {
+          setError("email", {
+            type: "manual",
+            message: "Email already in use",
+          });
+        } else {
+          setError("email", {
+            type: "manual",
+            message: "Something went wrong, please try again.",
+          });
+        }
+      } else {
+        setError("email", {
+          type: "manual",
+          message: "Unexpected error occurred.",
+        });
+      }
     }
   };
 

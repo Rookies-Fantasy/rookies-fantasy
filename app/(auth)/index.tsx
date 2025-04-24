@@ -15,7 +15,12 @@ import { router } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import auth from "@react-native-firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+} from "@react-native-firebase/auth";
+import { useAppDispatch } from "@/state/hooks";
+import { setUser } from "@/state/slices/userSlice";
 
 const schema = yup.object({
   email: yup
@@ -34,11 +39,14 @@ export default function LoginScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const auth = getAuth();
+  const dispatch = useAppDispatch();
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
+    setError,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: "onSubmit",
@@ -48,21 +56,47 @@ export default function LoginScreen() {
     },
   });
 
-  const handleLogin = async (email: string, password: string) => {
-    try {
-      await auth().signInWithEmailAndPassword(email, password);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const onSubmit = async (data: FormData) => {
+  const handleLogin = async (data: FormData) => {
     setIsLoading(true);
     try {
-      handleLogin(data.email, data.password);
+      const { user } = await signInWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password,
+      );
+
+      dispatch(
+        setUser({
+          userId: user.uid,
+          email: user.email ?? undefined,
+          isLoading: false,
+        }),
+      );
+
+      router.push("/(app)/(tabs)");
     } catch (error) {
-      console.error("Login error:", error);
+      console.log(error);
       setErrorMessage("An error occurred. Please try again.");
+      if (typeof error === "object" && error !== null && "code" in error) {
+        const firebaseError = error as { code: string };
+
+        if (firebaseError.code === "auth/invalid-credential") {
+          setError("email", {
+            type: "manual",
+            message: "No account found with this email. Please sign up first.",
+          });
+        } else if (firebaseError.code === "auth/wrong-password") {
+          setError("password", {
+            type: "manual",
+            message: "Incorrect password.",
+          });
+        }
+      } else {
+        setError("root", {
+          type: "manual",
+          message: "Something went wrong. Please try again.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -161,7 +195,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             disabled={!isValid || isLoading}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
-            onPress={handleSubmit(onSubmit)}
+            onPress={handleSubmit(handleLogin)}
           >
             <Text
               className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
@@ -171,7 +205,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Text
-            className="pbk-b1 py-5 text-center text-purple-600"
+            className="pbk-b1 mx-auto my-5 text-center text-purple-600"
             onPress={() => router.push("/forgotPassword")}
           >
             Forgot password?
