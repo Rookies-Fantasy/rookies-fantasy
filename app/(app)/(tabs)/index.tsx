@@ -1,11 +1,17 @@
 import EditScreenInfo from "@/components/EditScreenInfo";
 import { View, Text, TouchableOpacity } from "react-native";
 import auth from "@react-native-firebase/auth";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { clearUser } from "@/state/slices/userSlice";
 
 export default function TabOneScreen() {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user);
   const handleLogout = async () => {
     try {
       await auth().signOut();
+      dispatch(clearUser());
+      console.log(user);
     } catch (error) {
       console.log(error);
     }
