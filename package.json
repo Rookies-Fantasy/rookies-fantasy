@@ -23,6 +23,7 @@
     "@gluestack-ui/nativewind-utils": "^1.0.26",
     "@gluestack-ui/overlay": "^0.1.22",
     "@gluestack-ui/toast": "^1.0.9",
+    "@google-cloud/storage": "^7.16.0",
     "@hookform/resolvers": "^5.0.1",
     "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-native-firebase/app": "^21.14.0",
@@ -75,7 +76,7 @@
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "react-test-renderer": "18.3.1",
-    "typescript": "~5.3.3"
+    "typescript": "^5.8.3"
   },
   "private": true
 }

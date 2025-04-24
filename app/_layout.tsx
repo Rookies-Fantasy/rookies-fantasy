@@ -38,11 +38,13 @@ function RootLayoutNav() {
       <GluestackUIProvider>
         <GestureHandlerRootView>
           <Provider store={store}>
+            {/* <AuthProvider> */}
             <StatusBar style="light" />
             <Stack>
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="(app)" options={{ headerShown: false }} />
             </Stack>
+            {/* </AuthProvider> */}
           </Provider>
         </GestureHandlerRootView>
       </GluestackUIProvider>
