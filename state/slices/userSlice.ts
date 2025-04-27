@@ -9,6 +9,8 @@ export type CurrentUser = {
   displayName?: string;
   dob?: string;
   avatar?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 const initialState: CurrentUser = {
@@ -30,9 +32,7 @@ const userSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
-    clearUser: () => {
-      return { isLoading: true };
-    },
+    clearUser: () => initialState,
   },
 });
 

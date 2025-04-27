@@ -10,6 +10,9 @@ import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "../state/store";
+import AuthListener from "@/components/AuthListener";
+
+globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -38,13 +41,13 @@ function RootLayoutNav() {
       <GluestackUIProvider>
         <GestureHandlerRootView>
           <Provider store={store}>
-            {/* <AuthProvider> */}
-            <StatusBar style="light" />
-            <Stack>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(app)" options={{ headerShown: false }} />
-            </Stack>
-            {/* </AuthProvider> */}
+            <AuthListener>
+              <StatusBar style="light" />
+              <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(app)" options={{ headerShown: false }} />
+              </Stack>
+            </AuthListener>
           </Provider>
         </GestureHandlerRootView>
       </GluestackUIProvider>

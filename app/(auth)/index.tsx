@@ -38,7 +38,6 @@ type FormData = {
 export default function LoginScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const auth = getAuth();
   const dispatch = useAppDispatch();
 
@@ -76,14 +75,14 @@ export default function LoginScreen() {
       router.push("/(app)/(tabs)");
     } catch (error) {
       console.log(error);
-      setErrorMessage("An error occurred. Please try again.");
       if (typeof error === "object" && error !== null && "code" in error) {
         const firebaseError = error as { code: string };
 
-        if (firebaseError.code === "auth/invalid-credential") {
+        if (firebaseError.code === "auth/invalid-email") {
           setError("email", {
             type: "manual",
-            message: "No account found with this email. Please sign up first.",
+            message:
+              "The email or password you entered is incorrect. Please try again.",
           });
         } else if (firebaseError.code === "auth/wrong-password") {
           setError("password", {
@@ -128,7 +127,6 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   onChangeText={(text) => {
                     onChange(text);
-                    setErrorMessage("");
                   }}
                   textAlignVertical="center"
                   className="flex-1 text-base-white placeholder:pbk-b1"
@@ -152,7 +150,7 @@ export default function LoginScreen() {
             name="password"
             render={({ field: { onChange, value } }) => (
               <View
-                className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password || errorMessage ? "border-red-600" : "border-gray-920"} px-3 py-2`}
+                className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password ? "border-red-600" : "border-gray-920"} px-3 py-2`}
               >
                 <TextInput
                   placeholder="Enter password"
@@ -162,7 +160,6 @@ export default function LoginScreen() {
                   value={value}
                   onChangeText={(text) => {
                     onChange(text);
-                    setErrorMessage("");
                   }}
                 />
                 <TouchableOpacity
@@ -174,7 +171,7 @@ export default function LoginScreen() {
                   ) : (
                     <Eye size={20} color="gray" weight="bold" />
                   )}
-                  {(errors.password || errorMessage) && (
+                  {errors.password && (
                     <WarningCircle size={20} color="red" weight="bold" />
                   )}
                 </TouchableOpacity>
@@ -187,8 +184,10 @@ export default function LoginScreen() {
                 {errors.password.message}
               </Text>
             )}
-            {errorMessage && (
-              <Text className="pbk-b3 mb-4 text-red-600">{errorMessage}</Text>
+            {errors.root && (
+              <Text className="pbk-b3 mb-4 text-red-600">
+                {errors.root.message}
+              </Text>
             )}
           </View>
 

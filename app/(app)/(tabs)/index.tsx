@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import auth from "@react-native-firebase/auth";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { clearUser } from "@/state/slices/userSlice";
+import { router } from "expo-router";
 
 export default function TabOneScreen() {
   const dispatch = useAppDispatch();
@@ -12,6 +13,7 @@ export default function TabOneScreen() {
       await auth().signOut();
       dispatch(clearUser());
       console.log(user);
+      router.replace("/(auth)");
     } catch (error) {
       console.log(error);
     }
