@@ -15,6 +15,7 @@ import { useState } from "react";
 import { router } from "expo-router";
 import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import Spinner from "@/components/Spinner";
 
 const schema = yup.object({
   emailOrUsername: yup.string().required("Email or username is required"),
@@ -58,18 +59,18 @@ export default function ForgotPasswordScreen() {
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
-    console.log(data.emailOrUsername);
 
     try {
       const identifier = data.emailOrUsername.trim();
 
       const emailToUse = await findEmail(identifier);
 
-      console.log(emailToUse);
-
       await sendPasswordResetEmail(auth, emailToUse);
 
-      console.log("Login attempt with:", data);
+      router.push({
+        pathname: "/(auth)/confirmReset",
+        params: { email: emailToUse },
+      });
     } catch (error) {
       const firebaseError = error as { code: string };
 
@@ -110,7 +111,7 @@ export default function ForgotPasswordScreen() {
             name="emailOrUsername"
             render={({ field: { onChange, value } }) => (
               <View
-                className={`mb-2 min-h-14 w-full rounded-xl border ${errors.emailOrUsername ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                className={`mb-2 min-h-14 w-full justify-center rounded-xl border ${errors.emailOrUsername ? "border-red-600" : "border-gray-920"} px-2 py-2`}
               >
                 <TextInput
                   placeholder="Enter email or username"
@@ -137,14 +138,18 @@ export default function ForgotPasswordScreen() {
 
           <TouchableOpacity
             disabled={!isValid || isLoading}
-            className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
+            className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
             onPress={handleSubmit(onSubmit)}
           >
-            <Text
-              className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
-            >
-              RESET PASSWORD
-            </Text>
+            {isLoading ? (
+              <Spinner />
+            ) : (
+              <Text
+                className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
+              >
+                RESET PASSWORD
+              </Text>
+            )}
           </TouchableOpacity>
 
           <Text

@@ -7,12 +7,10 @@ import { router } from "expo-router";
 
 export default function TabOneScreen() {
   const dispatch = useAppDispatch();
-  const user = useAppSelector((state) => state.user);
   const handleLogout = async () => {
     try {
       await auth().signOut();
       dispatch(clearUser());
-      console.log(user);
       router.replace("/(auth)");
     } catch (error) {
       console.log(error);
