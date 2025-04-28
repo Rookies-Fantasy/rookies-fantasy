@@ -19,8 +19,6 @@ import {
   getAuth,
   signInWithEmailAndPassword,
 } from "@react-native-firebase/auth";
-import { useAppDispatch } from "@/state/hooks";
-import { setUser } from "@/state/slices/userSlice";
 
 const schema = yup.object({
   email: yup
@@ -39,7 +37,6 @@ export default function LoginScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const auth = getAuth();
-  const dispatch = useAppDispatch();
 
   const {
     control,
@@ -58,21 +55,7 @@ export default function LoginScreen() {
   const handleLogin = async (data: FormData) => {
     setIsLoading(true);
     try {
-      const { user } = await signInWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password,
-      );
-
-      dispatch(
-        setUser({
-          userId: user.uid,
-          email: user.email ?? undefined,
-          isLoading: false,
-        }),
-      );
-
-      router.push("/(app)/(tabs)");
+      await signInWithEmailAndPassword(auth, data.email, data.password);
     } catch (error) {
       console.log(error);
       if (typeof error === "object" && error !== null && "code" in error) {
