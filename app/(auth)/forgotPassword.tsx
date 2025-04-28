@@ -13,6 +13,8 @@ import * as yup from "yup";
 import { WarningCircle } from "phosphor-react-native";
 import { useState } from "react";
 import { router } from "expo-router";
+import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 
 const schema = yup.object({
   emailOrUsername: yup.string().required("Email or username is required"),
@@ -24,12 +26,13 @@ type FormData = {
 
 export default function ForgotPasswordScreen() {
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const auth = getAuth();
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
+    setError,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: "onSubmit",
@@ -38,22 +41,48 @@ export default function ForgotPasswordScreen() {
     },
   });
 
+  const findEmail = async (data: string): Promise<string> => {
+    const userSnapshot = await firestore()
+      .collection("users")
+      .where("username", "==", data)
+      .limit(1)
+      .get();
+
+    if (!userSnapshot.empty) {
+      const userData = userSnapshot.docs[0].data();
+      return userData.email;
+    }
+
+    return data;
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
+    console.log(data.emailOrUsername);
+
     try {
+      const identifier = data.emailOrUsername.trim();
+
+      const emailToUse = await findEmail(identifier);
+
+      console.log(emailToUse);
+
+      await sendPasswordResetEmail(auth, emailToUse);
+
       console.log("Login attempt with:", data);
-
-      const simulatedSuccess = false;
-
-      if (!simulatedSuccess) {
-        setErrorMessage("Email is incorrect. Try again.");
-      } else {
-        // Handle successful login
-        // e.g., router.push("/home");
-      }
     } catch (error) {
+      const firebaseError = error as { code: string };
+
       console.error("Login error:", error);
-      setErrorMessage("An error occurred. Please try again.");
+      if (firebaseError.code === "auth/invalid-email") {
+        setError("emailOrUsername", {
+          message: "Please enter a valid email address.",
+        });
+      } else if (firebaseError.code === "auth/user-not-found") {
+        setError("emailOrUsername", {
+          message: "No user found with this email address.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +129,7 @@ export default function ForgotPasswordScreen() {
             )}
           />
 
-          {errors.emailOrUsername && errorMessage && (
+          {errors.emailOrUsername && (
             <Text className="pbk-b3 mb-4 text-red-600">
               {errors.emailOrUsername.message}
             </Text>
