@@ -52,6 +52,8 @@ function ConfirmResetScreen() {
         setErrorMessage("Please enter a valid email address.");
       } else if (firebaseError.code === "auth/user-not-found") {
         setErrorMessage("No user found with this email address.");
+      } else {
+        setErrorMessage("Something went wrong.");
       }
     } finally {
       setIsLoading(false);
@@ -74,6 +76,11 @@ function ConfirmResetScreen() {
               We sent a password reset link to {email}. Please reset your
               password within 24 hours.
             </Text>
+            {errorMessage && (
+              <Text className="pbk-1 text-center text-red-600">
+                {errorMessage}
+              </Text>
+            )}
           </View>
 
           <View className="flex-1 justify-end">

@@ -188,7 +188,7 @@ export default function LoginScreen() {
 
           <Text
             className="pbk-b1 mx-auto my-5 text-center text-purple-600"
-            onPress={() => router.push("/forgotPassword")}
+            onPress={() => router.push("/confirmReset")}
           >
             Forgot password?
           </Text>
