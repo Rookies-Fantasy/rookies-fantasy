@@ -1,11 +1,12 @@
-import * as admin from "firebase-admin";
-import * as functions from "firebase-functions/v1";
+import type { UserRecord } from "firebase-admin/auth";
+const admin = require("firebase-admin");
+const functions = require("firebase-functions/v1");
 
 admin.initializeApp();
 
 export const createUserInDatabase = functions.auth
   .user()
-  .onCreate(async (user) => {
+  .onCreate(async (user: UserRecord) => {
     const { uid, email, displayName, photoURL } = user;
     const usersRef = admin.firestore().collection("users");
 
