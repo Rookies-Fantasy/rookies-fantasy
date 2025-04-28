@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
-import { useAppDispatch } from "@/state/hooks";
-import { setUser, CurrentUser, clearUser } from "@/state/slices/userSlice";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  setUser,
+  CurrentUser,
+  clearUser,
+  selectCurrentUserId,
+} from "@/state/slices/userSlice";
 import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { ActivityIndicator, View } from "react-native";
+import { useRouter } from "expo-router";
 
 type Props = {
   children: React.ReactNode;
@@ -12,7 +18,10 @@ type Props = {
 export default function AuthListener({ children }: Props) {
   const [initializing, setInitializing] = useState(true);
   const auth = getAuth();
+  const router = useRouter();
+  const isSignedIn = useAppSelector(selectCurrentUserId);
   const dispatch = useAppDispatch();
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, async (user) => {
@@ -41,13 +50,30 @@ export default function AuthListener({ children }: Props) {
         } catch (error) {
           console.error("Error fetching user document:", error);
         }
+      } else {
+        dispatch(clearUser());
       }
 
-      if (initializing) setInitializing(false);
+      setInitializing(false);
     });
 
     return subscriber;
-  }, [auth, dispatch, initializing]);
+  }, [auth, dispatch]);
+
+  useEffect(() => {
+    if (!initializing && appReady) {
+      // Now safe to navigate
+      if (isSignedIn) {
+        router.push("/(app)/(tabs)");
+      } else {
+        router.push("/(auth)");
+      }
+    }
+  }, [initializing, appReady, isSignedIn, router]);
+
+  useEffect(() => {
+    setAppReady(true);
+  }, []);
 
   if (initializing) {
     return (
