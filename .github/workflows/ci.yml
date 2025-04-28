@@ -41,9 +41,6 @@ jobs:
       - name: Check TypeScript
         run: npm run tsc
 
-      - name: Run Test Linting
-        run: npm run testLint
-
       - name: Run Linting
         run: npx eslint .
 

@@ -11,8 +11,7 @@
     "test": "jest --watchAll",
     "test-ci": "jest --ci --runInBand --passWithNoTests",
     "tsc": "tsc --noEmit",
-    "lint": "eslint .",
-    "testLint": "eslint . --config ./eslint.config.js"
+    "lint": "eslint ."
   },
   "jest": {
     "preset": "jest-expo"
