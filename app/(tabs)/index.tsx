@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,8 +8,13 @@ import {
   ImageSourcePropType,
   Image,
   Dimensions,
+  ViewToken,
 } from "react-native";
-import { SharedValue, useSharedValue } from "react-native-reanimated";
+import Animated, {
+  SharedValue,
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
 
 type SliderData = {
   title: string;
@@ -56,28 +61,22 @@ const data: SliderData[] = [
   },
 ];
 
-const Slider = () => {
-  const test = false;
-  return null;
-};
-
 type SliderItemProps = {
   item: SliderData;
+  index: number;
+  scrollX: SharedValue<number>;
 };
 
-const { width, height } = Dimensions.get("screen");
+const { width } = Dimensions.get("screen");
 
-const SliderItem = ({ item }: SliderItemProps) => {
+const SliderItem = ({ item, index, scrollX }: SliderItemProps) => {
   console.log(width);
   return (
     <View
       className="flex items-center justify-center gap-4 px-4"
       style={{ width }}
     >
-      <Image
-        source={item.image}
-        // style={{ width: "50%", height: "50%", resizeMode: "contain" }}
-      />
+      <Image source={item.image} />
       <Text className="text-center text-white">{item.title}</Text>
       <Text className="text-center text-white">{item.description}</Text>
     </View>
@@ -111,16 +110,49 @@ export default function TabOneScreen() {
   const scrollX = useSharedValue(0);
   const [paginationIndex, setPaginationIndex] = useState(0);
 
+  const viewabilityConfig = {
+    itemVisiblePercentThreshold: 50,
+  };
+
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (
+        viewableItems[0].index !== undefined &&
+        viewableItems[0].index !== null
+      ) {
+        setPaginationIndex(viewableItems[0].index);
+      }
+    },
+    [],
+  );
+
+  const viewabilityConfigCallbackPairs = useRef([
+    { viewabilityConfig, onViewableItemsChanged },
+  ]);
+
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollX.value = e.contentOffset.x;
+    },
+  });
+
   return (
     <SafeAreaView className="flex flex-1 items-center justify-between bg-black">
       <View className="flex flex-1 items-center justify-center gap-16">
-        <FlatList
+        <Animated.FlatList
           className="flex-none"
           data={data}
-          renderItem={({ item }) => <SliderItem item={item} />}
+          renderItem={({ item, index }) => (
+            <SliderItem item={item} index={index} scrollX={scrollX} />
+          )}
           horizontal
           showsHorizontalScrollIndicator={false}
           pagingEnabled
+          style={{ width }}
+          onScroll={onScroll}
+          viewabilityConfigCallbackPairs={
+            viewabilityConfigCallbackPairs.current
+          }
         />
         <SliderPagination
           numberOfItems={data.length}
