@@ -11,8 +11,11 @@ import {
   ViewToken,
 } from "react-native";
 import Animated, {
+  Extrapolation,
+  interpolate,
   SharedValue,
   useAnimatedScrollHandler,
+  useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
 
@@ -63,13 +66,11 @@ const data: SliderData[] = [
 
 type SliderItemProps = {
   item: SliderData;
-  index: number;
-  scrollX: SharedValue<number>;
 };
 
 const { width } = Dimensions.get("screen");
 
-const SliderItem = ({ item, index, scrollX }: SliderItemProps) => {
+const SliderItem = ({ item }: SliderItemProps) => {
   console.log(width);
   return (
     <View
@@ -89,19 +90,34 @@ type SliderPaginationProps = {
   scrollX: SharedValue<number>;
 };
 
+const defaultDotWidth = 8;
+
 const SliderPagination = ({
   numberOfItems,
   paginationIndex,
   scrollX,
 }: SliderPaginationProps) => {
   return (
-    <View className="flex flex-row justify-center gap-2">
-      {Array.from({ length: numberOfItems }).map((_, i) => (
-        <View
-          className={`h-2 w-2 rounded-xl ${paginationIndex === i ? "bg-purple-600" : "bg-white"}`}
-          key={i}
-        />
-      ))}
+    <View className="flex flex-row justify-center gap-1.5">
+      {Array.from({ length: numberOfItems }).map((_, i) => {
+        const animationStyle = useAnimatedStyle(() => {
+          const dotWidth = interpolate(
+            scrollX.value,
+            [(i - 1) * width, i * width, (i + 1) * width],
+            [defaultDotWidth, defaultDotWidth * 2, defaultDotWidth],
+            Extrapolation.CLAMP,
+          );
+
+          return { width: dotWidth };
+        });
+        return (
+          <Animated.View
+            className={`h-2 w-2 rounded-xl ${paginationIndex === i ? "bg-purple-600" : "bg-white"}`}
+            key={i}
+            style={animationStyle}
+          />
+        );
+      })}
     </View>
   );
 };
@@ -117,6 +133,7 @@ export default function TabOneScreen() {
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (
+        viewableItems[0] !== undefined &&
         viewableItems[0].index !== undefined &&
         viewableItems[0].index !== null
       ) {
@@ -142,9 +159,7 @@ export default function TabOneScreen() {
         <Animated.FlatList
           className="flex-none"
           data={data}
-          renderItem={({ item, index }) => (
-            <SliderItem item={item} index={index} scrollX={scrollX} />
-          )}
+          renderItem={({ item }) => <SliderItem item={item} />}
           horizontal
           showsHorizontalScrollIndicator={false}
           pagingEnabled
