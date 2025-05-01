@@ -4,7 +4,6 @@ import {
   Text,
   Pressable,
   SafeAreaView,
-  FlatList,
   ImageSourcePropType,
   Image,
   Dimensions,
@@ -148,7 +147,7 @@ export default function TabOneScreen() {
   ]);
 
   const onScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
+    onScroll: (e: any) => {
       scrollX.value = e.contentOffset.x;
     },
   });
@@ -159,20 +158,20 @@ export default function TabOneScreen() {
         <Animated.FlatList
           className="flex-none"
           data={data}
-          renderItem={({ item }) => <SliderItem item={item} />}
           horizontal
-          showsHorizontalScrollIndicator={false}
-          pagingEnabled
-          style={{ width }}
           onScroll={onScroll}
+          pagingEnabled
+          renderItem={({ item }) => <SliderItem item={item} />}
+          showsHorizontalScrollIndicator={false}
+          style={{ width }}
           viewabilityConfigCallbackPairs={
             viewabilityConfigCallbackPairs.current
           }
         />
         <SliderPagination
           numberOfItems={data.length}
-          scrollX={scrollX}
           paginationIndex={paginationIndex}
+          scrollX={scrollX}
         />
       </View>
       <View className="flex w-full gap-4 px-8 pb-8">
