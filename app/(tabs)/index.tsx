@@ -18,13 +18,13 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 
-type SliderData = {
+type CarouselData = {
   title: string;
   image: ImageSourcePropType;
   description: string;
 };
 
-const data: SliderData[] = [
+const carouselData: CarouselData[] = [
   {
     title: "Welcome to Rookies 👋",
     image: require("@/assets/images/Frame 5989.png"),
@@ -63,14 +63,13 @@ const data: SliderData[] = [
   },
 ];
 
-type SliderItemProps = {
-  item: SliderData;
-};
-
 const { width } = Dimensions.get("screen");
 
-const SliderItem = ({ item }: SliderItemProps) => {
-  console.log(width);
+type CarouselItemProps = {
+  item: CarouselData;
+};
+
+const CarouselItem = ({ item }: CarouselItemProps) => {
   return (
     <View
       className="flex items-center justify-center gap-4 px-4"
@@ -83,47 +82,41 @@ const SliderItem = ({ item }: SliderItemProps) => {
   );
 };
 
-type SliderPaginationProps = {
-  numberOfItems: number;
-  paginationIndex: number;
+type CarouselDotProps = {
+  carouselIndex: number;
+  dotIndex: number;
   scrollX: SharedValue<number>;
 };
 
 const defaultDotWidth = 8;
 
-const SliderPagination = ({
-  numberOfItems,
-  paginationIndex,
+const CarouselDot = ({
+  carouselIndex,
+  dotIndex,
   scrollX,
-}: SliderPaginationProps) => {
-  return (
-    <View className="flex flex-row justify-center gap-1.5">
-      {Array.from({ length: numberOfItems }).map((_, i) => {
-        const animationStyle = useAnimatedStyle(() => {
-          const dotWidth = interpolate(
-            scrollX.value,
-            [(i - 1) * width, i * width, (i + 1) * width],
-            [defaultDotWidth, defaultDotWidth * 2, defaultDotWidth],
-            Extrapolation.CLAMP,
-          );
+}: CarouselDotProps) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    const dotWidth = interpolate(
+      scrollX.value,
+      [(dotIndex - 1) * width, dotIndex * width, (dotIndex + 1) * width],
+      [defaultDotWidth, defaultDotWidth * 2, defaultDotWidth],
+      Extrapolation.CLAMP,
+    );
 
-          return { width: dotWidth };
-        });
-        return (
-          <Animated.View
-            className={`h-2 w-2 rounded-xl ${paginationIndex === i ? "bg-purple-600" : "bg-white"}`}
-            key={i}
-            style={animationStyle}
-          />
-        );
-      })}
-    </View>
+    return { width: dotWidth };
+  });
+
+  return (
+    <Animated.View
+      className={`h-2 w-2 rounded-xl ${dotIndex === carouselIndex ? "bg-purple-600" : "bg-white"}`}
+      style={animatedStyle}
+    />
   );
 };
 
 export default function TabOneScreen() {
   const scrollX = useSharedValue(0);
-  const [paginationIndex, setPaginationIndex] = useState(0);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   const viewabilityConfig = {
     itemVisiblePercentThreshold: 50,
@@ -136,7 +129,7 @@ export default function TabOneScreen() {
         viewableItems[0].index !== undefined &&
         viewableItems[0].index !== null
       ) {
-        setPaginationIndex(viewableItems[0].index);
+        setCarouselIndex(viewableItems[0].index);
       }
     },
     [],
@@ -157,28 +150,30 @@ export default function TabOneScreen() {
       <View className="flex flex-1 items-center justify-center gap-16">
         <Animated.FlatList
           className="flex-none"
-          data={data}
+          data={carouselData}
           horizontal
           onScroll={onScroll}
           pagingEnabled
-          renderItem={({ item }) => <SliderItem item={item} />}
+          renderItem={({ item }) => <CarouselItem item={item} />}
           showsHorizontalScrollIndicator={false}
           style={{ width }}
           viewabilityConfigCallbackPairs={
             viewabilityConfigCallbackPairs.current
           }
         />
-        <SliderPagination
-          numberOfItems={data.length}
-          paginationIndex={paginationIndex}
-          scrollX={scrollX}
-        />
+        <View className="flex flex-row justify-center gap-1.5">
+          {Array.from({ length: carouselData.length }).map((_, i) => (
+            <CarouselDot
+              carouselIndex={carouselIndex}
+              dotIndex={i}
+              key={i}
+              scrollX={scrollX}
+            />
+          ))}
+        </View>
       </View>
       <View className="flex w-full gap-4 px-8 pb-8">
-        <Pressable
-          className="rounded-lg bg-purple-600 p-3"
-          onPress={() => console.log("TEST")}
-        >
+        <Pressable className="rounded-lg bg-purple-600 p-3">
           <Text className="text-center text-white">Create an Account</Text>
         </Pressable>
         <Pressable className="rounded-lg p-3">
