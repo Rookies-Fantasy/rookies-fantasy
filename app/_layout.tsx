@@ -12,7 +12,7 @@ import { Provider } from "react-redux";
 import { store } from "../state/store";
 import AuthListener from "@/components/AuthListener";
 
-globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -43,14 +43,20 @@ function RootLayoutNav() {
           <Provider store={store}>
             <AuthListener>
               <StatusBar style="light" />
-              <Stack>
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(app)" options={{ headerShown: false }} />
-              </Stack>
+              <AppStack />
             </AuthListener>
           </Provider>
         </GestureHandlerRootView>
       </GluestackUIProvider>
     </SafeAreaProvider>
+  );
+}
+
+function AppStack() {
+  return (
+    <Stack screenOptions={{ animation: "none" }}>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(app)" options={{ headerShown: false }} />
+    </Stack>
   );
 }

@@ -16,11 +16,15 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import {
+  FirebaseAuthTypes,
   getAuth,
   signInWithEmailAndPassword,
 } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import * as WebBrowser from "expo-web-browser";
 import { signInWithGoogle } from "@/utils/socialAuth";
+import { useAppDispatch } from "@/state/hooks";
+import { CurrentUser, setUser } from "@/state/slices/userSlice";
 
 const schema = yup.object({
   email: yup
@@ -41,6 +45,7 @@ export default function LoginScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const auth = getAuth();
+  const dispatch = useAppDispatch();
 
   const {
     control,
@@ -55,6 +60,50 @@ export default function LoginScreen() {
       password: "",
     },
   });
+
+  const logInWithProvider = async (provider: string) => {
+    try {
+      if (provider === "google") {
+        const { user } = await signInWithGoogle();
+        await handleAuthenticatedUser(user);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleAuthenticatedUser = async (user: FirebaseAuthTypes.User) => {
+    try {
+      const userDoc = await firestore().collection("users").doc(user.uid).get();
+      console.log("Auth listener:" + userDoc);
+
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+
+        if (userData?.createdAt instanceof firestore.Timestamp) {
+          userData.createdAt = userData.createdAt.toDate().toISOString();
+        }
+
+        if (userData?.updatedAt instanceof firestore.Timestamp) {
+          userData.updatedAt = userData.updatedAt.toDate().toISOString();
+        }
+
+        dispatch(setUser(userData as CurrentUser));
+        router.push("/(app)/(tabs)");
+      } else {
+        dispatch(
+          setUser({
+            userId: user.uid,
+            email: user.email ?? undefined,
+            isLoading: false,
+          }),
+        );
+        router.push("/(auth)/createProfile");
+      }
+    } catch (error) {
+      console.log("Failed to handle user after auth", error);
+    }
+  };
 
   const handleLogin = async (data: FormData) => {
     setIsLoading(true);
@@ -208,13 +257,7 @@ export default function LoginScreen() {
 
           <Pressable
             className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
-            onPress={async () => {
-              try {
-                await signInWithGoogle();
-              } catch (error) {
-                console.log(error);
-              }
-            }}
+            onPress={() => logInWithProvider("google")}
           >
             <GoogleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
