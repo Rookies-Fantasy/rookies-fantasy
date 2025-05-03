@@ -5,7 +5,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TextInput,
-  TouchableOpacity,
+  Pressable,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -136,7 +136,7 @@ export default function ForgotPasswordScreen() {
             </Text>
           )}
 
-          <TouchableOpacity
+          <Pressable
             disabled={!isValid || isLoading}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
             onPress={handleSubmit(onSubmit)}
@@ -150,7 +150,7 @@ export default function ForgotPasswordScreen() {
                 RESET PASSWORD
               </Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
 
           <Text
             className="pbk-b1 mt-5 text-center text-purple-600"
