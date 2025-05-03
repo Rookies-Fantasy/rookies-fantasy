@@ -22,6 +22,7 @@ import {
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
 import { signInWithGoogle } from "@/utils/socialAuth";
+import Spinner from "@/components/Spinner";
 
 const schema = yup.object({
   email: yup
@@ -42,6 +43,7 @@ export type SignUpFormProps = {
 export default function SignUpScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
   const auth = getAuth();
 
@@ -79,6 +81,7 @@ export default function SignUpScreen() {
 
   const signUpUser = async (data: SignUpFormProps) => {
     const { email, password } = data;
+    setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
@@ -92,6 +95,7 @@ export default function SignUpScreen() {
           isLoading: false,
         }),
       );
+      setLoading(false);
       router.push("/(auth)/createProfile");
     } catch (error) {
       console.log(error);
@@ -218,11 +222,15 @@ export default function SignUpScreen() {
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
             onPress={handleSubmit(signUpUser)}
           >
-            <Text
-              className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
-            >
-              SIGN UP
-            </Text>
+            {loading ? (
+              <Spinner />
+            ) : (
+              <Text
+                className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
+              >
+                SIGN UP
+              </Text>
+            )}
           </Pressable>
 
           <View className="pbk-b1 my-5 flex-row flex-wrap">

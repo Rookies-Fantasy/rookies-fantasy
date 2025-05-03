@@ -25,6 +25,7 @@ import * as WebBrowser from "expo-web-browser";
 import { signInWithGoogle } from "@/utils/socialAuth";
 import { useAppDispatch } from "@/state/hooks";
 import { CurrentUser, setUser } from "@/state/slices/userSlice";
+import Spinner from "@/components/Spinner";
 
 const schema = yup.object({
   email: yup
@@ -43,7 +44,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [hidePassword, setHidePassword] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const auth = getAuth();
   const dispatch = useAppDispatch();
 
@@ -106,7 +107,7 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async (data: FormData) => {
-    setIsLoading(true);
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
     } catch (error) {
@@ -133,7 +134,7 @@ export default function LoginScreen() {
         });
       }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -231,15 +232,19 @@ export default function LoginScreen() {
           </View>
 
           <Pressable
-            disabled={!isValid || isLoading}
+            disabled={!isValid || loading}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
             onPress={handleSubmit(handleLogin)}
           >
-            <Text
-              className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
-            >
-              LOGIN
-            </Text>
+            {loading ? (
+              <Spinner />
+            ) : (
+              <Text
+                className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
+              >
+                LOGIN
+              </Text>
+            )}
           </Pressable>
 
           <Text
