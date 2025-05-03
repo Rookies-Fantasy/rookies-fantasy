@@ -7,14 +7,14 @@ admin.initializeApp();
 export const createUserInDatabase = functions.auth
   .user()
   .onCreate(async (user: UserRecord) => {
-    const { uid, email, displayName, photoURL } = user;
+    const { uid, email, displayName: username, photoURL } = user;
     const usersRef = admin.firestore().collection("users");
 
     try {
       await usersRef.doc(uid).set({
         userId: uid,
         email: email || "",
-        displayName: displayName || "",
+        username: username || "",
         photoURL: photoURL || "",
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
