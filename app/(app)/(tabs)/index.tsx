@@ -7,6 +7,8 @@ import { router } from "expo-router";
 
 export default function TabOneScreen() {
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user);
+
   const handleLogout = async () => {
     try {
       await auth().signOut();
@@ -27,6 +29,9 @@ export default function TabOneScreen() {
       >
         <Text className="pbk-h6 text-center text-base-white">Sign Out</Text>
       </TouchableOpacity>
+      <Text>{user.username}</Text>
+      <Text>{user.email}</Text>
+      <Text>{user.userId}</Text>
 
       <EditScreenInfo path="app/(tabs)/index.tsx" />
     </View>
