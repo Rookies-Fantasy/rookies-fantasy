@@ -39,8 +39,6 @@ export default function AuthListener({ children }: Props) {
             }
 
             dispatch(setUser(userData as CurrentUser));
-          } else {
-            console.log("No user document found in Firestore");
           }
         } catch (error) {
           console.error("Error fetching user document:", error);
