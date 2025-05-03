@@ -20,12 +20,6 @@ function AuthScreen() {
         >
           <Pressable
             className="min-h-12 w-full justify-center rounded-md bg-purple-600"
-            onPress={() => router.back()}
-          >
-            <Text className="pbk-h5 text-center text-base-white">Back</Text>
-          </Pressable>
-          <Pressable
-            className="min-h-12 w-full justify-center rounded-md bg-purple-600"
             onPress={() => router.push("/login")}
           >
             <Text className="pbk-h5 text-center text-base-white">Login</Text>
