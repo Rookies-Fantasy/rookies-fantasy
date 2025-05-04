@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   View,
@@ -114,7 +115,7 @@ const CarouselDot = ({
   );
 };
 
-export default function TabOneScreen() {
+export default function OnboardingCarosel() {
   const scrollX = useSharedValue(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
 
@@ -176,11 +177,13 @@ export default function TabOneScreen() {
         <Pressable className="rounded-lg bg-purple-600 p-3">
           <Text className="text-center text-white">Create an Account</Text>
         </Pressable>
-        <Pressable className="rounded-lg p-3">
-          <Text className="text-center text-white">
-            I Already Have An Account
-          </Text>
-        </Pressable>
+        <Link asChild href="/login">
+          <Pressable className="rounded-lg p-3">
+            <Text className="text-center text-white">
+              I Already Have An Account
+            </Text>
+          </Pressable>
+        </Link>
       </View>
     </SafeAreaView>
   );

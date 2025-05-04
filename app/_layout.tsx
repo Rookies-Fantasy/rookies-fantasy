@@ -34,8 +34,13 @@ function RootLayoutNav() {
     <GluestackUIProvider>
       <GestureHandlerRootView>
         <StatusBar />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(protected)" options={{ headerShown: false }} />
         </Stack>
       </GestureHandlerRootView>
     </GluestackUIProvider>
