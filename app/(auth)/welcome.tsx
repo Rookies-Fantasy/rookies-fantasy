@@ -9,6 +9,8 @@ import {
   Image,
   Dimensions,
   ViewToken,
+  ImageBackground,
+  StatusBar,
 } from "react-native";
 import Animated, {
   Extrapolation,
@@ -77,8 +79,12 @@ const CarouselItem = ({ item }: CarouselItemProps) => {
       style={{ width }}
     >
       <Image source={item.image} />
-      <Text className="text-center text-white">{item.title}</Text>
-      <Text className="text-center text-white">{item.description}</Text>
+      <Text className="text-center font-clash text-pbk-h5 font-semibold text-white">
+        {item.title}
+      </Text>
+      <Text className="text-center font-manrope text-pbk-b1 text-white">
+        {item.description}
+      </Text>
     </View>
   );
 };
@@ -109,7 +115,7 @@ const CarouselDot = ({
 
   return (
     <Animated.View
-      className={`h-2 w-2 rounded-xl ${dotIndex === carouselIndex ? "bg-purple-600" : "bg-white"}`}
+      className={`h-2 w-2 rounded-xl ${dotIndex === carouselIndex ? "bg-purple-600" : "bg-gray-800"}`}
       style={animatedStyle}
     />
   );
@@ -147,44 +153,53 @@ export default function OnboardingCarosel() {
   });
 
   return (
-    <SafeAreaView className="flex flex-1 items-center justify-between bg-black">
-      <View className="flex flex-1 items-center justify-center gap-16">
-        <Animated.FlatList
-          className="flex-none"
-          data={carouselData}
-          horizontal
-          onScroll={onScroll}
-          pagingEnabled
-          renderItem={({ item }) => <CarouselItem item={item} />}
-          showsHorizontalScrollIndicator={false}
-          style={{ width }}
-          viewabilityConfigCallbackPairs={
-            viewabilityConfigCallbackPairs.current
-          }
-        />
-        <View className="flex flex-row justify-center gap-1.5">
-          {Array.from({ length: carouselData.length }).map((_, i) => (
-            <CarouselDot
-              carouselIndex={carouselIndex}
-              dotIndex={i}
-              key={i}
-              scrollX={scrollX}
-            />
-          ))}
+    <ImageBackground
+      className="flex-1 bg-gray-950"
+      resizeMode="cover"
+      source={require("@/assets/images/Bg Elements.png")}
+    >
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView className="flex flex-1 items-center justify-between">
+        <View className="flex flex-1 items-center justify-center gap-16">
+          <Animated.FlatList
+            className="flex-none"
+            data={carouselData}
+            horizontal
+            onScroll={onScroll}
+            pagingEnabled
+            renderItem={({ item }) => <CarouselItem item={item} />}
+            showsHorizontalScrollIndicator={false}
+            style={{ width }}
+            viewabilityConfigCallbackPairs={
+              viewabilityConfigCallbackPairs.current
+            }
+          />
+          <View className="flex flex-row justify-center gap-1.5">
+            {Array.from({ length: carouselData.length }).map((_, i) => (
+              <CarouselDot
+                carouselIndex={carouselIndex}
+                dotIndex={i}
+                key={i}
+                scrollX={scrollX}
+              />
+            ))}
+          </View>
         </View>
-      </View>
-      <View className="flex w-full gap-4 px-8 pb-8">
-        <Pressable className="rounded-lg bg-purple-600 p-3">
-          <Text className="text-center text-white">Create an Account</Text>
-        </Pressable>
-        <Link asChild href="/login">
-          <Pressable className="rounded-lg p-3">
-            <Text className="text-center text-white">
-              I Already Have An Account
+        <View className="flex w-full gap-4 px-8 pb-8">
+          <Pressable className="rounded-lg bg-purple-600 p-3">
+            <Text className="text-center font-clash font-semibold uppercase text-white">
+              Create an Account
             </Text>
           </Pressable>
-        </Link>
-      </View>
-    </SafeAreaView>
+          <Link asChild href="/login">
+            <Pressable className="rounded-lg p-3">
+              <Text className="text-center font-clash font-semibold uppercase text-white">
+                I Already Have An Account
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
