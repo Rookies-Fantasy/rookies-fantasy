@@ -7,7 +7,7 @@ const OWNER = "rookies-fantasy";
 const APP_NAME = "Rookies Fantasy";
 const BUNDLE_IDENTIFIER = "com.rookies.rookiesfantasy";
 const PACKAGE_NAME = "com.rookies.rookiesfantasy";
-const ICON = "./assets/images/icon.png";
+const ICON = "./assets/images/1024x1024 icon.png";
 const ADAPTIVE_ICON = "./assets/images/adaptive-icon.png";
 const SCHEME = "myapp";
 
@@ -64,9 +64,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
-      image: "./assets/images/splash-icon.png",
+      image: "./assets/images/rockbook-01 1.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff",
+      backgroundColor: "#3B2689",
     },
     ios: {
       googleServicesFile:
