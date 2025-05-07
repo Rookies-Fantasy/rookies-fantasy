@@ -1,4 +1,3 @@
-import { Link } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   View,
@@ -20,6 +19,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
+import { PressableLink } from "@/components/PressableLink";
 
 type CarouselData = {
   title: string;
@@ -191,13 +191,15 @@ export default function OnboardingCarosel() {
               Create an Account
             </Text>
           </Pressable>
-          <Link asChild href="/login">
-            <Pressable className="rounded-lg p-3">
+          <PressableLink
+            className="rounded-lg p-3"
+            href="/login"
+            label={
               <Text className="text-center font-clash font-semibold uppercase text-white">
                 I Already Have An Account
               </Text>
-            </Pressable>
-          </Link>
+            }
+          />
         </View>
       </SafeAreaView>
     </ImageBackground>
