@@ -4,7 +4,7 @@ export default function ProtectedLayout() {
   const { loggedIn } = useLocalSearchParams();
 
   if (!loggedIn) {
-    return <Redirect href="./(auth)/welcome" />;
+    return <Redirect href="./(auth)" />;
   }
 
   return (

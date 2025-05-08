@@ -121,7 +121,7 @@ const CarouselDot = ({
   );
 };
 
-export default function OnboardingCarosel() {
+export default function Onboarding() {
   const scrollX = useSharedValue(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
 
