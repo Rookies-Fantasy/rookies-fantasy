@@ -29,6 +29,10 @@ export default defineConfig([
           },
         },
       ],
+      "react/jsx-curly-brace-presence": [
+        "error",
+        { props: "never", children: "never", propElementValues: "always" },
+      ],
     },
     settings: {
       react: {

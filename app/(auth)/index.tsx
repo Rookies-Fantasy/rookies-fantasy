@@ -194,11 +194,7 @@ export default function Onboarding() {
           <PressableLink
             className="rounded-lg p-3"
             href="/login"
-            label={
-              <Text className="text-center font-clash font-semibold uppercase text-white">
-                I Already Have An Account
-              </Text>
-            }
+            label="I Already Have An Account"
           />
         </View>
       </SafeAreaView>
