@@ -30,37 +30,37 @@ type CarouselData = {
 const carouselData: CarouselData[] = [
   {
     title: "Welcome to Rookies 👋",
-    image: require("@/assets/images/Frame 5989.png"),
+    image: require("@/assets/images/onboarding-image-1.png"),
     description:
       "Compete in weekly 1v1 matchups, build your lineup, and climb the ranked ladder!",
   },
   {
     title: "Create your team 🎽",
-    image: require("@/assets/images/Frame 5990.png"),
+    image: require("@/assets/images/onboarding-image-2.png"),
     description:
       "Pick a team name, choose a logo, and make your team uniquely yours!",
   },
   {
     title: "Choose your game mode ⚔️",
-    image: require("@/assets/images/Frame 5991.png"),
+    image: require("@/assets/images/onboarding-image-3.png"),
     description:
       "Pick a mode, queue up, and challenge opponents in daily matchups!",
   },
   {
     title: "Draft your team 💰",
-    image: require("@/assets/images/Frame 5992.png"),
+    image: require("@/assets/images/onboarding-image-4.png"),
     description:
       "Build your lineup within the salary cap  and make every pick count for every week!",
   },
   {
     title: "Power up your game 🚀",
-    image: require("@/assets/images/Frame 5993.png"),
+    image: require("@/assets/images/onboarding-image-5.png"),
     description:
       "Use special augments to boost your squad and outplay your opponent! Strategy is key!",
   },
   {
     title: "Climb the ranked ladder 🏆",
-    image: require("@/assets/images/Frame 5994.png"),
+    image: require("@/assets/images/onboarding-image-6.png"),
     description:
       "Compete in the daily matchups, win your games, and climb the ranks to the top!",
   },
@@ -78,7 +78,11 @@ const CarouselItem = ({ item }: CarouselItemProps) => {
       className="flex items-center justify-center gap-4 px-4"
       style={{ width }}
     >
-      <Image source={item.image} />
+      <Image
+        resizeMode="contain"
+        source={item.image}
+        style={{ width: 300, height: 200 }}
+      />
       <Text className="text-center font-clash text-pbk-h5 font-semibold text-white">
         {item.title}
       </Text>
@@ -156,7 +160,7 @@ export default function Onboarding() {
     <ImageBackground
       className="flex-1 bg-gray-950"
       resizeMode="cover"
-      source={require("@/assets/images/Bg Elements.png")}
+      source={require("@/assets/images/onboarding-background.png")}
     >
       <StatusBar barStyle="light-content" />
       <SafeAreaView className="flex flex-1 items-center justify-between">
