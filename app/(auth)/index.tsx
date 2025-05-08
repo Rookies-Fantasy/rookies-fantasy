@@ -1,31 +1,14 @@
-import { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
   Pressable,
   SafeAreaView,
-  ImageSourcePropType,
-  Image,
-  Dimensions,
-  ViewToken,
   ImageBackground,
   StatusBar,
 } from "react-native";
-import Animated, {
-  Extrapolation,
-  interpolate,
-  SharedValue,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
+import { Carousel } from "@/components/carousel/Carousel";
 import { PressableLink } from "@/components/PressableLink";
-
-type CarouselData = {
-  title: string;
-  image: ImageSourcePropType;
-  description: string;
-};
+import { CarouselData } from "@/types/carouselData";
 
 const carouselData: CarouselData[] = [
   {
@@ -66,96 +49,7 @@ const carouselData: CarouselData[] = [
   },
 ];
 
-const { width } = Dimensions.get("screen");
-
-type CarouselItemProps = {
-  item: CarouselData;
-};
-
-const CarouselItem = ({ item }: CarouselItemProps) => {
-  return (
-    <View
-      className="flex items-center justify-center gap-4 px-4"
-      style={{ width }}
-    >
-      <Image
-        resizeMode="contain"
-        source={item.image}
-        style={{ width: 300, height: 200 }}
-      />
-      <Text className="text-center font-clash text-pbk-h5 font-semibold text-white">
-        {item.title}
-      </Text>
-      <Text className="text-center font-manrope text-pbk-b1 text-white">
-        {item.description}
-      </Text>
-    </View>
-  );
-};
-
-type CarouselDotProps = {
-  carouselIndex: number;
-  dotIndex: number;
-  scrollX: SharedValue<number>;
-};
-
-const defaultDotWidth = 8;
-
-const CarouselDot = ({
-  carouselIndex,
-  dotIndex,
-  scrollX,
-}: CarouselDotProps) => {
-  const animatedStyle = useAnimatedStyle(() => {
-    const dotWidth = interpolate(
-      scrollX.value,
-      [(dotIndex - 1) * width, dotIndex * width, (dotIndex + 1) * width],
-      [defaultDotWidth, defaultDotWidth * 2, defaultDotWidth],
-      Extrapolation.CLAMP,
-    );
-
-    return { width: dotWidth };
-  });
-
-  return (
-    <Animated.View
-      className={`h-2 w-2 rounded-xl ${dotIndex === carouselIndex ? "bg-purple-600" : "bg-gray-800"}`}
-      style={animatedStyle}
-    />
-  );
-};
-
 export default function Onboarding() {
-  const scrollX = useSharedValue(0);
-  const [carouselIndex, setCarouselIndex] = useState(0);
-
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50,
-  };
-
-  const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (
-        viewableItems[0] !== undefined &&
-        viewableItems[0].index !== undefined &&
-        viewableItems[0].index !== null
-      ) {
-        setCarouselIndex(viewableItems[0].index);
-      }
-    },
-    [],
-  );
-
-  const viewabilityConfigCallbackPairs = useRef([
-    { viewabilityConfig, onViewableItemsChanged },
-  ]);
-
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (e: any) => {
-      scrollX.value = e.contentOffset.x;
-    },
-  });
-
   return (
     <ImageBackground
       className="flex-1 bg-gray-950"
@@ -164,31 +58,7 @@ export default function Onboarding() {
     >
       <StatusBar barStyle="light-content" />
       <SafeAreaView className="flex flex-1 items-center justify-between">
-        <View className="flex flex-1 items-center justify-center gap-16">
-          <Animated.FlatList
-            className="flex-none"
-            data={carouselData}
-            horizontal
-            onScroll={onScroll}
-            pagingEnabled
-            renderItem={({ item }) => <CarouselItem item={item} />}
-            showsHorizontalScrollIndicator={false}
-            style={{ width }}
-            viewabilityConfigCallbackPairs={
-              viewabilityConfigCallbackPairs.current
-            }
-          />
-          <View className="flex flex-row justify-center gap-1.5">
-            {Array.from({ length: carouselData.length }).map((_, i) => (
-              <CarouselDot
-                carouselIndex={carouselIndex}
-                dotIndex={i}
-                key={i}
-                scrollX={scrollX}
-              />
-            ))}
-          </View>
-        </View>
+        <Carousel data={carouselData} />
         <View className="flex w-full gap-4 px-8 pb-8">
           <Pressable className="rounded-lg bg-purple-600 p-3">
             <Text className="text-center font-clash font-semibold uppercase text-white">
