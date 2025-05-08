@@ -64,7 +64,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
-      image: "./assets/images/rockbook-01 1.png",
+      imageWidth: 200,
+      image: "./assets/images/1024x1024 splash.png",
       resizeMode: "contain",
       backgroundColor: "#3B2689",
     },
