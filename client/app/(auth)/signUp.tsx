@@ -11,7 +11,6 @@ import {
   Pressable,
 } from "react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
-import AppleLogo from "@/assets/icons/apple.svg";
 import { useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -21,7 +20,7 @@ import {
 } from "@react-native-firebase/auth";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
-import { signInWithApple, signInWithGoogle } from "@/utils/socialAuth";
+import { signInWithGoogle } from "@/utils/socialAuth";
 import Spinner from "@/components/Spinner";
 
 const schema = yup.object({
@@ -65,16 +64,6 @@ export default function SignUpScreen() {
     try {
       if (provider === "google") {
         const { user } = await signInWithGoogle();
-        dispatch(
-          setUser({
-            userId: user.uid,
-            email: user.email ?? undefined,
-            isLoading: false,
-          }),
-        );
-        router.push("/(auth)/createProfile");
-      } else if (provider === "apple") {
-        const { user } = await signInWithApple();
         dispatch(
           setUser({
             userId: user.uid,
@@ -270,16 +259,6 @@ export default function SignUpScreen() {
             <GoogleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Google
-            </Text>
-          </Pressable>
-
-          <Pressable
-            className="min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
-            onPress={() => signUpWithProvider("apple")}
-          >
-            <AppleLogo width={20} height={20} />
-            <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
-              Continue with Apple
             </Text>
           </Pressable>
         </KeyboardAvoidingView>

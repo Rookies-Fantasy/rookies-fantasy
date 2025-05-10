@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { X, Eye, EyeSlash, WarningCircle } from "phosphor-react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
-import AppleLogo from "@/assets/icons/apple.svg";
 import { useForm, Controller } from "react-hook-form";
 import { useRouter } from "expo-router";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -268,16 +267,6 @@ export default function LoginScreen() {
             <GoogleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Google
-            </Text>
-          </Pressable>
-
-          <Pressable
-            className="min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
-            onPress={() => router.push("/(auth)/signUp")}
-          >
-            <AppleLogo width={20} height={20} />
-            <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
-              Continue with Apple
             </Text>
           </Pressable>
         </KeyboardAvoidingView>
