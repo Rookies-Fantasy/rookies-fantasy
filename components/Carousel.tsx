@@ -24,9 +24,9 @@ const CarouselItem = ({ item }: CarouselItemProps) => {
       style={{ width }}
     >
       <Image
+        className="h-[200px] w-[300px]"
         resizeMode="contain"
         source={item.image}
-        style={{ width: 300, height: 200 }}
       />
       <Text className="text-center font-clash text-pbk-h5 font-semibold text-white">
         {item.title}
