@@ -49,7 +49,7 @@ const carouselData: CarouselData[] = [
   },
 ];
 
-export const OnboardingScreen = () => {
+const OnboardingScreen = () => {
   return (
     <ImageBackground
       className="flex-1 bg-gray-950"
@@ -75,3 +75,5 @@ export const OnboardingScreen = () => {
     </ImageBackground>
   );
 };
+
+export default OnboardingScreen;

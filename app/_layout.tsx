@@ -4,11 +4,11 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-reanimated";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 
-export const RootLayout = () => {
   const [fontsLoaded] = useFonts({
     "ClashDisplay-Bold": require("../assets/fonts/ClashDisplay-Bold.ttf"),
     "Manrope-Regular": require("../assets/fonts/Manrope-Regular.otf"),
@@ -46,3 +46,4 @@ const RootLayoutNav = () => {
     </GluestackUIProvider>
   );
 };
+export default RootLayout;

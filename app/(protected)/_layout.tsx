@@ -1,6 +1,6 @@
 import { Redirect, Tabs, useLocalSearchParams } from "expo-router";
 
-export const ProtectedLayout = () => {
+const ProtectedLayout = () => {
   const { loggedIn } = useLocalSearchParams();
 
   if (!loggedIn) {
@@ -18,3 +18,5 @@ export const ProtectedLayout = () => {
     </Tabs>
   );
 };
+
+export default ProtectedLayout;
