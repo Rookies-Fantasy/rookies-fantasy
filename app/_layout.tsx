@@ -8,7 +8,7 @@ import "react-native-reanimated";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 
-export default function RootLayout() {
+export const RootLayout = () => {
   const [fontsLoaded] = useFonts({
     "ClashDisplay-Bold": require("../assets/fonts/ClashDisplay-Bold.ttf"),
     "Manrope-Regular": require("../assets/fonts/Manrope-Regular.otf"),
@@ -27,9 +27,9 @@ export default function RootLayout() {
   }
 
   return <RootLayoutNav />;
-}
+};
 
-function RootLayoutNav() {
+const RootLayoutNav = () => {
   return (
     <GluestackUIProvider>
       <GestureHandlerRootView>
@@ -45,4 +45,4 @@ function RootLayoutNav() {
       </GestureHandlerRootView>
     </GluestackUIProvider>
   );
-}
+};

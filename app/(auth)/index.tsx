@@ -6,7 +6,7 @@ import {
   ImageBackground,
   StatusBar,
 } from "react-native";
-import { Carousel } from "@/components/carousel/Carousel";
+import { Carousel } from "@/components/Carousel";
 import { PressableLink } from "@/components/PressableLink";
 import { CarouselData } from "@/types/carouselData";
 
@@ -49,7 +49,7 @@ const carouselData: CarouselData[] = [
   },
 ];
 
-export default function Onboarding() {
+export const OnboardingScreen = () => {
   return (
     <ImageBackground
       className="flex-1 bg-gray-950"
@@ -74,4 +74,4 @@ export default function Onboarding() {
       </SafeAreaView>
     </ImageBackground>
   );
-}
+};

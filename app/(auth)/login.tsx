@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { PressableLink } from "@/components/PressableLink";
 
-export default function Login() {
+export const Login = () => {
   return (
     <View className="flex h-full w-full items-center justify-center">
       <PressableLink
@@ -10,4 +10,4 @@ export default function Login() {
       />
     </View>
   );
-}
+};

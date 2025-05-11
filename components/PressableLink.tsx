@@ -7,7 +7,7 @@ type PressableLinkProps = PressableProps & {
   label: string;
 };
 
-export const PressableLink = forwardRef<View, PressableLinkProps>(
+const PressableLink = forwardRef<View, PressableLinkProps>(
   ({ href, label, ...rest }: PressableLinkProps, ref) => {
     return (
       <Link asChild href={href}>
@@ -22,3 +22,5 @@ export const PressableLink = forwardRef<View, PressableLinkProps>(
 );
 
 PressableLink.displayName = "PressableLink";
+
+export { PressableLink };
