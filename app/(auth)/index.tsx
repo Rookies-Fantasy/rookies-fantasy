@@ -2,10 +2,10 @@ import {
   View,
   Text,
   Pressable,
-  SafeAreaView,
   ImageBackground,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Carousel } from "@/components/Carousel";
 import { PressableLink } from "@/components/PressableLink";
 import { CarouselData } from "@/types/carouselData";
@@ -56,8 +56,8 @@ const OnboardingScreen = () => {
       resizeMode="cover"
       source={require("@/assets/images/onboarding-background.png")}
     >
-      <StatusBar barStyle="light-content" />
-      <SafeAreaView className="flex flex-1 items-center justify-between">
+      <SafeAreaView className="flex-1 items-center justify-between">
+        <StatusBar barStyle="light-content" />
         <Carousel data={carouselData} />
         <View className="flex w-full gap-4 px-8 pb-8">
           <Pressable className="rounded-lg bg-purple-600 p-3">

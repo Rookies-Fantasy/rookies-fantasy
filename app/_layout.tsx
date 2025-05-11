@@ -9,6 +9,27 @@ import "react-native-reanimated";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 
+const RootLayoutNav = () => {
+  return (
+    <SafeAreaProvider>
+      <GluestackUIProvider>
+        <GestureHandlerRootView>
+          <StatusBar />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+          </Stack>
+        </GestureHandlerRootView>
+      </GluestackUIProvider>
+    </SafeAreaProvider>
+  );
+};
+
+const RootLayout = () => {
   const [fontsLoaded] = useFonts({
     "ClashDisplay-Bold": require("../assets/fonts/ClashDisplay-Bold.ttf"),
     "Manrope-Regular": require("../assets/fonts/Manrope-Regular.otf"),
@@ -29,21 +50,4 @@ import "@/global.css";
   return <RootLayoutNav />;
 };
 
-const RootLayoutNav = () => {
-  return (
-    <GluestackUIProvider>
-      <GestureHandlerRootView>
-        <StatusBar />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-        </Stack>
-      </GestureHandlerRootView>
-    </GluestackUIProvider>
-  );
-};
 export default RootLayout;
