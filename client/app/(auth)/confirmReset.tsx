@@ -4,7 +4,7 @@ import {
   TouchableWithoutFeedback,
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
 } from "react-native";
 import MailIcon from "@/assets/icons/mail.svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -84,15 +84,15 @@ function ConfirmResetScreen() {
           </View>
 
           <View className="flex-1 justify-end">
-            <TouchableOpacity
+            <Pressable
               className="min-h-14 w-full items-center justify-center rounded-md bg-purple-600"
               onPress={() => router.replace("/(auth)")}
             >
               <Text className={"pbk-h6 text-center text-base-white"}>
                 RETURN TO LOGIN
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               className="my-8 min-h-14 w-full items-center justify-center rounded-md bg-gray-950"
               onPress={() => handleResendEmail()}
             >
@@ -103,7 +103,7 @@ function ConfirmResetScreen() {
                   RESEND EMAIL
                 </Text>
               )}
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>

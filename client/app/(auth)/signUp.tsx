@@ -7,11 +7,10 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
-  TouchableOpacity,
   TextInput,
+  Pressable,
 } from "react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
-import AppleLogo from "@/assets/icons/apple.svg";
 import { useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -21,6 +20,8 @@ import {
 } from "@react-native-firebase/auth";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
+import { signInWithGoogle } from "@/utils/socialAuth";
+import Spinner from "@/components/Spinner";
 
 const schema = yup.object({
   email: yup
@@ -41,6 +42,7 @@ export type SignUpFormProps = {
 export default function SignUpScreen() {
   const [hidePassword, setHidePassword] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
   const auth = getAuth();
 
@@ -58,15 +60,33 @@ export default function SignUpScreen() {
     mode: "onSubmit",
   });
 
+  const signUpWithProvider = async (provider: string) => {
+    try {
+      if (provider === "google") {
+        const { user } = await signInWithGoogle();
+        dispatch(
+          setUser({
+            userId: user.uid,
+            email: user.email ?? undefined,
+            isLoading: false,
+          }),
+        );
+        router.push("/(auth)/createProfile");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const signUpUser = async (data: SignUpFormProps) => {
     const { email, password } = data;
+    setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
         password,
       );
-
       dispatch(
         setUser({
           userId: user.uid,
@@ -74,7 +94,7 @@ export default function SignUpScreen() {
           isLoading: false,
         }),
       );
-
+      setLoading(false);
       router.replace("/(auth)/createProfile");
     } catch (error) {
       console.log(error);
@@ -109,12 +129,12 @@ export default function SignUpScreen() {
           behavior="padding"
           className="flex-1 flex-col px-6 py-4"
         >
-          <TouchableOpacity
+          <Pressable
             className="my-16 size-8 items-center justify-center self-end rounded-md border border-gray-900 p-4"
             onPress={() => router.back()}
           >
             <X size={20} color="white" weight="bold" />
-          </TouchableOpacity>
+          </Pressable>
 
           <Text className="pbk-h5 mb-8 text-base-white">Create an account</Text>
           <Text className="pbk-b2 mb-1.5 text-base-white">Email</Text>
@@ -168,8 +188,7 @@ export default function SignUpScreen() {
                     setErrorMessage("");
                   }}
                 />
-                <TouchableOpacity
-                  activeOpacity={0.7}
+                <Pressable
                   onPress={() => setHidePassword(!hidePassword)}
                   className="ml-2 flex-row gap-2"
                 >
@@ -181,7 +200,7 @@ export default function SignUpScreen() {
                   {(errors.password || errorMessage) && (
                     <WarningCircle size={20} color="#dc2626" weight="bold" />
                   )}
-                </TouchableOpacity>
+                </Pressable>
               </View>
             )}
           />
@@ -197,29 +216,33 @@ export default function SignUpScreen() {
               <Text className="pbk-b3 mb-4 text-red-600">{errorMessage}</Text>
             )}
           </View>
-          <TouchableOpacity
+          <Pressable
             disabled={!isValid}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
             onPress={handleSubmit(signUpUser)}
           >
-            <Text
-              className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
-            >
-              SIGN UP
-            </Text>
-          </TouchableOpacity>
+            {loading ? (
+              <Spinner />
+            ) : (
+              <Text
+                className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
+              >
+                SIGN UP
+              </Text>
+            )}
+          </Pressable>
 
           <View className="pbk-b1 my-5 flex-row flex-wrap">
             <Text className="text-gray-600">
               By signing up, you agree to our
             </Text>
-            <TouchableOpacity onPress={() => router.back()}>
+            <Pressable onPress={() => router.back()}>
               <Text className="text-purple-600"> Terms of Service</Text>
-            </TouchableOpacity>
+            </Pressable>
             <Text className="text-gray-600"> and </Text>
-            <TouchableOpacity onPress={() => router.back()}>
+            <Pressable onPress={() => router.back()}>
               <Text className="text-purple-600">Privacy Policy</Text>
-            </TouchableOpacity>
+            </Pressable>
             <Text className="text-gray-600">.</Text>
           </View>
 
@@ -229,19 +252,15 @@ export default function SignUpScreen() {
             <View className="flex-1 bg-gray-800" />
           </View>
 
-          <TouchableOpacity className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920">
+          <Pressable
+            className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
+            onPress={() => signUpWithProvider("google")}
+          >
             <GoogleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Google
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity className="min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920">
-            <AppleLogo width={20} height={20} />
-            <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
-              Continue with Apple
-            </Text>
-          </TouchableOpacity>
+          </Pressable>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
     </View>

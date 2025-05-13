@@ -3,7 +3,6 @@ import "react-native-reanimated";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
@@ -11,8 +10,9 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "../state/store";
 import AuthListener from "@/components/AuthListener";
+import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 
-globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -43,14 +43,20 @@ function RootLayoutNav() {
           <Provider store={store}>
             <AuthListener>
               <StatusBar style="light" />
-              <Stack>
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(app)" options={{ headerShown: false }} />
-              </Stack>
+              <AppStack />
             </AuthListener>
           </Provider>
         </GestureHandlerRootView>
       </GluestackUIProvider>
     </SafeAreaProvider>
+  );
+}
+
+function AppStack() {
+  return (
+    <Stack screenOptions={{ animation: "none" }}>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(app)" options={{ headerShown: false }} />
+    </Stack>
   );
 }

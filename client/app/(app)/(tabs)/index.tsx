@@ -1,12 +1,14 @@
-import EditScreenInfo from "@/components/EditScreenInfo";
 import { View, Text, TouchableOpacity } from "react-native";
 import auth from "@react-native-firebase/auth";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { clearUser } from "@/state/slices/userSlice";
 import { router } from "expo-router";
+import EditScreenInfo from "@/components/EditScreenInfo";
 
 export default function TabOneScreen() {
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user);
+
   const handleLogout = async () => {
     try {
       await auth().signOut();
@@ -27,6 +29,9 @@ export default function TabOneScreen() {
       >
         <Text className="pbk-h6 text-center text-base-white">Sign Out</Text>
       </TouchableOpacity>
+      <Text>{user.username}</Text>
+      <Text>{user.email}</Text>
+      <Text>{user.userId}</Text>
 
       <EditScreenInfo path="app/(tabs)/index.tsx" />
     </View>

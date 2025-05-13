@@ -4,21 +4,27 @@ import {
   KeyboardAvoidingView,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   Keyboard,
+  Pressable,
 } from "react-native";
 import { X, Eye, EyeSlash, WarningCircle } from "phosphor-react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
-import AppleLogo from "@/assets/icons/apple.svg";
-import { router } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
+import { useRouter } from "expo-router";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import {
+  FirebaseAuthTypes,
   getAuth,
   signInWithEmailAndPassword,
 } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import * as WebBrowser from "expo-web-browser";
+import { signInWithGoogle } from "@/utils/socialAuth";
+import { useAppDispatch } from "@/state/hooks";
+import { CurrentUser, setUser } from "@/state/slices/userSlice";
+import Spinner from "@/components/Spinner";
 
 const schema = yup.object({
   email: yup
@@ -33,10 +39,14 @@ type FormData = {
   password: string;
 };
 
+WebBrowser.maybeCompleteAuthSession();
+
 export default function LoginScreen() {
   const [hidePassword, setHidePassword] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const auth = getAuth();
+  const dispatch = useAppDispatch();
 
   const {
     control,
@@ -52,8 +62,52 @@ export default function LoginScreen() {
     },
   });
 
+  const logInWithProvider = async (provider: string) => {
+    try {
+      if (provider === "google") {
+        const { user } = await signInWithGoogle();
+        await handleAuthenticatedUser(user);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleAuthenticatedUser = async (user: FirebaseAuthTypes.User) => {
+    try {
+      const userDoc = await firestore().collection("users").doc(user.uid).get();
+      console.log("Auth listener:" + userDoc);
+
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+
+        if (userData?.createdAt instanceof firestore.Timestamp) {
+          userData.createdAt = userData.createdAt.toDate().toISOString();
+        }
+
+        if (userData?.updatedAt instanceof firestore.Timestamp) {
+          userData.updatedAt = userData.updatedAt.toDate().toISOString();
+        }
+
+        dispatch(setUser(userData as CurrentUser));
+        router.push("/(app)/(tabs)");
+      } else {
+        dispatch(
+          setUser({
+            userId: user.uid,
+            email: user.email ?? undefined,
+            isLoading: false,
+          }),
+        );
+        router.push("/(auth)/createProfile");
+      }
+    } catch (error) {
+      console.log("Failed to handle user after auth", error);
+    }
+  };
+
   const handleLogin = async (data: FormData) => {
-    setIsLoading(true);
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
 
@@ -82,7 +136,7 @@ export default function LoginScreen() {
         });
       }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -93,9 +147,12 @@ export default function LoginScreen() {
           behavior="padding"
           className="flex-1 flex-col px-6 py-4"
         >
-          <TouchableOpacity className="my-16 size-8 items-center justify-center self-end rounded-md border border-gray-900 p-4">
+          <Pressable
+            className="my-16 size-8 items-center justify-center self-end rounded-md border border-gray-900 p-4"
+            onPress={() => router.back()}
+          >
             <X size={20} color="white" weight="bold" />
-          </TouchableOpacity>
+          </Pressable>
 
           <Text className="pbk-h5 mb-8 text-base-white">Login</Text>
           <Text className="pbk-b2 mb-1.5 text-base-white">Email</Text>
@@ -147,7 +204,7 @@ export default function LoginScreen() {
                     onChange(text);
                   }}
                 />
-                <TouchableOpacity
+                <Pressable
                   className="flex-row gap-2"
                   onPress={() => setHidePassword(!hidePassword)}
                 >
@@ -159,7 +216,7 @@ export default function LoginScreen() {
                   {errors.password && (
                     <WarningCircle size={20} color="red" weight="bold" />
                   )}
-                </TouchableOpacity>
+                </Pressable>
               </View>
             )}
           />
@@ -176,21 +233,25 @@ export default function LoginScreen() {
             )}
           </View>
 
-          <TouchableOpacity
-            disabled={!isValid || isLoading}
+          <Pressable
+            disabled={!isValid || loading}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
             onPress={handleSubmit(handleLogin)}
           >
-            <Text
-              className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
-            >
-              LOGIN
-            </Text>
-          </TouchableOpacity>
+            {loading ? (
+              <Spinner />
+            ) : (
+              <Text
+                className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
+              >
+                LOGIN
+              </Text>
+            )}
+          </Pressable>
 
           <Text
             className="pbk-b1 mx-auto my-5 text-center text-purple-600"
-            onPress={() => router.push("/confirmReset")}
+            onPress={() => router.push("/forgotPassword")}
           >
             Forgot password?
           </Text>
@@ -201,22 +262,15 @@ export default function LoginScreen() {
             <View className="h-px flex-1 bg-gray-800" />
           </View>
 
-          <TouchableOpacity
+          <Pressable
             className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
-            onPress={() => router.push("/(auth)/signUp")}
+            onPress={() => logInWithProvider("google")}
           >
             <GoogleLogo width={20} height={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Google
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity className="min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920">
-            <AppleLogo width={20} height={20} />
-            <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
-              Continue with Apple
-            </Text>
-          </TouchableOpacity>
+          </Pressable>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
     </View>

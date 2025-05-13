@@ -1,20 +1,20 @@
 import type { UserRecord } from "firebase-admin/auth";
-const admin = require("firebase-admin");
-const functions = require("firebase-functions/v1");
+import * as admin from "firebase-admin";
+import * as functions from "firebase-functions/v1";
 
 admin.initializeApp();
 
 export const createUserInDatabase = functions.auth
   .user()
   .onCreate(async (user: UserRecord) => {
-    const { uid, email, displayName, photoURL } = user;
+    const { uid, email, displayName: username, photoURL } = user;
     const usersRef = admin.firestore().collection("users");
 
     try {
       await usersRef.doc(uid).set({
         userId: uid,
         email: email || "",
-        displayName: displayName || "",
+        username: username || "",
         photoURL: photoURL || "",
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
