@@ -5,7 +5,7 @@ import {
 } from "@/state/slices/userSlice";
 import { Redirect, Stack, useSegments } from "expo-router";
 
-export default function AuthLayout() {
+const AuthLayout = () => {
   const isSignedIn = useAppSelector(selectIsUserSignedIn);
   const isRegistered = useAppSelector(selectIsRegistered);
   const segments = useSegments();
@@ -32,4 +32,6 @@ export default function AuthLayout() {
       <Stack.Screen name="confirmReset" />
     </Stack>
   );
-}
+};
+
+export default AuthLayout;

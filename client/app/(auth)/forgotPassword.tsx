@@ -25,7 +25,7 @@ type FormData = {
   emailOrUsername: string;
 };
 
-export default function ForgotPasswordScreen() {
+const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const auth = getAuth();
 
@@ -162,4 +162,6 @@ export default function ForgotPasswordScreen() {
       </TouchableWithoutFeedback>
     </View>
   );
-}
+};
+
+export default ForgotPassword;

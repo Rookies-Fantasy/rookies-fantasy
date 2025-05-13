@@ -5,7 +5,7 @@ import {
 } from "@/state/slices/userSlice";
 import { Redirect, Stack } from "expo-router";
 
-export default function AppLayout() {
+const AppLayout = () => {
   const isSignedIn = useAppSelector(selectCurrentUserId);
   const isRegistered = useAppSelector(selectIsRegistered);
 
@@ -26,4 +26,6 @@ export default function AppLayout() {
       <Stack.Screen name="(tabs)" />
     </Stack>
   );
-}
+};
+
+export default AppLayout;

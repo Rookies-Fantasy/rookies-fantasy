@@ -14,7 +14,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-export default function AuthListener({ children }: Props) {
+const AuthListener = ({ children }: Props) => {
   const [initializing, setInitializing] = useState(true);
   const auth = getAuth();
   const dispatch = useAppDispatch();
@@ -63,4 +63,6 @@ export default function AuthListener({ children }: Props) {
   }
 
   return <>{children}</>;
-}
+};
+
+export default AuthListener;

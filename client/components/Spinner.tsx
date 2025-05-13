@@ -32,6 +32,7 @@ const Spinner = ({ className }: SpinnerProps) => {
     <Animated.View
       className={cn(
         "h-6 w-6 rounded-full border-2 border-white border-t-transparent",
+        className,
       )}
       style={{ transform: [{ rotate: spin }] }}
     />

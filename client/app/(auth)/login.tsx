@@ -41,7 +41,7 @@ type FormData = {
 
 WebBrowser.maybeCompleteAuthSession();
 
-export default function LoginScreen() {
+const LoginScreen = () => {
   const [hidePassword, setHidePassword] = useState(true);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -273,4 +273,6 @@ export default function LoginScreen() {
       </TouchableWithoutFeedback>
     </View>
   );
-}
+};
+
+export default LoginScreen;

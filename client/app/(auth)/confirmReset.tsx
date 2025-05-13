@@ -13,7 +13,7 @@ import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { Spinner } from "phosphor-react-native";
 
-function ConfirmResetScreen() {
+const ConfirmReset = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -109,6 +109,6 @@ function ConfirmResetScreen() {
       </TouchableWithoutFeedback>
     </View>
   );
-}
+};
 
-export default ConfirmResetScreen;
+export default ConfirmReset;

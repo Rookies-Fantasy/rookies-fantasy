@@ -14,7 +14,33 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
-export default function RootLayout() {
+const RootLayoutNav = () => {
+  return (
+    <SafeAreaProvider>
+      <GluestackUIProvider>
+        <GestureHandlerRootView>
+          <Provider store={store}>
+            <AuthListener>
+              <StatusBar style="light" />
+              <AppStack />
+            </AuthListener>
+          </Provider>
+        </GestureHandlerRootView>
+      </GluestackUIProvider>
+    </SafeAreaProvider>
+  );
+};
+
+const AppStack = () => {
+  return (
+    <Stack screenOptions={{ animation: "none" }}>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(app)" options={{ headerShown: false }} />
+    </Stack>
+  );
+};
+
+const RootLayout = () => {
   const [fontsLoaded] = useFonts({
     "ClashDisplay-Bold": require("../assets/fonts/ClashDisplay-Bold.ttf"),
     "Manrope-Regular": require("../assets/fonts/Manrope-Regular.otf"),
@@ -33,30 +59,6 @@ export default function RootLayout() {
   }
 
   return <RootLayoutNav />;
-}
+};
 
-function RootLayoutNav() {
-  return (
-    <SafeAreaProvider>
-      <GluestackUIProvider>
-        <GestureHandlerRootView>
-          <Provider store={store}>
-            <AuthListener>
-              <StatusBar style="light" />
-              <AppStack />
-            </AuthListener>
-          </Provider>
-        </GestureHandlerRootView>
-      </GluestackUIProvider>
-    </SafeAreaProvider>
-  );
-}
-
-function AppStack() {
-  return (
-    <Stack screenOptions={{ animation: "none" }}>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(app)" options={{ headerShown: false }} />
-    </Stack>
-  );
-}
+export default RootLayout;

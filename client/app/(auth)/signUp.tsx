@@ -39,7 +39,7 @@ export type SignUpFormProps = {
   password: string;
 };
 
-export default function SignUpScreen() {
+const SignUp = () => {
   const [hidePassword, setHidePassword] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -265,4 +265,6 @@ export default function SignUpScreen() {
       </TouchableWithoutFeedback>
     </View>
   );
-}
+};
+
+export default SignUp;

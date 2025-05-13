@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-function AuthScreen() {
+const AuthScreen = () => {
   const router = useRouter();
 
   return (
@@ -34,6 +34,6 @@ function AuthScreen() {
       </TouchableWithoutFeedback>
     </SafeAreaView>
   );
-}
+};
 
 export default AuthScreen;

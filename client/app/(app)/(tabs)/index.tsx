@@ -3,9 +3,8 @@ import auth from "@react-native-firebase/auth";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { clearUser } from "@/state/slices/userSlice";
 import { router } from "expo-router";
-import EditScreenInfo from "@/components/EditScreenInfo";
 
-export default function TabOneScreen() {
+const TabOne = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
 
@@ -32,8 +31,8 @@ export default function TabOneScreen() {
       <Text>{user.username}</Text>
       <Text>{user.email}</Text>
       <Text>{user.userId}</Text>
-
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
     </View>
   );
-}
+};
+
+export default TabOne;

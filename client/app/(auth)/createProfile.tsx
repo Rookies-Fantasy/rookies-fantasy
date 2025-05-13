@@ -2,7 +2,7 @@ import { useAppSelector } from "@/state/hooks";
 import { Link, Stack } from "expo-router";
 import { View, Text } from "react-native";
 
-export default function CreateProfileScreen() {
+const CreateProfile = () => {
   const user = useAppSelector((state) => state.user);
   return (
     <>
@@ -19,4 +19,6 @@ export default function CreateProfileScreen() {
       </View>
     </>
   );
-}
+};
+
+export default CreateProfile;
