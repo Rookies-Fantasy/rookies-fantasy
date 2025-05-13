@@ -126,6 +126,11 @@ const LoginScreen = () => {
             type: "manual",
             message: "Incorrect password.",
           });
+        } else if (firebaseError.code === "auth/invalid-credential") {
+          setError("root", {
+            type: "manual",
+            message: "These are invalid credentials. Please try again.",
+          });
         }
       } else {
         setError("root", {
@@ -233,7 +238,7 @@ const LoginScreen = () => {
 
           <Pressable
             disabled={!isValid || loading}
-            className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
+            className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
             onPress={handleSubmit(handleLogin)}
           >
             {loading ? (
