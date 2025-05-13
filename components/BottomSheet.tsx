@@ -34,7 +34,7 @@ type BottomSheetProps = {
   snapPoints?: SnapPoint[];
 };
 
-export const BottomSheet = ({
+const BottomSheet = ({
   children,
   footer,
   header,
@@ -176,3 +176,5 @@ export const BottomSheet = ({
     </View>
   );
 };
+
+export default BottomSheet;
