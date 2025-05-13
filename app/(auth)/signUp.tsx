@@ -75,7 +75,7 @@ export default function SignUpScreen() {
         }),
       );
 
-      router.push("/(auth)/createProfile");
+      router.replace("/(auth)/createProfile");
     } catch (error) {
       console.log(error);
 

@@ -56,6 +56,8 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
+
+      router.replace("/(auth)/createProfile");
     } catch (error) {
       console.log(error);
       if (typeof error === "object" && error !== null && "code" in error) {
