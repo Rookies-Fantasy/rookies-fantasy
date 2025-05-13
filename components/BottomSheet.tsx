@@ -34,14 +34,14 @@ type BottomSheetProps = {
   snapPoints?: SnapPoint[];
 };
 
-export default function BottomSheet({
+export const BottomSheet = ({
   children,
   footer,
   header,
   isOpen,
   onClose,
   snapPoints,
-}: BottomSheetProps) {
+}: BottomSheetProps) => {
   const context = useSharedValue({ y: 0 });
   const translateY = useSharedValue(0);
   const sheetTop = useSharedValue(SCREEN_HEIGHT);
@@ -175,4 +175,4 @@ export default function BottomSheet({
       </GestureDetector>
     </View>
   );
-}
+};
