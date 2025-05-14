@@ -7,7 +7,7 @@ const OWNER = "rookies-fantasy";
 const APP_NAME = "Rookies Fantasy";
 const BUNDLE_IDENTIFIER = "com.rookies.rookiesfantasy";
 const PACKAGE_NAME = "com.rookies.rookiesfantasy";
-const ICON = "./assets/images/icon.png";
+const ICON = "./assets/images/ios-light-icon.png";
 const ADAPTIVE_ICON = "./assets/images/adaptive-icon.png";
 const SCHEME = "myapp";
 

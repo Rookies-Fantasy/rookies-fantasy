@@ -18,6 +18,7 @@ export default defineConfig([
       parser: tsParser,
     },
     rules: {
+      "arrow-body-style": ["error", "as-needed"],
       "react/jsx-sort-props": ["error", { ignoreCase: true }],
       "react/sort-prop-types": "error",
       "import/order": [

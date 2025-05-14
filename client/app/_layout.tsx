@@ -14,28 +14,26 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
-const RootLayoutNav = () => {
-  return (
-    <SafeAreaProvider>
-      <GluestackUIProvider>
-        <GestureHandlerRootView>
-          <Provider store={store}>
-            <AuthListener>
-              <StatusBar style="light" />
-              <Stack screenOptions={{ animation: "none" }}>
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(protected)"
-                  options={{ headerShown: false }}
-                />
-              </Stack>
-            </AuthListener>
-          </Provider>
-        </GestureHandlerRootView>
-      </GluestackUIProvider>
-    </SafeAreaProvider>
-  );
-};
+const RootLayoutNav = () => (
+  <SafeAreaProvider>
+    <GluestackUIProvider>
+      <GestureHandlerRootView>
+        <Provider store={store}>
+          <AuthListener>
+            <StatusBar />
+            <Stack screenOptions={{ animation: "none" }}>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(protected)"
+                options={{ headerShown: false }}
+              />
+            </Stack>
+          </AuthListener>
+        </Provider>
+      </GestureHandlerRootView>
+    </GluestackUIProvider>
+  </SafeAreaProvider>
+);
 
 const RootLayout = () => {
   const [fontsLoaded] = useFonts({

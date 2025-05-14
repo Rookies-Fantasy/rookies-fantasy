@@ -66,12 +66,12 @@ const OnboardingScreen = () => {
             className="rounded-lg bg-purple-600 p-3"
             onPress={() => router.push("/(auth)/signUp")}
           >
-            <Text className="text-center font-clash font-semibold uppercase text-white">
+            <Text className="pbk-h7 text-center uppercase text-base-white">
               Create an Account
             </Text>
           </Pressable>
           <PressableLink
-            className="rounded-lg p-3"
+            className="self-center rounded-lg p-3"
             href="/login"
             label="I Already Have An Account"
           />
