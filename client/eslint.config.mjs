@@ -41,9 +41,8 @@ export default defineConfig([
       "import/resolver": {
         typescript: {
           alwaysTryTypes: true,
-          project: "./tsconfig.json",
+          project: "./client/tsconfig.json",
         },
-        node: true,
       },
     },
   },
