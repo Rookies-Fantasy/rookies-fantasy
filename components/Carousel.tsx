@@ -28,10 +28,8 @@ const CarouselItem = ({ item }: CarouselItemProps) => {
         resizeMode="contain"
         source={item.image}
       />
-      <Text className="text-center font-clash text-pbk-h5 font-semibold text-white">
-        {item.title}
-      </Text>
-      <Text className="text-center font-manrope text-pbk-b1 text-white">
+      <Text className="pbk-h5 text-center text-base-white">{item.title}</Text>
+      <Text className="pbk-b1 text-center text-base-white">
         {item.description}
       </Text>
     </View>

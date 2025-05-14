@@ -61,12 +61,12 @@ const OnboardingScreen = () => {
         <Carousel data={carouselData} />
         <View className="flex w-full gap-4 px-8 pb-8">
           <Pressable className="rounded-lg bg-purple-600 p-3">
-            <Text className="text-center font-clash font-semibold uppercase text-white">
+            <Text className="pbk-h7 text-center uppercase text-base-white">
               Create an Account
             </Text>
           </Pressable>
           <PressableLink
-            className="rounded-lg p-3"
+            className="self-center rounded-lg p-3"
             href="/login"
             label="I Already Have An Account"
           />

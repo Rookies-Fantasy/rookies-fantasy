@@ -12,7 +12,7 @@ const PressableLink = forwardRef<View, PressableLinkProps>(
     return (
       <Link asChild href={href}>
         <Pressable ref={ref} {...rest}>
-          <Text className="text-center font-clash font-semibold uppercase text-white">
+          <Text className="pbk-h7 text-center uppercase text-base-white">
             {label}
           </Text>
         </Pressable>
