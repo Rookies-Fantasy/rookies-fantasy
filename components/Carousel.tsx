@@ -17,24 +17,22 @@ type CarouselItemProps = {
   item: CarouselData;
 };
 
-const CarouselItem = ({ item }: CarouselItemProps) => {
-  return (
-    <View
-      className="flex items-center justify-center gap-4 px-4"
-      style={{ width }}
-    >
-      <Image
-        className="h-[200px] w-[300px]"
-        resizeMode="contain"
-        source={item.image}
-      />
-      <Text className="pbk-h5 text-center text-base-white">{item.title}</Text>
-      <Text className="pbk-b1 text-center text-base-white">
-        {item.description}
-      </Text>
-    </View>
-  );
-};
+const CarouselItem = ({ item }: CarouselItemProps) => (
+  <View
+    className="flex items-center justify-center gap-4 px-4"
+    style={{ width }}
+  >
+    <Image
+      className="h-[200px] w-[300px]"
+      resizeMode="contain"
+      source={item.image}
+    />
+    <Text className="pbk-h5 text-center text-base-white">{item.title}</Text>
+    <Text className="pbk-b1 text-center text-base-white">
+      {item.description}
+    </Text>
+  </View>
+);
 
 type CarouselDotProps = {
   carouselIndex: number;

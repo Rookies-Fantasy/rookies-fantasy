@@ -8,17 +8,15 @@ type PressableLinkProps = PressableProps & {
 };
 
 const PressableLink = forwardRef<View, PressableLinkProps>(
-  ({ href, label, ...rest }: PressableLinkProps, ref) => {
-    return (
-      <Link asChild href={href}>
-        <Pressable ref={ref} {...rest}>
-          <Text className="pbk-h7 text-center uppercase text-base-white">
-            {label}
-          </Text>
-        </Pressable>
-      </Link>
-    );
-  },
+  ({ href, label, ...rest }: PressableLinkProps, ref) => (
+    <Link asChild href={href}>
+      <Pressable ref={ref} {...rest}>
+        <Text className="pbk-h7 text-center uppercase text-base-white">
+          {label}
+        </Text>
+      </Pressable>
+    </Link>
+  ),
 );
 
 PressableLink.displayName = "PressableLink";

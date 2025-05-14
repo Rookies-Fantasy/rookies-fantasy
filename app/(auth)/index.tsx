@@ -49,31 +49,29 @@ const carouselData: CarouselData[] = [
   },
 ];
 
-const OnboardingScreen = () => {
-  return (
-    <ImageBackground
-      className="flex-1 bg-gray-950"
-      resizeMode="cover"
-      source={require("@/assets/images/onboarding-background.png")}
-    >
-      <SafeAreaView className="flex-1 items-center justify-between">
-        <StatusBar barStyle="light-content" />
-        <Carousel data={carouselData} />
-        <View className="flex w-full gap-4 px-8 pb-8">
-          <Pressable className="rounded-lg bg-purple-600 p-3">
-            <Text className="pbk-h7 text-center uppercase text-base-white">
-              Create an Account
-            </Text>
-          </Pressable>
-          <PressableLink
-            className="self-center rounded-lg p-3"
-            href="/login"
-            label="I Already Have An Account"
-          />
-        </View>
-      </SafeAreaView>
-    </ImageBackground>
-  );
-};
+const OnboardingScreen = () => (
+  <ImageBackground
+    className="flex-1 bg-gray-950"
+    resizeMode="cover"
+    source={require("@/assets/images/onboarding-background.png")}
+  >
+    <SafeAreaView className="flex-1 items-center justify-between">
+      <StatusBar barStyle="light-content" />
+      <Carousel data={carouselData} />
+      <View className="flex w-full gap-4 px-8 pb-8">
+        <Pressable className="rounded-lg bg-purple-600 p-3">
+          <Text className="pbk-h7 text-center uppercase text-base-white">
+            Create an Account
+          </Text>
+        </Pressable>
+        <PressableLink
+          className="self-center rounded-lg p-3"
+          href="/login"
+          label="I Already Have An Account"
+        />
+      </View>
+    </SafeAreaView>
+  </ImageBackground>
+);
 
 export default OnboardingScreen;
