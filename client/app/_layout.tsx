@@ -1,11 +1,11 @@
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
+import "@/global.css";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import "@/global.css";
-import { useFonts } from "expo-font";
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "../state/store";
@@ -22,21 +22,18 @@ const RootLayoutNav = () => {
           <Provider store={store}>
             <AuthListener>
               <StatusBar style="light" />
-              <AppStack />
+              <Stack screenOptions={{ animation: "none" }}>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(protected)"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
             </AuthListener>
           </Provider>
         </GestureHandlerRootView>
       </GluestackUIProvider>
     </SafeAreaProvider>
-  );
-};
-
-const AppStack = () => {
-  return (
-    <Stack screenOptions={{ animation: "none" }}>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(app)" options={{ headerShown: false }} />
-    </Stack>
   );
 };
 

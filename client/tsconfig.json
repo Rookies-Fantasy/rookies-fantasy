@@ -16,10 +16,11 @@
     "**/*.ts",
     "**/*.tsx",
     "client/.expo/types/**/*.ts",
-    "expo-env.d.ts",
+    "../expo-env.d.ts",
     "nativewind-env.d.ts",
     "./declarations.d.ts",
     "./gloabl.d.ts",
-    ".expo/types/**/*.ts"
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ]
 }

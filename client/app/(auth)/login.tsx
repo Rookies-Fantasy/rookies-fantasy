@@ -1,4 +1,15 @@
+import { yupResolver } from "@hookform/resolvers/yup";
+import {
+  FirebaseAuthTypes,
+  getAuth,
+  signInWithEmailAndPassword,
+} from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import { X, Eye, EyeSlash, WarningCircle } from "phosphor-react-native";
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import {
   View,
   KeyboardAvoidingView,
@@ -8,23 +19,12 @@ import {
   Keyboard,
   Pressable,
 } from "react-native";
-import { X, Eye, EyeSlash, WarningCircle } from "phosphor-react-native";
-import GoogleLogo from "@/assets/icons/google.svg";
-import { useForm, Controller } from "react-hook-form";
-import { useRouter } from "expo-router";
-import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import {
-  FirebaseAuthTypes,
-  getAuth,
-  signInWithEmailAndPassword,
-} from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
-import * as WebBrowser from "expo-web-browser";
-import { signInWithGoogle } from "@/utils/socialAuth";
+import GoogleLogo from "@/assets/icons/google.svg";
+import Spinner from "@/components/Spinner";
 import { useAppDispatch } from "@/state/hooks";
 import { CurrentUser, setUser } from "@/state/slices/userSlice";
-import Spinner from "@/components/Spinner";
+import { signInWithGoogle } from "@/utils/socialAuth";
 
 const schema = yup.object({
   email: yup
@@ -90,7 +90,7 @@ const LoginScreen = () => {
         }
 
         dispatch(setUser(userData as CurrentUser));
-        router.push("/(app)/(tabs)");
+        router.push("/(protected)");
       } else {
         dispatch(
           setUser({
@@ -154,7 +154,7 @@ const LoginScreen = () => {
             className="my-16 size-8 items-center justify-center self-end rounded-md border border-gray-900 p-4"
             onPress={() => router.back()}
           >
-            <X size={20} color="white" weight="bold" />
+            <X color="white" size={20} weight="bold" />
           </Pressable>
 
           <Text className="pbk-h5 mb-8 text-base-white">Login</Text>
@@ -167,18 +167,18 @@ const LoginScreen = () => {
                 className={`mb-1 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.email ? "border-red-600" : "border-gray-920"} px-2 py-2`}
               >
                 <TextInput
-                  placeholder="Enter email"
-                  value={value}
                   autoCapitalize="none"
+                  className="flex-1 text-base-white placeholder:pbk-b1"
                   onChangeText={(text) => {
                     onChange(text);
                   }}
-                  textAlignVertical="center"
-                  className="flex-1 text-base-white placeholder:pbk-b1"
+                  placeholder="Enter email"
                   placeholderTextColor="gray"
+                  textAlignVertical="center"
+                  value={value}
                 />
                 {errors.email && (
-                  <WarningCircle size={20} color="red" weight="bold" />
+                  <WarningCircle color="red" size={20} weight="bold" />
                 )}
               </View>
             )}
@@ -198,26 +198,26 @@ const LoginScreen = () => {
                 className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password ? "border-red-600" : "border-gray-920"} px-3 py-2`}
               >
                 <TextInput
-                  placeholder="Enter password"
                   className="flex-1 text-base-white placeholder:pbk-b1"
-                  placeholderTextColor="gray"
-                  secureTextEntry={hidePassword}
-                  value={value}
                   onChangeText={(text) => {
                     onChange(text);
                   }}
+                  placeholder="Enter password"
+                  placeholderTextColor="gray"
+                  secureTextEntry={hidePassword}
+                  value={value}
                 />
                 <Pressable
                   className="flex-row gap-2"
                   onPress={() => setHidePassword(!hidePassword)}
                 >
                   {hidePassword ? (
-                    <EyeSlash size={20} color="gray" weight="bold" />
+                    <EyeSlash color="gray" size={20} weight="bold" />
                   ) : (
-                    <Eye size={20} color="gray" weight="bold" />
+                    <Eye color="gray" size={20} weight="bold" />
                   )}
                   {errors.password && (
-                    <WarningCircle size={20} color="red" weight="bold" />
+                    <WarningCircle color="red" size={20} weight="bold" />
                   )}
                 </Pressable>
               </View>
@@ -237,8 +237,8 @@ const LoginScreen = () => {
           </View>
 
           <Pressable
-            disabled={!isValid || loading}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
+            disabled={!isValid || loading}
             onPress={handleSubmit(handleLogin)}
           >
             {loading ? (
@@ -269,7 +269,7 @@ const LoginScreen = () => {
             className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
             onPress={() => logInWithProvider("google")}
           >
-            <GoogleLogo width={20} height={20} />
+            <GoogleLogo height={20} width={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Google
             </Text>

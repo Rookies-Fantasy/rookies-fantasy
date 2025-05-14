@@ -1,3 +1,8 @@
+import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Spinner } from "phosphor-react-native";
+import { useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -7,11 +12,6 @@ import {
   Pressable,
 } from "react-native";
 import MailIcon from "@/assets/icons/mail.svg";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
-import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
-import { Spinner } from "phosphor-react-native";
 
 const ConfirmReset = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -68,7 +68,7 @@ const ConfirmReset = () => {
           className="my-16 flex-1 flex-col px-6 py-4"
         >
           <View className="items-center">
-            <MailIcon width={180} height={180} />
+            <MailIcon height={180} width={180} />
             <Text className="pbk-h5 mb-8 text-center text-base-white">
               Reset password email sent!
             </Text>
@@ -88,7 +88,7 @@ const ConfirmReset = () => {
               className="min-h-14 w-full items-center justify-center rounded-md bg-purple-600"
               onPress={() => router.replace("/(auth)")}
             >
-              <Text className={"pbk-h6 text-center text-base-white"}>
+              <Text className="pbk-h6 text-center text-base-white">
                 RETURN TO LOGIN
               </Text>
             </Pressable>
@@ -99,7 +99,7 @@ const ConfirmReset = () => {
               {isLoading ? (
                 <Spinner />
               ) : (
-                <Text className={"pbk-h6 text-center text-base-white"}>
+                <Text className="pbk-h6 text-center text-base-white">
                   RESEND EMAIL
                 </Text>
               )}

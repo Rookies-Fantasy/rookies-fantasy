@@ -1,4 +1,7 @@
+import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import { useState, useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { useAppDispatch } from "@/state/hooks";
 import {
   setUser,
@@ -6,9 +9,6 @@ import {
   clearUser,
   setIsLoading,
 } from "@/state/slices/userSlice";
-import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
-import { ActivityIndicator, View } from "react-native";
 
 type Props = {
   children: React.ReactNode;
@@ -31,11 +31,11 @@ const AuthListener = ({ children }: Props) => {
             const userData = userDoc.data();
 
             if (userData?.createdAt instanceof firestore.Timestamp) {
-              userData.createdAt = userData.createdAt.toDate().toISOString(); // Convert to string
+              userData.createdAt = userData.createdAt.toDate().toISOString();
             }
 
             if (userData?.updatedAt instanceof firestore.Timestamp) {
-              userData.updatedAt = userData.updatedAt.toDate().toISOString(); // Convert to string
+              userData.updatedAt = userData.updatedAt.toDate().toISOString();
             }
 
             dispatch(setUser(userData as CurrentUser));

@@ -1,5 +1,5 @@
-import { Animated, Easing } from "react-native";
 import { useEffect, useRef } from "react";
+import { Animated, Easing } from "react-native";
 import { cn } from "@/utils/cn";
 
 type SpinnerProps = {
