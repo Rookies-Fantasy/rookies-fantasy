@@ -10,7 +10,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Carousel } from "@/components/Carousel";
 import { PressableLink } from "@/components/PressableLink";
 import { CarouselData } from "@/types/carouselData";
-import { useAppSelector } from "@/state/hooks";
 
 const carouselData: CarouselData[] = [
   {
@@ -53,7 +52,6 @@ const carouselData: CarouselData[] = [
 
 const OnboardingScreen = () => {
   const router = useRouter();
-  const user = useAppSelector((state) => state.user);
   return (
     <ImageBackground
       className="flex-1 bg-gray-950"
@@ -64,7 +62,6 @@ const OnboardingScreen = () => {
         <StatusBar barStyle="light-content" />
         <Carousel data={carouselData} />
         <View className="flex w-full gap-4 px-8 pb-8">
-          <Text className="text-base-white">Test: {user.email}</Text>
           <Pressable
             className="rounded-lg bg-purple-600 p-3"
             onPress={() => router.push("/(auth)/signUp")}
