@@ -2,17 +2,18 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 
 export type CurrentUser = {
-  isLoading: boolean;
-  userId?: string;
-  username?: string;
+  avatarUrl?: string;
+  createdAt?: Date;
+  dateOfBirth?: Date;
   email?: string;
-  dob?: string;
-  avatar?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  id: string;
+  isLoading: boolean;
+  updatedAt?: Date;
+  username?: string;
 };
 
 const initialState: CurrentUser = {
+  id: "",
   isLoading: true,
 };
 
@@ -35,13 +36,13 @@ const userSlice = createSlice({
   },
 });
 
-export const selectCurrentUserId = (state: RootState) => state.user.userId;
+export const selectCurrentUserId = (state: RootState) => state.user.id;
 
 export const selectIsUserSignedIn = (state: RootState): boolean =>
-  typeof state.user.userId === "string" && state.user.userId.length > 0;
+  typeof state.user.id === "string" && state.user.id.length > 0;
 
 export const selectIsRegistered = (state: RootState): boolean =>
-  state.user.userId !== undefined && state.user.username !== undefined;
+  state.user.id !== undefined && state.user.username !== undefined;
 
 export const { setUsername, setUser, setIsLoading, clearUser } =
   userSlice.actions;

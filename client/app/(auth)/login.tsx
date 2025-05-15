@@ -25,6 +25,7 @@ import { signInWithGoogle } from "@/utils/socialAuth";
 import { useAppDispatch } from "@/state/hooks";
 import { CurrentUser, setUser } from "@/state/slices/userSlice";
 import Spinner from "@/components/Spinner";
+import { UserController } from "@/controllers/userController";
 
 const schema = yup.object({
   email: yup
@@ -75,17 +76,14 @@ export default function LoginScreen() {
 
   const handleAuthenticatedUser = async (user: FirebaseAuthTypes.User) => {
     try {
-      const userDoc = await firestore().collection("users").doc(user.uid).get();
-      console.log("Auth listener:" + userDoc);
+      const userData = await UserController.getUser(user.uid);
 
-      if (userDoc.exists) {
-        const userData = userDoc.data();
-
-        if (userData?.createdAt instanceof firestore.Timestamp) {
+      if (userData !== undefined) {
+        if (userData.createdAt instanceof firestore.Timestamp) {
           userData.createdAt = userData.createdAt.toDate().toISOString();
         }
 
-        if (userData?.updatedAt instanceof firestore.Timestamp) {
+        if (userData.updatedAt instanceof firestore.Timestamp) {
           userData.updatedAt = userData.updatedAt.toDate().toISOString();
         }
 
@@ -94,8 +92,8 @@ export default function LoginScreen() {
       } else {
         dispatch(
           setUser({
-            userId: user.uid,
             email: user.email ?? undefined,
+            id: user.uid,
             isLoading: false,
           }),
         );
