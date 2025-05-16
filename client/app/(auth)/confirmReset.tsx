@@ -1,8 +1,6 @@
 import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Spinner } from "phosphor-react-native";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -12,42 +10,37 @@ import {
   Pressable,
 } from "react-native";
 import MailIcon from "@/assets/icons/mail.svg";
+import { PressableLink } from "@/components/PressableLink";
+import Spinner from "@/components/Spinner";
+import { cn } from "@/utils/cn";
 
 const ConfirmReset = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const router = useRouter();
+  const [cooldown, setCooldown] = useState(0);
   const auth = getAuth();
 
-  const findEmail = async (data: string): Promise<string> => {
-    const userSnapshot = await firestore()
-      .collection("users")
-      .where("username", "==", data)
-      .limit(1)
-      .get();
-
-    if (!userSnapshot.empty) {
-      const userData = userSnapshot.docs[0].data();
-      return userData.email;
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
     }
-
-    return data;
-  };
+  }, [cooldown]);
 
   const handleResendEmail = async () => {
+    if (cooldown > 0) return;
+
     setIsLoading(true);
+    setErrorMessage("");
 
     try {
-      const emailToUse = await findEmail(email);
-
-      await sendPasswordResetEmail(auth, emailToUse);
-
-      router.push("/(auth)/confirmReset");
+      await sendPasswordResetEmail(auth, email);
+      setCooldown(60);
     } catch (error) {
       const firebaseError = error as { code: string };
 
-      console.error("Login error:", error);
+      console.error("Resend error:", error);
       if (firebaseError.code === "auth/invalid-email") {
         setErrorMessage("Please enter a valid email address.");
       } else if (firebaseError.code === "auth/user-not-found") {
@@ -84,22 +77,30 @@ const ConfirmReset = () => {
           </View>
 
           <View className="flex-1 justify-end">
-            <Pressable
-              className="min-h-14 w-full items-center justify-center rounded-md bg-purple-600"
-              onPress={() => router.replace("/(auth)")}
-            >
-              <Text className="pbk-h6 text-center text-base-white">
-                RETURN TO LOGIN
+            {cooldown > 0 && (
+              <Text className="pbk-b2 text-center text-base-white">
+                Resend email again in {cooldown} seconds.
               </Text>
-            </Pressable>
+            )}
+            <PressableLink
+              className="my-4 min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
+              href="/(auth)/login"
+              label="RETURN TO LOGIN"
+            />
             <Pressable
-              className="my-8 min-h-14 w-full items-center justify-center rounded-md bg-gray-950"
-              onPress={() => handleResendEmail()}
+              className="min-h-12 w-full items-center justify-center bg-gray-950"
+              disabled={cooldown > 0 || isLoading}
+              onPress={handleResendEmail}
             >
               {isLoading ? (
                 <Spinner />
               ) : (
-                <Text className="pbk-h6 text-center text-base-white">
+                <Text
+                  className={cn(
+                    "pbk-h7 text-center",
+                    cooldown > 0 ? "text-gray-400" : "text-base-white",
+                  )}
+                >
                   RESEND EMAIL
                 </Text>
               )}

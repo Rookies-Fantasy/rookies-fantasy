@@ -3,25 +3,20 @@ import firestore from "@react-native-firebase/firestore";
 import { useState, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useAppDispatch } from "@/state/hooks";
-import {
-  setUser,
-  CurrentUser,
-  clearUser,
-  setIsLoading,
-} from "@/state/slices/userSlice";
+import { setUser, clearUser } from "@/state/slices/userSlice";
+import { CurrentUser } from "@/types/userTypes";
 
-type Props = {
+type AuthListenerProps = {
   children: React.ReactNode;
 };
 
-const AuthListener = ({ children }: Props) => {
+const AuthListener = ({ children }: AuthListenerProps) => {
   const [initializing, setInitializing] = useState(true);
   const auth = getAuth();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, async (user) => {
-      dispatch(setIsLoading(true));
       if (user) {
         try {
           const userRef = firestore().collection("users").doc(user.uid);
@@ -47,7 +42,6 @@ const AuthListener = ({ children }: Props) => {
         dispatch(clearUser());
       }
 
-      dispatch(setIsLoading(false));
       setInitializing(false);
     });
 

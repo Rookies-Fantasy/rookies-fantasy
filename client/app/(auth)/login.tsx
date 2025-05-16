@@ -6,7 +6,6 @@ import {
 } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { X, Eye, EyeSlash, WarningCircle } from "phosphor-react-native";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -23,7 +22,8 @@ import * as yup from "yup";
 import GoogleLogo from "@/assets/icons/google.svg";
 import Spinner from "@/components/Spinner";
 import { useAppDispatch } from "@/state/hooks";
-import { CurrentUser, setUser } from "@/state/slices/userSlice";
+import { setUser } from "@/state/slices/userSlice";
+import { LoginProvider } from "@/types/providers";
 import { signInWithGoogle } from "@/utils/socialAuth";
 
 const schema = yup.object({
@@ -34,16 +34,14 @@ const schema = yup.object({
   password: yup.string().required("Password is required"),
 });
 
-type FormData = {
+type LoginFormData = {
   email: string;
   password: string;
 };
 
-WebBrowser.maybeCompleteAuthSession();
-
-const LoginScreen = () => {
+const Login = () => {
   const [hidePassword, setHidePassword] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const auth = getAuth();
   const dispatch = useAppDispatch();
@@ -53,7 +51,7 @@ const LoginScreen = () => {
     handleSubmit,
     formState: { errors, isValid },
     setError,
-  } = useForm<FormData>({
+  } = useForm<LoginFormData>({
     resolver: yupResolver(schema),
     mode: "onSubmit",
     defaultValues: {
@@ -62,9 +60,9 @@ const LoginScreen = () => {
     },
   });
 
-  const logInWithProvider = async (provider: string) => {
+  const logInWithProvider = async (provider: LoginProvider) => {
     try {
-      if (provider === "google") {
+      if (provider === LoginProvider.Google) {
         const { user } = await signInWithGoogle();
         await handleAuthenticatedUser(user);
       }
@@ -76,60 +74,61 @@ const LoginScreen = () => {
   const handleAuthenticatedUser = async (user: FirebaseAuthTypes.User) => {
     try {
       const userDoc = await firestore().collection("users").doc(user.uid).get();
-      console.log("Auth listener:" + userDoc);
 
       if (userDoc.exists) {
         const userData = userDoc.data();
 
-        if (userData?.createdAt instanceof firestore.Timestamp) {
-          userData.createdAt = userData.createdAt.toDate().toISOString();
-        }
+        const mappedUser = {
+          userId: user.uid,
+          email: userData?.email ?? undefined,
+          username: userData?.username,
+          avatar: userData?.avatarUrl,
+          dob: userData?.dateOfBirth,
+        };
 
-        if (userData?.updatedAt instanceof firestore.Timestamp) {
-          userData.updatedAt = userData.updatedAt.toDate().toISOString();
-        }
-
-        dispatch(setUser(userData as CurrentUser));
-        router.push("/(protected)");
+        dispatch(setUser(mappedUser));
+        router.replace("/(protected)");
       } else {
         dispatch(
           setUser({
             userId: user.uid,
             email: user.email ?? undefined,
-            isLoading: false,
           }),
         );
-        router.push("/(auth)/createProfile");
+        router.replace("/(auth)/createProfile");
       }
     } catch (error) {
       console.log("Failed to handle user after auth", error);
     }
   };
 
-  const handleLogin = async (data: FormData) => {
-    setLoading(true);
+  const handleLogin = async (data: LoginFormData) => {
+    setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      await signInWithEmailAndPassword(
+        auth,
+        data.email.trim().toLowerCase(),
+        data.password,
+      );
     } catch (error) {
       console.log(error);
       if (typeof error === "object" && error !== null && "code" in error) {
         const firebaseError = error as { code: string };
 
-        if (firebaseError.code === "auth/invalid-email") {
-          setError("email", {
-            type: "manual",
-            message:
-              "The email or password you entered is incorrect. Please try again.",
-          });
-        } else if (firebaseError.code === "auth/wrong-password") {
-          setError("password", {
-            type: "manual",
-            message: "Incorrect password.",
-          });
-        } else if (firebaseError.code === "auth/invalid-credential") {
+        if (
+          firebaseError.code === "auth/invalid-email" ||
+          firebaseError.code === "auth/wrong-password" ||
+          firebaseError.code === "auth/invalid-credential" ||
+          firebaseError.code === "auth/user-not-found"
+        ) {
           setError("root", {
             type: "manual",
-            message: "These are invalid credentials. Please try again.",
+            message: "Invalid email or password. Please try again.",
+          });
+        } else {
+          setError("root", {
+            type: "manual",
+            message: "Something went wrong. Please try again later.",
           });
         }
       } else {
@@ -139,7 +138,7 @@ const LoginScreen = () => {
         });
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -238,10 +237,10 @@ const LoginScreen = () => {
 
           <Pressable
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
-            disabled={!isValid || loading}
+            disabled={!isValid || isLoading}
             onPress={handleSubmit(handleLogin)}
           >
-            {loading ? (
+            {isLoading ? (
               <Spinner />
             ) : (
               <Text
@@ -267,7 +266,7 @@ const LoginScreen = () => {
 
           <Pressable
             className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
-            onPress={() => logInWithProvider("google")}
+            onPress={() => logInWithProvider(LoginProvider.Google)}
           >
             <GoogleLogo height={20} width={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
@@ -280,4 +279,4 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
+export default Login;

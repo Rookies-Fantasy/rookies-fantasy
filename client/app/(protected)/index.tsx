@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { clearUser } from "@/state/slices/userSlice";
 
-const HomeScreen = () => {
+const Home = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
   const router = useRouter();
@@ -36,4 +36,4 @@ const HomeScreen = () => {
   );
 };
 
-export default HomeScreen;
+export default Home;

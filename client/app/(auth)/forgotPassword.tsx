@@ -21,7 +21,7 @@ const schema = yup.object({
   emailOrUsername: yup.string().required("Email or username is required"),
 });
 
-type FormData = {
+type ForgotPasswordFormData = {
   emailOrUsername: string;
 };
 
@@ -34,7 +34,7 @@ const ForgotPassword = () => {
     handleSubmit,
     formState: { errors, isValid },
     setError,
-  } = useForm<FormData>({
+  } = useForm<ForgotPasswordFormData>({
     resolver: yupResolver(schema),
     mode: "onSubmit",
     defaultValues: {
@@ -57,7 +57,7 @@ const ForgotPassword = () => {
     return data;
   };
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true);
 
     try {
@@ -74,7 +74,7 @@ const ForgotPassword = () => {
     } catch (error) {
       const firebaseError = error as { code: string };
 
-      console.error("Login error:", error);
+      console.error("Forgot password error:", error);
       if (firebaseError.code === "auth/invalid-email") {
         setError("emailOrUsername", {
           message: "Please enter a valid email address.",
@@ -111,11 +111,11 @@ const ForgotPassword = () => {
             name="emailOrUsername"
             render={({ field: { onChange, value } }) => (
               <View
-                className={`mb-2 min-h-14 w-full justify-center rounded-xl border ${errors.emailOrUsername ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                className={`mb-2 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.emailOrUsername ? "border-red-600" : "border-gray-920"} px-2 py-2`}
               >
                 <TextInput
                   autoCapitalize="none"
-                  className="text-base-white placeholder:pbk-b1"
+                  className="flex-1 text-base-white placeholder:pbk-b1"
                   onChangeText={(text) => {
                     onChange(text);
                   }}
