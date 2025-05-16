@@ -1,14 +1,33 @@
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import "react-native-reanimated";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import "react-native-reanimated";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
-import { useFonts } from "expo-font";
-import { useEffect } from "react";
 
-export default function RootLayout() {
+const RootLayoutNav = () => (
+  <SafeAreaProvider>
+    <GluestackUIProvider>
+      <GestureHandlerRootView>
+        <StatusBar />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+        </Stack>
+      </GestureHandlerRootView>
+    </GluestackUIProvider>
+  </SafeAreaProvider>
+);
+
+const RootLayout = () => {
   const [fontsLoaded] = useFonts({
     "ClashDisplay-Bold": require("../assets/fonts/ClashDisplay-Bold.ttf"),
     "Manrope-Regular": require("../assets/fonts/Manrope-Regular.otf"),
@@ -27,17 +46,6 @@ export default function RootLayout() {
   }
 
   return <RootLayoutNav />;
-}
+};
 
-function RootLayoutNav() {
-  return (
-    <GluestackUIProvider>
-      <GestureHandlerRootView>
-        <StatusBar />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-      </GestureHandlerRootView>
-    </GluestackUIProvider>
-  );
-}
+export default RootLayout;
