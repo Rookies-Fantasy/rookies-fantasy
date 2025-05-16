@@ -44,7 +44,7 @@ export type CreateProfileFormProps = {
   name: string;
 };
 
-const CreateProfileScreen = () => {
+const CreateProfile = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAvatarUrl, setSelectedAvatarUrl] =
@@ -306,4 +306,4 @@ const CreateProfileScreen = () => {
   );
 };
 
-export default CreateProfileScreen;
+export default CreateProfile;

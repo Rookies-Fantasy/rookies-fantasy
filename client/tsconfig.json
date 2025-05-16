@@ -4,22 +4,18 @@
     "jsx": "react-jsx",
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "tailwind.config": [
-        "./tailwind.config.js"
-      ]
+      "@/*": ["./*"],
+      "tailwind.config": ["./tailwind.config.js"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     "client/.expo/types/**/*.ts",
-    "expo-env.d.ts",
     "nativewind-env.d.ts",
     "./declarations.d.ts",
-    "./gloabl.d.ts",
-    ".expo/types/**/*.ts"
+    "./global.d.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ]
 }

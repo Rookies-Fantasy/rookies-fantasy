@@ -1,5 +1,5 @@
-import { Animated, Easing } from "react-native";
 import { useEffect, useRef } from "react";
+import { Animated, Easing } from "react-native";
 import { cn } from "@/utils/cn";
 
 type SpinnerProps = {
@@ -32,6 +32,7 @@ const Spinner = ({ className }: SpinnerProps) => {
     <Animated.View
       className={cn(
         "h-6 w-6 rounded-full border-2 border-white border-t-transparent",
+        className,
       )}
       style={{ transform: [{ rotate: spin }] }}
     />

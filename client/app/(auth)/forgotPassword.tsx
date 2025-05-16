@@ -1,3 +1,10 @@
+import { yupResolver } from "@hookform/resolvers/yup";
+import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import { router } from "expo-router";
+import { WarningCircle } from "phosphor-react-native";
+import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import {
   View,
   Text,
@@ -7,14 +14,7 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { WarningCircle } from "phosphor-react-native";
-import { useState } from "react";
-import { router } from "expo-router";
-import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 import Spinner from "@/components/Spinner";
 
 const schema = yup.object({
@@ -25,7 +25,7 @@ type FormData = {
   emailOrUsername: string;
 };
 
-export default function ForgotPasswordScreen() {
+const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const auth = getAuth();
 
@@ -114,17 +114,17 @@ export default function ForgotPasswordScreen() {
                 className={`mb-2 min-h-14 w-full justify-center rounded-xl border ${errors.emailOrUsername ? "border-red-600" : "border-gray-920"} px-2 py-2`}
               >
                 <TextInput
-                  placeholder="Enter email or username"
-                  value={value}
                   autoCapitalize="none"
+                  className="text-base-white placeholder:pbk-b1"
                   onChangeText={(text) => {
                     onChange(text);
                   }}
-                  className="text-base-white placeholder:pbk-b1"
+                  placeholder="Enter email or username"
                   placeholderTextColor="gray"
+                  value={value}
                 />
                 {errors.emailOrUsername && (
-                  <WarningCircle size={20} color="red" weight="bold" />
+                  <WarningCircle color="red" size={20} weight="bold" />
                 )}
               </View>
             )}
@@ -137,8 +137,8 @@ export default function ForgotPasswordScreen() {
           )}
 
           <Pressable
-            disabled={!isValid || isLoading}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
+            disabled={!isValid || isLoading}
             onPress={handleSubmit(onSubmit)}
           >
             {isLoading ? (
@@ -162,4 +162,6 @@ export default function ForgotPasswordScreen() {
       </TouchableWithoutFeedback>
     </View>
   );
-}
+};
+
+export default ForgotPassword;

@@ -1,11 +1,11 @@
+import { Redirect, Stack, useSegments } from "expo-router";
 import { useAppSelector } from "@/state/hooks";
 import {
   selectIsRegistered,
   selectIsUserSignedIn,
 } from "@/state/slices/userSlice";
-import { Redirect, Stack, useSegments } from "expo-router";
 
-export default function AuthLayout() {
+const AuthLayout = () => {
   const isSignedIn = useAppSelector(selectIsUserSignedIn);
   const isRegistered = useAppSelector(selectIsRegistered);
   const segments = useSegments();
@@ -14,7 +14,11 @@ export default function AuthLayout() {
   const isOnCreateProfile = currentRoute === "createProfile";
 
   if (isSignedIn && !isRegistered && !isOnCreateProfile) {
-    return <Redirect href={"/(auth)/createProfile"} />;
+    return <Redirect href="/(auth)/createProfile" />;
+  }
+
+  if (isSignedIn && isRegistered) {
+    return <Redirect href="/(protected)" />;
   }
 
   return (
@@ -32,4 +36,6 @@ export default function AuthLayout() {
       <Stack.Screen name="confirmReset" />
     </Stack>
   );
-}
+};
+
+export default AuthLayout;

@@ -1,6 +1,12 @@
-import { Eye, EyeSlash, WarningCircle, X } from "phosphor-react-native";
-import { Controller, useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+} from "@react-native-firebase/auth";
 import { router } from "expo-router";
+import { Eye, EyeSlash, WarningCircle, X } from "phosphor-react-native";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   View,
   Text,
@@ -10,18 +16,12 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import GoogleLogo from "@/assets/icons/google.svg";
-import { useState } from "react";
-import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-} from "@react-native-firebase/auth";
+import GoogleLogo from "@/assets/icons/google.svg";
+import Spinner from "@/components/Spinner";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
 import { signInWithGoogle } from "@/utils/socialAuth";
-import Spinner from "@/components/Spinner";
 
 const schema = yup.object({
   email: yup
@@ -39,7 +39,7 @@ export type SignUpFormProps = {
   password: string;
 };
 
-export default function SignUpScreen() {
+const SignUp = () => {
   const [hidePassword, setHidePassword] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -133,7 +133,7 @@ export default function SignUpScreen() {
             className="my-16 size-8 items-center justify-center self-end rounded-md border border-gray-900 p-4"
             onPress={() => router.back()}
           >
-            <X size={20} color="white" weight="bold" />
+            <X color="white" size={20} weight="bold" />
           </Pressable>
 
           <Text className="pbk-h5 mb-8 text-base-white">Create an account</Text>
@@ -147,18 +147,18 @@ export default function SignUpScreen() {
                 className={`mb-1 min-h-14 w-full flex-row items-center rounded-xl border ${errors.email ? "border-red-600" : "border-gray-920"} px-2 py-2`}
               >
                 <TextInput
-                  placeholder="Enter email"
-                  value={value}
                   autoCapitalize="none"
+                  className="flex-1 text-base-white placeholder:pbk-b1"
                   onChangeText={(text) => {
                     onChange(text);
                     setErrorMessage("");
                   }}
-                  className="flex-1 text-base-white placeholder:pbk-b1"
+                  placeholder="Enter email"
                   placeholderTextColor="gray"
+                  value={value}
                 />
                 {errors.email && (
-                  <WarningCircle size={20} color="#dc2626" weight="bold" />
+                  <WarningCircle color="#dc2626" size={20} weight="bold" />
                 )}
               </View>
             )}
@@ -178,27 +178,27 @@ export default function SignUpScreen() {
                 className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password || errorMessage ? "border-red-600" : "border-gray-920"} px-3 py-2`}
               >
                 <TextInput
-                  placeholder="Enter password"
                   className="flex-1 text-base-white placeholder:pbk-b1"
-                  placeholderTextColor="gray"
-                  secureTextEntry={hidePassword}
-                  value={value}
                   onChangeText={(text) => {
                     onChange(text);
                     setErrorMessage("");
                   }}
+                  placeholder="Enter password"
+                  placeholderTextColor="gray"
+                  secureTextEntry={hidePassword}
+                  value={value}
                 />
                 <Pressable
-                  onPress={() => setHidePassword(!hidePassword)}
                   className="ml-2 flex-row gap-2"
+                  onPress={() => setHidePassword(!hidePassword)}
                 >
                   {hidePassword ? (
-                    <EyeSlash size={20} color="gray" weight="bold" />
+                    <EyeSlash color="gray" size={20} weight="bold" />
                   ) : (
-                    <Eye size={20} color="gray" weight="bold" />
+                    <Eye color="gray" size={20} weight="bold" />
                   )}
                   {(errors.password || errorMessage) && (
-                    <WarningCircle size={20} color="#dc2626" weight="bold" />
+                    <WarningCircle color="#dc2626" size={20} weight="bold" />
                   )}
                 </Pressable>
               </View>
@@ -217,8 +217,8 @@ export default function SignUpScreen() {
             )}
           </View>
           <Pressable
-            disabled={!isValid}
             className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
+            disabled={!isValid}
             onPress={handleSubmit(signUpUser)}
           >
             {loading ? (
@@ -256,7 +256,7 @@ export default function SignUpScreen() {
             className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
             onPress={() => signUpWithProvider("google")}
           >
-            <GoogleLogo width={20} height={20} />
+            <GoogleLogo height={20} width={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
               Continue with Google
             </Text>
@@ -265,4 +265,6 @@ export default function SignUpScreen() {
       </TouchableWithoutFeedback>
     </View>
   );
-}
+};
+
+export default SignUp;

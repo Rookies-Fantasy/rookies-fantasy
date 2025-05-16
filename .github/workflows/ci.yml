@@ -20,29 +20,35 @@ jobs:
         with:
           node-version: lts/*
           cache: "npm"
+          cache-dependency-path: client/package-lock.json
 
       - name: Install dependencies
+        working-directory: client
         run: npm ci
 
       - name: Setup Expo
+        working-directory: client
         run: npx expo install
 
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
           path: |
-            node_modules
-            .expo
+            client/node_modules
+            client/.expo
             ~/.expo
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Check TypeScript
+        working-directory: client
         run: npm run tsc
 
       - name: Run Linting
+        working-directory: client
         run: npx eslint .
 
       - name: Run Tests
+        working-directory: client
         run: npm run test-ci
