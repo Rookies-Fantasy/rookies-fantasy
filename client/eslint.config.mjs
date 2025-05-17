@@ -1,0 +1,51 @@
+// https://docs.expo.dev/guides/using-eslint/
+import tsParser from "@typescript-eslint/parser";
+import { defineConfig } from "eslint/config";
+import expoConfig from "eslint-config-expo/flat.js";
+import importPlugin from "eslint-plugin-import";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+
+export default defineConfig([
+  expoConfig,
+  importPlugin.flatConfigs.recommended,
+  importPlugin.flatConfigs.typescript,
+  eslintPluginPrettierRecommended,
+  {
+    ignores: ["dist/*"],
+  },
+  {
+    languageOptions: {
+      parser: tsParser,
+    },
+    rules: {
+      "arrow-body-style": ["error", "as-needed"],
+      "react/jsx-sort-props": ["error", { ignoreCase: true }],
+      "react/sort-prop-types": "error",
+      "import/order": [
+        "error",
+        {
+          alphabetize: {
+            order: "asc",
+            caseInsensitive: true,
+          },
+        },
+      ],
+      "react/jsx-curly-brace-presence": [
+        "error",
+        { props: "never", children: "never", propElementValues: "always" },
+      ],
+    },
+    settings: {
+      react: {
+        version: "detect",
+      },
+      "import/resolver": {
+        typescript: {
+          alwaysTryTypes: true,
+          project: "./tsconfig.json",
+        },
+        node: true,
+      },
+    },
+  },
+]);
