@@ -1,77 +1,153 @@
-import { useState } from "react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { getAuth } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import { router } from "expo-router";
+import { Spinner, WarningCircle } from "phosphor-react-native";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import {
   Image,
   View,
   KeyboardAvoidingView,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   Keyboard,
   ImageSourcePropType,
   Modal,
+  Pressable,
 } from "react-native";
-import { WarningCircle } from "phosphor-react-native";
-import { useForm, Controller } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import BottomSheet from "@/components/BottomSheet";
-import { router } from "expo-router";
+import { UserController, UserEditModel } from "@/controllers/userController";
+import { useAppDispatch } from "@/state/hooks";
+import { CurrentUser, setUser } from "@/state/slices/userSlice";
 
-const avatars = [
-  require("../../assets/images/placeholder-avatar.png"),
-  require("../../assets/images/profile/profile-1.png"),
-  require("../../assets/images/profile/profile-2.png"),
-  require("../../assets/images/profile/profile-3.png"),
-  require("../../assets/images/profile/profile-4.png"),
-  require("../../assets/images/profile/profile-5.png"),
-  require("../../assets/images/profile/profile-6.png"),
-  require("../../assets/images/profile/profile-7.png"),
-  require("../../assets/images/profile/profile-8.png"),
-  require("../../assets/images/profile/profile-9.png"),
+type AvatarOption = {
+  url: string;
+  source: ImageSourcePropType;
+};
+
+const avatarOptions: AvatarOption[] = [
+  {
+    url: "../../assets/images/placeholder-avatar.png",
+    source: require("../../assets/images/placeholder-avatar.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-1.png",
+    source: require("../../assets/images/profile/profile-1.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-2.png",
+    source: require("../../assets/images/profile/profile-2.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-3.png",
+    source: require("../../assets/images/profile/profile-3.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-4.png",
+    source: require("../../assets/images/profile/profile-4.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-5.png",
+    source: require("../../assets/images/profile/profile-5.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-6.png",
+    source: require("../../assets/images/profile/profile-6.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-7.png",
+    source: require("../../assets/images/profile/profile-7.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-8.png",
+    source: require("../../assets/images/profile/profile-8.png"),
+  },
+  {
+    url: "../../assets/images/profile/profile-9.png",
+    source: require("../../assets/images/profile/profile-9.png"),
+  },
 ];
 
 const schema = yup.object({
+  avatarUrl: yup.string().required("Avatar is required"),
   dateOfBirth: yup.date().required("Date of Birth is required"),
   username: yup.string().required("Username is required"),
   name: yup.string().required("Name is required"),
 });
 
-export type CreateProfileFormProps = {
-  dateOfBirth: Date;
-  username: string;
-  name: string;
-};
-
 const CreateProfile = () => {
-  const [errorMessage, setErrorMessage] = useState("");
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
+
+  const dispatch = useAppDispatch();
+
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAvatarUrl, setSelectedAvatarUrl] =
-    useState<ImageSourcePropType>(
-      require("../../assets/images/placeholder-avatar.png"),
-    );
+  const [selectedAvatarOption, setSelectedAvatarOption] =
+    useState<AvatarOption>(avatarOptions[0]);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid },
-  } = useForm<CreateProfileFormProps>({
+    formState: { errors },
+    setValue,
+    reset,
+  } = useForm<UserEditModel>({
     resolver: yupResolver(schema),
     defaultValues: {
-      dateOfBirth: undefined,
+      avatarUrl: "",
+      dateOfBirth: new Date(),
       username: "",
       name: "",
     },
     mode: "onSubmit",
   });
 
-  const handleCreateProfile = async (data: CreateProfileFormProps) => {
+  useEffect(() => {
+    const setDefaultUserData = async () => {
+      if (currentUser) {
+        const userData = await UserController.getUser(currentUser.uid);
+        if (userData !== undefined) {
+          const values: UserEditModel = {
+            dateOfBirth: userData!.dateOfBirth.toDate(),
+            username: userData!.username,
+            avatarUrl: userData!.avatarUrl,
+            name: userData!.name,
+          };
+
+          const matchedAvatar = avatarOptions.find(
+            (option) => option.url === userData!.avatarUrl,
+          );
+          if (matchedAvatar) {
+            setSelectedAvatarOption(matchedAvatar);
+          }
+
+          reset(values);
+        }
+      }
+    };
+
+    setDefaultUserData();
+  }, [currentUser, reset]);
+
+  const handleCreateProfile = async (formData: UserEditModel) => {
     setIsLoading(true);
     try {
-      router.push("/(auth)/createTeam");
+      if (currentUser) {
+        await UserController.editUser(currentUser.uid, formData);
+        const userData = await UserController.getUser(currentUser.uid);
+
+        dispatch(setUser(userData as CurrentUser));
+
+        router.push("/(auth)/createTeam");
+      } else {
+        router.push("/(auth)");
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -100,18 +176,17 @@ const CreateProfile = () => {
                     className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.username ? "border-red-600" : "border-gray-920"} px-2 py-2`}
                   >
                     <TextInput
-                      placeholder="Enter your username"
-                      value={value}
                       autoCapitalize="none"
+                      className="flex-1 text-base-white placeholder:pbk-b1"
                       onChangeText={(text) => {
                         onChange(text);
-                        setErrorMessage("");
                       }}
-                      className="flex-1 text-base-white placeholder:pbk-b1"
+                      placeholder="Enter your username"
                       placeholderTextColor="gray"
+                      value={value}
                     />
                     {errors.username && (
-                      <WarningCircle size={20} color="#dc2626" weight="bold" />
+                      <WarningCircle color="#dc2626" size={20} weight="bold" />
                     )}
                   </View>
                 )}
@@ -133,21 +208,28 @@ const CreateProfile = () => {
                 name="name"
                 render={({ field: { onChange, value } }) => (
                   <View
-                    className={`mb-4 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.name || errorMessage ? "border-red-600" : "border-gray-920"} px-3 py-2`}
+                    className={`mb-4 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.name ? "border-red-600" : "border-gray-920"} px-3 py-2`}
                   >
                     <TextInput
-                      placeholder="Enter full name"
                       className="flex-1 text-base-white placeholder:pbk-b1"
-                      placeholderTextColor="gray"
-                      value={value}
                       onChangeText={(text) => {
                         onChange(text);
-                        setErrorMessage("");
                       }}
+                      placeholder="Enter full name"
+                      placeholderTextColor="gray"
+                      value={value}
                     />
+                    {errors.name && (
+                      <WarningCircle color="#dc2626" size={20} weight="bold" />
+                    )}
                   </View>
                 )}
               />
+              {errors.name && (
+                <Text className="pbk-b3 mb-4 text-red-600">
+                  {errors.name.message}
+                </Text>
+              )}
 
               <Text className="pbk-b2 mb-1.5 text-base-white">
                 Date of birth
@@ -157,7 +239,7 @@ const CreateProfile = () => {
                 name="dateOfBirth"
                 render={({ field: { onChange, value } }) => (
                   <>
-                    <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                    <Pressable onPress={() => setShowDatePicker(true)}>
                       <View
                         className={`mb-4 min-h-14 w-full flex-row items-center rounded-xl border ${
                           errors.dateOfBirth
@@ -166,7 +248,11 @@ const CreateProfile = () => {
                         } px-2 py-2`}
                       >
                         <TextInput
+                          className="flex-1 text-base-white placeholder:pbk-b1"
                           editable={false}
+                          placeholder="Enter date of birth"
+                          placeholderTextColor="gray"
+                          pointerEvents="none"
                           value={
                             value
                               ? new Date(value).toLocaleDateString("en-US", {
@@ -176,13 +262,16 @@ const CreateProfile = () => {
                                 })
                               : ""
                           }
-                          placeholder="Enter date of birth"
-                          className="flex-1 text-base-white placeholder:pbk-b1"
-                          placeholderTextColor="gray"
-                          pointerEvents="none"
                         />
+                        {errors.dateOfBirth && (
+                          <WarningCircle
+                            color="#dc2626"
+                            size={20}
+                            weight="bold"
+                          />
+                        )}
                       </View>
-                    </TouchableOpacity>
+                    </Pressable>
 
                     <Modal
                       animationType="slide"
@@ -194,84 +283,89 @@ const CreateProfile = () => {
                         onPress={() => setShowDatePicker(false)}
                       >
                         <View className="flex-1 items-center justify-end">
-                          <TouchableOpacity
-                            onPress={() => {}}
+                          <Pressable
                             className="w-full rounded-t-2xl bg-gray-920 p-8"
+                            onPress={() => {}}
                           >
                             <DateTimePicker
-                              maximumDate={new Date()}
                               display="spinner"
-                              themeVariant="dark"
-                              value={value ? new Date(value) : new Date()}
+                              maximumDate={new Date()}
                               mode="date"
                               onChange={(_, selectedDate) => {
                                 if (selectedDate) {
                                   onChange(selectedDate);
                                 }
                               }}
+                              themeVariant="dark"
+                              value={value ? new Date(value) : new Date()}
                             />
-                            <TouchableOpacity
+                            <Pressable
                               className="min-h-12 justify-center rounded-md bg-purple-600"
                               onPress={() => setShowDatePicker(false)}
                             >
                               <Text className="pbk-h6 text-center text-base-white">
                                 DONE
                               </Text>
-                            </TouchableOpacity>
-                          </TouchableOpacity>
+                            </Pressable>
+                          </Pressable>
                         </View>
                       </TouchableWithoutFeedback>
                     </Modal>
                   </>
                 )}
               />
+              {errors.dateOfBirth && (
+                <Text className="pbk-b3 mb-4 text-red-600">
+                  {errors.dateOfBirth.message}
+                </Text>
+              )}
 
               <Text className="pbk-b2 mb-1.5 text-base-white">Avatar</Text>
               <View className="mb-2 mt-4 flex-row items-center justify-between">
-                <TouchableOpacity onPress={() => setShowBottomDrawer(true)}>
+                <Pressable onPress={() => setShowBottomDrawer(true)}>
                   <Image
                     className="h-24 w-24 rounded-full border-2 border-purple-600"
-                    source={selectedAvatarUrl}
+                    source={selectedAvatarOption.source}
                   />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setShowBottomDrawer(true)}>
+                </Pressable>
+                <Pressable onPress={() => setShowBottomDrawer(true)}>
                   <Text className="text-purple-600">Change avatar</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
           </KeyboardAvoidingView>
 
           <View className="mb-8 justify-end bg-gray-950 px-6">
-            <TouchableOpacity
-              className={`min-h-12 justify-center rounded-md ${
-                !isValid ? "bg-purple-900" : "bg-purple-600"
-              }`}
-              disabled={!isValid || isLoading}
+            <Pressable
+              className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
+              disabled={isLoading}
               onPress={handleSubmit(handleCreateProfile)}
             >
-              <Text
-                className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
-              >
-                CONTINUE
-              </Text>
-            </TouchableOpacity>
+              {isLoading ? (
+                <Spinner />
+              ) : (
+                <Text className="pbk-h7 text-center text-base-white">
+                  CONTINUE
+                </Text>
+              )}
+            </Pressable>
           </View>
         </View>
       </TouchableWithoutFeedback>
 
       <BottomSheet
-        header={
-          <Text className="pbk-h6 text-center text-base-white">
-            Change avatar
-          </Text>
-        }
         footer={
-          <TouchableOpacity
+          <Pressable
             className="min-h-12 w-full justify-center rounded-md bg-purple-600"
             onPress={() => setShowBottomDrawer(false)}
           >
-            <Text className="pbk-h6 text-center text-base-white">SAVE</Text>
-          </TouchableOpacity>
+            <Text className="pbk-h7 text-center text-base-white">SAVE</Text>
+          </Pressable>
+        }
+        header={
+          <Text className="pbk-b1 text-center text-base-white">
+            Change avatar
+          </Text>
         }
         isOpen={showBottomDrawer}
         onClose={() => setShowBottomDrawer(false)}
@@ -279,24 +373,27 @@ const CreateProfile = () => {
       >
         <View className="flex-1 px-6 py-4">
           <View className="mb-6 flex-row flex-wrap justify-between">
-            {avatars.map((img, index) => {
-              const isSelected = selectedAvatarUrl === img;
+            {avatarOptions.map((avatarOption, index) => {
+              const isSelected = selectedAvatarOption === avatarOption;
               return (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => setSelectedAvatarUrl(img)}
+                <Pressable
                   className="relative mb-2.5 aspect-square w-[26%] items-center justify-center"
+                  key={index}
+                  onPress={() => {
+                    setSelectedAvatarOption(avatarOption);
+                    setValue("avatarUrl", avatarOption.url);
+                  }}
                 >
                   {isSelected && (
                     <View className="absolute -bottom-1 -left-1 -right-1 -top-1 rounded-full border-4 border-purple-600" />
                   )}
 
                   <Image
-                    source={img}
                     className="h-full w-full rounded-full"
                     resizeMode="cover"
+                    source={avatarOption.source}
                   />
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </View>
