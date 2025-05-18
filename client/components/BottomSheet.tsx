@@ -53,6 +53,8 @@ const BottomSheet = ({
   useAnimatedReaction(
     () => translateY.value,
     (currentTranslateY) => {
+      // TODO: Find a way to dynamically calculate the scrollViewMaxHeight based on the footer content.
+      // The 135 offset value is hardcoded right now to fit the exact height of a button in the footer.
       scrollViewMaxHeight.value = Math.abs(currentTranslateY + 135);
     },
   );
@@ -131,23 +133,19 @@ const BottomSheet = ({
     };
   });
 
-  const backdropStyle = useAnimatedStyle(() => {
-    return {
-      opacity: backdropOpacity.value,
-    };
-  });
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
+  }));
 
-  const scrollViewStyle = useAnimatedStyle(() => {
-    return {
-      maxHeight: scrollViewMaxHeight.value,
-    };
-  });
+  const scrollViewStyle = useAnimatedStyle(() => ({
+    maxHeight: scrollViewMaxHeight.value,
+  }));
 
   if (!visible) return null;
 
   return (
     <View className="absolute inset-0 z-50">
-      <Pressable onPress={onClose} className="absolute inset-0">
+      <Pressable className="absolute inset-0" onPress={onClose}>
         <Animated.View className="flex-1 bg-black/50" style={[backdropStyle]} />
       </Pressable>
 
