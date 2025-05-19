@@ -1,4 +1,6 @@
 ﻿import firestore from "@react-native-firebase/firestore";
+import { defaultTeam, Team } from "@/types/teamTypes";
+import { defaultUser, User } from "@/types/userTypes";
 
 const USERS_COLLECTION = "users";
 const TEAMS_COLLECTION = "teams";
@@ -17,13 +19,23 @@ export type TeamEditModel = {
 };
 
 export class UserController {
-  static getUser = async (userId: string) => {
+  static getUser = async (userId: string): Promise<User> => {
     try {
-      const userDoc = await firestore()
+      const user = await firestore()
         .collection(USERS_COLLECTION)
         .doc(userId)
         .get();
-      return userDoc.exists ? userDoc.data() : undefined;
+
+      return user.exists
+        ? {
+            avatarUrl: user.data()?.avatarUrl,
+            dateOfBirth: user.data()?.dateOfBirth?.toDate()?.toISOString(),
+            email: user.data()?.email,
+            id: user.id,
+            name: user.data()?.name,
+            username: user.data()?.username,
+          }
+        : defaultUser;
     } catch (error) {
       throw error;
     }
@@ -43,7 +55,10 @@ export class UserController {
     }
   };
 
-  static addUserTeam = async (userId: string, params: TeamEditModel) => {
+  static addUserTeam = async (
+    userId: string,
+    params: TeamEditModel,
+  ): Promise<string> => {
     try {
       const teamRef = await firestore()
         .collection(USERS_COLLECTION)
@@ -60,32 +75,44 @@ export class UserController {
     }
   };
 
-  static getUserTeam = async (userId: string, teamId: string) => {
+  static getUserTeam = async (
+    userId: string,
+    teamId: string,
+  ): Promise<Team> => {
     try {
-      const teamDoc = await firestore()
+      const team = await firestore()
         .collection(USERS_COLLECTION)
         .doc(userId)
         .collection(TEAMS_COLLECTION)
         .doc(teamId)
         .get();
 
-      return teamDoc.exists ? { id: teamDoc.id, ...teamDoc.data() } : undefined;
+      return team.exists
+        ? {
+            abbreviation: team.data()?.abbreviation,
+            id: team.id,
+            logoUrl: team.data()?.logoUrl,
+            name: team.data()?.name,
+          }
+        : defaultTeam;
     } catch (error) {
       throw error;
     }
   };
 
-  static getUserTeams = async (userId: string) => {
+  static getUserTeams = async (userId: string): Promise<Team[]> => {
     try {
-      const teamsSnapshot = await firestore()
+      const teams = await firestore()
         .collection(USERS_COLLECTION)
         .doc(userId)
         .collection(TEAMS_COLLECTION)
         .get();
 
-      return teamsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      return teams.docs.map((team) => ({
+        abbreviation: team.data()?.abbreviation,
+        id: team.id,
+        logoUrl: team.data()?.logoUrl,
+        name: team.data()?.name,
       }));
     } catch (error) {
       throw error;

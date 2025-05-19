@@ -129,7 +129,9 @@ const CreateProfile = () => {
 
           reset({
             avatarUrl: userData.avatarUrl,
-            dateOfBirth: userData.dateOfBirth?.toDate().toISOString(),
+            dateOfBirth: userData.dateOfBirth
+              ? new Date(userData.dateOfBirth)
+              : undefined,
             name: userData.name,
             username: userData.username,
           });
@@ -146,15 +148,7 @@ const CreateProfile = () => {
       if (currentUser) {
         await UserController.editUser(currentUser.uid, model);
         const userData = await UserController.getUser(currentUser.uid);
-        dispatch(
-          setUser({
-            avatarUrl: userData?.avatarUrl,
-            dateOfBirth: userData?.dateOfBirth?.toDate().toISOString(),
-            email: userData?.email,
-            id: userData?.userId,
-            username: userData?.username,
-          }),
-        );
+        dispatch(setUser(userData));
         router.push("/(auth)/createTeam");
       } else {
         router.push("/(auth)");
@@ -222,6 +216,7 @@ const CreateProfile = () => {
                     className={`mb-4 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.name ? "border-red-600" : "border-gray-920"} px-3 py-2`}
                   >
                     <TextInput
+                      autoCapitalize="words"
                       className="flex-1 text-base-white placeholder:pbk-b1"
                       onChangeText={(text) => {
                         onChange(text);
@@ -311,7 +306,7 @@ const CreateProfile = () => {
                                 }
                               }}
                               themeVariant="dark"
-                              value={value ?? new Date()}
+                              value={value ? new Date(value) : new Date()}
                             />
                             <Pressable
                               className="min-h-12 justify-center rounded-md bg-purple-600"
@@ -398,7 +393,7 @@ const CreateProfile = () => {
         <Controller
           control={control}
           name="avatarUrl"
-          render={({ field: { onChange, value } }) => (
+          render={({ field: { onChange } }) => (
             <View className="flex-1 px-6 py-4">
               <View className="mb-6 flex-row flex-wrap justify-between">
                 {avatarOptions.map((avatarOption, index) => {

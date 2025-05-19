@@ -19,15 +19,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
       if (user) {
         try {
           const userData = await UserController.getUser(user.uid);
-          dispatch(
-            setUser({
-              avatarUrl: userData?.avatarUrl,
-              dateOfBirth: userData?.dateOfBirth?.toDate().toISOString(),
-              email: userData?.email,
-              id: user.uid,
-              username: userData?.username,
-            }),
-          );
+          dispatch(setUser(userData));
         } catch (error) {
           console.error("Error fetching user document:", error);
         }

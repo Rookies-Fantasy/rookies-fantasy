@@ -21,8 +21,9 @@ import * as yup from "yup";
 import GoogleLogo from "@/assets/icons/google.svg";
 import Spinner from "@/components/Spinner";
 import { UserController } from "@/controllers/userController";
-import { useAppDispatch } from "@/state/hooks";
-import { setUser } from "@/state/slices/userSlice";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { selectIsTeamRegistered } from "@/state/slices/teamSlice";
+import { selectIsUserRegistered, setUser } from "@/state/slices/userSlice";
 import { LoginProvider } from "@/types/providers";
 import { signInWithGoogle } from "@/utils/socialAuth";
 
@@ -45,6 +46,8 @@ const Login = () => {
   const router = useRouter();
   const auth = getAuth();
   const dispatch = useAppDispatch();
+  const isUserRegistered = useAppSelector(selectIsUserRegistered);
+  const isTeamRegistered = useAppSelector(selectIsTeamRegistered);
 
   const {
     control,
@@ -73,19 +76,10 @@ const Login = () => {
 
   const handleAuthenticatedUser = async (user: FirebaseAuthTypes.User) => {
     try {
-      const userDoc = await UserController.getUser(user.uid);
+      const userData = await UserController.getUser(user.uid);
 
-      if (userDoc?.exists) {
-        const userData = userDoc.data();
-        dispatch(
-          setUser({
-            avatarUrl: userData?.avatarUrl,
-            dateOfBirth: userData?.dateOfBirth?.toDate().toISOString(),
-            email: userData?.email,
-            id: user.uid,
-            username: userData?.username,
-          }),
-        );
+      if (userData.id) {
+        dispatch(setUser(userData));
         router.replace("/(protected)");
       } else {
         dispatch(
@@ -109,7 +103,16 @@ const Login = () => {
         model.email.trim().toLowerCase(),
         model.password,
       );
-      router.replace("/(auth)/createProfile");
+
+      if (!isUserRegistered) {
+        router.replace("/(auth)/createProfile");
+      }
+
+      if (!isTeamRegistered) {
+        router.replace("/(auth)/createTeam");
+      }
+
+      router.replace("/(protected)");
     } catch (error) {
       console.log(error);
       if (typeof error === "object" && error !== null && "code" in error) {

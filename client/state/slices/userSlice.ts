@@ -1,15 +1,13 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { User } from "@/types/userTypes";
-
-const initialState: User = {};
+import { defaultUser, User } from "@/types/userTypes";
 
 const userSlice = createSlice({
   name: "user",
-  initialState,
+  initialState: defaultUser,
   reducers: {
     setUser: (_, action: PayloadAction<User>) => action.payload,
-    clearUser: () => initialState,
+    clearUser: () => defaultUser,
   },
 });
 

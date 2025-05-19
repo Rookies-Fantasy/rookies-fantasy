@@ -1,15 +1,13 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { Team } from "@/types/teamTypes";
-
-const initialState: Team = {};
+import { defaultTeam, Team } from "@/types/teamTypes";
 
 const teamSlice = createSlice({
   name: "team",
-  initialState,
+  initialState: defaultTeam,
   reducers: {
     setTeam: (_, action: PayloadAction<Team>) => action.payload,
-    clearTeam: () => initialState,
+    clearTeam: () => defaultTeam,
   },
 });
 
