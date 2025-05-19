@@ -14,7 +14,7 @@ export const createUserInDatabase = functions.auth
       await usersRef.doc(uid).set({
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         email: email || "",
-        id: uid,
+        userId: uid,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
       console.log("User created in the custom users table.");
