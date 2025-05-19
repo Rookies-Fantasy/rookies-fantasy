@@ -1,11 +1,4 @@
-import { useRouter } from "expo-router";
-import {
-  View,
-  Text,
-  Pressable,
-  ImageBackground,
-  StatusBar,
-} from "react-native";
+import { View, ImageBackground, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Carousel } from "@/components/Carousel";
 import { PressableLink } from "@/components/PressableLink";
@@ -50,35 +43,28 @@ const carouselData: CarouselData[] = [
   },
 ];
 
-const OnboardingScreen = () => {
-  const router = useRouter();
-  return (
-    <ImageBackground
-      className="flex-1 bg-gray-950"
-      resizeMode="cover"
-      source={require("@/assets/images/onboarding-background.png")}
-    >
-      <SafeAreaView className="flex-1 items-center justify-between">
-        <StatusBar barStyle="light-content" />
-        <Carousel data={carouselData} />
-        <View className="flex w-full gap-4 px-8 pb-8">
-          <Pressable
-            className="rounded-lg bg-purple-600 p-3"
-            onPress={() => router.push("/(auth)/signUp")}
-          >
-            <Text className="pbk-h7 text-center uppercase text-base-white">
-              Create an Account
-            </Text>
-          </Pressable>
-          <PressableLink
-            className="self-center rounded-lg p-3"
-            href="/login"
-            label="I Already Have An Account"
-          />
-        </View>
-      </SafeAreaView>
-    </ImageBackground>
-  );
-};
-
-export default OnboardingScreen;
+const Onboarding = () => (
+  <ImageBackground
+    className="flex-1 bg-gray-950"
+    resizeMode="cover"
+    source={require("@/assets/images/onboarding-background.png")}
+  >
+    <SafeAreaView className="flex-1 items-center justify-between">
+      <StatusBar barStyle="light-content" />
+      <Carousel data={carouselData} />
+      <View className="flex w-full gap-4 px-8 pb-8">
+        <PressableLink
+          className="rounded-lg bg-purple-600 p-3"
+          href="/(auth)/signUp"
+          label="Create an Account"
+        />
+        <PressableLink
+          className="self-center rounded-lg p-3"
+          href="/login"
+          label="I Already Have An Account"
+        />
+      </View>
+    </SafeAreaView>
+  </ImageBackground>
+);
+export default Onboarding;

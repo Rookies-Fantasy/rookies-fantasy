@@ -2,6 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import {
   getAuth,
   createUserWithEmailAndPassword,
+  sendEmailVerification,
 } from "@react-native-firebase/auth";
 import { router } from "expo-router";
 import { Eye, EyeSlash, WarningCircle, X } from "phosphor-react-native";
@@ -21,20 +22,21 @@ import GoogleLogo from "@/assets/icons/google.svg";
 import Spinner from "@/components/Spinner";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
+import { LoginProvider } from "@/types/providers";
 import { signInWithGoogle } from "@/utils/socialAuth";
 
 const schema = yup.object({
   email: yup
     .string()
     .required("Email is required")
-    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Enter a valid email address"),
+    .email("Enter a valid email address"),
   password: yup
     .string()
     .required("Password is required")
-    .min(8, "Password must be at least 88 characters"),
+    .min(8, "Password must be at least 8 characters"),
 });
 
-export type SignUpFormProps = {
+type SignUpFormData = {
   email: string;
   password: string;
 };
@@ -51,7 +53,7 @@ const SignUp = () => {
     handleSubmit,
     formState: { errors, isValid },
     setError,
-  } = useForm<SignUpFormProps>({
+  } = useForm<SignUpFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
       email: "",
@@ -60,25 +62,24 @@ const SignUp = () => {
     mode: "onSubmit",
   });
 
-  const signUpWithProvider = async (provider: string) => {
+  const signUpWithProvider = async (provider: LoginProvider) => {
     try {
-      if (provider === "google") {
+      if (provider === LoginProvider.Google) {
         const { user } = await signInWithGoogle();
         dispatch(
           setUser({
             userId: user.uid,
             email: user.email ?? undefined,
-            isLoading: false,
           }),
         );
-        router.push("/(auth)/createProfile");
+        router.replace("/(auth)/createProfile");
       }
     } catch (error) {
       console.log(error);
     }
   };
 
-  const signUpUser = async (data: SignUpFormProps) => {
+  const signUpUser = async (data: SignUpFormData) => {
     const { email, password } = data;
     setLoading(true);
     try {
@@ -87,15 +88,26 @@ const SignUp = () => {
         email,
         password,
       );
-      dispatch(
-        setUser({
-          userId: user.uid,
-          email: user.email ?? undefined,
-          isLoading: false,
-        }),
-      );
-      setLoading(false);
-      router.replace("/(auth)/createProfile");
+      if (user) {
+        await sendEmailVerification(user);
+        console.log("Verification email sent");
+      }
+      const intervalId = setInterval(async () => {
+        await auth.currentUser?.reload();
+        if (auth.currentUser?.emailVerified) {
+          clearInterval(intervalId);
+
+          dispatch(
+            setUser({
+              userId: user.uid,
+              email: user.email ?? undefined,
+            }),
+          );
+
+          setLoading(false);
+          router.replace("/(auth)/createProfile");
+        }
+      }, 3000);
     } catch (error) {
       console.log(error);
 
@@ -217,7 +229,7 @@ const SignUp = () => {
             )}
           </View>
           <Pressable
-            className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full justify-center rounded-md`}
+            className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
             disabled={!isValid}
             onPress={handleSubmit(signUpUser)}
           >
@@ -254,7 +266,7 @@ const SignUp = () => {
 
           <Pressable
             className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
-            onPress={() => signUpWithProvider("google")}
+            onPress={() => signUpWithProvider(LoginProvider.Google)}
           >
             <GoogleLogo height={20} width={20} />
             <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
