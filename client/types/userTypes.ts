@@ -1,7 +1,7 @@
-export type CurrentUser = {
-  userId?: string;
-  username?: string;
+export type User = {
+  avatarUrl?: string;
+  dateOfBirth?: string;
   email?: string;
-  dob?: string;
-  avatar?: string;
+  id?: string;
+  username?: string;
 };

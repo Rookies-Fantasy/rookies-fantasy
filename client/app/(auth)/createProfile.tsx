@@ -1,9 +1,8 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getAuth } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 import { router } from "expo-router";
-import { Spinner, WarningCircle } from "phosphor-react-native";
+import { WarningCircle } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -20,9 +19,10 @@ import {
 } from "react-native";
 import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
+import Spinner from "@/components/Spinner";
 import { UserController, UserEditModel } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
-import { CurrentUser, setUser } from "@/state/slices/userSlice";
+import { setUser } from "@/state/slices/userSlice";
 
 type AvatarOption = {
   url: string;
@@ -73,7 +73,14 @@ const avatarOptions: AvatarOption[] = [
 ];
 
 const schema = yup.object({
-  avatarUrl: yup.string().required("Avatar is required"),
+  avatarUrl: yup
+    .string()
+    .required("Avatar is required")
+    .test(
+      "not-default-avatar",
+      "Avatar is required",
+      (value) => value !== avatarOptions[0].url,
+    ),
   dateOfBirth: yup.date().required("Date of Birth is required"),
   username: yup.string().required("Username is required"),
   name: yup.string().required("Name is required"),
@@ -90,18 +97,18 @@ const CreateProfile = () => {
     useState<AvatarOption>(avatarOptions[0]);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>();
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-    setValue,
     reset,
   } = useForm<UserEditModel>({
     resolver: yupResolver(schema),
     defaultValues: {
       avatarUrl: "",
-      dateOfBirth: new Date(),
+      dateOfBirth: undefined,
       username: "",
       name: "",
     },
@@ -112,14 +119,7 @@ const CreateProfile = () => {
     const setDefaultUserData = async () => {
       if (currentUser) {
         const userData = await UserController.getUser(currentUser.uid);
-        if (userData !== undefined) {
-          const values: UserEditModel = {
-            dateOfBirth: userData!.dateOfBirth.toDate(),
-            username: userData!.username,
-            avatarUrl: userData!.avatarUrl,
-            name: userData!.name,
-          };
-
+        if (userData) {
           const matchedAvatar = avatarOptions.find(
             (option) => option.url === userData!.avatarUrl,
           );
@@ -127,7 +127,12 @@ const CreateProfile = () => {
             setSelectedAvatarOption(matchedAvatar);
           }
 
-          reset(values);
+          reset({
+            avatarUrl: userData.avatarUrl,
+            dateOfBirth: userData.dateOfBirth?.toDate().toISOString(),
+            name: userData.name,
+            username: userData.username,
+          });
         }
       }
     };
@@ -135,15 +140,21 @@ const CreateProfile = () => {
     setDefaultUserData();
   }, [currentUser, reset]);
 
-  const handleCreateProfile = async (formData: UserEditModel) => {
+  const handleCreateProfile = async (model: UserEditModel) => {
     setIsLoading(true);
     try {
       if (currentUser) {
-        await UserController.editUser(currentUser.uid, formData);
+        await UserController.editUser(currentUser.uid, model);
         const userData = await UserController.getUser(currentUser.uid);
-
-        dispatch(setUser(userData as CurrentUser));
-
+        dispatch(
+          setUser({
+            avatarUrl: userData?.avatarUrl,
+            dateOfBirth: userData?.dateOfBirth?.toDate().toISOString(),
+            email: userData?.email,
+            id: userData?.userId,
+            username: userData?.username,
+          }),
+        );
         router.push("/(auth)/createTeam");
       } else {
         router.push("/(auth)");
@@ -239,7 +250,12 @@ const CreateProfile = () => {
                 name="dateOfBirth"
                 render={({ field: { onChange, value } }) => (
                   <>
-                    <Pressable onPress={() => setShowDatePicker(true)}>
+                    <Pressable
+                      onPress={() => {
+                        setSelectedDate(value ?? new Date());
+                        setShowDatePicker(true);
+                      }}
+                    >
                       <View
                         className={`mb-4 min-h-14 w-full flex-row items-center rounded-xl border ${
                           errors.dateOfBirth
@@ -283,31 +299,34 @@ const CreateProfile = () => {
                         onPress={() => setShowDatePicker(false)}
                       >
                         <View className="flex-1 items-center justify-end">
-                          <Pressable
-                            className="w-full rounded-t-2xl bg-gray-920 p-8"
-                            onPress={() => {}}
-                          >
+                          <View className="w-full rounded-t-2xl bg-gray-920 p-8">
                             <DateTimePicker
                               display="spinner"
                               maximumDate={new Date()}
                               mode="date"
                               onChange={(_, selectedDate) => {
                                 if (selectedDate) {
+                                  setSelectedDate(selectedDate);
                                   onChange(selectedDate);
                                 }
                               }}
                               themeVariant="dark"
-                              value={value ? new Date(value) : new Date()}
+                              value={value ?? new Date()}
                             />
                             <Pressable
                               className="min-h-12 justify-center rounded-md bg-purple-600"
-                              onPress={() => setShowDatePicker(false)}
+                              onPress={() => {
+                                if (selectedDate) {
+                                  onChange(selectedDate);
+                                }
+                                setShowDatePicker(false);
+                              }}
                             >
                               <Text className="pbk-h6 text-center text-base-white">
                                 DONE
                               </Text>
                             </Pressable>
-                          </Pressable>
+                          </View>
                         </View>
                       </TouchableWithoutFeedback>
                     </Modal>
@@ -332,6 +351,11 @@ const CreateProfile = () => {
                   <Text className="text-purple-600">Change avatar</Text>
                 </Pressable>
               </View>
+              {errors.avatarUrl && (
+                <Text className="pbk-b3 mb-4 text-red-600">
+                  {errors.avatarUrl.message}
+                </Text>
+              )}
             </View>
           </KeyboardAvoidingView>
 
@@ -371,33 +395,40 @@ const CreateProfile = () => {
         onClose={() => setShowBottomDrawer(false)}
         snapPoints={["66%"]}
       >
-        <View className="flex-1 px-6 py-4">
-          <View className="mb-6 flex-row flex-wrap justify-between">
-            {avatarOptions.map((avatarOption, index) => {
-              const isSelected = selectedAvatarOption === avatarOption;
-              return (
-                <Pressable
-                  className="relative mb-2.5 aspect-square w-[26%] items-center justify-center"
-                  key={index}
-                  onPress={() => {
-                    setSelectedAvatarOption(avatarOption);
-                    setValue("avatarUrl", avatarOption.url);
-                  }}
-                >
-                  {isSelected && (
-                    <View className="absolute -bottom-1 -left-1 -right-1 -top-1 rounded-full border-4 border-purple-600" />
-                  )}
+        <Controller
+          control={control}
+          name="avatarUrl"
+          render={({ field: { onChange, value } }) => (
+            <View className="flex-1 px-6 py-4">
+              <View className="mb-6 flex-row flex-wrap justify-between">
+                {avatarOptions.map((avatarOption, index) => {
+                  const isSelected =
+                    selectedAvatarOption.url === avatarOption.url;
 
-                  <Image
-                    className="h-full w-full rounded-full"
-                    resizeMode="cover"
-                    source={avatarOption.source}
-                  />
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+                  return (
+                    <Pressable
+                      className="relative mb-2.5 aspect-square w-[26%] items-center justify-center"
+                      key={index}
+                      onPress={() => {
+                        onChange(avatarOption.url);
+                        setSelectedAvatarOption(avatarOption);
+                      }}
+                    >
+                      {isSelected && (
+                        <View className="absolute -bottom-1 -left-1 -right-1 -top-1 rounded-full border-4 border-purple-600" />
+                      )}
+                      <Image
+                        className="h-full w-full rounded-full"
+                        resizeMode="cover"
+                        source={avatarOption.source}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+        />
       </BottomSheet>
     </View>
   );
