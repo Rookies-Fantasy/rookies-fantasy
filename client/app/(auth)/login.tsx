@@ -4,7 +4,6 @@ import {
   getAuth,
   signInWithEmailAndPassword,
 } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import { X, Eye, EyeSlash, WarningCircle } from "phosphor-react-native";
 import { useState } from "react";
@@ -21,11 +20,11 @@ import {
 import * as yup from "yup";
 import GoogleLogo from "@/assets/icons/google.svg";
 import Spinner from "@/components/Spinner";
+import { UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
 import { LoginProvider } from "@/types/providers";
 import { signInWithGoogle } from "@/utils/socialAuth";
-import { UserController } from "@/controllers/userController";
 
 const schema = yup.object({
   email: yup
@@ -35,7 +34,7 @@ const schema = yup.object({
   password: yup.string().required("Password is required"),
 });
 
-type LoginFormData = {
+type LoginFormModel = {
   email: string;
   password: string;
 };
@@ -52,7 +51,7 @@ const Login = () => {
     handleSubmit,
     formState: { errors, isValid },
     setError,
-  } = useForm<LoginFormData>({
+  } = useForm<LoginFormModel>({
     resolver: yupResolver(schema),
     mode: "onSubmit",
     defaultValues: {
@@ -76,23 +75,22 @@ const Login = () => {
     try {
       const userDoc = await UserController.getUser(user.uid);
 
-      if (userDoc.exists) {
+      if (userDoc?.exists) {
         const userData = userDoc.data();
-
-        const mappedUser = {
-          userId: user.uid,
-          email: userData?.email ?? undefined,
-          username: userData?.username,
-          avatar: userData?.avatarUrl,
-          dob: userData?.dateOfBirth,
-        };
-
-        dispatch(setUser(mappedUser));
+        dispatch(
+          setUser({
+            avatarUrl: userData?.avatarUrl,
+            dateOfBirth: userData?.dateOfBirth?.toDate().toISOString(),
+            email: userData?.email,
+            id: user.uid,
+            username: userData?.username,
+          }),
+        );
         router.replace("/(protected)");
       } else {
         dispatch(
           setUser({
-            userId: user.uid,
+            id: user.uid,
             email: user.email ?? undefined,
           }),
         );
@@ -103,14 +101,15 @@ const Login = () => {
     }
   };
 
-  const handleLogin = async (data: LoginFormData) => {
+  const handleLogin = async (model: LoginFormModel) => {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(
         auth,
-        data.email.trim().toLowerCase(),
-        data.password,
+        model.email.trim().toLowerCase(),
+        model.password,
       );
+      router.replace("/(auth)/createProfile");
     } catch (error) {
       console.log(error);
       if (typeof error === "object" && error !== null && "code" in error) {
