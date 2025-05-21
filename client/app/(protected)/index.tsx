@@ -31,7 +31,7 @@ const Home = () => {
       </Pressable>
       <Text>{user.username}</Text>
       <Text>{user.email}</Text>
-      <Text>{user.userId}</Text>
+      <Text>{user.id}</Text>
     </View>
   );
 };
