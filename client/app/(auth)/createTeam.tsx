@@ -16,13 +16,12 @@ import {
   Pressable,
 } from "react-native";
 import * as yup from "yup";
-import BackIcon from "@/assets/icons/arrow-square-left.svg";
+import BackIcon from "@/assets/icons/back-icon.svg";
 import BottomSheet from "@/components/BottomSheet";
 import Spinner from "@/components/Spinner";
 import { TeamEditModel, UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
 import { setTeam } from "@/state/slices/teamSlice";
-import { setUser } from "@/state/slices/userSlice";
 
 type LogoOption = {
   url: string;
