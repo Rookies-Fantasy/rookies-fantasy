@@ -36,7 +36,7 @@ const schema = yup.object({
     .min(8, "Password must be at least 8 characters"),
 });
 
-type SignUpFormData = {
+type SignUpFormModel = {
   email: string;
   password: string;
 };
@@ -53,7 +53,7 @@ const SignUp = () => {
     handleSubmit,
     formState: { errors, isValid },
     setError,
-  } = useForm<SignUpFormData>({
+  } = useForm<SignUpFormModel>({
     resolver: yupResolver(schema),
     defaultValues: {
       email: "",
@@ -68,7 +68,7 @@ const SignUp = () => {
         const { user } = await signInWithGoogle();
         dispatch(
           setUser({
-            userId: user.uid,
+            id: user.uid,
             email: user.email ?? undefined,
           }),
         );
@@ -79,14 +79,13 @@ const SignUp = () => {
     }
   };
 
-  const signUpUser = async (data: SignUpFormData) => {
-    const { email, password } = data;
+  const signUpUser = async (model: SignUpFormModel) => {
     setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
-        email,
-        password,
+        model.email,
+        model.password,
       );
       if (user) {
         await sendEmailVerification(user);
@@ -99,7 +98,7 @@ const SignUp = () => {
 
           dispatch(
             setUser({
-              userId: user.uid,
+              id: user.uid,
               email: user.email ?? undefined,
             }),
           );

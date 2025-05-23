@@ -1,31 +1,27 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { CurrentUser } from "@/types/userTypes";
-
-const initialState: CurrentUser = {};
+import { defaultUser, User } from "@/types/userTypes";
 
 const userSlice = createSlice({
   name: "user",
-  initialState,
+  initialState: defaultUser,
   reducers: {
-    setUser: (_, action: PayloadAction<CurrentUser>) => ({
-      ...action.payload,
-    }),
-    setUsername: (state, action: PayloadAction<string>) => {
-      state.username = action.payload;
-    },
-    clearUser: () => initialState,
+    setUser: (_, action: PayloadAction<User>) => action.payload,
+    clearUser: () => defaultUser,
   },
 });
 
-export const selectCurrentUserId = (state: RootState) => state.user.userId;
+export const selectUserId = (state: RootState) => state.user.id;
 
 export const selectIsUserSignedIn = (state: RootState): boolean =>
-  typeof state.user.userId === "string" && state.user.userId.length > 0;
+  typeof state.user.id === "string" && state.user.id.length > 0;
 
-export const selectIsRegistered = (state: RootState): boolean =>
-  state.user.userId !== undefined && state.user.username !== undefined;
+export const selectIsUserRegistered = (state: RootState): boolean =>
+  state.user.id !== undefined &&
+  state.user.username !== undefined &&
+  state.user.dateOfBirth !== undefined &&
+  state.user.avatarUrl !== undefined;
 
-export const { setUsername, setUser, clearUser } = userSlice.actions;
+export const { setUser, clearUser } = userSlice.actions;
 
 export default userSlice.reducer;
