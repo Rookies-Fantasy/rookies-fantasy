@@ -16,6 +16,7 @@ import {
   TouchableWithoutFeedback,
   TextInput,
   Pressable,
+  Alert,
 } from "react-native";
 import * as yup from "yup";
 import GoogleLogo from "@/assets/icons/google.svg";
@@ -90,7 +91,7 @@ const SignUp = () => {
       );
       if (user) {
         await sendEmailVerification(user);
-        console.log("Verification email sent");
+        Alert.alert("Verification email sent!");
       }
       const intervalId = setInterval(async () => {
         await auth.currentUser?.reload();
