@@ -1,8 +1,9 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { CurrentUser } from "@/types/userTypes";
+import { isNotNil } from "@/utils/jsUtils";
 
-const initialState: CurrentUser = {};
+const initialState: CurrentUser = { emailVerified: false };
 
 const userSlice = createSlice({
   name: "user",
@@ -18,13 +19,16 @@ const userSlice = createSlice({
   },
 });
 
-export const selectCurrentUserId = (state: RootState) => state.user.userId;
+export const selectCurrentUserId = (state: RootState) => state.user.id;
 
 export const selectIsUserSignedIn = (state: RootState): boolean =>
-  typeof state.user.userId === "string" && state.user.userId.length > 0;
+  !!state.user.id;
 
-export const selectIsRegistered = (state: RootState): boolean =>
-  state.user.userId !== undefined && state.user.username !== undefined;
+export const selectIsUserRegistered = (state: RootState): boolean =>
+  isNotNil(state.user.id) && isNotNil(state.user.username);
+
+export const selectIsUserVerified = (state: RootState): boolean =>
+  state.user.emailVerified === true;
 
 export const { setUsername, setUser, clearUser } = userSlice.actions;
 

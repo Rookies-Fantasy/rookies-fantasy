@@ -1,12 +1,10 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  FirebaseAuthTypes,
   getAuth,
   signInWithEmailAndPassword,
 } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
-import { X, Eye, EyeSlash, WarningCircle } from "phosphor-react-native";
+import { Eye, EyeSlash, WarningCircle, ArrowLeft } from "phosphor-react-native";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -14,17 +12,12 @@ import {
   KeyboardAvoidingView,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   Keyboard,
   Pressable,
 } from "react-native";
 import * as yup from "yup";
-import GoogleLogo from "@/assets/icons/google.svg";
 import Spinner from "@/components/Spinner";
-import { useAppDispatch } from "@/state/hooks";
-import { setUser } from "@/state/slices/userSlice";
-import { LoginProvider } from "@/types/providers";
-import { signInWithGoogle } from "@/utils/socialAuth";
+import SSOButtons from "@/components/SSOButtons";
 
 const schema = yup.object({
   email: yup
@@ -44,12 +37,11 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const auth = getAuth();
-  const dispatch = useAppDispatch();
 
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     setError,
   } = useForm<LoginFormData>({
     resolver: yupResolver(schema),
@@ -59,48 +51,6 @@ const Login = () => {
       password: "",
     },
   });
-
-  const logInWithProvider = async (provider: LoginProvider) => {
-    try {
-      if (provider === LoginProvider.Google) {
-        const { user } = await signInWithGoogle();
-        await handleAuthenticatedUser(user);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleAuthenticatedUser = async (user: FirebaseAuthTypes.User) => {
-    try {
-      const userDoc = await firestore().collection("users").doc(user.uid).get();
-
-      if (userDoc.exists) {
-        const userData = userDoc.data();
-
-        const mappedUser = {
-          userId: user.uid,
-          email: userData?.email ?? undefined,
-          username: userData?.username,
-          avatar: userData?.avatarUrl,
-          dob: userData?.dateOfBirth,
-        };
-
-        dispatch(setUser(mappedUser));
-        router.replace("/(protected)");
-      } else {
-        dispatch(
-          setUser({
-            userId: user.uid,
-            email: user.email ?? undefined,
-          }),
-        );
-        router.replace("/(auth)/createProfile");
-      }
-    } catch (error) {
-      console.log("Failed to handle user after auth", error);
-    }
-  };
 
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -144,42 +94,46 @@ const Login = () => {
 
   return (
     <View className="flex-1 bg-gray-950">
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior="padding"
           className="flex-1 flex-col px-6 py-4"
         >
-          <Pressable
-            className="my-16 size-8 items-center justify-center self-end rounded-md border border-gray-900 p-4"
-            onPress={() => router.back()}
-          >
-            <X color="white" size={20} weight="bold" />
-          </Pressable>
+          <View className="my-20 flex-row items-center gap-4">
+            <Pressable
+              className="size-8 items-center justify-center rounded-md border border-gray-900 p-4"
+              onPress={() => router.dismissAll()}
+            >
+              <ArrowLeft color="white" size={20} weight="bold" />
+            </Pressable>
 
-          <Text className="pbk-h5 mb-8 text-base-white">Login</Text>
-          <Text className="pbk-b2 mb-1.5 text-base-white">Email</Text>
+            <Text className="pbk-h5 text-base-white">Login</Text>
+          </View>
           <Controller
             control={control}
             name="email"
             render={({ field: { onChange, value } }) => (
-              <View
-                className={`mb-1 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.email ? "border-red-600" : "border-gray-920"} px-2 py-2`}
-              >
-                <TextInput
-                  autoCapitalize="none"
-                  className="flex-1 text-base-white placeholder:pbk-b1"
-                  onChangeText={(text) => {
-                    onChange(text);
-                  }}
-                  placeholder="Enter email"
-                  placeholderTextColor="gray"
-                  textAlignVertical="center"
-                  value={value}
-                />
-                {errors.email && (
-                  <WarningCircle color="red" size={20} weight="bold" />
-                )}
-              </View>
+              <>
+                <Text className="pbk-b2 mb-1.5 text-base-white">Email</Text>
+                <View
+                  className={`mb-2 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.email ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                >
+                  <TextInput
+                    autoCapitalize="none"
+                    className="flex-1 text-base-white placeholder:pbk-b1"
+                    onChangeText={(text) => {
+                      onChange(text);
+                    }}
+                    placeholder="Enter email"
+                    placeholderTextColor="gray"
+                    textAlignVertical="center"
+                    value={value}
+                  />
+                  {errors.email && (
+                    <WarningCircle color="red" size={20} weight="bold" />
+                  )}
+                </View>
+              </>
             )}
           />
           {errors.email && (
@@ -187,39 +141,42 @@ const Login = () => {
               {errors.email.message}
             </Text>
           )}
-          <Text className="pbk-b2 mb-1.5 text-base-white">Password</Text>
 
           <Controller
             control={control}
             name="password"
             render={({ field: { onChange, value } }) => (
-              <View
-                className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password ? "border-red-600" : "border-gray-920"} px-3 py-2`}
-              >
-                <TextInput
-                  className="flex-1 text-base-white placeholder:pbk-b1"
-                  onChangeText={(text) => {
-                    onChange(text);
-                  }}
-                  placeholder="Enter password"
-                  placeholderTextColor="gray"
-                  secureTextEntry={hidePassword}
-                  value={value}
-                />
-                <Pressable
-                  className="flex-row gap-2"
-                  onPress={() => setHidePassword(!hidePassword)}
+              <>
+                <Text className="pbk-b2 mb-1.5 text-base-white">Password</Text>
+
+                <View
+                  className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password ? "border-red-600" : "border-gray-920"} px-3 py-2`}
                 >
-                  {hidePassword ? (
-                    <EyeSlash color="gray" size={20} weight="bold" />
-                  ) : (
-                    <Eye color="gray" size={20} weight="bold" />
-                  )}
-                  {errors.password && (
-                    <WarningCircle color="red" size={20} weight="bold" />
-                  )}
-                </Pressable>
-              </View>
+                  <TextInput
+                    className="flex-1 text-base-white placeholder:pbk-b1"
+                    onChangeText={(text) => {
+                      onChange(text);
+                    }}
+                    placeholder="Enter password"
+                    placeholderTextColor="gray"
+                    secureTextEntry={hidePassword}
+                    value={value}
+                  />
+                  <Pressable
+                    className="flex-row gap-2"
+                    onPress={() => setHidePassword(!hidePassword)}
+                  >
+                    {hidePassword ? (
+                      <EyeSlash color="gray" size={20} weight="bold" />
+                    ) : (
+                      <Eye color="gray" size={20} weight="bold" />
+                    )}
+                    {errors.password && (
+                      <WarningCircle color="red" size={20} weight="bold" />
+                    )}
+                  </Pressable>
+                </View>
+              </>
             )}
           />
           <View className="mb-5">
@@ -236,18 +193,14 @@ const Login = () => {
           </View>
 
           <Pressable
-            className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
-            disabled={!isValid || isLoading}
+            className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
+            disabled={isLoading}
             onPress={handleSubmit(handleLogin)}
           >
             {isLoading ? (
               <Spinner />
             ) : (
-              <Text
-                className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
-              >
-                LOGIN
-              </Text>
+              <Text className="pbk-h6 text-center text-base-white">LOGIN</Text>
             )}
           </Pressable>
 
@@ -264,17 +217,9 @@ const Login = () => {
             <View className="h-px flex-1 bg-gray-800" />
           </View>
 
-          <Pressable
-            className="mb-4 min-h-14 w-full flex-row items-center justify-center gap-2 rounded-md border border-gray-900 bg-gray-920"
-            onPress={() => logInWithProvider(LoginProvider.Google)}
-          >
-            <GoogleLogo height={20} width={20} />
-            <Text className="pbk-b1 rounded-lg text-center font-semibold text-base-white">
-              Continue with Google
-            </Text>
-          </Pressable>
+          <SSOButtons />
         </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+      </Pressable>
     </View>
   );
 };

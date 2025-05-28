@@ -1,13 +1,14 @@
 import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
-import { useState, useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { useState, useEffect, ReactNode } from "react";
+import { View } from "react-native";
+import Spinner from "./Spinner";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser, clearUser } from "@/state/slices/userSlice";
 import { CurrentUser } from "@/types/userTypes";
 
 type AuthListenerProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 const AuthListener = ({ children }: AuthListenerProps) => {
@@ -50,8 +51,8 @@ const AuthListener = ({ children }: AuthListenerProps) => {
 
   if (initializing) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View className="flex-1 items-center justify-center">
+        <Spinner />
       </View>
     );
   }

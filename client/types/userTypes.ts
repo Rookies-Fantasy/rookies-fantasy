@@ -1,7 +1,8 @@
 export type CurrentUser = {
-  userId?: string;
+  id?: string;
   username?: string;
   email?: string;
   dob?: string;
   avatar?: string;
+  emailVerified?: boolean;
 };

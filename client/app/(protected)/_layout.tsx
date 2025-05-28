@@ -2,19 +2,19 @@ import { Redirect, Tabs } from "expo-router";
 import { useAppSelector } from "@/state/hooks";
 import {
   selectCurrentUserId,
-  selectIsRegistered,
+  selectIsUserRegistered,
 } from "@/state/slices/userSlice";
 
 const AppLayout = () => {
   const isSignedIn = useAppSelector(selectCurrentUserId);
-  const isRegistered = useAppSelector(selectIsRegistered);
-
-  if (isSignedIn && !isRegistered) {
-    return <Redirect href="/(auth)/createProfile" />;
-  }
+  const isRegistered = useAppSelector(selectIsUserRegistered);
 
   if (!isSignedIn) {
     return <Redirect href="/(auth)" />;
+  }
+
+  if (isSignedIn && !isRegistered) {
+    return <Redirect href="/(auth)/createProfile" />;
   }
 
   return (

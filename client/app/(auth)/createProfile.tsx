@@ -8,7 +8,10 @@ const CreateProfile = () => {
   return (
     <View className="flex-1 items-center justify-center p-5">
       <Text className="pbk-h6 text-gray-950">This is temporary</Text>
-      <Text className="pbk-b1 text-gray-950">{user.userId}</Text>
+      <Text className="pbk-b1 text-gray-950">{user.id}</Text>
+      <Text className="pbk-b1 text-gray-950">
+        {user.emailVerified?.toString()}
+      </Text>
       <Text className="pbk-b1 text-gray-950">{user.email}</Text>
       <Text className="pbk-b1 text-gray-950">{user.username}</Text>
 
