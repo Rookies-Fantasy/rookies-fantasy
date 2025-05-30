@@ -10,6 +10,11 @@ export const createUserInDatabase = functions.auth
     const { uid, email, emailVerified } = user;
     const usersRef = admin.firestore().collection("users");
 
+    if (!email || !email.trim()) {
+      console.error(`${uid} has invalid or missing email`);
+      throw new Error("Email is required for user creation.");
+    }
+
     try {
       await usersRef.doc(uid).set({
         id: uid,
@@ -18,7 +23,6 @@ export const createUserInDatabase = functions.auth
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-      console.log("User created in the users table.");
     } catch (error) {
       console.error("Error creating user in Firestore:", error);
     }
