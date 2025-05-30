@@ -15,7 +15,6 @@ import {
   Keyboard,
   TextInput,
   Pressable,
-  Alert,
 } from "react-native";
 import * as yup from "yup";
 import Spinner from "@/components/Spinner";
