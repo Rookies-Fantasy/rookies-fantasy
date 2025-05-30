@@ -28,7 +28,7 @@ export const selectIsUserRegistered = (state: RootState): boolean =>
   isNotNil(state.user.id) && isNotNil(state.user.username);
 
 export const selectIsUserVerified = (state: RootState): boolean =>
-  state.user.emailVerified === true;
+  !!state.user.emailVerified;
 
 export const { setUsername, setUser, clearUser } = userSlice.actions;
 

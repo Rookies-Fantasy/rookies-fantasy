@@ -1,5 +1,5 @@
 import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Keyboard,
@@ -9,7 +9,6 @@ import {
   Pressable,
 } from "react-native";
 import MailIcon from "@/assets/icons/mail.svg";
-import { PressableLink } from "@/components/PressableLink";
 import Spinner from "@/components/Spinner";
 import { cn } from "@/utils/jsUtils";
 
@@ -19,6 +18,7 @@ const ConfirmReset = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const auth = getAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -83,13 +83,18 @@ const ConfirmReset = () => {
                 Resend email again in {cooldown} seconds.
               </Text>
             )}
-            <PressableLink
-              className="my-4 min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-              href="/(auth)/login"
-              label="RETURN TO LOGIN"
-            />
             <Pressable
-              className="min-h-12 w-full items-center justify-center bg-gray-950"
+              className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
+              onPress={() => {
+                router.dismissTo("/(auth)/login");
+              }}
+            >
+              <Text className="pbk-h7 text-center uppercase text-base-white">
+                RETURN TO LOGIN
+              </Text>
+            </Pressable>
+            <Pressable
+              className="min-h-12 w-full items-center justify-center"
               disabled={cooldown > 0 || isLoading}
               onPress={handleResendEmail}
             >

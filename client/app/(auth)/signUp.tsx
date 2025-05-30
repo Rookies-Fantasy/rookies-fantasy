@@ -67,7 +67,6 @@ const SignUp = () => {
 
       if (auth.currentUser) {
         await sendEmailVerification(auth.currentUser);
-        Alert.alert("Verification email sent!");
       }
 
       router.replace("/(auth)/emailVerification");
@@ -188,14 +187,14 @@ const SignUp = () => {
           />
           <View className="mb-5">
             <Text
-              className={`pbk-b3 ${errors.password || errorMessage ? "text-red-600" : "text-gray-600"}`}
+              className={`pbk-b2 ${errors.password || errorMessage ? "text-red-600" : "text-gray-600"}`}
             >
               {errors.password
                 ? errors.password.message
                 : "Password must be at least 8 characters"}
             </Text>
             {errorMessage && (
-              <Text className="pbk-b3 mb-4 text-red-600">{errorMessage}</Text>
+              <Text className="pbk-b2 mb-4 text-red-600">{errorMessage}</Text>
             )}
           </View>
           <Pressable
@@ -212,10 +211,10 @@ const SignUp = () => {
             )}
           </Pressable>
 
-          <Text className="pbk-b1 my-5 flex-row flex-wrap text-gray-600">
-            By signing up, you agree to our{" "}
-            <Text className="text-purple-600">Terms of Service</Text> and{" "}
-            <Text className="text-purple-600">Privacy Policy</Text>.
+          <Text className="pbk-b2 my-5 flex-row flex-wrap text-gray-600">
+            By signing up, you agree to our
+            <Text className="text-purple-600">{` Terms of Service `}</Text> and
+            <Text className="text-purple-600">{` Privacy Policy `}</Text>.
           </Text>
 
           <View className="flex-row items-center gap-2 pb-5">

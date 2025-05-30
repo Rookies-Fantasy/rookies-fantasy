@@ -12,7 +12,6 @@ import {
   Text,
 } from "react-native";
 import MailIcon from "@/assets/icons/mail.svg";
-import { PressableLink } from "@/components/PressableLink";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
 import { cn } from "@/utils/jsUtils";
@@ -121,18 +120,21 @@ const EmailVerification = () => {
             )}
 
             <Pressable
-              className="min-h-12 w-full items-center justify-center bg-gray-950"
+              className="my-4 min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
+              onPress={async () => {
+                router.dismissAll();
+                await auth.signOut();
+              }}
+            >
+              <Text className="pbk-h7 text-center uppercase text-base-white">
+                RETURN TO ONBOARDING
+              </Text>
+            </Pressable>
+            <Pressable
+              className="min-h-12 w-full items-center justify-center"
               disabled={cooldown > 0 || isLoading}
               onPress={handleResendEmail}
             >
-              <PressableLink
-                className="my-4 min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-                href="/(auth)"
-                label="RETURN TO ONBOARDING"
-                onPress={async () => {
-                  await auth.signOut();
-                }}
-              />
               {isLoading ? (
                 <Spinner />
               ) : (
