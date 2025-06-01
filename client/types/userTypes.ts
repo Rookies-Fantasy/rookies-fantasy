@@ -2,7 +2,7 @@ export type CurrentUser = {
   id?: string;
   username?: string;
   email?: string;
-  dob?: string;
+  dateOfBirth?: string;
   avatar?: string;
   emailVerified?: boolean;
 };

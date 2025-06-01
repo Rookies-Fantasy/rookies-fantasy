@@ -34,6 +34,12 @@ const AuthListener = ({ children }: AuthListenerProps) => {
               userData.updatedAt = userData.updatedAt.toDate().toISOString();
             }
 
+            if (userData?.dateOfBirth instanceof firestore.Timestamp) {
+              userData.dateOfBirth = userData.dateOfBirth
+                .toDate()
+                .toISOString();
+            }
+
             dispatch(setUser(userData as CurrentUser));
           }
         } catch (error) {

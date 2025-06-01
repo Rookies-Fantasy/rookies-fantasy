@@ -47,7 +47,7 @@ const SSOButtons = () => {
             email: user.email,
             username: userData?.username,
             avatar: userData?.avatarUrl,
-            dob: userData?.dateOfBirth,
+            dateOfBirth: userData?.dateOfBirth.toDate().toISOString(),
             emailVerified: userData?.emailVerified,
           };
 
