@@ -66,6 +66,8 @@ const EmailVerification = () => {
         router.replace("/(auth)/createProfile");
       }
     }, 3000);
+
+    return () => clearInterval(intervalId);
   }, [auth.currentUser, dispatch, firestore, router]);
 
   const handleResendEmail = async () => {
@@ -105,22 +107,21 @@ const EmailVerification = () => {
               We sent a verification link to {auth.currentUser?.email}. Please
               verify this email to move to the next step.
             </Text>
-            {errorMessage && (
-              <Text className="pbk-1 text-center text-red-600">
-                {errorMessage}
-              </Text>
-            )}
           </View>
 
-          <View className="flex-1 justify-end">
+          <View className="flex w-full flex-1 justify-end gap-4">
             {cooldown > 0 && (
-              <Text className="pbk-b2 text-center text-base-white">
+              <Text className="pbk-b2 p-3 text-center text-base-white">
                 Resend email again in {cooldown} seconds.
               </Text>
             )}
-
+            {errorMessage && (
+              <Text className="pbk-1 p-3 text-center text-red-600">
+                {errorMessage}
+              </Text>
+            )}
             <Pressable
-              className="my-4 min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
+              className="rounded-md bg-purple-600 p-3"
               onPress={async () => {
                 router.dismissAll();
                 await auth.signOut();
@@ -131,7 +132,7 @@ const EmailVerification = () => {
               </Text>
             </Pressable>
             <Pressable
-              className="min-h-12 w-full items-center justify-center"
+              className="p-3"
               disabled={cooldown > 0 || isLoading}
               onPress={handleResendEmail}
             >

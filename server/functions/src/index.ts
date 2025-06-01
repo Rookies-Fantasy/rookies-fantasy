@@ -10,7 +10,7 @@ export const createUserInDatabase = functions.auth
     const { uid, email, emailVerified } = user;
     const usersRef = admin.firestore().collection("users");
 
-    if (!email || !email.trim()) {
+    if (!!email?.trim()) {
       console.error(`${uid} has invalid or missing email`);
       throw new Error("Email is required for user creation.");
     }

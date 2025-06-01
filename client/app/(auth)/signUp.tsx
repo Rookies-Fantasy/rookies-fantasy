@@ -213,7 +213,7 @@ const SignUp = () => {
           <Text className="pbk-b2 my-5 flex-row flex-wrap text-gray-600">
             By signing up, you agree to our
             <Text className="text-purple-600">{` Terms of Service `}</Text> and
-            <Text className="text-purple-600">{` Privacy Policy `}</Text>.
+            <Text className="text-purple-600">{` Privacy Policy`}</Text>.
           </Text>
 
           <View className="flex-row items-center gap-2 pb-5">
