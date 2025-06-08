@@ -1,24 +1,29 @@
-import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { getAuth, sendEmailVerification } from "@react-native-firebase/auth";
+import { getFirestore } from "@react-native-firebase/firestore";
+import { useRouter } from "expo-router";
+import { Spinner } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import {
+  View,
+  Pressable,
   Keyboard,
   KeyboardAvoidingView,
-  View,
+  Alert,
   Text,
-  Pressable,
 } from "react-native";
 import MailIcon from "@/assets/icons/mail.svg";
-import Spinner from "@/components/Spinner";
+import { useAppDispatch } from "@/state/hooks";
+import { setUser } from "@/state/slices/userSlice";
 import { cn } from "@/utils/jsUtils";
 
-const ConfirmReset = () => {
-  const { email } = useLocalSearchParams<{ email: string }>();
+const EmailVerification = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const auth = getAuth();
+  const firestore = getFirestore();
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -29,6 +34,42 @@ const ConfirmReset = () => {
     }
   }, [cooldown]);
 
+  /**
+   * TODO: Remove polling and introduce cloud func and an onSnapshot listener
+   * to handle verification check
+   */
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      await auth.currentUser?.reload();
+
+      if (!auth.currentUser?.email) {
+        throw new Error("Verified user has no email");
+      }
+
+      if (auth.currentUser?.emailVerified) {
+        await firestore.collection("users").doc(auth.currentUser.uid).update({
+          emailVerified: auth.currentUser.emailVerified,
+          updatedAt: new Date(),
+        });
+
+        clearInterval(intervalId);
+
+        dispatch(
+          setUser({
+            id: auth.currentUser.uid,
+            email: auth.currentUser.email,
+            emailVerified: auth.currentUser.emailVerified,
+          }),
+        );
+
+        setIsLoading(false);
+        router.replace("/(auth)/createProfile");
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [auth.currentUser, dispatch, firestore, router]);
+
   const handleResendEmail = async () => {
     if (cooldown > 0) return;
 
@@ -36,19 +77,15 @@ const ConfirmReset = () => {
     setErrorMessage("");
 
     try {
-      await sendPasswordResetEmail(auth, email);
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser);
+        Alert.alert("Verification email sent!");
+      }
+
       setCooldown(60);
     } catch (error) {
-      const firebaseError = error as { code: string };
-
       console.error("Resend error:", error);
-      if (firebaseError.code === "auth/invalid-email") {
-        setErrorMessage("Please enter a valid email address.");
-      } else if (firebaseError.code === "auth/user-not-found") {
-        setErrorMessage("No user found with this email address.");
-      } else {
-        setErrorMessage("Something went wrong.");
-      }
+      setErrorMessage("Something went wrong.");
     } finally {
       setIsLoading(false);
     }
@@ -61,14 +98,14 @@ const ConfirmReset = () => {
           behavior="padding"
           className="my-16 flex-1 flex-col px-6 py-4"
         >
-          <View className="items-center">
+          <View className="mt-16 items-center">
             <MailIcon height={180} width={180} />
             <Text className="pbk-h5 mb-8 text-center text-base-white">
-              Reset password email sent!
+              Verification email sent!
             </Text>
             <Text className="pbk-b1 mb-8 text-center text-base-white">
-              We sent a password reset link to {email}. Please reset your
-              password within 24 hours.
+              We sent a verification link to {auth.currentUser?.email}. Please
+              verify this email to move to the next step.
             </Text>
           </View>
 
@@ -85,12 +122,13 @@ const ConfirmReset = () => {
             )}
             <Pressable
               className="rounded-md bg-purple-600 p-3"
-              onPress={() => {
-                router.dismissTo("/(auth)/login");
+              onPress={async () => {
+                router.dismissAll();
+                await auth.signOut();
               }}
             >
               <Text className="pbk-h7 text-center uppercase text-base-white">
-                RETURN TO LOGIN
+                RETURN TO ONBOARDING
               </Text>
             </Pressable>
             <Pressable
@@ -107,7 +145,7 @@ const ConfirmReset = () => {
                     cooldown > 0 ? "text-gray-400" : "text-base-white",
                   )}
                 >
-                  RESEND EMAIL
+                  RESEND VERIFICATION EMAIL
                 </Text>
               )}
             </Pressable>
@@ -118,4 +156,4 @@ const ConfirmReset = () => {
   );
 };
 
-export default ConfirmReset;
+export default EmailVerification;

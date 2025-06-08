@@ -1,32 +1,38 @@
-import { useEffect, useRef } from "react";
-import { Animated, Easing } from "react-native";
-import { cn } from "@/utils/cn";
+import { useEffect } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
+import { cn } from "@/utils/jsUtils";
 
 type SpinnerProps = {
   className?: string;
 };
 
 const Spinner = ({ className }: SpinnerProps) => {
-  const rotation = useRef(new Animated.Value(0)).current;
+  const rotation = useSharedValue(0);
 
   useEffect(() => {
-    const spinAnimation = Animated.loop(
-      Animated.timing(rotation, {
-        toValue: 1,
-        duration: 1000, // 1 second for full spin
+    rotation.value = withRepeat(
+      withTiming(360, {
+        duration: 1000,
         easing: Easing.linear,
-        useNativeDriver: true,
       }),
+      -1,
+      false,
     );
-    spinAnimation.start();
-
-    return () => spinAnimation.stop();
   }, [rotation]);
 
-  const spin = rotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  const animatedStyles = useAnimatedStyle(() => ({
+    transform: [
+      {
+        rotate: `${rotation.value}deg`,
+      },
+    ],
+  }));
 
   return (
     <Animated.View
@@ -34,7 +40,7 @@ const Spinner = ({ className }: SpinnerProps) => {
         "h-6 w-6 rounded-full border-2 border-white border-t-transparent",
         className,
       )}
-      style={{ transform: [{ rotate: spin }] }}
+      style={animatedStyles}
     />
   );
 };

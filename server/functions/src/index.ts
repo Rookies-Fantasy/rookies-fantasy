@@ -7,17 +7,22 @@ admin.initializeApp();
 export const createUserInDatabase = functions.auth
   .user()
   .onCreate(async (user: UserRecord) => {
-    const { uid, email } = user;
+    const { uid, email, emailVerified } = user;
     const usersRef = admin.firestore().collection("users");
+
+    if (!email?.trim()) {
+      console.error(`${uid} has invalid or missing email`);
+      throw new Error("Email is required for user creation.");
+    }
 
     try {
       await usersRef.doc(uid).set({
+        id: uid,
+        email: email,
+        emailVerified: emailVerified,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        email: email || "",
-        userId: uid,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-      console.log("User created in the custom users table.");
     } catch (error) {
       console.error("Error creating user in Firestore:", error);
     }

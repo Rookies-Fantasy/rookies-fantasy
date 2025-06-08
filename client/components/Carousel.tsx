@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { CarouselData } from "@/types/carouselData";
+import { isNotNil } from "@/utils/jsUtils";
 
 const { width } = Dimensions.get("screen");
 const defaultDotWidth = 8;
@@ -78,11 +79,7 @@ export const Carousel = ({ data }: CarouselProps) => {
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (
-        viewableItems[0] !== undefined &&
-        viewableItems[0].index !== undefined &&
-        viewableItems[0].index !== null
-      ) {
+      if (isNotNil(viewableItems[0]) && isNotNil(viewableItems[0].index)) {
         setCarouselIndex(viewableItems[0].index);
       }
     },

@@ -6,12 +6,12 @@ const AppLayout = () => {
   const isSignedIn = useAppSelector(selectUserId);
   const isRegistered = useAppSelector(selectIsUserRegistered);
 
-  if (isSignedIn && !isRegistered) {
-    return <Redirect href="/(auth)/createProfile" />;
-  }
-
   if (!isSignedIn) {
     return <Redirect href="/(auth)" />;
+  }
+
+  if (isSignedIn && !isRegistered) {
+    return <Redirect href="/(auth)/createProfile" />;
   }
 
   return (

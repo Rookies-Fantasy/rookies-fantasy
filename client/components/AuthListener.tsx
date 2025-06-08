@@ -1,4 +1,6 @@
 import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import Spinner from "./Spinner";
 import { useState, useEffect, ReactNode } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { UserController } from "@/controllers/userController";
@@ -35,8 +37,8 @@ const AuthListener = ({ children }: AuthListenerProps) => {
 
   if (initializing) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View className="flex-1 items-center justify-center">
+        <Spinner />
       </View>
     );
   }
