@@ -12,6 +12,7 @@ import {
   Text,
 } from "react-native";
 import MailIcon from "@/assets/icons/mail.svg";
+import { UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
 import { cn } from "@/utils/jsUtils";
@@ -47,9 +48,8 @@ const EmailVerification = () => {
       }
 
       if (auth.currentUser?.emailVerified) {
-        await firestore.collection("users").doc(auth.currentUser.uid).update({
+        await UserController.editUser(auth.currentUser.uid, {
           emailVerified: auth.currentUser.emailVerified,
-          updatedAt: new Date(),
         });
 
         clearInterval(intervalId);

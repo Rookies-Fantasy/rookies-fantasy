@@ -5,12 +5,13 @@ import { defaultUser, User } from "@/types/userTypes";
 const USERS_COLLECTION = "users";
 const TEAMS_COLLECTION = "teams";
 
-export type UserEditModel = {
+export type UserEditModel = Partial<{
   avatarUrl: string;
   dateOfBirth: Date;
+  emailVerified: boolean;
   name: string;
   username: string;
-};
+}>;
 
 export type TeamEditModel = {
   abbreviation: string;
