@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { getAuth } from "@react-native-firebase/auth";
 import { router } from "expo-router";
 import { WarningCircle } from "phosphor-react-native";
 import { useEffect, useState } from "react";
@@ -11,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   Keyboard,
   ImageSourcePropType,
   Modal,
@@ -21,7 +19,7 @@ import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
 import Spinner from "@/components/Spinner";
 import { UserController, UserEditModel } from "@/controllers/userController";
-import { useAppDispatch } from "@/state/hooks";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
 
 type AvatarOption = {
@@ -35,40 +33,40 @@ const avatarOptions: AvatarOption[] = [
     source: require("../../assets/images/placeholder-avatar.png"),
   },
   {
-    url: "../../assets/images/profile/profile-1.png",
-    source: require("../../assets/images/profile/profile-1.png"),
+    url: "../../assets/images/profile/1.png",
+    source: require("../../assets/images/profile/1.png"),
   },
   {
-    url: "../../assets/images/profile/profile-2.png",
-    source: require("../../assets/images/profile/profile-2.png"),
+    url: "../../assets/images/profile/2.png",
+    source: require("../../assets/images/profile/2.png"),
   },
   {
-    url: "../../assets/images/profile/profile-3.png",
-    source: require("../../assets/images/profile/profile-3.png"),
+    url: "../../assets/images/profile/3.png",
+    source: require("../../assets/images/profile/3.png"),
   },
   {
-    url: "../../assets/images/profile/profile-4.png",
-    source: require("../../assets/images/profile/profile-4.png"),
+    url: "../../assets/images/profile/4.png",
+    source: require("../../assets/images/profile/4.png"),
   },
   {
-    url: "../../assets/images/profile/profile-5.png",
-    source: require("../../assets/images/profile/profile-5.png"),
+    url: "../../assets/images/profile/5.png",
+    source: require("../../assets/images/profile/5.png"),
   },
   {
-    url: "../../assets/images/profile/profile-6.png",
-    source: require("../../assets/images/profile/profile-6.png"),
+    url: "../../assets/images/profile/6.png",
+    source: require("../../assets/images/profile/6.png"),
   },
   {
-    url: "../../assets/images/profile/profile-7.png",
-    source: require("../../assets/images/profile/profile-7.png"),
+    url: "../../assets/images/profile/7.png",
+    source: require("../../assets/images/profile/7.png"),
   },
   {
-    url: "../../assets/images/profile/profile-8.png",
-    source: require("../../assets/images/profile/profile-8.png"),
+    url: "../../assets/images/profile/8.png",
+    source: require("../../assets/images/profile/8.png"),
   },
   {
-    url: "../../assets/images/profile/profile-9.png",
-    source: require("../../assets/images/profile/profile-9.png"),
+    url: "../../assets/images/profile/9.png",
+    source: require("../../assets/images/profile/9.png"),
   },
 ];
 
@@ -87,8 +85,7 @@ const schema = yup.object({
 });
 
 const CreateProfile = () => {
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
+  const userId = useAppSelector((state) => state.user.id);
 
   const dispatch = useAppDispatch();
 
@@ -117,15 +114,13 @@ const CreateProfile = () => {
 
   useEffect(() => {
     const setDefaultUserData = async () => {
-      if (currentUser) {
-        const userData = await UserController.getUser(currentUser.uid);
+      if (userId) {
+        const userData = await UserController.getUser(userId);
         if (userData) {
           const matchedAvatar = avatarOptions.find(
-            (option) => option.url === userData!.avatarUrl,
+            (option) => option.url === userData.avatarUrl,
           );
-          if (matchedAvatar) {
-            setSelectedAvatarOption(matchedAvatar);
-          }
+          setSelectedAvatarOption(matchedAvatar || avatarOptions[0]);
 
           reset({
             avatarUrl: userData.avatarUrl,
@@ -140,19 +135,18 @@ const CreateProfile = () => {
     };
 
     setDefaultUserData();
-  }, [currentUser, reset]);
+  }, [userId, reset]);
 
   const handleCreateProfile = async (model: UserEditModel) => {
     setIsLoading(true);
     try {
-      if (currentUser) {
-        await UserController.editUser(currentUser.uid, model);
-        const userData = await UserController.getUser(currentUser.uid);
+      if (userId) {
+        await UserController.editUser(userId, model);
+        const userData = await UserController.getUser(userId);
         dispatch(setUser(userData));
         router.push("/(auth)/createTeam");
-      } else {
-        router.push("/(auth)");
       }
+      router.push("/(auth)");
     } catch (error) {
       console.log(error);
     } finally {
@@ -162,89 +156,66 @@ const CreateProfile = () => {
 
   return (
     <View className="flex-1 bg-gray-950">
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <View className="flex-1">
           <KeyboardAvoidingView behavior="padding" className="flex-1">
             <View className="flex-1 flex-col px-6 py-4">
-              <View className="my-8 size-8 self-end" />
-
-              <Text className="pbk-h5 mb-8 text-base-white">
+              <Text className="pbk-h5 mb-8 mt-20 text-base-white">
                 Tell us who you are
               </Text>
 
-              <Text className="pbk-b2 mb-1.5 text-base-white">Username</Text>
               <Controller
                 control={control}
                 name="username"
                 render={({ field: { onChange, value } }) => (
-                  <View
-                    className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.username ? "border-red-600" : "border-gray-920"} px-2 py-2`}
-                  >
-                    <TextInput
-                      autoCapitalize="none"
-                      className="flex-1 text-base-white placeholder:pbk-b1"
-                      onChangeText={(text) => {
-                        onChange(text);
-                      }}
-                      placeholder="Enter your username"
-                      placeholderTextColor="gray"
-                      value={value}
-                    />
-                    {errors.username && (
-                      <WarningCircle color="#dc2626" size={20} weight="bold" />
-                    )}
-                  </View>
+                  <>
+                    <Text className="pbk-b2 mb-1.5 text-base-white">
+                      Username
+                    </Text>
+                    <View
+                      className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.username ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                    >
+                      <TextInput
+                        autoCapitalize="none"
+                        className="flex-1 text-base-white placeholder:pbk-b1"
+                        onChangeText={(text) => {
+                          onChange(text);
+                        }}
+                        placeholder="Enter your username"
+                        placeholderTextColor="gray"
+                        value={value}
+                      />
+                      {errors.username && (
+                        <WarningCircle
+                          color="#dc2626"
+                          size={20}
+                          weight="bold"
+                        />
+                      )}
+                    </View>
+                  </>
                 )}
               />
-              {errors.username && (
-                <Text className="pbk-b3 mb-4 text-red-600">
-                  {errors.username.message}
-                </Text>
-              )}
-              <View className="mb-5">
-                <Text className="pbk-b3 text-gray-600">
-                  This is your display name. You can change it later.
-                </Text>
+              <View className="mb-4">
+                {errors.username ? (
+                  <Text className="pbk-b3 text-red-600">
+                    {errors.username.message}
+                  </Text>
+                ) : (
+                  <Text className="pbk-b3 text-gray-600">
+                    This is your display name. You can change it later.
+                  </Text>
+                )}
               </View>
 
-              <Text className="pbk-b2 mb-1.5 text-base-white">Name</Text>
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, value } }) => (
-                  <View
-                    className={`mb-4 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.name ? "border-red-600" : "border-gray-920"} px-3 py-2`}
-                  >
-                    <TextInput
-                      autoCapitalize="words"
-                      className="flex-1 text-base-white placeholder:pbk-b1"
-                      onChangeText={(text) => {
-                        onChange(text);
-                      }}
-                      placeholder="Enter full name"
-                      placeholderTextColor="gray"
-                      value={value}
-                    />
-                    {errors.name && (
-                      <WarningCircle color="#dc2626" size={20} weight="bold" />
-                    )}
-                  </View>
-                )}
-              />
-              {errors.name && (
-                <Text className="pbk-b3 mb-4 text-red-600">
-                  {errors.name.message}
-                </Text>
-              )}
-
-              <Text className="pbk-b2 mb-1.5 text-base-white">
-                Date of birth
-              </Text>
               <Controller
                 control={control}
                 name="dateOfBirth"
                 render={({ field: { onChange, value } }) => (
                   <>
+                    <Text className="pbk-b2 mb-1.5 text-base-white">
+                      Date of birth
+                    </Text>
                     <Pressable
                       onPress={() => {
                         setSelectedDate(value ?? new Date());
@@ -252,7 +223,7 @@ const CreateProfile = () => {
                       }}
                     >
                       <View
-                        className={`mb-4 min-h-14 w-full flex-row items-center rounded-xl border ${
+                        className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${
                           errors.dateOfBirth
                             ? "border-red-600"
                             : "border-gray-920"
@@ -290,7 +261,8 @@ const CreateProfile = () => {
                       transparent
                       visible={showDatePicker}
                     >
-                      <TouchableWithoutFeedback
+                      <Pressable
+                        className="flex-1"
                         onPress={() => setShowDatePicker(false)}
                       >
                         <View className="flex-1 items-center justify-end">
@@ -323,27 +295,41 @@ const CreateProfile = () => {
                             </Pressable>
                           </View>
                         </View>
-                      </TouchableWithoutFeedback>
+                      </Pressable>
                     </Modal>
                   </>
                 )}
               />
-              {errors.dateOfBirth && (
-                <Text className="pbk-b3 mb-4 text-red-600">
-                  {errors.dateOfBirth.message}
-                </Text>
-              )}
+              <View className="mb-4">
+                {errors.dateOfBirth && (
+                  <Text className="pbk-b3 mb-4 text-red-600">
+                    {errors.dateOfBirth.message}
+                  </Text>
+                )}
+              </View>
 
               <Text className="pbk-b2 mb-1.5 text-base-white">Avatar</Text>
               <View className="mb-2 mt-4 flex-row items-center justify-between">
-                <Pressable onPress={() => setShowBottomDrawer(true)}>
+                <Pressable
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setShowBottomDrawer(true);
+                  }}
+                >
                   <Image
                     className="h-24 w-24 rounded-full border-2 border-purple-600"
                     source={selectedAvatarOption.source}
                   />
                 </Pressable>
-                <Pressable onPress={() => setShowBottomDrawer(true)}>
-                  <Text className="text-purple-600">Change avatar</Text>
+                <Pressable
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setShowBottomDrawer(true);
+                  }}
+                >
+                  <Text className="pbk-b2 p-4 text-purple-600">
+                    Change avatar
+                  </Text>
                 </Pressable>
               </View>
               {errors.avatarUrl && (
@@ -370,7 +356,7 @@ const CreateProfile = () => {
             </Pressable>
           </View>
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
 
       <BottomSheet
         footer={

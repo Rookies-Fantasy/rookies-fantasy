@@ -1,6 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { defaultTeam, Team } from "@/types/teamTypes";
+import { isNotNil } from "@/utils/jsUtils";
 
 const teamSlice = createSlice({
   name: "team",
@@ -14,10 +15,7 @@ const teamSlice = createSlice({
 export const selectTeamId = (state: RootState) => state.team.id;
 
 export const selectIsTeamRegistered = (state: RootState): boolean =>
-  state.team.id !== undefined &&
-  state.team.abbreviation !== undefined &&
-  state.team.logoUrl !== undefined &&
-  state.team.name !== undefined;
+  isNotNil(state.team.id);
 
 export const { setTeam, clearTeam } = teamSlice.actions;
 

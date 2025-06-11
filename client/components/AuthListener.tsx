@@ -1,8 +1,7 @@
 import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
-import Spinner from "./Spinner";
 import { useState, useEffect, ReactNode } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
+import Spinner from "./Spinner";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser, clearUser } from "@/state/slices/userSlice";

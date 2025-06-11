@@ -3,11 +3,9 @@ import { RootState } from "../store";
 import { defaultUser, User } from "@/types/userTypes";
 import { isNotNil } from "@/utils/jsUtils";
 
-const initialState: User = { id: "", emailVerified: false };
-
 const userSlice = createSlice({
   name: "user",
-  initialState,
+  initialState: defaultUser,
   reducers: {
     setUser: (_, action: PayloadAction<User>) => action.payload,
     clearUser: () => defaultUser,

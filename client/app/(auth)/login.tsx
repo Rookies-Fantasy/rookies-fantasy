@@ -18,9 +18,6 @@ import {
 import * as yup from "yup";
 import Spinner from "@/components/Spinner";
 import SSOButtons from "@/components/SSOButtons";
-import { useAppSelector } from "@/state/hooks";
-import { selectIsTeamRegistered } from "@/state/slices/teamSlice";
-import { selectIsUserRegistered } from "@/state/slices/userSlice";
 
 const schema = yup.object({
   email: yup
@@ -40,8 +37,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const auth = getAuth();
-  const isUserRegistered = useAppSelector(selectIsUserRegistered);
-  const isTeamRegistered = useAppSelector(selectIsTeamRegistered);
 
   const {
     control,
@@ -65,16 +60,6 @@ const Login = () => {
         model.email.trim().toLowerCase(),
         model.password,
       );
-
-      if (!isUserRegistered) {
-        router.replace("/(auth)/createProfile");
-      }
-
-      if (!isTeamRegistered) {
-        router.replace("/(auth)/createTeam");
-      }
-
-      router.replace("/(protected)");
     } catch (error) {
       console.log(error);
       if (typeof error === "object" && error !== null && "code" in error) {

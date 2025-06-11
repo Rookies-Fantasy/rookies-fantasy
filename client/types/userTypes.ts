@@ -8,4 +8,4 @@ export type User = {
   username?: string;
 };
 
-export const defaultUser: User = { id: "" };
+export const defaultUser: User = { id: "", emailVerified: false };

@@ -1,7 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { getAuth } from "@react-native-firebase/auth";
 import { router } from "expo-router";
-import { WarningCircle } from "phosphor-react-native";
+import { ArrowLeft, WarningCircle } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -11,16 +10,14 @@ import {
   Text,
   TextInput,
   ImageSourcePropType,
-  TouchableWithoutFeedback,
   Keyboard,
   Pressable,
 } from "react-native";
 import * as yup from "yup";
-import BackIcon from "@/assets/icons/back-icon.svg";
 import BottomSheet from "@/components/BottomSheet";
 import Spinner from "@/components/Spinner";
 import { TeamEditModel, UserController } from "@/controllers/userController";
-import { useAppDispatch } from "@/state/hooks";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setTeam } from "@/state/slices/teamSlice";
 
 type LogoOption = {
@@ -34,36 +31,36 @@ const logoOptions: LogoOption[] = [
     source: require("../../assets/images/placeholder-avatar.png"),
   },
   {
-    url: "../../assets/images/team/team-1.png",
-    source: require("../../assets/images/team/team-1.png"),
+    url: "../../assets/images/team/1.png",
+    source: require("../../assets/images/team/1.png"),
   },
   {
-    url: "../../assets/images/team/team-2.png",
-    source: require("../../assets/images/team/team-2.png"),
+    url: "../../assets/images/team/2.png",
+    source: require("../../assets/images/team/2.png"),
   },
   {
-    url: "../../assets/images/team/team-3.png",
-    source: require("../../assets/images/team/team-3.png"),
+    url: "../../assets/images/team/3.png",
+    source: require("../../assets/images/team/3.png"),
   },
   {
-    url: "../../assets/images/team/team-4.png",
-    source: require("../../assets/images/team/team-4.png"),
+    url: "../../assets/images/team/4.png",
+    source: require("../../assets/images/team/4.png"),
   },
   {
-    url: "../../assets/images/team/team-5.png",
-    source: require("../../assets/images/team/team-5.png"),
+    url: "../../assets/images/team/5.png",
+    source: require("../../assets/images/team/5.png"),
   },
   {
-    url: "../../assets/images/team/team-6.png",
-    source: require("../../assets/images/team/team-6.png"),
+    url: "../../assets/images/team/6.png",
+    source: require("../../assets/images/team/6.png"),
   },
   {
-    url: "../../assets/images/team/team-7.png",
-    source: require("../../assets/images/team/team-7.png"),
+    url: "../../assets/images/team/7.png",
+    source: require("../../assets/images/team/7.png"),
   },
   {
-    url: "../../assets/images/team/team-8.png",
-    source: require("../../assets/images/team/team-8.png"),
+    url: "../../assets/images/team/8.png",
+    source: require("../../assets/images/team/8.png"),
   },
 ];
 
@@ -84,8 +81,8 @@ const schema = yup.object({
 });
 
 const CreateTeam = () => {
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
+  const userId = useAppSelector((state) => state.user.id);
+  const teamId = useAppSelector((state) => state.team.id);
 
   const dispatch = useAppDispatch();
 
@@ -113,17 +110,15 @@ const CreateTeam = () => {
 
   useEffect(() => {
     const setDefaultTeamData = async () => {
-      if (currentUser) {
-        const teams = await UserController.getUserTeams(currentUser.uid);
+      if (userId && teamId) {
+        const teams = await UserController.getUserTeams(teamId);
 
         // A user should only have either 0 or 1 team on the createTeam screen.
         if (teams?.length === 1) {
           const matchedLogo = logoOptions.find(
-            (option) => option.url === teams[0]!.logoUrl,
+            (option) => option.url === teams[0].logoUrl,
           );
-          if (matchedLogo) {
-            setSelectedLogoOption(matchedLogo);
-          }
+          setSelectedLogoOption(matchedLogo || logoOptions[0]);
 
           reset({
             abbreviation: teams[0].abbreviation,
@@ -135,31 +130,25 @@ const CreateTeam = () => {
     };
 
     setDefaultTeamData();
-  }, [currentUser, reset]);
+  }, [teamId, reset, userId]);
 
   const handleCreateTeam = async (model: TeamEditModel) => {
     setIsLoading(true);
     try {
-      if (!currentUser) {
-        router.push("/(auth)");
-        return;
-      }
-
-      const userId = currentUser.uid;
       const teams = await UserController.getUserTeams(userId);
 
-      let teamId: string;
+      let newTeamId: string;
 
       if (teams?.length === 0) {
-        teamId = await UserController.addUserTeam(userId, model);
+        newTeamId = await UserController.addUserTeam(userId, model);
       } else if (teams?.length === 1) {
-        teamId = teams[0].id;
-        await UserController.editUserTeam(userId, teamId, model);
+        newTeamId = teams[0].id;
+        await UserController.editUserTeam(userId, newTeamId, model);
       } else {
         throw new Error("Unexpected number of teams in create team screen");
       }
 
-      const teamData = await UserController.getUserTeam(userId, teamId);
+      const teamData = await UserController.getUserTeam(userId, newTeamId);
       if (teamData) {
         dispatch(
           setTeam({
@@ -181,101 +170,127 @@ const CreateTeam = () => {
 
   return (
     <View className="flex-1 bg-gray-950">
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <View className="flex-1">
           <KeyboardAvoidingView behavior="padding" className="flex-1">
             <View className="flex-1 flex-col px-6 py-4">
-              <View className="my-8 size-8 self-end" />
-
-              <View className="flex-row items-start">
+              <View className="mb-8 mt-20 flex-row items-center gap-4">
                 <Pressable
-                  className="mr-3"
+                  className="size-8 items-center justify-center rounded-md border border-gray-900"
                   onPress={() => router.push("/(auth)/createProfile")}
                 >
-                  <BackIcon fill="white" height={25} width={25} />
+                  <ArrowLeft color="white" size={20} weight="bold" />
                 </Pressable>
-                <Text className="pbk-h5 mb-8 text-base-white">
-                  Create your team
-                </Text>
+                <Text className="pbk-h5 text-base-white">Create your team</Text>
               </View>
 
-              <Text className="pbk-b2 mb-1.5 text-base-white">Team Name</Text>
               <Controller
                 control={control}
                 name="name"
                 render={({ field: { onChange, value } }) => (
-                  <View
-                    className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.name ? "border-red-600" : "border-gray-920"} px-2 py-2`}
-                  >
-                    <TextInput
-                      autoCapitalize="none"
-                      className="flex-1 text-base-white placeholder:pbk-b1"
-                      onChangeText={(text) => {
-                        onChange(text);
-                      }}
-                      placeholder="Enter team name"
-                      placeholderTextColor="gray"
-                      value={value}
-                    />
-                    {errors.name && (
-                      <WarningCircle color="#dc2626" size={20} weight="bold" />
-                    )}
-                  </View>
+                  <>
+                    <Text className="pbk-b2 mb-1.5 text-base-white">
+                      Team Name
+                    </Text>
+                    <View
+                      className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.name ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                    >
+                      <TextInput
+                        autoCapitalize="none"
+                        className="flex-1 text-base-white placeholder:pbk-b1"
+                        onChangeText={(text) => {
+                          onChange(text);
+                        }}
+                        placeholder="Enter team name"
+                        placeholderTextColor="gray"
+                        value={value}
+                      />
+                      {errors.name && (
+                        <WarningCircle
+                          color="#dc2626"
+                          size={20}
+                          weight="bold"
+                        />
+                      )}
+                    </View>
+                  </>
                 )}
               />
-              {errors.name && (
-                <Text className="pbk-b3 mb-2 text-red-600">
-                  {errors.name.message}
-                </Text>
-              )}
-              <View className="mb-5">
-                <Text className="pbk-b3 text-gray-600">
-                  This is your team name. You can change it later.
-                </Text>
+              <View className="mb-4">
+                {errors.name ? (
+                  <Text className="pbk-b3 text-red-600">
+                    {errors.name.message}
+                  </Text>
+                ) : (
+                  <Text className="pbk-b3 text-gray-600">
+                    This is your team name. You can change it later.
+                  </Text>
+                )}
               </View>
 
-              <Text className="pbk-b2 mb-1.5 text-base-white">
-                Team Abbreviation
-              </Text>
               <Controller
                 control={control}
                 name="abbreviation"
                 render={({ field: { onChange, value } }) => (
-                  <View
-                    className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.name ? "border-red-600" : "border-gray-920"} px-2 py-2`}
-                  >
-                    <TextInput
-                      autoCapitalize="characters"
-                      className="flex-1 text-base-white placeholder:pbk-b1"
-                      onChangeText={(text) => {
-                        onChange(text);
-                      }}
-                      placeholder="Enter team abbreviation"
-                      placeholderTextColor="gray"
-                      value={value}
-                    />
-                    {errors.abbreviation && (
-                      <WarningCircle color="#dc2626" size={20} weight="bold" />
-                    )}
-                  </View>
+                  <>
+                    <Text className="pbk-b2 mb-1.5 text-base-white">
+                      Team Abbreviation
+                    </Text>
+                    <View
+                      className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.abbreviation ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                    >
+                      <TextInput
+                        autoCapitalize="characters"
+                        className="flex-1 text-base-white placeholder:pbk-b1"
+                        maxLength={3}
+                        onChangeText={(text) => {
+                          onChange(text);
+                        }}
+                        placeholder="Enter team abbreviation"
+                        placeholderTextColor="gray"
+                        value={value}
+                      />
+                      {errors.abbreviation && (
+                        <WarningCircle
+                          color="#dc2626"
+                          size={20}
+                          weight="bold"
+                        />
+                      )}
+                    </View>
+                  </>
                 )}
               />
-              {errors.abbreviation && (
-                <Text className="pbk-b3 mb-4 text-red-600">
-                  {errors.abbreviation.message}
-                </Text>
-              )}
+              <View className="mb-4">
+                {errors.abbreviation && (
+                  <Text className="pbk-b3 text-red-600">
+                    {errors.abbreviation.message}
+                  </Text>
+                )}
+              </View>
 
               <Text className="pbk-b2 mb-1.5 text-base-white">Team logo</Text>
               <View className="mb-2 mt-4 flex-row items-center justify-between">
-                <Pressable onPress={() => setShowBottomDrawer(true)}>
+                <Pressable
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setShowBottomDrawer(true);
+                  }}
+                >
                   <Image
                     className="h-24 w-24 rounded-full border-2 border-purple-600"
                     source={selectedLogoOption.source}
                   />
                 </Pressable>
-                <Pressable onPress={() => setShowBottomDrawer(true)}>
-                  <Text className="text-purple-600">Change Team Logo</Text>
+                <Pressable
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setShowBottomDrawer(true);
+                  }}
+                >
+                  <Text className="pbk-b2 p-4 text-purple-600">
+                    Change team logo
+                  </Text>
                 </Pressable>
               </View>
               {errors.logoUrl && (
@@ -302,7 +317,7 @@ const CreateTeam = () => {
             </Pressable>
           </View>
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
 
       <BottomSheet
         footer={
