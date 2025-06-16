@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "teams": "node --experimental-json-modules fillNBATeams.js",
-    "players": "node --experimental-json-modules fillNBAPlayers.js"
+    "players": "node --experimental-json-modules fillNBAPlayers.js",
+    "playerAverages": "node --experimental-json-modules fillNBAPlayerAverages.js"
   },
   "keywords": [],
   "author": "",
