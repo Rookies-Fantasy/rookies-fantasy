@@ -1,4 +1,4 @@
-import { Redirect, Stack, Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { House, UserSquare } from "phosphor-react-native";
 import { useAppSelector } from "@/state/hooks";
 import {
@@ -19,15 +19,36 @@ const AppLayout = () => {
   }
 
   return (
-    <Stack
+    <Tabs
       screenOptions={{
         headerShown: false,
         animation: "none",
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: "#6336F5",
+        tabBarIconStyle: {
+          flex: 1,
+        },
+        tabBarStyle: {
+          backgroundColor: "#0A0D12",
+          borderTopColor: "#181D27",
+        },
       }}
     >
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(draft)" />
-    </Stack>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color }) => <House color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="myTeam"
+        options={{
+          title: "My Team",
+          tabBarIcon: ({ color }) => <UserSquare color={color} />,
+        }}
+      />
+    </Tabs>
   );
 };
 

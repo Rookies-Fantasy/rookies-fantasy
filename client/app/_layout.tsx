@@ -20,7 +20,7 @@ const RootLayoutNav = () => (
       <GestureHandlerRootView>
         <Provider store={store}>
           <AuthListener>
-            <StatusBar />
+            <StatusBar style="light" />
             <Stack screenOptions={{ animation: "none" }}>
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen
