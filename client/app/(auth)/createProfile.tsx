@@ -70,6 +70,11 @@ const avatarOptions: AvatarOption[] = [
   },
 ];
 
+export type UserEditFormModel = Pick<
+  Required<UserEditModel>,
+  "avatarUrl" | "dateOfBirth" | "username" | "name"
+>;
+
 const schema = yup.object({
   avatarUrl: yup
     .string()
@@ -101,7 +106,7 @@ const CreateProfile = () => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<UserEditModel>({
+  } = useForm<UserEditFormModel>({
     resolver: yupResolver(schema),
     defaultValues: {
       avatarUrl: "",
@@ -137,7 +142,7 @@ const CreateProfile = () => {
     setDefaultUserData();
   }, [userId, reset]);
 
-  const handleCreateProfile = async (model: UserEditModel) => {
+  const handleCreateProfile = async (model: UserEditFormModel) => {
     setIsLoading(true);
     try {
       if (userId) {
