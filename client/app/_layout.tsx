@@ -11,29 +11,39 @@ import { Provider } from "react-redux";
 import { store } from "../state/store";
 import AuthListener from "@/components/AuthListener";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
+import { useAppSelector } from "@/state/hooks";
+import {
+  selectIsUserSignedIn,
+  selectIsUserVerified,
+} from "@/state/slices/userSlice";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
-const RootLayoutNav = () => (
-  <SafeAreaProvider>
-    <GluestackUIProvider>
-      <GestureHandlerRootView>
-        <Provider store={store}>
+const RootLayoutNav = () => {
+  const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
+  const isUserVerified = useAppSelector(selectIsUserVerified);
+
+  return (
+    <SafeAreaProvider>
+      <GluestackUIProvider>
+        <GestureHandlerRootView>
           <AuthListener>
             <StatusBar style="light" />
-            <Stack screenOptions={{ animation: "none" }}>
+            <Stack>
+              <Stack.Protected guard={isUserSignedIn && isUserVerified}>
+                <Stack.Screen
+                  name="(protected)"
+                  options={{ headerShown: false }}
+                />
+              </Stack.Protected>
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(protected)"
-                options={{ headerShown: false }}
-              />
             </Stack>
           </AuthListener>
-        </Provider>
-      </GestureHandlerRootView>
-    </GluestackUIProvider>
-  </SafeAreaProvider>
-);
+        </GestureHandlerRootView>
+      </GluestackUIProvider>
+    </SafeAreaProvider>
+  );
+};
 
 const RootLayout = () => {
   const [fontsLoaded] = useFonts({
@@ -53,7 +63,11 @@ const RootLayout = () => {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <Provider store={store}>
+      <RootLayoutNav />
+    </Provider>
+  );
 };
 
 export default RootLayout;

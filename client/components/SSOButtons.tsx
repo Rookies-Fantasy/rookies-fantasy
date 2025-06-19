@@ -1,6 +1,5 @@
 import { getFirestore } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
-import React from "react";
 import { Pressable, View, Text } from "react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
 import { useAppDispatch } from "@/state/hooks";
@@ -41,7 +40,7 @@ const SSOButtons = () => {
           throw new Error("Verified user has no email");
         }
 
-        if (userDoc.exists) {
+        if (userDoc.exists()) {
           const mappedUser = {
             id: user.uid,
             email: user.email,
@@ -52,7 +51,6 @@ const SSOButtons = () => {
           };
 
           dispatch(setUser(mappedUser));
-          router.replace("/(protected)");
         } else {
           dispatch(
             setUser({
@@ -61,8 +59,8 @@ const SSOButtons = () => {
               emailVerified: user.emailVerified,
             }),
           );
-          router.replace("/(auth)/createProfile");
         }
+        router.replace("/(protected)/createProfile");
       }
     } catch (error) {
       console.log(error);

@@ -32,7 +32,7 @@ const schema = yup.object({
     .min(8, "Password must be at least 8 characters"),
 });
 
-type SignUpFormData = {
+type SignUpFormModel = {
   email: string;
   password: string;
 };
@@ -50,7 +50,7 @@ const SignUp = () => {
     formState: { errors },
     setError,
     clearErrors,
-  } = useForm<SignUpFormData>({
+  } = useForm<SignUpFormModel>({
     resolver: yupResolver(schema),
     defaultValues: {
       email: "",
@@ -59,8 +59,8 @@ const SignUp = () => {
     mode: "onSubmit",
   });
 
-  const signUpUser = async (data: SignUpFormData) => {
-    const { email, password } = data;
+  const signUpUser = async (model: SignUpFormModel) => {
+    const { email, password } = model;
     setIsLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
