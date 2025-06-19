@@ -4,6 +4,7 @@ import { View } from "react-native";
 import Spinner from "./Spinner";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
+import { setTeam } from "@/state/slices/teamSlice";
 import { setUser, clearUser } from "@/state/slices/userSlice";
 
 type AuthListenerProps = {
@@ -21,6 +22,17 @@ const AuthListener = ({ children }: AuthListenerProps) => {
         try {
           const userData = await UserController.getUser(user.uid);
           dispatch(setUser(userData));
+
+          const teams = await UserController.getUserTeams(user.uid);
+          if (teams?.length > 0) {
+            let firstTeamId: string;
+            firstTeamId = teams[0].id;
+            const teamData = await UserController.getUserTeam(
+              user.uid,
+              firstTeamId,
+            );
+            dispatch(setTeam(teamData));
+          }
         } catch (error) {
           console.error("Error fetching user document:", error);
         }

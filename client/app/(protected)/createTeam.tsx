@@ -111,20 +111,24 @@ const CreateTeam = () => {
   useEffect(() => {
     const setDefaultTeamData = async () => {
       if (userId && teamId) {
-        const teams = await UserController.getUserTeams(teamId);
+        try {
+          const teams = await UserController.getUserTeams(userId);
 
-        // A user should only have either 0 or 1 team on the createTeam screen.
-        if (teams?.length === 1) {
-          const matchedLogo = logoOptions.find(
-            (option) => option.url === teams[0].logoUrl,
-          );
-          setSelectedLogoOption(matchedLogo || logoOptions[0]);
+          // A user should only have either 0 or 1 team on the createTeam screen.
+          if (teams?.length === 1) {
+            const matchedLogo = logoOptions.find(
+              (option) => option.url === teams[0].logoUrl,
+            );
+            setSelectedLogoOption(matchedLogo || logoOptions[0]);
 
-          reset({
-            abbreviation: teams[0].abbreviation,
-            name: teams[0].name,
-            logoUrl: teams[0].logoUrl,
-          });
+            reset({
+              abbreviation: teams[0].abbreviation,
+              name: teams[0].name,
+              logoUrl: teams[0].logoUrl,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching user teams:", error);
         }
       }
     };
@@ -160,7 +164,7 @@ const CreateTeam = () => {
         );
       }
 
-      router.replace("/(protected)");
+      router.replace("/(protected)/(tabs)");
     } catch (error) {
       console.error("Failed to create team:", error);
     } finally {
@@ -177,7 +181,7 @@ const CreateTeam = () => {
               <View className="mb-8 mt-20 flex-row items-center gap-4">
                 <Pressable
                   className="size-8 items-center justify-center rounded-md border border-gray-900"
-                  onPress={() => router.push("/(auth)/createProfile")}
+                  onPress={() => router.back()}
                 >
                   <ArrowLeft color="white" size={20} weight="bold" />
                 </Pressable>
@@ -310,7 +314,7 @@ const CreateTeam = () => {
               {isLoading ? (
                 <Spinner />
               ) : (
-                <Text className="pbk-h7 text-center text-base-white">
+                <Text className="pbk-h6 text-center text-base-white">
                   FINISH ACCOUNT CREATION
                 </Text>
               )}
@@ -325,7 +329,7 @@ const CreateTeam = () => {
             className="min-h-12 w-full justify-center rounded-md bg-purple-600"
             onPress={() => setShowBottomDrawer(false)}
           >
-            <Text className="pbk-h7 text-center text-base-white">SAVE</Text>
+            <Text className="pbk-h6 text-center text-base-white">SAVE</Text>
           </Pressable>
         }
         header={

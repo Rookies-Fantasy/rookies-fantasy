@@ -72,7 +72,7 @@ const avatarOptions: AvatarOption[] = [
 
 export type UserEditFormModel = Pick<
   Required<UserEditModel>,
-  "avatarUrl" | "dateOfBirth" | "username" | "name"
+  "avatarUrl" | "dateOfBirth" | "username"
 >;
 
 const schema = yup.object({
@@ -86,7 +86,6 @@ const schema = yup.object({
     ),
   dateOfBirth: yup.date().required("Date of Birth is required"),
   username: yup.string().required("Username is required"),
-  name: yup.string().required("Name is required"),
 });
 
 const CreateProfile = () => {
@@ -112,7 +111,6 @@ const CreateProfile = () => {
       avatarUrl: "",
       dateOfBirth: undefined,
       username: "",
-      name: "",
     },
     mode: "onSubmit",
   });
@@ -132,7 +130,6 @@ const CreateProfile = () => {
             dateOfBirth: userData.dateOfBirth
               ? new Date(userData.dateOfBirth)
               : undefined,
-            name: userData.name,
             username: userData.username,
           });
         }
@@ -149,9 +146,10 @@ const CreateProfile = () => {
         await UserController.editUser(userId, model);
         const userData = await UserController.getUser(userId);
         dispatch(setUser(userData));
-        router.push("/(auth)/createTeam");
+        router.push("/(protected)/createTeam");
+      } else {
+        router.push("/(auth)");
       }
-      router.push("/(auth)");
     } catch (error) {
       console.log(error);
     } finally {
@@ -354,7 +352,7 @@ const CreateProfile = () => {
               {isLoading ? (
                 <Spinner />
               ) : (
-                <Text className="pbk-h7 text-center text-base-white">
+                <Text className="pbk-h6 text-center text-base-white">
                   CONTINUE
                 </Text>
               )}
@@ -369,7 +367,7 @@ const CreateProfile = () => {
             className="min-h-12 w-full justify-center rounded-md bg-purple-600"
             onPress={() => setShowBottomDrawer(false)}
           >
-            <Text className="pbk-h7 text-center text-base-white">SAVE</Text>
+            <Text className="pbk-h6 text-center text-base-white">SAVE</Text>
           </Pressable>
         }
         header={

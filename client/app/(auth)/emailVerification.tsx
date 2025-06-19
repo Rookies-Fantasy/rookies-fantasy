@@ -63,7 +63,7 @@ const EmailVerification = () => {
         );
 
         setIsLoading(false);
-        router.replace("/(auth)/createProfile");
+        router.replace("/(protected)/createProfile");
       }
     }, 3000);
 

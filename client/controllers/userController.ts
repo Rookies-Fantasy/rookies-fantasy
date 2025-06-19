@@ -9,7 +9,6 @@ export type UserEditModel = Partial<{
   avatarUrl: string;
   dateOfBirth: Date;
   emailVerified: boolean;
-  name: string;
   username: string;
 }>;
 
@@ -27,13 +26,13 @@ export class UserController {
         .doc(userId)
         .get();
 
-      return user.exists
+      return user.exists()
         ? {
             avatarUrl: user.data()?.avatarUrl,
             dateOfBirth: user.data()?.dateOfBirth?.toDate()?.toISOString(),
             email: user.data()?.email,
+            emailVerified: user.data()?.emailVerified ?? false,
             id: user.id,
-            name: user.data()?.name,
             username: user.data()?.username,
           }
         : defaultUser;
@@ -88,7 +87,7 @@ export class UserController {
         .doc(teamId)
         .get();
 
-      return team.exists
+      return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
             id: team.id,
