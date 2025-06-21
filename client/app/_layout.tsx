@@ -63,7 +63,11 @@ const RootLayout = () => {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <Provider store={store}>
+      <RootLayoutNav />
+    </Provider>
+  );
 };
 
 export default RootLayout;

@@ -1,6 +1,5 @@
 import { getFirestore } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
-import React from "react";
 import { Pressable, View, Text } from "react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
 import { useAppDispatch } from "@/state/hooks";
@@ -61,8 +60,8 @@ const SSOButtons = () => {
               emailVerified: user.emailVerified,
             }),
           );
-          router.replace("/(auth)/createProfile");
         }
+        router.replace("/(protected)/createProfile");
       }
     } catch (error) {
       console.log(error);

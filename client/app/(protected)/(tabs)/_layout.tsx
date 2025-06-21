@@ -1,13 +1,10 @@
 import { Redirect, Tabs } from "expo-router";
 import { House, UserSquare } from "phosphor-react-native";
 import { useAppSelector } from "@/state/hooks";
-import {
-  selectCurrentUserId,
-  selectIsUserRegistered,
-} from "@/state/slices/userSlice";
+import { selectUserId, selectIsUserRegistered } from "@/state/slices/userSlice";
 
 const AppLayout = () => {
-  const isSignedIn = useAppSelector(selectCurrentUserId);
+  const isSignedIn = useAppSelector(selectUserId);
   const isRegistered = useAppSelector(selectIsUserRegistered);
 
   if (!isSignedIn) {
@@ -15,7 +12,7 @@ const AppLayout = () => {
   }
 
   if (isSignedIn && !isRegistered) {
-    return <Redirect href="/(auth)/createProfile" />;
+    return <Redirect href="/(protected)/createProfile" />;
   }
 
   return (
