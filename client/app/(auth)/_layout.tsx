@@ -35,7 +35,7 @@ const AuthLayout = () => {
   }
 
   if (isUserSignedIn && isUserRegistered) {
-    return <Redirect href="/(protected)" />;
+    return <Redirect href="/(protected)/(tabs)" />;
   }
 
   return (

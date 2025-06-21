@@ -41,7 +41,7 @@ const SSOButtons = () => {
           throw new Error("Verified user has no email");
         }
 
-        if (userDoc.exists) {
+        if (userDoc.exists()) {
           const mappedUser = {
             id: user.uid,
             email: user.email,
@@ -52,7 +52,7 @@ const SSOButtons = () => {
           };
 
           dispatch(setUser(mappedUser));
-          router.replace("/(protected)");
+          router.replace("/(protected)/(tabs)");
         } else {
           dispatch(
             setUser({

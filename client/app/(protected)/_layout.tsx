@@ -1,5 +1,4 @@
-import { Redirect, Stack, Tabs } from "expo-router";
-import { House, UserSquare } from "phosphor-react-native";
+import { Redirect, Stack } from "expo-router";
 import { useAppSelector } from "@/state/hooks";
 import {
   selectCurrentUserId,

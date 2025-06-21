@@ -23,7 +23,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
           const userRef = firestore().collection("users").doc(user.uid);
           const userDoc = await userRef.get();
 
-          if (userDoc.exists) {
+          if (userDoc.exists()) {
             const userData = userDoc.data();
 
             if (userData?.createdAt instanceof firestore.Timestamp) {
