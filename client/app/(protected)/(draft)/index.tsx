@@ -13,12 +13,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView } from "react-native-virtualized-view";
 import PlayersTable from "@/components/PlayersTable";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import TeamBudget from "@/components/TeamBudget";
 import { Player } from "@/types/players";
-
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
@@ -26,6 +26,7 @@ type FetchPlayersParams = {
 const headers = [
   "ACTION",
   "PLAYER",
+  "GP",
   "MIN",
   "PTS",
   "REB",
@@ -38,17 +39,18 @@ const headers = [
 ];
 
 const columnWidthClasses = [
-  "w-[70px]", // ACTION
-  "w-[140px]", // PLAYER
-  "w-[70px]", // MIN
-  "w-[70px]", // PTS
-  "w-[70px]", // REB
-  "w-[70px]", // AST
-  "w-[70px]", // STL
-  "w-[70px]", // BLK
-  "w-[70px]", // TO
-  "w-[70px]", // FPTS
-  "w-[70px]", // T.FPTS
+  "w-24", // ACTION
+  "w-48", // PLAYER
+  "w-24", // GAMES PLAYED
+  "w-24", // MIN
+  "w-24", // PTS
+  "w-24", // REB
+  "w-24", // AST
+  "w-24", // STL
+  "w-24", // BLK
+  "w-24", // TO
+  "w-24", // FPTS
+  "w-24", // T.FPTS
 ];
 
 const stickyHeaders = headers.slice(0, 2); // ACTION, PLAYER
@@ -148,15 +150,19 @@ const Players = () => {
   const players = data?.pages.flatMap((page) => page.players) || [];
 
   const tableData = players.map((player) => [
-    `${player.firstName} ${player.secondName}`,
+    "+",
+    `${player.firstName.slice(0, 1)}. ${player.secondName}`,
     player.gamesPlayed,
-    player.averageStats.pts,
-    player.averageStats.reb,
-    player.averageStats.ast,
-    player.averageStats.stl,
-    player.averageStats.blk,
-    player.averageStats.tov,
+    player.averageStats.min.toFixed(1),
+    player.averageStats.pts.toFixed(1),
+    player.averageStats.reb.toFixed(1),
+    player.averageStats.ast.toFixed(1),
+    player.averageStats.stl.toFixed(1),
+    player.averageStats.blk.toFixed(1),
+    player.averageStats.tov.toFixed(1),
   ]);
+
+  console.log(tableData);
 
   const handleEndReached = () => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -193,14 +199,16 @@ const Players = () => {
             </Pressable>
           </View>
 
-          <PlayersTable
-            data={tableData}
-            onEndReached={handleEndReached}
-            scrollableHeaders={scrollableHeaders}
-            scrollableWidths={scrollableWidths}
-            stickyHeaders={stickyHeaders}
-            stickyWidths={stickyWidths}
-          />
+          <ScrollView className="flex-1">
+            <PlayersTable
+              data={tableData}
+              onEndReached={handleEndReached}
+              scrollableHeaders={scrollableHeaders}
+              scrollableWidths={scrollableWidths}
+              stickyHeaders={stickyHeaders}
+              stickyWidths={stickyWidths}
+            />
+          </ScrollView>
         </KeyboardAvoidingView>
       </Pressable>
     </SafeAreaView>

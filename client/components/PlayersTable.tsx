@@ -1,16 +1,13 @@
-import { View, Text, FlatList, ScrollView } from "react-native";
+import { View, Text, FlatList } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 type TableProps = {
   stickyHeaders: string[];
   scrollableHeaders: string[];
   stickyWidths: string[];
   scrollableWidths: string[];
-  data: (string | number)[][];
+  data: any[][];
   onEndReached?: () => void;
-  headerClass?: string;
-  rowClass?: string;
-  cellClass?: string;
-  textClass?: string;
 };
 
 const PlayersTable = ({
@@ -21,29 +18,27 @@ const PlayersTable = ({
   data,
   onEndReached,
 }: TableProps) => {
-  const rowHeightClass = "h-[32px]";
-
-  const renderStickyCells = ({ item }: { item: any }) => (
-    <View className={`flex-row ${rowHeightClass}`}>
-      {[item[0], item[1]].map((cell, idx) => (
+  const renderStickyRow = ({ item }: { item: (string | number)[] }) => (
+    <View className="min-h-16 flex-row items-center border-b border-gray-300">
+      {item.map((cell, index) => (
         <View
-          className={`${stickyWidths[idx]} border bg-white px-2 py-1`}
-          key={idx}
+          className={`${stickyWidths[index]} justify-center border-r border-gray-400 px-3`}
+          key={index}
         >
-          <Text className="text-xs">{cell}</Text>
+          <Text className="text-base-white">{cell}</Text>
         </View>
       ))}
     </View>
   );
 
-  const renderScrollableCells = ({ item }: { item: any }) => (
-    <View className={`flex-row ${rowHeightClass}`}>
-      {item.slice(2).map((cell: string | number, idx: number) => (
+  const renderScrollableRow = ({ item }: { item: (string | number)[] }) => (
+    <View className="min-h-16 flex-row items-center border-b border-gray-300">
+      {item.map((cell, index) => (
         <View
-          className={`${scrollableWidths[idx]} border bg-white px-2 py-1`}
-          key={idx}
+          className={`${scrollableWidths[index]} justify-center border-r border-gray-400 px-3`}
+          key={index}
         >
-          <Text className="text-xs">{cell}</Text>
+          <Text className="text-base-white">{cell}</Text>
         </View>
       ))}
     </View>
@@ -51,43 +46,47 @@ const PlayersTable = ({
 
   return (
     <View className="flex-row">
-      {/* Sticky Columns */}
       <View>
-        <View className="flex-row bg-gray-100">
-          {stickyHeaders.map((header, idx) => (
-            <View className={`${stickyWidths[idx]} border px-2 py-1`} key={idx}>
-              <Text className="text-xs font-bold">{header}</Text>
+        {/* Sticky Header */}
+        <View className="min-h-12 flex-row items-center border-b-2 border-gray-900 bg-gray-920">
+          {stickyHeaders.map((header, index) => (
+            <View className={`${stickyWidths[index]}`} key={index}>
+              <Text className="text-pbk-b1 text-gray-400">{header}</Text>
             </View>
           ))}
         </View>
+        {/* Scrollable Rows */}
         <FlatList
-          data={data}
-          renderItem={renderStickyCells}
+          data={data.map((row) => row.slice(0, stickyHeaders.length))}
+          keyExtractor={(_, idx) => idx.toString()}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
+          renderItem={renderStickyRow}
           scrollEnabled={false}
         />
       </View>
-
       <ScrollView
+        bounces={false}
         horizontal
-        nestedScrollEnabled={true}
         showsHorizontalScrollIndicator={false}
       >
         <View>
-          <View className="flex-row bg-gray-100">
-            {scrollableHeaders.map((header, idx) => (
-              <View
-                className={`${scrollableWidths[idx]} border px-2 py-1`}
-                key={idx}
-              >
-                <Text className="text-xs font-bold">{header}</Text>
+          {/* Scrollable Header */}
+          <View className="min-h-12 flex-row items-center border-b-2 border-gray-900 bg-gray-920">
+            {scrollableHeaders.map((header, index) => (
+              <View className={`${scrollableWidths[index]}`} key={index}>
+                <Text className="text-pbk-b1 text-gray-400">{header}</Text>
               </View>
             ))}
           </View>
+          {/* Scrollable Rows */}
           <FlatList
-            data={data}
+            data={data.map((row) => row.slice(stickyHeaders.length))}
+            keyExtractor={(_, idx) => idx.toString()}
             onEndReached={onEndReached}
-            renderItem={renderScrollableCells}
-            scrollEnabled={true}
+            onEndReachedThreshold={0.5}
+            renderItem={renderScrollableRow}
+            scrollEnabled={false}
           />
         </View>
       </ScrollView>

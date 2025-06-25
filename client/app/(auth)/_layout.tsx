@@ -9,35 +9,8 @@ const AuthLayout = () => {
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
 
-<<<<<<< HEAD
-  const currentRoute = segments[segments.length - 1];
-  const isOnCreateProfile = currentRoute === "createProfile";
-  const isOnEmailVerification = currentRoute === "emailVerification";
-
-  if (
-    isUserSignedIn &&
-    !isUserVerified &&
-    !isUserRegistered &&
-    !isOnEmailVerification
-  ) {
-    return <Redirect href="/(auth)/emailVerification" />;
-  }
-
-  if (
-    isUserSignedIn &&
-    !isUserRegistered &&
-    isUserVerified &&
-    !isOnCreateProfile
-  ) {
-    return <Redirect href="/(auth)/createProfile" />;
-  }
-
-  if (isUserSignedIn && isUserRegistered) {
-    return <Redirect href="/(protected)/(tabs)" />;
-=======
   if (isUserSignedIn && isUserVerified) {
     return <Redirect href="/(protected)/createProfile" />;
->>>>>>> 15541e4c674e51b784a4a39e04f1a7a9aead8f18
   }
 
   return (
