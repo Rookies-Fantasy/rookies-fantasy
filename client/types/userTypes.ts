@@ -1,8 +1,10 @@
-export type CurrentUser = {
-  id?: string;
-  username?: string;
-  email?: string;
+export type User = {
+  avatarUrl?: string;
   dateOfBirth?: string;
-  avatar?: string;
-  emailVerified?: boolean;
+  email?: string;
+  emailVerified: boolean;
+  id: string;
+  username?: string;
 };
+
+export const defaultUser: User = { id: "", emailVerified: false };

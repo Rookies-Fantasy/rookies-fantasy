@@ -27,7 +27,7 @@ const schema = yup.object({
   password: yup.string().required("Password is required"),
 });
 
-type LoginFormData = {
+type LoginFormModel = {
   email: string;
   password: string;
 };
@@ -43,7 +43,7 @@ const Login = () => {
     handleSubmit,
     formState: { errors },
     setError,
-  } = useForm<LoginFormData>({
+  } = useForm<LoginFormModel>({
     resolver: yupResolver(schema),
     mode: "onSubmit",
     defaultValues: {
@@ -52,13 +52,13 @@ const Login = () => {
     },
   });
 
-  const handleLogin = async (data: LoginFormData) => {
+  const handleLogin = async (model: LoginFormModel) => {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(
         auth,
-        data.email.trim().toLowerCase(),
-        data.password,
+        model.email.trim().toLowerCase(),
+        model.password,
       );
     } catch (error) {
       console.log(error);
