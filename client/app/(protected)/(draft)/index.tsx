@@ -16,9 +16,9 @@ import {
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import IconButton from "@/components/IconButton";
-import PlayersTable from "@/components/PlayersTable";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
+import PlayersTable from "@/components/Table/PlayersTable";
 import TeamBudget from "@/components/TeamBudget";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { addPlayer, removePlayer } from "@/state/slices/lineupSlice";
