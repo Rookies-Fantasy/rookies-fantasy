@@ -6,7 +6,7 @@ export type Player = {
   weight: string;
   teamId: string;
   jerseyNumber: string;
-  positions: [string];
+  positions: string[];
   headshotUrl: string;
   gamesPlayed: number;
   averageStats: {

@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { View, Text } from "react-native";
 
-const TeamBudget = () => {
+type TeamBudgetProps = {
+  className?: string;
+};
+
+const TeamBudget = ({ className }: TeamBudgetProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    <View className="w-full rounded-lg border border-gray-800 bg-gray-900">
+    <View
+      className={`w-full rounded-lg border border-gray-800 bg-gray-900 ${className}`}
+    >
       <Text className="pbk-b1 p-4 text-base-white">
         Salary Cap: $100,000,000
       </Text>

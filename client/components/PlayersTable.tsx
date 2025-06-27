@@ -1,91 +1,70 @@
-import { View, Text, FlatList } from "react-native";
+import { View, FlatList } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import Row from "./Row";
 
 type TableProps = {
-  stickyHeaders: string[];
-  scrollableHeaders: string[];
-  stickyWidths: string[];
-  scrollableWidths: string[];
+  headers: string[];
   data: any[][];
+  stickyIndexes: number[];
+  widthClasses: string[];
   onEndReached?: () => void;
 };
 
 const PlayersTable = ({
-  stickyHeaders,
-  scrollableHeaders,
-  stickyWidths,
-  scrollableWidths,
+  headers,
   data,
+  stickyIndexes = [],
+  widthClasses,
   onEndReached,
 }: TableProps) => {
-  const renderStickyRow = ({ item }: { item: (string | number)[] }) => (
-    <View className="min-h-16 flex-row items-center border-b border-gray-300">
-      {item.map((cell, index) => (
-        <View
-          className={`${stickyWidths[index]} justify-center border-r border-gray-400 px-3`}
-          key={index}
-        >
-          <Text className="text-base-white">{cell}</Text>
-        </View>
-      ))}
-    </View>
-  );
+  const stickyHeaders = headers.slice(0, stickyIndexes.length);
+  const scrollableHeaders = headers.slice(stickyIndexes.length);
 
-  const renderScrollableRow = ({ item }: { item: (string | number)[] }) => (
-    <View className="min-h-16 flex-row items-center border-b border-gray-300">
-      {item.map((cell, index) => (
-        <View
-          className={`${scrollableWidths[index]} justify-center border-r border-gray-400 px-3`}
-          key={index}
-        >
-          <Text className="text-base-white">{cell}</Text>
-        </View>
-      ))}
-    </View>
-  );
+  const stickyData = data.map((row) => row.slice(0, stickyIndexes.length));
+  const scrollableData = data.map((row) => row.slice(stickyIndexes.length));
 
+  const stickyWidths = widthClasses.slice(0, stickyIndexes.length);
+  const scrollableWidths = widthClasses.slice(stickyIndexes.length);
   return (
-    <View className="flex-row">
+    <View className="flex-1 flex-row">
       <View>
-        {/* Sticky Header */}
-        <View className="min-h-12 flex-row items-center border-b-2 border-gray-900 bg-gray-920">
-          {stickyHeaders.map((header, index) => (
-            <View className={`${stickyWidths[index]}`} key={index}>
-              <Text className="text-pbk-b1 text-gray-400">{header}</Text>
-            </View>
-          ))}
-        </View>
-        {/* Scrollable Rows */}
+        <Row
+          rowData={stickyHeaders}
+          variant="header"
+          widthClasses={stickyWidths}
+        />
         <FlatList
-          data={data.map((row) => row.slice(0, stickyHeaders.length))}
-          keyExtractor={(_, idx) => idx.toString()}
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          renderItem={renderStickyRow}
+          data={stickyData}
+          renderItem={({ item }) => (
+            <Row rowData={item} widthClasses={stickyWidths} />
+          )}
           scrollEnabled={false}
         />
       </View>
+
       <ScrollView
         bounces={false}
         horizontal
         showsHorizontalScrollIndicator={false}
       >
         <View>
-          {/* Scrollable Header */}
-          <View className="min-h-12 flex-row items-center border-b-2 border-gray-900 bg-gray-920">
-            {scrollableHeaders.map((header, index) => (
-              <View className={`${scrollableWidths[index]}`} key={index}>
-                <Text className="text-pbk-b1 text-gray-400">{header}</Text>
-              </View>
-            ))}
-          </View>
-          {/* Scrollable Rows */}
+          <Row
+            cellVariant="scrollable"
+            rowData={scrollableHeaders}
+            variant="header"
+            widthClasses={scrollableWidths}
+          />
           <FlatList
-            data={data.map((row) => row.slice(stickyHeaders.length))}
-            keyExtractor={(_, idx) => idx.toString()}
-            onEndReached={onEndReached}
-            onEndReachedThreshold={0.5}
-            renderItem={renderScrollableRow}
+            data={scrollableData}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ item }) => (
+              <Row
+                cellVariant="scrollable"
+                rowData={item}
+                stickyIndexes={stickyIndexes}
+                widthClasses={scrollableWidths}
+              />
+            )}
             scrollEnabled={false}
           />
         </View>
