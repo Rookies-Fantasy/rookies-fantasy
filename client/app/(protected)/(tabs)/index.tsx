@@ -2,6 +2,7 @@ import auth from "@react-native-firebase/auth";
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { clearTeam } from "@/state/slices/teamSlice";
 import { clearUser } from "@/state/slices/userSlice";
 
 const Home = () => {
@@ -13,6 +14,7 @@ const Home = () => {
     try {
       await auth().signOut();
       dispatch(clearUser());
+      dispatch(clearTeam());
       router.replace("/(auth)");
     } catch (error) {
       console.log(error);

@@ -1,28 +1,18 @@
-import { Redirect, Tabs } from "expo-router";
+import { Stack } from "expo-router";
 import { House, UserSquare } from "phosphor-react-native";
 import { useAppSelector } from "@/state/hooks";
-import {
-  selectCurrentUserId,
-  selectIsUserRegistered,
-} from "@/state/slices/userSlice";
+import { selectIsTeamRegistered } from "@/state/slices/teamSlice";
+import { selectIsUserRegistered } from "@/state/slices/userSlice";
 
-const AppLayout = () => {
-  const isSignedIn = useAppSelector(selectCurrentUserId);
-  const isRegistered = useAppSelector(selectIsUserRegistered);
-
-  if (!isSignedIn) {
-    return <Redirect href="/(auth)" />;
-  }
-
-  if (isSignedIn && !isRegistered) {
-    return <Redirect href="/(auth)/createProfile" />;
-  }
+const ProtectedLayout = () => {
+  const isUserRegistered = useAppSelector(selectIsUserRegistered);
+  const isTeamRegistered = useAppSelector(selectIsTeamRegistered);
 
   return (
-    <Tabs
+    <Stack
       screenOptions={{
         headerShown: false,
-        animation: "none",
+        animation: "default",
         tabBarShowLabel: false,
         tabBarActiveTintColor: "#6336F5",
         tabBarIconStyle: {
@@ -52,4 +42,4 @@ const AppLayout = () => {
   );
 };
 
-export default AppLayout;
+export default ProtectedLayout;

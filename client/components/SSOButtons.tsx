@@ -1,9 +1,9 @@
-import { getFirestore } from "@react-native-firebase/firestore";
-import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, View, Text } from "react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
+import { UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
+import { setTeam } from "@/state/slices/teamSlice";
 import { setUser } from "@/state/slices/userSlice";
 import { LoginProvider } from "@/types/providers";
 import { signInWithGoogle } from "@/utils/authUtils";
@@ -25,43 +25,29 @@ const PROVIDERS: ProviderConfig[] = [
 ];
 
 const SSOButtons = () => {
-  const router = useRouter();
   const dispatch = useAppDispatch();
-  const firestore = getFirestore();
 
   const handleSSOAuthentication = async (provider: LoginProvider) => {
     try {
       if (provider === LoginProvider.Google) {
         const { user } = await signInWithGoogle();
-        const userDoc = await firestore.collection("users").doc(user.uid).get();
-
-        const userData = userDoc.data();
 
         if (!isNotNil(user.email)) {
           throw new Error("Verified user has no email");
         }
 
-        if (userDoc.exists) {
-          const mappedUser = {
-            id: user.uid,
-            email: user.email,
-            username: userData?.username,
-            avatar: userData?.avatarUrl,
-            dateOfBirth: userData?.dateOfBirth.toDate().toISOString(),
-            emailVerified: userData?.emailVerified,
-          };
+        const userData = await UserController.getUser(user.uid);
+        dispatch(setUser(userData));
 
-          dispatch(setUser(mappedUser));
-          router.replace("/(protected)");
-        } else {
-          dispatch(
-            setUser({
-              id: user.uid,
-              email: user.email,
-              emailVerified: user.emailVerified,
-            }),
+        const teams = await UserController.getUserTeams(user.uid);
+        if (teams?.length > 0) {
+          let firstTeamId: string;
+          firstTeamId = teams[0].id;
+          const teamData = await UserController.getUserTeam(
+            user.uid,
+            firstTeamId,
           );
-          router.replace("/(auth)/createProfile");
+          dispatch(setTeam(teamData));
         }
       }
     } catch (error) {
