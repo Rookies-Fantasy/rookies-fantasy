@@ -4,6 +4,18 @@ import { db } from "./firebaseConfig.js";
 
 const api = new BalldontlieAPI({ apiKey: process.env.BALLDONTLIE_API_KEY });
 
+const normalizeTeam = (team) => ({
+  id: team.id.toString(),
+  abbreviation: team.abbreviation,
+  city: team.city,
+  conference: team.conference,
+  division: team.division,
+  fullName: team.full_name,
+  name: team.name,
+  state: "",
+  logoUrl: "",
+});
+
 const populateNBATeams = async () => {
   try {
     const response = await api.nba.getTeams();
@@ -19,19 +31,7 @@ const populateNBATeams = async () => {
       (team) => team.division && team.division.trim() !== ""
     );
 
-    const normalizedTeams = filteredTeams.map((team) => ({
-      id: team.id.toString(),
-      abbreviation: team.abbreviation,
-      city: team.city,
-      conference: team.conference,
-      division: team.division,
-      fullName: team.full_name,
-      name: team.name,
-      state: "",
-      logoUrl: "",
-    }));
-
-    console.log(normalizedTeams);
+    const normalizedTeams = filteredTeams.map(normalizeTeam);
 
     const batch = db.batch();
     const teamsRef = db.collection("nbaTeams");

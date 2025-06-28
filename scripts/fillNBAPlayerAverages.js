@@ -84,9 +84,9 @@ const fetchAndStoreSeasonAverages = async () => {
     });
 
     await batch.commit();
-    console.log(`✅ Stored season averages for ${allAverages.length} players.`);
+    console.log(`Stored season averages for ${allAverages.length} players.`);
   } catch (err) {
-    console.error("❌ Error fetching/storing season averages:", err);
+    console.error("Error fetching/storing season averages:", err);
   }
 };
 
