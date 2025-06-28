@@ -42,7 +42,7 @@ async function updatePlayersInBatches(players) {
     console.log(`Batch ${++batchCount} committed with ${chunk.length} players`);
   }
 
-  console.log("🎉 All batches completed!");
+  console.log("All batches completed!");
 }
 
 updatePlayersInBatches(playersArray).catch((err) => {
