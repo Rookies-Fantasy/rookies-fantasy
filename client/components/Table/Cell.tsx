@@ -23,7 +23,7 @@ const Cell = ({
 
   return (
     <View
-      className={`justify-center bg-gray-920 p-2 ${widthClass} ${heightClass} items-center ${borderClass}`}
+      className={`justify-center bg-gray-920 pl-3.5 ${widthClass} ${heightClass} ${borderClass}`}
     >
       {typeof content === "string" || typeof content === "number" ? (
         <Text className="pbk-b1 text-base-white">{content}</Text>

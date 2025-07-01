@@ -1,6 +1,4 @@
-import firestore, {
-  FirebaseFirestoreTypes,
-} from "@react-native-firebase/firestore";
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Minus, Plus, Sliders } from "phosphor-react-native";
@@ -20,38 +18,13 @@ import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import PlayersTable from "@/components/Table/PlayersTable";
 import TeamBudget from "@/components/TeamBudget";
+import { NBAPlayersController } from "@/controllers/nbaPlayersController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { addPlayer, removePlayer } from "@/state/slices/lineupSlice";
-import { Player } from "@/types/players";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
-
-const dummyPlayer = [
-  {
-    id: "2",
-    firstName: "John",
-    secondName: "Gilgeous-Alexander",
-    height: "6-5",
-    weight: "200",
-    teamId: "12",
-    jerseyNumber: "12",
-    positions: ["G", "F"],
-    headshotUrl:
-      "https://cdn.nba.com/headshots/nba/latest/1040x760/1627759.png",
-    gamesPlayed: 57,
-    averageStats: {
-      min: 0.8,
-      pts: 0.8,
-      reb: 0.8,
-      ast: 0.8,
-      stl: 0.8,
-      blk: 0.8,
-      tov: 0.8,
-    },
-  },
-];
 
 const Players = () => {
   const [query, setQuery] = useState("");
@@ -62,74 +35,30 @@ const Players = () => {
   const isPlayerInLineup = (id: string) =>
     lineup.some((player) => player.id === id);
 
-  // const fetchPlayersWithAverages = async ({
-  //   pageParam,
-  // }: FetchPlayersParams = {}) => {
-  //   const PAGE_SIZE = 25;
+  const fetchPlayersWithAverages = async ({
+    pageParam,
+  }: FetchPlayersParams = {}) => {
+    const PAGE_SIZE = 25;
 
-  //   let query = firestore()
-  //     .collection("nbaPlayers")
-  //     .orderBy("lastName")
-  //     .limit(PAGE_SIZE);
+    return await NBAPlayersController.getFreeAgents(PAGE_SIZE, pageParam);
+  };
 
-  //   if (pageParam) {
-  //     query = query.startAfter(pageParam);
-  //   }
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["nbaPlayers"],
+    queryFn: fetchPlayersWithAverages,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.lastDoc : undefined,
+    initialPageParam: undefined,
+  });
 
-  //   const playerSnapshot = await query.get();
-  //   const playerDocs = playerSnapshot.docs;
-
-  //   const players: Player[] = playerDocs.map((doc) => {
-  //     const data = doc.data();
-  //     const avg = data.averageStats ?? {};
-
-  //     // return {
-  //     //   id: data.playerId,
-  //     //   firstName: data.firstName,
-  //     //   secondName: data.lastName,
-  //     //   height: data.height,
-  //     //   weight: data.weight,
-  //     //   teamId: data.teamId,
-  //     //   jerseyNumber: data.jerseyNumber,
-  //     //   positions: data.positions,
-  //     //   headshotUrl: data.headshotURL,
-  //     //   gamesPlayed: data.gamesPlayed,
-  //     //   averageStats: {
-  //     //     min: avg.minutes ?? 0,
-  //     //     pts: avg.points ?? 0,
-  //     //     reb: avg.rebounds ?? 0,
-  //     //     ast: avg.assists ?? 0,
-  //     //     stl: avg.steals ?? 0,
-  //     //     blk: avg.blocks ?? 0,
-  //     //     tov: avg.turnovers ?? 0,
-  //     //   },
-  //     //   // TODO: ADD FPTS and T.FPTS
-  //     // };
-  //   });
-
-  //   return {
-  //     players,
-  //     lastDoc: playerDocs[playerDocs.length - 1],
-  //     hasMore: playerDocs.length === PAGE_SIZE,
-  //   };
-  // };
-
-  // const {
-  //   data,
-  //   isLoading,
-  //   isError,
-  //   fetchNextPage,
-  //   hasNextPage,
-  //   isFetchingNextPage,
-  // } = useInfiniteQuery({
-  //   queryKey: ["nbaPlayers"],
-  //   queryFn: fetchPlayersWithAverages,
-  //   getNextPageParam: (lastPage) =>
-  //     lastPage.hasMore ? lastPage.lastDoc : undefined,
-  //   initialPageParam: undefined,
-  // });
-
-  const players = dummyPlayer;
+  const players = data?.pages.flatMap((page) => page.players) || [];
 
   const tableData = players.map((player) => [
     <IconButton
@@ -164,8 +93,12 @@ const Players = () => {
           </Text>
           <Text className="pbk-b2 text-green-400">$25,000,000</Text>
           <View className="flex-1 flex-row gap-2">
-            <Text className="pbk-b2 text-base-white">BOS</Text>
-            <Text className="pbk-b2 text-base-white">PF, SF</Text>
+            <Text className="pbk-b2 text-base-white">
+              {player.teamAbbreviation}
+            </Text>
+            <Text className="pbk-b2 text-base-white">
+              {player.positions.join(", ")}
+            </Text>
           </View>
         </View>
       </View>
@@ -179,12 +112,6 @@ const Players = () => {
     player.averageStats.blk.toFixed(1),
     player.averageStats.tov.toFixed(1),
   ]);
-
-  // const handleEndReached = () => {
-  //   if (hasNextPage && !isFetchingNextPage) {
-  //     fetchNextPage();
-  //   }
-  // };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-950">
@@ -216,49 +143,62 @@ const Players = () => {
             </View>
           </View>
 
-          {/* {isLoading ? (
+          {isLoading ? (
             <Spinner />
           ) : isError ? (
             <Text className="text-pbk-bl text-base-white">
               Something went wrong
             </Text>
-          ) : ( */}
-          <ScrollView className="flex-1">
-            <PlayersTable
-              data={tableData}
-              headers={[
-                "",
-                "PLAYER",
-                "GP",
-                "MIN",
-                "PTS",
-                "REB",
-                "AST",
-                "STL",
-                "BLK",
-                "TO",
-                "FPTS",
-                "T.FPTS",
-              ]}
-              stickyIndexes={[0, 1]}
-              widthClasses={[
-                "w-16",
-                "min-w-60",
-                "min-w-12",
-                "min-w-12",
-                "min-w-12",
-                "min-w-12",
-                "min-w-12",
-                "min-w-12",
-                "min-w-12",
-                "min-w-12",
-                "min-w-12",
-                "min-w-12",
-              ]}
-              // onEndReached={handleEndReached}
-            />
-          </ScrollView>
-          {/* )} */}
+          ) : (
+            <ScrollView
+              className="flex-1"
+              onScroll={({ nativeEvent }) => {
+                const { layoutMeasurement, contentOffset, contentSize } =
+                  nativeEvent;
+                const isBottom =
+                  layoutMeasurement.height + contentOffset.y >=
+                  contentSize.height - 50;
+
+                if (isBottom && hasNextPage && !isFetchingNextPage) {
+                  fetchNextPage();
+                }
+              }}
+              scrollEventThrottle={200}
+            >
+              <PlayersTable
+                data={tableData}
+                headers={[
+                  "",
+                  "PLAYER",
+                  "GP",
+                  "MIN",
+                  "PTS",
+                  "REB",
+                  "AST",
+                  "STL",
+                  "BLK",
+                  "TO",
+                  "FPTS",
+                  "T.FPTS",
+                ]}
+                stickyIndexes={[0, 1]}
+                widthClasses={[
+                  "w-16",
+                  "min-w-60",
+                  "min-w-12",
+                  "min-w-12",
+                  "min-w-12",
+                  "min-w-12",
+                  "min-w-12",
+                  "min-w-12",
+                  "min-w-12",
+                  "min-w-12",
+                  "min-w-12",
+                  "min-w-12",
+                ]}
+              />
+            </ScrollView>
+          )}
         </KeyboardAvoidingView>
       </Pressable>
     </SafeAreaView>
