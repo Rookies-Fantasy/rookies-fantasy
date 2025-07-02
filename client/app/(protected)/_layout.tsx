@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Tabs } from "expo-router";
 import { House, UserSquare } from "phosphor-react-native";
 import { useAppSelector } from "@/state/hooks";
 import { selectIsTeamRegistered } from "@/state/slices/teamSlice";
@@ -9,10 +9,9 @@ const ProtectedLayout = () => {
   const isTeamRegistered = useAppSelector(selectIsTeamRegistered);
 
   return (
-    <Stack
+    <Tabs
       screenOptions={{
         headerShown: false,
-        animation: "default",
         tabBarShowLabel: false,
         tabBarActiveTintColor: "#6336F5",
         tabBarIconStyle: {
