@@ -29,14 +29,11 @@ const RootLayoutNav = () => {
         <GestureHandlerRootView>
           <AuthListener>
             <StatusBar style="light" />
-            <Stack>
+            <Stack screenOptions={{ headerShown: false }}>
               <Stack.Protected guard={isUserSignedIn && isUserVerified}>
-                <Stack.Screen
-                  name="(protected)"
-                  options={{ headerShown: false }}
-                />
+                <Stack.Screen name="(protected)" />
               </Stack.Protected>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" />
             </Stack>
           </AuthListener>
         </GestureHandlerRootView>
