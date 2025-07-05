@@ -50,6 +50,7 @@ const Players = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   } = useInfiniteQuery({
     queryKey: ["nbaPlayers"],
     queryFn: fetchPlayersWithAverages,
@@ -144,11 +145,21 @@ const Players = () => {
           </View>
 
           {isLoading ? (
-            <Spinner />
+            <View className="flex-1 items-center justify-center border-t-2 border-gray-900">
+              <Spinner />
+            </View>
           ) : isError ? (
-            <Text className="text-pbk-bl text-base-white">
-              Something went wrong
-            </Text>
+            <View className="flex-1 items-center justify-center gap-2 border-t-2 border-gray-900">
+              <Text className="pbk-bl text-base-white">
+                Something went wrong.
+              </Text>
+              <Pressable
+                className="rounded-md bg-purple-600 p-3"
+                onPress={() => refetch()}
+              >
+                <Text className="pbk-bl text-base-white">Try Again</Text>
+              </Pressable>
+            </View>
           ) : (
             <ScrollView
               className="flex-1"

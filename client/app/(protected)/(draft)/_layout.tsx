@@ -21,7 +21,7 @@ const DraftLayout = () => (
     }}
   >
     <Tabs.Screen
-      name="index"
+      name="players"
       options={{
         title: "PLAYERS",
         tabBarIcon: ({ color }) => <UserList color={color} />,

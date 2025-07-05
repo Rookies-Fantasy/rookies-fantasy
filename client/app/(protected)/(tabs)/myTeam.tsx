@@ -1,10 +1,8 @@
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAppSelector } from "@/state/hooks";
 
 const MyTeam = () => {
-  const user = useAppSelector((state) => state.user);
   const router = useRouter();
   return (
     <SafeAreaView className="flex-1 bg-gray-950">
@@ -25,7 +23,7 @@ const MyTeam = () => {
       </View>
       <Pressable
         className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-        onPress={() => router.push("/(protected)/(draft)")}
+        onPress={() => router.push("/(protected)/(draft)/players")}
       >
         <Text className="pbk-h6 text-center text-base-white">
           Draft Players
