@@ -17,7 +17,7 @@ export class NBAPlayersController {
     try {
       let query = await firestore()
         .collection(PLAYERS_COLLECTION)
-        .orderBy("lastName")
+        .orderBy("salary", "desc")
         .limit(PAGE_SIZE);
 
       console.log("I am querying");
@@ -34,26 +34,28 @@ export class NBAPlayersController {
         const avg = data.averageStats ?? {};
 
         return {
-          id: data.playerId,
-          firstName: data.firstName,
-          secondName: data.lastName,
-          height: data.height,
-          weight: data.weight,
-          teamId: data.teamId,
-          jerseyNumber: data.jerseyNumber,
-          positions: data.positions,
-          headshotUrl: data.headshotURL,
-          teamAbbreviation: data.teamAbbreviation,
-          gamesPlayed: data.gamesPlayed,
           averageStats: {
+            ast: avg.assists ?? 0,
+            blk: avg.blocks ?? 0,
+            fpts: avg.fantasyPoints ?? 0,
             min: avg.minutes ?? 0,
             pts: avg.points ?? 0,
             reb: avg.rebounds ?? 0,
-            ast: avg.assists ?? 0,
             stl: avg.steals ?? 0,
-            blk: avg.blocks ?? 0,
             tov: avg.turnovers ?? 0,
           },
+          firstName: data.firstName,
+          gamesPlayed: data.gamesPlayed,
+          headshotUrl: data.headshotURL,
+          height: data.height,
+          id: data.playerId,
+          jerseyNumber: data.jerseyNumber,
+          positions: data.positions,
+          salary: data.salary.toLocaleString(),
+          secondName: data.lastName,
+          teamAbbreviation: data.teamAbbreviation,
+          teamId: data.teamId,
+          weight: data.weight,
         };
       });
 

@@ -92,7 +92,7 @@ const Players = () => {
           >
             {player.firstName.slice(0, 1)}. {player.secondName}
           </Text>
-          <Text className="pbk-b2 text-green-400">$25,000,000</Text>
+          <Text className="pbk-b2 text-green-400">${player.salary}</Text>
           <View className="flex-1 flex-row gap-2">
             <Text className="pbk-b2 text-base-white">
               {player.teamAbbreviation}
@@ -112,6 +112,7 @@ const Players = () => {
     player.averageStats.stl.toFixed(1),
     player.averageStats.blk.toFixed(1),
     player.averageStats.tov.toFixed(1),
+    player.averageStats.fpts,
   ]);
 
   return (
@@ -190,7 +191,6 @@ const Players = () => {
                   "BLK",
                   "TO",
                   "FPTS",
-                  "T.FPTS",
                 ]}
                 stickyIndexes={[0, 1]}
                 widthClasses={[

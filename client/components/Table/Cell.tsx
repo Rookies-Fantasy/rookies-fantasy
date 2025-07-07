@@ -16,14 +16,14 @@ const Cell = ({
   cellVariant = "sticky",
 }: CellProps) => {
   const heightClass = variant === "header" ? "h-12" : "h-24";
-  const borderClass =
+  const cellClass =
     cellVariant === "scrollable"
-      ? "border-b border-t border-gray-900"
-      : "border border-gray-900";
+      ? "border-b border-t border-gray-900 items-center"
+      : "border border-gray-900 pl-3.5";
 
   return (
     <View
-      className={`justify-center bg-gray-920 pl-3.5 ${widthClass} ${heightClass} ${borderClass}`}
+      className={`justify-center bg-gray-920 ${widthClass} ${heightClass} ${cellClass}`}
     >
       {typeof content === "string" || typeof content === "number" ? (
         <Text className="pbk-b1 text-base-white">{content}</Text>

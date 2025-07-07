@@ -1,22 +1,24 @@
 export type Player = {
-  id: string;
-  firstName: string;
-  secondName: string;
-  height: string;
-  weight: string;
-  teamId: string;
-  jerseyNumber: string;
-  positions: string[];
-  headshotUrl: string;
-  teamAbbreviation: string;
-  gamesPlayed: number;
   averageStats: {
+    ast: number;
+    blk: number;
+    fpts: number;
     min: number;
     pts: number;
     reb: number;
-    ast: number;
     stl: number;
-    blk: number;
     tov: number;
   };
+  firstName: string;
+  gamesPlayed: number;
+  headshotUrl: string;
+  height: string;
+  id: string;
+  jerseyNumber: string;
+  positions: string[];
+  salary: string;
+  secondName: string;
+  teamAbbreviation: string;
+  teamId: string;
+  weight: string;
 };
