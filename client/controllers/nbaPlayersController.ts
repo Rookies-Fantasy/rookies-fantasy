@@ -20,8 +20,6 @@ export class NBAPlayersController {
         .orderBy("salary", "desc")
         .limit(PAGE_SIZE);
 
-      console.log("I am querying");
-
       if (pageParam) {
         query = query.startAfter(pageParam);
       }
