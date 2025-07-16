@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { House, UserSquare } from "phosphor-react-native";
+import { House, IdentificationBadge } from "phosphor-react-native";
 
 const AppLayout = () => (
   <Tabs
@@ -24,10 +24,10 @@ const AppLayout = () => (
       }}
     />
     <Tabs.Screen
-      name="myTeam"
+      name="(profile)"
       options={{
-        title: "My Team",
-        tabBarIcon: ({ color }) => <UserSquare color={color} />,
+        title: "Profile",
+        tabBarIcon: ({ color }) => <IdentificationBadge color={color} />,
       }}
     />
   </Tabs>

@@ -21,6 +21,7 @@ export default defineConfig([
       "arrow-body-style": ["error", "as-needed"],
       "react/jsx-sort-props": ["error", { ignoreCase: true }],
       "react/sort-prop-types": "error",
+      "react/jsx-no-useless-fragment": "error",
       "import/order": [
         "error",
         {
