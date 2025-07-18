@@ -1,8 +1,7 @@
 import { Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
-const MyTeam = () => (
-  <SafeAreaView className="h-full w-full items-center justify-center bg-gray-950">
+const Roaster = () => (
+  <View className="h-full w-full items-center justify-center bg-gray-950">
     <View className="h-[250px] w-full">
       <View className="h-1/2 bg-pink-700" />
       <View className="h-1/2 border-b border-gray-900 bg-gray-950">
@@ -34,9 +33,9 @@ const MyTeam = () => (
       </View>
     </View>
     <View className="flex flex-1 justify-center">
-      <Text className="text-white">My Team</Text>
+      <Text className="text-white">Roaster</Text>
     </View>
-  </SafeAreaView>
+  </View>
 );
 
-export default MyTeam;
+export default Roaster;
