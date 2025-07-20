@@ -18,10 +18,6 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
-    "@gluestack-ui/icon": "^0.1.26",
-    "@gluestack-ui/nativewind-utils": "^1.0.26",
-    "@gluestack-ui/overlay": "^0.1.22",
-    "@gluestack-ui/toast": "^1.0.9",
     "@hookform/resolvers": "^5.0.1",
     "@invertase/react-native-apple-authentication": "^2.4.1",
     "@react-native-async-storage/async-storage": "^2.1.2",

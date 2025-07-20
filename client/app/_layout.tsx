@@ -10,7 +10,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "../state/store";
 import AuthListener from "@/components/AuthListener";
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useAppSelector } from "@/state/hooks";
 import {
   selectIsUserSignedIn,
@@ -25,19 +24,17 @@ const RootLayoutNav = () => {
 
   return (
     <SafeAreaProvider>
-      <GluestackUIProvider>
-        <GestureHandlerRootView>
-          <AuthListener>
-            <StatusBar style="light" />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Protected guard={isUserSignedIn && isUserVerified}>
-                <Stack.Screen name="(protected)" />
-              </Stack.Protected>
-              <Stack.Screen name="(auth)" />
-            </Stack>
-          </AuthListener>
-        </GestureHandlerRootView>
-      </GluestackUIProvider>
+      <GestureHandlerRootView>
+        <AuthListener>
+          <StatusBar style="light" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Protected guard={isUserSignedIn && isUserVerified}>
+              <Stack.Screen name="(protected)" />
+            </Stack.Protected>
+            <Stack.Screen name="(auth)" />
+          </Stack>
+        </AuthListener>
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   );
 };
