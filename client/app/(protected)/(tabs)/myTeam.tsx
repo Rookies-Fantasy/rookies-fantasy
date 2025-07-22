@@ -23,7 +23,7 @@ const MyTeam = () => {
       </View>
       <Pressable
         className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-        onPress={() => router.push("/(protected)/(draft)/players")}
+        onPress={() => router.push("/(protected)/(draft)/roster")}
       >
         <Text className="pbk-h6 text-center text-base-white">
           Draft Players

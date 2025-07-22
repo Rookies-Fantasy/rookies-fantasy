@@ -97,7 +97,7 @@ const ForgotPassword = () => {
         >
           <View className="my-20 flex-row items-center gap-4">
             <Pressable
-              className="size-8 items-center justify-center rounded-md border border-gray-900 p-4"
+              className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
               onPress={() => router.dismissAll()}
             >
               <ArrowLeft color="white" size={20} weight="bold" />

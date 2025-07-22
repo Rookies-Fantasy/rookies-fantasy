@@ -1,9 +1,12 @@
+import { useRef } from "react";
 import { View, FlatList } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import Row from "./Row";
 
 type TableProps = {
+  isFetchingNextPage: boolean;
   headers: string[];
+  hasNextPage: boolean;
   data: any[][];
   stickyIndexes: number[];
   widthClasses: string[];
@@ -11,12 +14,18 @@ type TableProps = {
 };
 
 const PlayersTable = ({
+  isFetchingNextPage,
   headers,
+  hasNextPage,
   data,
   stickyIndexes = [],
   widthClasses,
   onEndReached,
 }: TableProps) => {
+  const horizontalScrollRef = useRef<ScrollView>(null);
+  const bodyScrollRef = useRef<ScrollView>(null);
+  const isSyncingRef = useRef(false);
+
   const stickyHeaders = headers.slice(0, stickyIndexes.length);
   const scrollableHeaders = headers.slice(stickyIndexes.length);
 
@@ -25,48 +34,103 @@ const PlayersTable = ({
 
   const stickyWidths = widthClasses.slice(0, stickyIndexes.length);
   const scrollableWidths = widthClasses.slice(stickyIndexes.length);
+
+  const handleHorizontalScroll = (x: number, source?: "header") => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
+
+    let frameId: number | null = null;
+    if (source === "header") {
+      bodyScrollRef.current?.scrollTo({ x, animated: false });
+    } else {
+      horizontalScrollRef.current?.scrollTo({ x, animated: false });
+    }
+
+    if (frameId !== null) cancelAnimationFrame(frameId);
+    frameId = requestAnimationFrame(() => {
+      isSyncingRef.current = false;
+      frameId = null;
+    });
+  };
+
   return (
-    <View className="flex-1 flex-row">
-      <View>
+    <View className="flex-1">
+      <View className="flex-row">
         <Row
           rowData={stickyHeaders}
           variant="header"
           widthClasses={stickyWidths}
         />
-        <FlatList
-          data={stickyData}
-          renderItem={({ item }) => (
-            <Row rowData={item} widthClasses={stickyWidths} />
-          )}
-          scrollEnabled={false}
-        />
-      </View>
-
-      <ScrollView
-        bounces={false}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-        <View>
+        <ScrollView
+          bounces={false}
+          horizontal
+          onScroll={(e) => {
+            const x = e.nativeEvent.contentOffset.x;
+            handleHorizontalScroll(x, "header");
+          }}
+          ref={horizontalScrollRef}
+          scrollEventThrottle={16}
+          showsHorizontalScrollIndicator={false}
+        >
           <Row
             cellVariant="scrollable"
             rowData={scrollableHeaders}
             variant="header"
             widthClasses={scrollableWidths}
           />
-          <FlatList
-            data={scrollableData}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={({ item }) => (
-              <Row
-                cellVariant="scrollable"
-                rowData={item}
-                stickyIndexes={stickyIndexes}
-                widthClasses={scrollableWidths}
+        </ScrollView>
+      </View>
+      <ScrollView
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const isBottom =
+            layoutMeasurement.height + contentOffset.y >=
+            contentSize.height - 50;
+
+          if (isBottom && hasNextPage && !isFetchingNextPage) {
+            onEndReached?.();
+          }
+        }}
+        scrollEventThrottle={200}
+      >
+        <View className="flex-row">
+          <View>
+            <FlatList
+              data={stickyData}
+              renderItem={({ item }) => (
+                <Row rowData={item} widthClasses={stickyWidths} />
+              )}
+              scrollEnabled={false}
+            />
+          </View>
+
+          <ScrollView
+            bounces={false}
+            horizontal
+            onScroll={(e) => {
+              const x = e.nativeEvent.contentOffset.x;
+              handleHorizontalScroll(x);
+            }}
+            ref={bodyScrollRef}
+            scrollEventThrottle={16}
+            showsHorizontalScrollIndicator={false}
+          >
+            <View>
+              <FlatList
+                data={scrollableData}
+                keyExtractor={(_, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <Row
+                    cellVariant="scrollable"
+                    rowData={item}
+                    stickyIndexes={stickyIndexes}
+                    widthClasses={scrollableWidths}
+                  />
+                )}
+                scrollEnabled={false}
               />
-            )}
-            scrollEnabled={false}
-          />
+            </View>
+          </ScrollView>
         </View>
       </ScrollView>
     </View>
