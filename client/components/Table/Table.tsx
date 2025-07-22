@@ -13,7 +13,7 @@ type TableProps = {
   onEndReached?: () => void;
 };
 
-const PlayersTable = ({
+const Table = ({
   isFetchingNextPage,
   headers,
   hasNextPage,
@@ -137,4 +137,4 @@ const PlayersTable = ({
   );
 };
 
-export default PlayersTable;
+export default Table;

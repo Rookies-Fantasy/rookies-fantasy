@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import IconButton from "@/components/IconButton";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
-import PlayersTable from "@/components/Table/PlayersTable";
+import Table from "@/components/Table/Table";
 import TeamBudget from "@/components/TeamBudget";
 import { NBAPlayersController } from "@/controllers/nbaPlayersController";
 
@@ -176,7 +176,7 @@ const Players = () => {
               </Pressable>
             </View>
           ) : (
-            <PlayersTable
+            <Table
               data={tableData}
               hasNextPage={hasNextPage}
               headers={[
