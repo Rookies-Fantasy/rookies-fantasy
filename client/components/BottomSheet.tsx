@@ -11,6 +11,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT + 50;
@@ -154,21 +155,21 @@ const BottomSheet = ({
           className="absolute top-full h-screen w-full border border-gray-900 bg-gray-920"
           style={[bottomSheetStyle]}
         >
-          <View className="my-2 h-1 w-12 self-center rounded-sm bg-gray-500" />
+          <SafeAreaView className="flex-1" edges={["bottom"]}>
+            <View className="my-2 h-1 w-12 self-center rounded-sm bg-gray-500" />
+            <View className="flex-1">
+              {header && <View className="z-[1] pb-4">{header}</View>}
 
-          <View className="flex-1">
-            {header && <View className="z-[1] pb-4">{header}</View>}
-
-            <Animated.ScrollView
-              className="flex-1"
-              showsVerticalScrollIndicator
-              style={[scrollViewStyle]}
-            >
-              {children}
-            </Animated.ScrollView>
-
-            {footer && <View className="z-[1] mt-4 px-4">{footer}</View>}
-          </View>
+              <Animated.ScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator
+                style={[scrollViewStyle]}
+              >
+                {children}
+              </Animated.ScrollView>
+              {footer && <View className="z-[1] mt-4 px-4">{footer}</View>}
+            </View>
+          </SafeAreaView>
         </Animated.View>
       </GestureDetector>
     </View>
