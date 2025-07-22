@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { House, IdentificationBadge } from "phosphor-react-native";
 
-const AppLayout = () => (
+const MainLayout = () => (
   <Tabs
     screenOptions={{
       headerShown: false,
@@ -33,4 +33,4 @@ const AppLayout = () => (
   </Tabs>
 );
 
-export default AppLayout;
+export default MainLayout;

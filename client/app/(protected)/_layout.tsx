@@ -9,7 +9,7 @@ const ProtectedLayout = () => {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!isUserRegistered && !isTeamRegistered}>
+      <Stack.Protected guard={!isUserRegistered || !isTeamRegistered}>
         <Stack.Screen name="createProfile" />
       </Stack.Protected>
       <Stack.Protected guard={isUserRegistered && !isTeamRegistered}>
