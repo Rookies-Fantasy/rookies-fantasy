@@ -14,6 +14,7 @@ export type UserEditModel = Partial<{
 
 export type TeamEditModel = {
   abbreviation: string;
+  augmentId: string;
   logoUrl: string;
   name: string;
 };
@@ -123,7 +124,7 @@ export class UserController {
   static editUserTeam = async (
     userId: string,
     teamId: string,
-    params: TeamEditModel,
+    params: Partial<TeamEditModel>,
   ) => {
     try {
       await firestore()
@@ -133,26 +134,6 @@ export class UserController {
         .doc(teamId)
         .update({
           ...params,
-          updatedAt: new Date(),
-        });
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  static editUserTeamAugment = async (
-    userId: string,
-    teamId: string,
-    augmentId?: string,
-  ) => {
-    try {
-      await firestore()
-        .collection(USERS_COLLECTION)
-        .doc(userId)
-        .collection(TEAMS_COLLECTION)
-        .doc(teamId)
-        .update({
-          augmentId,
           updatedAt: new Date(),
         });
     } catch (error) {

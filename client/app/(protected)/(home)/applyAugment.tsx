@@ -95,7 +95,7 @@ const ApplyAugment = () => {
   const handleUpdateTeamAugment = async (augmentId?: string) => {
     setIsLoading(true);
     try {
-      await UserController.editUserTeamAugment(userId, teamId, augmentId);
+      await UserController.editUserTeam(userId, teamId, { augmentId });
       dispatch(setAugmentId(augmentId));
 
       router.replace("/(protected)/(tabs)");
