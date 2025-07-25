@@ -5,15 +5,17 @@ import { Player } from "@/types/players";
 
 const PLAYERS_COLLECTION = "nbaPlayers";
 
-export class NBAPlayersController {
+type PlayerFetchResult = {
+  players: Player[];
+  lastDoc?: FirebaseFirestoreTypes.DocumentSnapshot;
+  hasMore: boolean;
+};
+
+export class NbaPlayersController {
   static getFreeAgents = async (
     PAGE_SIZE: number,
     pageParam?: FirebaseFirestoreTypes.DocumentSnapshot,
-  ): Promise<{
-    players: Player[];
-    lastDoc?: FirebaseFirestoreTypes.DocumentSnapshot;
-    hasMore: boolean;
-  }> => {
+  ): Promise<PlayerFetchResult> => {
     try {
       let query = await firestore()
         .collection(PLAYERS_COLLECTION)

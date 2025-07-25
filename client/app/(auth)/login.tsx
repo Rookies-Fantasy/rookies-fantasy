@@ -16,6 +16,7 @@ import {
   Pressable,
 } from "react-native";
 import * as yup from "yup";
+import IconButton from "@/components/IconButton";
 import Spinner from "@/components/Spinner";
 import SSOButtons from "@/components/SSOButtons";
 
@@ -100,12 +101,11 @@ const Login = () => {
           className="flex-1 flex-col px-6 py-4"
         >
           <View className="my-20 flex-row items-center gap-4">
-            <Pressable
+            <IconButton
               className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
+              icon={<ArrowLeft color="white" size={20} weight="bold" />}
               onPress={() => router.dismissAll()}
-            >
-              <ArrowLeft color="white" size={20} weight="bold" />
-            </Pressable>
+            />
 
             <Text className="pbk-h5 text-base-white">Login</Text>
           </View>
