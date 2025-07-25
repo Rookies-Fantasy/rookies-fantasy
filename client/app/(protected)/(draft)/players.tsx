@@ -155,6 +155,11 @@ const Players = () => {
                 onPress={() => {}}
               />
             </View>
+
+            <View className="flex-row justify-between py-2">
+              <Text className="pbk-h8 text-base-white">PLAYERS</Text>
+              <Text className="pbk-h8 text-base-white">SELECTED: 0/8</Text>
+            </View>
           </View>
 
           {isLoading ? (
