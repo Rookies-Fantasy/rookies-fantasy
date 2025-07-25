@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import Button from "@/components/Button";
-import HelpModalButton from "@/components/HelpModalButton";
+import HelpDialogButton from "@/components/HelpDialogButton";
 import { AugmentController } from "@/controllers/augmentController";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
@@ -122,7 +122,7 @@ const ApplyAugment = () => {
                 <Text className="pbk-h5 text-base-white">
                   Select one augment
                 </Text>
-                <HelpModalButton title="What are Augments?">
+                <HelpDialogButton title="What are Augments?">
                   <Text className="pbk-b2 text-gray-500">
                     {`Augments are strategic bonuses that reward how you build your team.\n\nEach Augment comes with a unique condition. When certain players on your roster meet that condition, only those players get a boost to their stats.\n\nWhether you're stacking sharpshooters, loading up on defenders, or betting on underdogs, Augments let you shape your playstyle and gain a competitive edge.`}
                   </Text>
@@ -131,7 +131,7 @@ const ApplyAugment = () => {
                       {`Example\n\nThe “Deep Threat” Augment gives a +15% Points boost to players shooting 40%+ from three — but only if you have 3 such players on your team.`}
                     </Text>
                   </View>
-                </HelpModalButton>
+                </HelpDialogButton>
               </View>
 
               <ScrollView className="p-2">
