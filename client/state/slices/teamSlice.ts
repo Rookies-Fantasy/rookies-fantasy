@@ -8,6 +8,9 @@ const teamSlice = createSlice({
   reducers: {
     setTeam: (_, action: PayloadAction<Team>) => action.payload,
     clearTeam: () => defaultTeam,
+    setAugmentId: (state, action: PayloadAction<string | undefined>) => {
+      state.augmentId = action.payload;
+    },
   },
 });
 
@@ -19,6 +22,6 @@ export const selectIsTeamRegistered = (state: RootState): boolean =>
   !!state.team.logoUrl &&
   !!state.team.name;
 
-export const { setTeam, clearTeam } = teamSlice.actions;
+export const { setTeam, clearTeam, setAugmentId } = teamSlice.actions;
 
 export default teamSlice.reducer;

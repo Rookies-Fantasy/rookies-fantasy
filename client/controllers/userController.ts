@@ -90,6 +90,7 @@ export class UserController {
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
+            augmentId: team.data()?.augmentId,
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
@@ -132,6 +133,26 @@ export class UserController {
         .doc(teamId)
         .update({
           ...params,
+          updatedAt: new Date(),
+        });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static editUserTeamAugment = async (
+    userId: string,
+    teamId: string,
+    augmentId?: string,
+  ) => {
+    try {
+      await firestore()
+        .collection(USERS_COLLECTION)
+        .doc(userId)
+        .collection(TEAMS_COLLECTION)
+        .doc(teamId)
+        .update({
+          augmentId,
           updatedAt: new Date(),
         });
     } catch (error) {
