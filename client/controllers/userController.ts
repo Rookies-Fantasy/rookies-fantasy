@@ -115,7 +115,6 @@ export class UserController {
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
-        lineup: team.data()?.lineup,
         balance: team.data()?.balance,
       }));
     } catch (error) {

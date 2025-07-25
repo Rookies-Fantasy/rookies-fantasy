@@ -17,7 +17,7 @@ import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import TeamBudget from "@/components/TeamBudget";
-import { NBAPlayersController } from "@/controllers/nbaPlayersController";
+import { NbaPlayersController } from "@/controllers/nbaPlayersController";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -26,14 +26,12 @@ type FetchPlayersParams = {
 const Players = () => {
   const [query, setQuery] = useState("");
   const router = useRouter();
+  const PAGE_SIZE = 25;
 
   const fetchPlayersWithAverages = async ({
     pageParam,
-  }: FetchPlayersParams = {}) => {
-    const PAGE_SIZE = 25;
-
-    return await NBAPlayersController.getFreeAgents(PAGE_SIZE, pageParam);
-  };
+  }: FetchPlayersParams = {}) =>
+    await NbaPlayersController.getFreeAgents(PAGE_SIZE, pageParam);
 
   const {
     data,
@@ -56,7 +54,7 @@ const Players = () => {
 
     return players.map((player) => [
       <IconButton
-        className={false ? "bg-red-600" : "bg-green-700"} // TODO: Check if player is on roster
+        className={false ? "bg-red-600" : "bg-purple-600"} // TODO: Check if player is on roster
         icon={
           <Plus color="white" size={12} />
 
@@ -96,7 +94,7 @@ const Players = () => {
             >
               {player.firstName.slice(0, 1)}. {player.secondName}
             </Text>
-            <Text className="pbk-b2 text-green-400">${player.salary}</Text>
+            <Text className="pbk-b2 text-green-200">${player.salary}</Text>
             <View className="flex-1 flex-row gap-2">
               <Text className="pbk-b2 text-base-white">
                 {player.teamAbbreviation}
@@ -130,20 +128,18 @@ const Players = () => {
           <View className="px-6">
             <View className="mb-10 flex-row items-center justify-between">
               <View className="flex-row items-center gap-2">
-                <Pressable
+                <IconButton
                   className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
+                  icon={<ArrowLeft color="white" size={20} weight="bold" />}
                   onPress={() => router.back()}
-                >
-                  <ArrowLeft color="white" size={20} weight="bold" />
-                </Pressable>
+                />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
-              <Pressable
+              <IconButton
                 className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
+                icon={<X color="white" size={20} weight="bold" />}
                 onPress={() => router.dismissAll()}
-              >
-                <X color="white" size={20} weight="bold" />
-              </Pressable>
+              />
             </View>
 
             <TeamBudget />
@@ -153,9 +149,11 @@ const Players = () => {
                 <SearchBar onChangeText={setQuery} value={query} />
               </View>
 
-              <Pressable className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900">
-                <Sliders color="white" />
-              </Pressable>
+              <IconButton
+                className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
+                icon={<Sliders color="white" />}
+                onPress={() => {}}
+              />
             </View>
           </View>
 

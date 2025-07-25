@@ -10,15 +10,17 @@ const TeamBudget = ({ className }: TeamBudgetProps) => {
 
   return (
     <View
-      className={`w-full rounded-lg border border-gray-800 bg-gray-900 ${className}`}
+      className={`w-full gap-1 rounded-lg border border-gray-800 bg-gray-900 p-4 ${className}`}
     >
-      <Text className="pbk-h6 self-center p-4 text-base-white">
-        <Text className="pbk-h6 text-green-600">
+      <Text className="pbk-b1 self-center text-base-white">
+        Available Balance
+      </Text>
+      <Text className="pbk-bl self-center text-base-white">
+        <Text className="pbk-bl text-green-600">
           ${teamBalance.toLocaleString()}
         </Text>
         {` / $100,000,000`}
       </Text>
-      <View className="h-0.5 w-full bg-gray-800" />
     </View>
   );
 };
