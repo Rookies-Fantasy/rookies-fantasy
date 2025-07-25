@@ -14,7 +14,7 @@ import {
   Pressable,
 } from "react-native";
 import * as yup from "yup";
-import Spinner from "@/components/Spinner";
+import Button from "@/components/Button";
 
 const schema = yup.object({
   emailOrUsername: yup.string().required("Email or username is required"),
@@ -148,21 +148,12 @@ const ForgotPassword = () => {
             )}
           </View>
 
-          <Pressable
-            className={`${!isValid ? "bg-purple-900" : "bg-purple-600"} min-h-12 w-full items-center justify-center rounded-md`}
-            disabled={!isValid || isLoading}
+          <Button
+            disabled={!isValid}
+            isLoading={isLoading}
             onPress={handleSubmit(onSubmit)}
-          >
-            {isLoading ? (
-              <Spinner />
-            ) : (
-              <Text
-                className={`pbk-h6 text-center ${!isValid ? "text-gray-400" : "text-base-white"}`}
-              >
-                RESET PASSWORD
-              </Text>
-            )}
-          </Pressable>
+            text="Reset Password"
+          />
 
           <Text
             className="pbk-b1 mt-5 text-center text-purple-600"

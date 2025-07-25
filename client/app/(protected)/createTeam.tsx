@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
-import Spinner from "@/components/Spinner";
+import Button from "@/components/Button";
 import { TeamEditModel, UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setTeam } from "@/state/slices/teamSlice";
@@ -306,19 +306,11 @@ const CreateTeam = () => {
           </KeyboardAvoidingView>
 
           <View className="mb-8 justify-end bg-gray-950 px-6">
-            <Pressable
-              className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-              disabled={isLoading}
+            <Button
+              isLoading={isLoading}
               onPress={handleSubmit(handleCreateTeam)}
-            >
-              {isLoading ? (
-                <Spinner />
-              ) : (
-                <Text className="pbk-h6 text-center text-base-white">
-                  FINISH ACCOUNT CREATION
-                </Text>
-              )}
-            </Pressable>
+              text="Finish Account Creation"
+            />
           </View>
         </View>
       </Pressable>
@@ -329,7 +321,7 @@ const CreateTeam = () => {
             className="min-h-12 w-full justify-center rounded-md bg-purple-600"
             onPress={() => setShowBottomDrawer(false)}
           >
-            <Text className="pbk-h6 text-center text-base-white">SAVE</Text>
+            <Text className="pbk-h7 text-center text-base-white">SAVE</Text>
           </Pressable>
         }
         header={

@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
-import Spinner from "@/components/Spinner";
+import Button from "@/components/Button";
 import { UserController, UserEditModel } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
@@ -283,19 +283,15 @@ const CreateProfile = () => {
                               themeVariant="dark"
                               value={value ? new Date(value) : new Date()}
                             />
-                            <Pressable
-                              className="min-h-12 justify-center rounded-md bg-purple-600"
+                            <Button
                               onPress={() => {
                                 if (selectedDate) {
                                   onChange(selectedDate);
                                 }
                                 setShowDatePicker(false);
                               }}
-                            >
-                              <Text className="pbk-h6 text-center text-base-white">
-                                DONE
-                              </Text>
-                            </Pressable>
+                              text="Done"
+                            />
                           </View>
                         </View>
                       </Pressable>
@@ -344,19 +340,11 @@ const CreateProfile = () => {
           </KeyboardAvoidingView>
 
           <View className="mb-8 justify-end bg-gray-950 px-6">
-            <Pressable
-              className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-              disabled={isLoading}
+            <Button
+              isLoading={isLoading}
               onPress={handleSubmit(handleCreateProfile)}
-            >
-              {isLoading ? (
-                <Spinner />
-              ) : (
-                <Text className="pbk-h6 text-center text-base-white">
-                  CONTINUE
-                </Text>
-              )}
-            </Pressable>
+              text="Continue"
+            />
           </View>
         </View>
       </Pressable>
@@ -367,7 +355,7 @@ const CreateProfile = () => {
             className="min-h-12 w-full justify-center rounded-md bg-purple-600"
             onPress={() => setShowBottomDrawer(false)}
           >
-            <Text className="pbk-h6 text-center text-base-white">SAVE</Text>
+            <Text className="pbk-h7 text-center text-base-white">SAVE</Text>
           </Pressable>
         }
         header={

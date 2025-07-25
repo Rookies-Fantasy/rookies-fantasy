@@ -17,7 +17,7 @@ import {
   Pressable,
 } from "react-native";
 import * as yup from "yup";
-import Spinner from "@/components/Spinner";
+import Button from "@/components/Button";
 import SSOButtons from "@/components/SSOButtons";
 
 const schema = yup.object({
@@ -196,19 +196,11 @@ const SignUp = () => {
               <Text className="pbk-b2 mb-4 text-red-600">{errorMessage}</Text>
             )}
           </View>
-          <Pressable
-            className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-            disabled={isLoading}
+          <Button
+            isLoading={isLoading}
             onPress={handleSubmit(signUpUser)}
-          >
-            {isLoading ? (
-              <Spinner />
-            ) : (
-              <Text className="pbk-h6 text-center text-base-white">
-                SIGN UP
-              </Text>
-            )}
-          </Pressable>
+            text="Sign Up"
+          />
 
           <Text className="pbk-b2 my-5 flex-row flex-wrap text-gray-600">
             By signing up, you agree to our
