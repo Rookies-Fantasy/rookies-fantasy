@@ -14,7 +14,7 @@ export type UserEditModel = Partial<{
 
 export type TeamEditModel = {
   abbreviation: string;
-  augmentId: string;
+  augmentId?: string;
   logoUrl: string;
   name: string;
 };
