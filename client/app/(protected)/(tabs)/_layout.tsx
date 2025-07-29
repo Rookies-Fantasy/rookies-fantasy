@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 
-const AppLayout = () => (
+const MainLayout = () => (
   <Tabs
     screenOptions={{
       headerShown: false,
@@ -11,4 +11,4 @@ const AppLayout = () => (
   </Tabs>
 );
 
-export default AppLayout;
+export default MainLayout;
