@@ -8,12 +8,7 @@ const ProtectedLayout = () => {
   const isTeamRegistered = useAppSelector(selectIsTeamRegistered);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: "default",
-      }}
-    >
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!isUserRegistered || !isTeamRegistered}>
         <Stack.Screen name="createProfile" />
         <Stack.Screen name="createTeam" />

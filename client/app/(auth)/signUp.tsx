@@ -16,6 +16,7 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as yup from "yup";
 import IconButton from "@/components/IconButton";
 import Spinner from "@/components/Spinner";
@@ -99,7 +100,7 @@ const SignUp = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-950">
+    <SafeAreaView className="flex-1 bg-gray-950">
       <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView behavior="padding" className="flex-col px-6 py-4">
           <View className="my-20 flex-row items-center gap-4">
@@ -224,7 +225,7 @@ const SignUp = () => {
           <SSOButtons />
         </KeyboardAvoidingView>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 };
 
