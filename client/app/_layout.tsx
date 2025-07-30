@@ -11,36 +11,36 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "../state/store";
 import AuthListener from "@/components/AuthListener";
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
+import { useAppSelector } from "@/state/hooks";
+import {
+  selectIsUserSignedIn,
+  selectIsUserVerified,
+} from "@/state/slices/userSlice";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 const RootLayoutNav = () => {
   const queryClient = new QueryClient();
+  const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
+  const isUserVerified = useAppSelector(selectIsUserVerified);
 
   return (
     <SafeAreaProvider>
-      <GluestackUIProvider>
-        <GestureHandlerRootView>
-          <QueryClientProvider client={queryClient}>
-            <Provider store={store}>
-              <AuthListener>
-                <StatusBar style="light" />
-                <Stack screenOptions={{ animation: "none" }}>
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(protected)"
-                    options={{ headerShown: false }}
-                  />
-                </Stack>
-              </AuthListener>
-            </Provider>
-          </QueryClientProvider>
-        </GestureHandlerRootView>
-      </GluestackUIProvider>
+      <GestureHandlerRootView>
+        <QueryClientProvider client={queryClient}>
+          <AuthListener>
+            <StatusBar style="light" />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
+                <Stack.Screen name="(auth)" />
+              </Stack.Protected>
+              <Stack.Protected guard={isUserSignedIn && isUserVerified}>
+                <Stack.Screen name="(protected)" />
+              </Stack.Protected>
+            </Stack>
+          </AuthListener>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   );
 };
