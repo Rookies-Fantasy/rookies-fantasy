@@ -10,31 +10,36 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "../state/store";
 import AuthListener from "@/components/AuthListener";
+import { Theme } from "@/components/Theme";
 import { useAppSelector } from "@/state/hooks";
 import {
   selectIsUserSignedIn,
   selectIsUserVerified,
 } from "@/state/slices/userSlice";
+import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 const RootLayoutNav = () => {
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
+  const { theme } = useTheme();
 
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView>
         <AuthListener>
           <StatusBar style="light" />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
-              <Stack.Screen name="(auth)" />
-            </Stack.Protected>
-            <Stack.Protected guard={isUserSignedIn && isUserVerified}>
-              <Stack.Screen name="(protected)" />
-            </Stack.Protected>
-          </Stack>
+          <Theme name={theme as "purple" | "green"}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
+                <Stack.Screen name="(auth)" />
+              </Stack.Protected>
+              <Stack.Protected guard={isUserSignedIn && isUserVerified}>
+                <Stack.Screen name="(protected)" />
+              </Stack.Protected>
+            </Stack>
+          </Theme>
         </AuthListener>
       </GestureHandlerRootView>
     </SafeAreaProvider>
@@ -60,9 +65,11 @@ const RootLayout = () => {
   }
 
   return (
-    <Provider store={store}>
-      <RootLayoutNav />
-    </Provider>
+    <ThemeProvider>
+      <Provider store={store}>
+        <RootLayoutNav />
+      </Provider>
+    </ThemeProvider>
   );
 };
 

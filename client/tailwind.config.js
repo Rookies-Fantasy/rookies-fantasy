@@ -29,6 +29,9 @@ module.exports = {
         base: {
           white: "#FFFFFF",
         },
+        primary: "rgb(var(--color-primary) / <alpha-value>)",
+        background: "rgb(var(--color-background) / <alpha-value>)",
+        text: "rgb(var(--color-text) / <alpha-value>)",
         gray: {
           25: "#FDFDFD",
           50: "#FAFAFA",

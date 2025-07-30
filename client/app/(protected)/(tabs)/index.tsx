@@ -4,11 +4,13 @@ import { Pressable, Text, View } from "react-native";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { clearTeam } from "@/state/slices/teamSlice";
 import { clearUser } from "@/state/slices/userSlice";
+import { useTheme } from "@/theme/ThemeProvider";
 
 const Home = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
   const router = useRouter();
+  const { setTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -35,6 +37,41 @@ const Home = () => {
       <Text>{user.email}</Text>
       <Text>{user.id}</Text>
       <Text>{user.emailVerified?.toString()}</Text>
+      <View>
+        <Pressable className="min-h-12 w-20 justify-center rounded-md bg-yellow-600">
+          <Text className="text-center">Yellow</Text>
+        </Pressable>
+        <Pressable className="min-h-12 w-20 justify-center rounded-md bg-green-600">
+          <Text
+            className="text-center"
+            onPress={() => {
+              console.log("Switching theme to green");
+              setTheme("green");
+            }}
+          >
+            Green
+          </Text>
+        </Pressable>
+        <Pressable className="min-h-12 w-20 justify-center rounded-md bg-purple-600">
+          <Text className="text-center" onPress={() => setTheme("purple")}>
+            Purple
+          </Text>
+        </Pressable>
+      </View>
+      <View>
+        <Pressable className="min-h-12 w-20 justify-center rounded-md bg-black">
+          <Text className="text-center text-white">Dark</Text>
+        </Pressable>
+        <Pressable className="min-h-12 w-20 justify-center rounded-md bg-white">
+          <Text className="text-center">Light</Text>
+        </Pressable>
+        <Pressable className="min-h-12 w-20 justify-center rounded-md bg-purple-600">
+          <Text className="text-center">System</Text>
+        </Pressable>
+        <Pressable className="bg-background min-h-12 w-20 justify-center rounded-md">
+          <Text className="text-center">Button</Text>
+        </Pressable>
+      </View>
     </View>
   );
 };
