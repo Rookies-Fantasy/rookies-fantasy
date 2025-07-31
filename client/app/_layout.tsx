@@ -10,27 +10,26 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "../state/store";
 import AuthListener from "@/components/AuthListener";
-import { Theme } from "@/components/Theme";
+import { ThemeWrapper } from "@/components/ThemeWrapper";
 import { useAppSelector } from "@/state/hooks";
 import {
   selectIsUserSignedIn,
   selectIsUserVerified,
 } from "@/state/slices/userSlice";
-import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
+import { ThemeProvider } from "@/theme/ThemeProvider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 const RootLayoutNav = () => {
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
-  const { theme } = useAppTheme();
 
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView>
         <AuthListener>
           <StatusBar style="light" />
-          <Theme name={theme as "purple" | "green"}>
+          <ThemeWrapper>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
                 <Stack.Screen name="(auth)" />
@@ -39,7 +38,7 @@ const RootLayoutNav = () => {
                 <Stack.Screen name="(protected)" />
               </Stack.Protected>
             </Stack>
-          </Theme>
+          </ThemeWrapper>
         </AuthListener>
       </GestureHandlerRootView>
     </SafeAreaProvider>

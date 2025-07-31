@@ -1,3 +1,4 @@
+import { useColorScheme } from "nativewind";
 import { createContext, ReactNode, useContext, useState } from "react";
 import { ThemeMode, ThemeName } from "./theme";
 
@@ -16,7 +17,13 @@ type ThemeProviderProps = {
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [theme, setTheme] = useState<ThemeName>(ThemeName.Purple);
-  const [mode, setMode] = useState<ThemeMode>(ThemeMode.System);
+  const [mode, _setMode] = useState<ThemeMode>(ThemeMode.System);
+  const { setColorScheme } = useColorScheme();
+
+  const setMode = (mode: ThemeMode) => {
+    _setMode(mode);
+    setColorScheme(mode);
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, mode, setMode }}>

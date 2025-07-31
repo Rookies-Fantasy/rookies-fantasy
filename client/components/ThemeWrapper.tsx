@@ -3,16 +3,15 @@ import { View, ViewStyle } from "react-native";
 import { ThemeMode, themes } from "../theme/theme";
 import { useAppTheme } from "@/theme/ThemeProvider";
 
-type ThemeProps = {
-  name: keyof typeof themes;
+type ThemeWrapperProps = {
   children: React.ReactNode;
 };
 
-export const Theme = ({ name, children }: ThemeProps) => {
-  const { mode } = useAppTheme();
+export const ThemeWrapper = ({ children }: ThemeWrapperProps) => {
+  const { mode, theme } = useAppTheme();
   const systemMode = useColorScheme().colorScheme ?? "light";
   const resolvedMode = mode === ThemeMode.System ? systemMode : mode;
-  const style: ViewStyle = themes[name][resolvedMode];
+  const style: ViewStyle = themes[theme][resolvedMode];
 
   return <View style={[{ flex: 1 }, style]}>{children}</View>;
 };
