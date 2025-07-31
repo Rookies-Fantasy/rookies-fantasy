@@ -1,15 +1,18 @@
 import { useColorScheme } from "nativewind";
 import { View, ViewStyle } from "react-native";
-import { themes } from "../theme/theme";
+import { ThemeMode, themes } from "../theme/theme";
+import { useAppTheme } from "@/theme/ThemeProvider";
 
-export function Theme({
-  name,
-  children,
-}: {
+type ThemeProps = {
   name: keyof typeof themes;
   children: React.ReactNode;
-}) {
-  const { colorScheme = "light" } = useColorScheme();
-  const style: ViewStyle = themes[name][colorScheme];
+};
+
+export const Theme = ({ name, children }: ThemeProps) => {
+  const { mode } = useAppTheme();
+  const systemMode = useColorScheme().colorScheme ?? "light";
+  const resolvedMode = mode === ThemeMode.System ? systemMode : mode;
+  const style: ViewStyle = themes[name][resolvedMode];
+
   return <View style={[{ flex: 1 }, style]}>{children}</View>;
-}
+};

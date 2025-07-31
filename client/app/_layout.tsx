@@ -16,14 +16,14 @@ import {
   selectIsUserSignedIn,
   selectIsUserVerified,
 } from "@/state/slices/userSlice";
-import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
+import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 const RootLayoutNav = () => {
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
-  const { theme } = useTheme();
+  const { theme } = useAppTheme();
 
   return (
     <SafeAreaProvider>

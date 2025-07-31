@@ -1,5 +1,16 @@
 import { vars } from "nativewind";
 
+export enum ThemeName {
+  Green = "green",
+  Purple = "purple",
+}
+
+export enum ThemeMode {
+  Dark = "dark",
+  Light = "light",
+  System = "system",
+}
+
 export const themes = {
   purple: {
     light: vars({

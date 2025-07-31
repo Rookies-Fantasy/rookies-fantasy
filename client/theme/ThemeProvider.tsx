@@ -1,33 +1,34 @@
-import {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useState,
-} from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
+import { ThemeMode, ThemeName } from "./theme";
 
-type ThemeName = "purple" | "green";
-
-interface ThemeContextType {
+type ThemeContextType = {
   theme: ThemeName;
-  setTheme: Dispatch<SetStateAction<ThemeName>>;
-}
-
-const defaultContext: ThemeContextType = {
-  theme: "purple",
-  setTheme: () => {},
+  setTheme: (theme: ThemeName) => void;
+  mode: ThemeMode;
+  setMode: (mode: ThemeMode) => void;
 };
 
-const ThemeContext = createContext<ThemeContextType>(defaultContext);
-export function ThemeProvider({ children }: any) {
-  const [theme, setTheme] = useState<ThemeName>("purple");
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+type ThemeProviderProps = {
+  children: ReactNode;
+};
+
+export const ThemeProvider = ({ children }: ThemeProviderProps) => {
+  const [theme, setTheme] = useState<ThemeName>(ThemeName.Purple);
+  const [mode, setMode] = useState<ThemeMode>(ThemeMode.System);
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, mode, setMode }}>
       {children}
     </ThemeContext.Provider>
   );
-}
+};
 
-export function useTheme() {
-  return useContext(ThemeContext);
-}
+export const useAppTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+};

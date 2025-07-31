@@ -4,13 +4,14 @@ import { Pressable, Text, View } from "react-native";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { clearTeam } from "@/state/slices/teamSlice";
 import { clearUser } from "@/state/slices/userSlice";
-import { useTheme } from "@/theme/ThemeProvider";
+import { ThemeName } from "@/theme/theme";
+import { useAppTheme } from "@/theme/ThemeProvider";
 
 const Home = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
   const router = useRouter();
-  const { setTheme } = useTheme();
+  const { setTheme } = useAppTheme();
 
   const handleLogout = async () => {
     try {
@@ -45,15 +46,17 @@ const Home = () => {
           <Text
             className="text-center"
             onPress={() => {
-              console.log("Switching theme to green");
-              setTheme("green");
+              setTheme(ThemeName.Green);
             }}
           >
             Green
           </Text>
         </Pressable>
         <Pressable className="min-h-12 w-20 justify-center rounded-md bg-purple-600">
-          <Text className="text-center" onPress={() => setTheme("purple")}>
+          <Text
+            className="text-center"
+            onPress={() => setTheme(ThemeName.Purple)}
+          >
             Purple
           </Text>
         </Pressable>
