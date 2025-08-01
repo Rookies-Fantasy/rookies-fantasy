@@ -67,7 +67,7 @@ const Players = () => {
         }
         key={player.id}
         onPress={
-          () => console.log("Button pressed")
+          () => {}
           /* TODO: 
           // isPlayerInLineup(player.id)
           //   ? dispatch(removePlayerFromLineup(player.id))
