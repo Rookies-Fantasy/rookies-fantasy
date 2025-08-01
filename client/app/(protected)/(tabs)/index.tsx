@@ -28,7 +28,7 @@ const Home = () => {
       <View className="my-30 h-16" />
       <Button
         className="mb-4"
-        onPress={() => router.push("/(protected)/(home)/applyAugment")}
+        onPress={() => router.push("/(protected)/(draft)/applyAugment")}
         text="Build your team"
       />
       <Button onPress={handleLogout} text="Sign Out" />
