@@ -152,7 +152,7 @@ const Players = () => {
               <IconButton
                 className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
                 icon={<Sliders color="white" />}
-                onPress={() => { }}
+                onPress={() => {}}
               />
             </View>
 

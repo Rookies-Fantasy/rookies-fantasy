@@ -1,4 +1,4 @@
-﻿export const TEAM_BALANCE = 150000000;
+export const TEAM_BALANCE = 150000000;
 
 export type Team = {
   abbreviation?: string;

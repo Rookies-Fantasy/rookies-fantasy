@@ -39,16 +39,14 @@ const Table = ({
     if (isSyncingRef.current) return;
     isSyncingRef.current = true;
 
-    let frameId: number | null = null;
     if (source === "header") {
       bodyScrollRef.current?.scrollTo({ x, animated: false });
     } else {
       horizontalScrollRef.current?.scrollTo({ x, animated: false });
     }
 
-    frameId = requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       isSyncingRef.current = false;
-      frameId = null;
     });
   };
 
