@@ -13,6 +13,7 @@ import {
   Keyboard,
   Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
 import Button from "@/components/Button";
@@ -96,7 +97,6 @@ const CreateTeam = () => {
     control,
     handleSubmit,
     formState: { errors },
-    setValue,
     reset,
   } = useForm<TeamEditModel>({
     resolver: yupResolver(schema),
@@ -173,7 +173,7 @@ const CreateTeam = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-950">
+    <SafeAreaView className="flex-1 bg-gray-950">
       <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <View className="flex-1">
           <KeyboardAvoidingView behavior="padding" className="flex-1">
@@ -337,38 +337,36 @@ const CreateTeam = () => {
           control={control}
           name="logoUrl"
           render={({ field: { onChange } }) => (
-            <View className="flex-1 px-6 py-4">
-              <View className="mb-6 flex-row flex-wrap justify-between">
-                {logoOptions.map((teamLogoOption, index) => {
-                  const isSelected =
-                    selectedLogoOption.url === teamLogoOption.url;
-                  return (
-                    <Pressable
-                      className="relative mb-2.5 aspect-square w-[26%] items-center justify-center"
-                      key={index}
-                      onPress={() => {
-                        setSelectedLogoOption(teamLogoOption);
-                        setValue("logoUrl", teamLogoOption.url);
-                      }}
-                    >
-                      {isSelected && (
-                        <View className="absolute -bottom-1 -left-1 -right-1 -top-1 rounded-full border-4 border-purple-600" />
-                      )}
+            <View className="mb-6 flex-1 flex-row flex-wrap justify-between px-6 py-4">
+              {logoOptions.map((teamLogoOption, index) => {
+                const isSelected =
+                  selectedLogoOption.url === teamLogoOption.url;
+                return (
+                  <Pressable
+                    className="relative mb-2.5 aspect-square w-[26%] items-center justify-center"
+                    key={index}
+                    onPress={() => {
+                      onChange(teamLogoOption.url);
+                      setSelectedLogoOption(teamLogoOption);
+                    }}
+                  >
+                    {isSelected && (
+                      <View className="absolute -bottom-1 -left-1 -right-1 -top-1 rounded-full border-4 border-purple-600" />
+                    )}
 
-                      <Image
-                        className="h-full w-full rounded-full"
-                        resizeMode="cover"
-                        source={teamLogoOption.source}
-                      />
-                    </Pressable>
-                  );
-                })}
-              </View>
+                    <Image
+                      className="h-full w-full rounded-full"
+                      resizeMode="cover"
+                      source={teamLogoOption.source}
+                    />
+                  </Pressable>
+                );
+              })}
             </View>
           )}
         />
       </BottomSheet>
-    </View>
+    </SafeAreaView>
   );
 };
 

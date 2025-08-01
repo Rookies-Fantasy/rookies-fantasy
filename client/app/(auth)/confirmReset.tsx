@@ -8,6 +8,7 @@ import {
   Text,
   Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import MailIcon from "@/assets/icons/mail.svg";
 import Spinner from "@/components/Spinner";
 import { cn } from "@/utils/jsUtils";
@@ -55,7 +56,7 @@ const ConfirmReset = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-950">
+    <SafeAreaView className="flex-1 bg-gray-950">
       <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior="padding"
@@ -114,7 +115,7 @@ const ConfirmReset = () => {
           </View>
         </KeyboardAvoidingView>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 };
 

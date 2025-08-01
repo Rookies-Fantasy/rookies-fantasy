@@ -1,4 +1,3 @@
-import gluestackPlugin from "@gluestack-ui/nativewind-utils/tailwind-plugin";
 import typographyPlugin from "./utils/typography.plugin";
 
 /** @type {import('tailwindcss').Config} */
@@ -153,5 +152,5 @@ module.exports = {
       },
     },
   },
-  plugins: [gluestackPlugin, typographyPlugin],
+  plugins: [typographyPlugin],
 };

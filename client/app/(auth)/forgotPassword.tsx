@@ -13,6 +13,7 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as yup from "yup";
 import Button from "@/components/Button";
 
@@ -89,7 +90,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-950">
+    <SafeAreaView className="flex-1 bg-gray-950">
       <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior="padding"
@@ -163,7 +164,7 @@ const ForgotPassword = () => {
           </Text>
         </KeyboardAvoidingView>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 };
 

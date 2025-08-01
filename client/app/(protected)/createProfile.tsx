@@ -15,6 +15,7 @@ import {
   Modal,
   Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
 import Button from "@/components/Button";
@@ -158,7 +159,7 @@ const CreateProfile = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-950">
+    <SafeAreaView className="flex-1 bg-gray-950">
       <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <View className="flex-1">
           <KeyboardAvoidingView behavior="padding" className="flex-1">
@@ -371,38 +372,36 @@ const CreateProfile = () => {
           control={control}
           name="avatarUrl"
           render={({ field: { onChange } }) => (
-            <View className="flex-1 px-6 py-4">
-              <View className="mb-6 flex-row flex-wrap justify-between">
-                {avatarOptions.map((avatarOption, index) => {
-                  const isSelected =
-                    selectedAvatarOption.url === avatarOption.url;
+            <View className="mb-6 flex-1 flex-row flex-wrap justify-between px-6 py-4">
+              {avatarOptions.map((avatarOption, index) => {
+                const isSelected =
+                  selectedAvatarOption.url === avatarOption.url;
 
-                  return (
-                    <Pressable
-                      className="relative mb-2.5 aspect-square w-[26%] items-center justify-center"
-                      key={index}
-                      onPress={() => {
-                        onChange(avatarOption.url);
-                        setSelectedAvatarOption(avatarOption);
-                      }}
-                    >
-                      {isSelected && (
-                        <View className="absolute -bottom-1 -left-1 -right-1 -top-1 rounded-full border-4 border-purple-600" />
-                      )}
-                      <Image
-                        className="h-full w-full rounded-full"
-                        resizeMode="cover"
-                        source={avatarOption.source}
-                      />
-                    </Pressable>
-                  );
-                })}
-              </View>
+                return (
+                  <Pressable
+                    className="relative mb-2.5 aspect-square w-[26%] items-center justify-center"
+                    key={index}
+                    onPress={() => {
+                      onChange(avatarOption.url);
+                      setSelectedAvatarOption(avatarOption);
+                    }}
+                  >
+                    {isSelected && (
+                      <View className="absolute -bottom-1 -left-1 -right-1 -top-1 rounded-full border-4 border-purple-600" />
+                    )}
+                    <Image
+                      className="h-full w-full rounded-full"
+                      resizeMode="cover"
+                      source={avatarOption.source}
+                    />
+                  </Pressable>
+                );
+              })}
             </View>
           )}
         />
       </BottomSheet>
-    </View>
+    </SafeAreaView>
   );
 };
 
