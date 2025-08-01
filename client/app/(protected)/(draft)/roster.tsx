@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { ArrowLeft, X } from "phosphor-react-native";
+import { ArrowLeft, UserPlus, X } from "phosphor-react-native";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -9,9 +9,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TeamBudget from "@/components/TeamBudget";
+import PlayerSlot from "@/components/PlayerSlot";
+import { useAppSelector } from "@/state/hooks";
 
 const Roster = () => {
   const router = useRouter();
+  const lineup = useAppSelector((state) => state.team.lineup);
 
   return (
     <SafeAreaView
@@ -40,12 +43,19 @@ const Roster = () => {
             </View>
 
             <TeamBudget />
+
+            <View className="flex-row justify-between py-2">
+              <Text className="pbk-h8 text-base-white">ROSTER</Text>
+              <Text className="pbk-h8 text-base-white">SELECTED: 0/8</Text>
+            </View>
           </View>
-          <Text className="pbk-h6 text-base-white">Roster</Text>
-          <View className="my-30 h-16" />
+
+          {/* <View className="flex-1  mx-6 bg-red-500 ">
+            {lineup.slots.map((slot) => { return <PlayerSlot /> })}
+          </View> */}
         </KeyboardAvoidingView>
       </Pressable>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
