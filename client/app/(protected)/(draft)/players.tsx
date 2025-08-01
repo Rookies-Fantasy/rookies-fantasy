@@ -31,7 +31,7 @@ const Players = () => {
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    await NbaPlayersController.getFreeAgents(PAGE_SIZE, pageParam);
+    await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
 
   const {
     data,
@@ -152,7 +152,7 @@ const Players = () => {
               <IconButton
                 className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
                 icon={<Sliders color="white" />}
-                onPress={() => {}}
+                onPress={() => { }}
               />
             </View>
 
@@ -197,7 +197,7 @@ const Players = () => {
               ]}
               isFetchingNextPage={isFetchingNextPage}
               onEndReached={() => fetchNextPage()}
-              stickyIndexes={[0, 1]}
+              stickyColumns={2}
               widthClasses={[
                 "w-16",
                 "min-w-60",

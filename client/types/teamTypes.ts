@@ -1,4 +1,6 @@
-﻿export type Team = {
+﻿export const TEAM_BALANCE = 150000000;
+
+export type Team = {
   abbreviation?: string;
   id: string;
   logoUrl?: string;
@@ -8,5 +10,5 @@
 
 export const defaultTeam: Team = {
   id: "",
-  balance: 100000000,
+  balance: TEAM_BALANCE,
 };

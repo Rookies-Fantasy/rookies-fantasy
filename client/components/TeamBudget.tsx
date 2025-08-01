@@ -19,7 +19,7 @@ const TeamBudget = ({ className }: TeamBudgetProps) => {
         <Text className="pbk-bl text-green-600">
           ${teamBalance.toLocaleString()}
         </Text>
-        {` / $100,000,000`}
+        {` / $150,000,000`}
       </Text>
     </View>
   );
