@@ -6,29 +6,31 @@ export type Team = {
   logoUrl?: string;
   name?: string;
   balance: number;
-  lineup: Lineup;
+  lineup: LineupSlot[];
 };
 
 type Position = "PG" | "SG" | "SF" | "PF" | "C";
 type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
+type SlotPosition = Position | FlexPosition;
 
 type LineupSlot = {
-  slot: Position | FlexPosition;
+  position: SlotPosition;
   player: Player | null;
-}
+};
 
-type Lineup = {
-  slots: LineupSlot[];
-}
-
-const SLOT_ORDER: (Position | FlexPosition)[] = [
-  "PG", "SG", "SF", "PF", "C", "UTIL1", "UTIL2", "UTIL3"
+export const SLOT_ORDER: SlotPosition[] = [
+  "PG",
+  "SG",
+  "SF",
+  "PF",
+  "C",
+  "UTIL1",
+  "UTIL2",
+  "UTIL3",
 ];
 
 export const defaultTeam: Team = {
   id: "",
   balance: 150000000,
-  lineup: {
-    slots: SLOT_ORDER.map((slot) => ({ slot, player: null }))
-  }
+  lineup: SLOT_ORDER.map((position) => ({ position, player: null })),
 };

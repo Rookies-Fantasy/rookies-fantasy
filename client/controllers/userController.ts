@@ -1,4 +1,4 @@
-﻿import firestore from "@react-native-firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import { defaultTeam, Team } from "@/types/teamTypes";
 import { defaultUser, User } from "@/types/userTypes";
 
@@ -94,6 +94,7 @@ export class UserController {
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
+            lineup: team.data()?.lineup ?? defaultTeam.lineup,
             balance: team.data()?.balance ?? 0,
           }
         : defaultTeam;
@@ -115,6 +116,7 @@ export class UserController {
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
+        lineup: team.data()?.lineup,
         balance: team.data()?.balance,
       }));
     } catch (error) {
