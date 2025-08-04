@@ -1,10 +1,9 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Plus, Sliders, X } from "phosphor-react-native";
+import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
 import { useMemo, useState } from "react";
 import {
-  Image,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -14,13 +13,21 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import BottomSheet from "@/components/BottomSheet";
 import IconButton from "@/components/IconButton";
+import PlayerData from "@/components/PlayerData";
 import PlayerSlot from "@/components/PlayerSlot";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
-import { useAppSelector } from "@/state/hooks";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  addPlayerToLineup,
+  getLineupPlayerCount,
+  isPlayerInLineup,
+  removePlayerFromLineup,
+  updateBalance,
+} from "@/state/slices/teamSlice";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -30,7 +37,9 @@ const Players = () => {
   const [query, setQuery] = useState("");
   const router = useRouter();
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
+  const dispatch = useAppDispatch();
   const lineup = useAppSelector((state) => state.team.lineup);
+  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
   const PAGE_SIZE = 25;
 
   const fetchPlayersWithAverages = async ({
@@ -59,61 +68,30 @@ const Players = () => {
 
     return players.map((player) => [
       <IconButton
-        className={false ? "bg-red-600" : "bg-purple-600"} // TODO: Check if player is on roster
+        className={
+          isPlayerInLineup(lineup, player.id) ? "bg-red-600" : "bg-purple-600"
+        } // TODO: Check if player is on roster
         icon={
-          <Plus color="white" size={12} />
-
-          // TODO:
-          //isPlayerInLineup(player.id) ? (
-          //   <Minus color="white" size={12} />
-          // ) : (
-          //   <Plus color="white" size={12} />
-          // )
+          isPlayerInLineup(lineup, player.id) ? (
+            <Minus color="white" size={12} />
+          ) : (
+            <Plus color="white" size={12} />
+          )
         }
         key={player.id}
-        onPress={
-          () => {
-            Keyboard.dismiss();
-            setShowBottomDrawer(true);
+        onPress={() => {
+          if (isPlayerInLineup(lineup, player.id)) {
+            dispatch(removePlayerFromLineup(player));
+            dispatch(updateBalance(parseInt(player.salary)));
+          } else {
+            dispatch(addPlayerToLineup(player));
+            dispatch(updateBalance(parseInt(player.salary) * -1));
           }
-          /* TODO: 
-          // isPlayerInLineup(player.id)
-          //   ? dispatch(removePlayerFromLineup(player.id))
-          //   : dispatch(
-          //       addPlayerToLineup({
-          //         player: player,
-          //         position: player.positions[0] as keyof Lineup,
-          //       }),
-          //     )
-          */
-        }
+          // Keyboard.dismiss();
+          // setShowBottomDrawer(true);
+        }}
       />,
-      <View key={player.id}>
-        <View className="flex-row gap-2">
-          <Image
-            className="size-14 rounded-full"
-            source={{ uri: player.headshotUrl }}
-          />
-          <View className="max-w-32">
-            <Text
-              className="pbk-b2 text-base-white"
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              {player.firstName.slice(0, 1)}. {player.secondName}
-            </Text>
-            <Text className="pbk-b2 text-green-200">${player.salary}</Text>
-            <View className="flex-1 flex-row gap-2">
-              <Text className="pbk-b2 text-base-white">
-                {player.teamAbbreviation}
-              </Text>
-              <Text className="pbk-b2 text-base-white">
-                {player.positions.join(", ")}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>,
+      <PlayerData key={player.id} player={player} />,
       player.gamesPlayed,
       player.averageStats.min.toFixed(1),
       player.averageStats.pts.toFixed(1),
@@ -124,7 +102,7 @@ const Players = () => {
       player.averageStats.tov.toFixed(1),
       player.averageStats.fpts,
     ]);
-  }, [data?.pages]);
+  }, [data?.pages, dispatch, lineup]);
 
   return (
     <SafeAreaView
@@ -166,7 +144,9 @@ const Players = () => {
 
             <View className="flex-row justify-between py-2">
               <Text className="pbk-h8 text-base-white">PLAYERS</Text>
-              <Text className="pbk-h8 text-base-white">SELECTED: 0/8</Text>
+              <Text className="pbk-h8 text-base-white">
+                SELECTED: {selectedPlayers}/8
+              </Text>
             </View>
           </View>
 

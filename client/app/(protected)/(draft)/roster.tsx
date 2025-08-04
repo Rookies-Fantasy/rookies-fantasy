@@ -12,10 +12,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PlayerSlot from "@/components/PlayerSlot";
 import TeamBudget from "@/components/TeamBudget";
 import { useAppSelector } from "@/state/hooks";
+import { getLineupPlayerCount } from "@/state/slices/teamSlice";
 
 const Roster = () => {
   const router = useRouter();
   const lineup = useAppSelector((state) => state.team.lineup);
+  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
 
   console.log("team from redux:", lineup);
 
@@ -50,7 +52,9 @@ const Roster = () => {
 
               <View className="flex-row justify-between py-4">
                 <Text className="pbk-h7 text-base-white">ROSTER</Text>
-                <Text className="pbk-h7 text-base-white">SELECTED: 0/8</Text>
+                <Text className="pbk-h7 text-base-white">
+                  SELECTED: {selectedPlayers}/8
+                </Text>
               </View>
             </View>
 

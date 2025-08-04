@@ -1,5 +1,6 @@
 import { UserPlus } from "phosphor-react-native";
 import { View, Text, Pressable } from "react-native";
+import PlayerData from "./PlayerData";
 import { Player } from "@/types/players";
 
 type PlayerSlotProps = {
@@ -22,13 +23,9 @@ const PlayerSlot = ({
           <Text className="pbk-h8 text-purple-400">{position}</Text>
         </Pressable>
         {playerData ? (
-          <Text className="pbk-b2 text-base-white">
-            Full player - Tap to add player
-          </Text>
+          <PlayerData player={playerData} />
         ) : (
-          <Text className="pbk-b2 text-base-white">
-            Empty player - Tap to add player
-          </Text>
+          <Text className="pbk-b2 text-base-white">Empty</Text>
         )}
       </View>
 

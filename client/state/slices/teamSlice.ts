@@ -1,6 +1,13 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { defaultTeam, Team } from "@/types/teamTypes";
+import { Player } from "@/types/players";
+import {
+  defaultTeam,
+  FlexPosition,
+  LineupSlot,
+  SlotPosition,
+  Team,
+} from "@/types/teamTypes";
 
 const teamSlice = createSlice({
   name: "team",
@@ -8,6 +15,68 @@ const teamSlice = createSlice({
   reducers: {
     setTeam: (_, action: PayloadAction<Team>) => action.payload,
     clearTeam: () => defaultTeam,
+    addPlayerToLineup: (state, action: PayloadAction<Player>) => {
+      const player = action.payload;
+      const positions = player.positions;
+
+      if (!positions || positions.length === 0) {
+        return;
+      }
+
+      const findSlotByPosition = (position: SlotPosition) =>
+        state.lineup.find((slot) => slot.position === position);
+
+      const isPositionAvailable = (position: SlotPosition) => {
+        const slot = findSlotByPosition(position);
+        return slot && slot.player === null;
+      };
+
+      // Check if primary position (positions[0]) is available
+      const primaryPosition = positions[0] as SlotPosition;
+      if (isPositionAvailable(primaryPosition)) {
+        const slot = findSlotByPosition(primaryPosition);
+        if (slot) {
+          slot.player = player;
+          return;
+        }
+      }
+
+      // Look through remaining eligible positions
+      for (let i = 1; i < positions.length; i++) {
+        const position = positions[i] as SlotPosition;
+        if (isPositionAvailable(position)) {
+          const slot = findSlotByPosition(position);
+          if (slot) {
+            slot.player = player;
+            return;
+          }
+        }
+      }
+
+      // Check UTIL positions if no eligible positions are available
+      const utilPositions: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
+      for (const utilPosition of utilPositions) {
+        if (isPositionAvailable(utilPosition)) {
+          const slot = findSlotByPosition(utilPosition);
+          if (slot) {
+            slot.player = player;
+            return;
+          }
+        }
+      }
+    },
+    removePlayerFromLineup: (state, action: PayloadAction<Player>) => {
+      const player = action.payload;
+      const slot = state.lineup.find(
+        (slot) => slot.player && slot.player.id === player.id,
+      );
+      if (slot) {
+        slot.player = null;
+      }
+    },
+    updateBalance: (state, action: PayloadAction<number>) => {
+      state.balance += action.payload;
+    },
   },
 });
 
@@ -19,6 +88,20 @@ export const selectIsTeamRegistered = (state: RootState): boolean =>
   !!state.team.logoUrl &&
   !!state.team.name;
 
-export const { setTeam, clearTeam } = teamSlice.actions;
+export const getLineupPlayerCount = (state: RootState): number =>
+  state.team.lineup.filter((slot) => slot.player !== null).length;
+
+export const isPlayerInLineup = (
+  lineup: LineupSlot[],
+  playerId: string,
+): boolean => lineup.some((slot) => slot.player?.id === playerId);
+
+export const {
+  setTeam,
+  clearTeam,
+  addPlayerToLineup,
+  removePlayerFromLineup,
+  updateBalance,
+} = teamSlice.actions;
 
 export default teamSlice.reducer;

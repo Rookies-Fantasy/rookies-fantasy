@@ -51,7 +51,7 @@ export class NbaPlayersController {
           id: data.playerId,
           jerseyNumber: data.jerseyNumber,
           positions: data.positions,
-          salary: data.salary.toLocaleString(),
+          salary: data.salary,
           secondName: data.lastName,
           teamAbbreviation: data.teamAbbreviation,
           teamId: data.teamId,

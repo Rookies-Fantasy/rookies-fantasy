@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { UserList, UsersThree } from "phosphor-react-native";
+import { UserPlus, UsersThree } from "phosphor-react-native";
 
 const DraftLayout = () => (
   <Tabs
@@ -30,8 +30,8 @@ const DraftLayout = () => (
     <Tabs.Screen
       name="players"
       options={{
-        title: "PLAYERS",
-        tabBarIcon: ({ color }) => <UserList color={color} />,
+        title: "ADD PLAYERS",
+        tabBarIcon: ({ color }) => <UserPlus color={color} />,
       }}
     />
   </Tabs>

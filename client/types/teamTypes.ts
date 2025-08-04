@@ -9,11 +9,11 @@ export type Team = {
   lineup: LineupSlot[];
 };
 
-type Position = "PG" | "SG" | "SF" | "PF" | "C";
-type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
-type SlotPosition = Position | FlexPosition;
+export type Position = "PG" | "SG" | "SF" | "PF" | "C";
+export type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
+export type SlotPosition = Position | FlexPosition;
 
-type LineupSlot = {
+export type LineupSlot = {
   position: SlotPosition;
   player: Player | null;
 };
