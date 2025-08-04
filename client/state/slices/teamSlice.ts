@@ -37,6 +37,7 @@ const teamSlice = createSlice({
         const slot = findSlotByPosition(primaryPosition);
         if (slot) {
           slot.player = player;
+          state.balance += parseInt(slot.player.salary) * -1;
           return;
         }
       }
@@ -48,6 +49,7 @@ const teamSlice = createSlice({
           const slot = findSlotByPosition(position);
           if (slot) {
             slot.player = player;
+            state.balance += parseInt(slot.player.salary) * -1;
             return;
           }
         }
@@ -60,6 +62,7 @@ const teamSlice = createSlice({
           const slot = findSlotByPosition(utilPosition);
           if (slot) {
             slot.player = player;
+            state.balance += parseInt(slot.player.salary) * -1;
             return;
           }
         }
@@ -70,12 +73,10 @@ const teamSlice = createSlice({
       const slot = state.lineup.find(
         (slot) => slot.player && slot.player.id === player.id,
       );
-      if (slot) {
+      if (slot && slot.player) {
+        state.balance += parseInt(slot.player.salary);
         slot.player = null;
       }
-    },
-    updateBalance: (state, action: PayloadAction<number>) => {
-      state.balance += action.payload;
     },
   },
 });
@@ -96,12 +97,7 @@ export const isPlayerInLineup = (
   playerId: string,
 ): boolean => lineup.some((slot) => slot.player?.id === playerId);
 
-export const {
-  setTeam,
-  clearTeam,
-  addPlayerToLineup,
-  removePlayerFromLineup,
-  updateBalance,
-} = teamSlice.actions;
+export const { setTeam, clearTeam, addPlayerToLineup, removePlayerFromLineup } =
+  teamSlice.actions;
 
 export default teamSlice.reducer;

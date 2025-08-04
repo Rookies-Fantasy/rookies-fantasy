@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { ArrowLeft, X } from "phosphor-react-native";
+import { useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -9,6 +10,7 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import BottomSheet from "@/components/BottomSheet";
 import PlayerSlot from "@/components/PlayerSlot";
 import TeamBudget from "@/components/TeamBudget";
 import { useAppSelector } from "@/state/hooks";
@@ -18,6 +20,8 @@ const Roster = () => {
   const router = useRouter();
   const lineup = useAppSelector((state) => state.team.lineup);
   const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
+  const [showBottomDrawer, setShowBottomDrawer] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
 
   console.log("team from redux:", lineup);
 
@@ -63,6 +67,10 @@ const Roster = () => {
                 <PlayerSlot
                   isCard
                   key={slot.position}
+                  openDrawer={() => {
+                    setSelectedPosition(slot.position);
+                    setShowBottomDrawer(true);
+                  }}
                   playerData={slot.player}
                   position={slot.position}
                 />
@@ -71,6 +79,49 @@ const Roster = () => {
           </KeyboardAvoidingView>
         </Pressable>
       </ScrollView>
+      <BottomSheet
+        footer={
+          <Pressable
+            className="min-h-12 w-full justify-center rounded-md bg-purple-600"
+            onPress={() => {
+              setShowBottomDrawer(false);
+              setSelectedPosition(null);
+            }}
+          >
+            <Text className="pbk-h6 text-center text-base-white">
+              SAVE LINEUP
+            </Text>
+          </Pressable>
+        }
+        header={
+          <Text className="pbk-b1 text-center text-base-white">
+            Edit lineup
+          </Text>
+        }
+        isOpen={showBottomDrawer}
+        onClose={() => {
+          setShowBottomDrawer(false);
+          setSelectedPosition(null);
+        }}
+        snapPoints={["66%"]}
+      >
+        <View className="flex-1 border-t-2 border-gray-900">
+          {lineup.map((slot) => (
+            <View className="border-b-2 border-gray-900" key={slot.position}>
+              <PlayerSlot
+                isSelected={selectedPosition === slot.position}
+                onPlayerRemove={() => {
+                  if (selectedPosition === slot.position) {
+                    setSelectedPosition(null);
+                  }
+                }}
+                playerData={slot.player}
+                position={slot.position}
+              />
+            </View>
+          ))}
+        </View>
+      </BottomSheet>
     </SafeAreaView>
   );
 };
