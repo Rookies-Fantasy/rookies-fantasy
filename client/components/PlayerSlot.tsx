@@ -3,12 +3,19 @@ import { View, Text, Pressable } from "react-native";
 import { Player } from "@/types/players";
 
 type PlayerSlotProps = {
+  isCard?: boolean;
   position: string;
   playerData: Player | null;
 };
 
-const PlayerSlot = ({ position, playerData }: PlayerSlotProps) => (
-  <View className="min-h-24 w-full justify-center rounded-2xl border border-gray-900 bg-gray-920">
+const PlayerSlot = ({
+  isCard = false,
+  position,
+  playerData,
+}: PlayerSlotProps) => (
+  <View
+    className={`min-h-24 w-full justify-center ${isCard ? "rounded-2xl border border-gray-900" : ""} bg-gray-920`}
+  >
     <View className="flex-row items-center justify-between px-3">
       <View className="flex-1 flex-row items-center gap-2">
         <Pressable className="h-8 min-w-16 items-center justify-center rounded-3xl border border-purple-400">
@@ -25,9 +32,7 @@ const PlayerSlot = ({ position, playerData }: PlayerSlotProps) => (
         )}
       </View>
 
-      <View className="">
-        <UserPlus color="#6042FF" size={20} />
-      </View>
+      <UserPlus color="#6042FF" size={20} />
     </View>
   </View>
 );

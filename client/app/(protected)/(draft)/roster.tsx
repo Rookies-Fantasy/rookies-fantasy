@@ -57,6 +57,7 @@ const Roster = () => {
             <View className="mx-6 flex-1 gap-4">
               {lineup.map((slot) => (
                 <PlayerSlot
+                  isCard
                   key={slot.position}
                   playerData={slot.player}
                   position={slot.position}

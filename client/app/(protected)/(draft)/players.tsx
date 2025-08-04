@@ -12,12 +12,15 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import BottomSheet from "@/components/BottomSheet";
 import IconButton from "@/components/IconButton";
+import PlayerSlot from "@/components/PlayerSlot";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
+import { useAppSelector } from "@/state/hooks";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -26,6 +29,8 @@ type FetchPlayersParams = {
 const Players = () => {
   const [query, setQuery] = useState("");
   const router = useRouter();
+  const [showBottomDrawer, setShowBottomDrawer] = useState(false);
+  const lineup = useAppSelector((state) => state.team.lineup);
   const PAGE_SIZE = 25;
 
   const fetchPlayersWithAverages = async ({
@@ -67,7 +72,10 @@ const Players = () => {
         }
         key={player.id}
         onPress={
-          () => console.log("Button pressed")
+          () => {
+            Keyboard.dismiss();
+            setShowBottomDrawer(true);
+          }
           /* TODO: 
           // isPlayerInLineup(player.id)
           //   ? dispatch(removePlayerFromLineup(player.id))
@@ -216,6 +224,35 @@ const Players = () => {
           )}
         </KeyboardAvoidingView>
       </Pressable>
+
+      <BottomSheet
+        footer={
+          <Pressable
+            className="min-h-12 w-full justify-center rounded-md bg-purple-600"
+            onPress={() => setShowBottomDrawer(false)}
+          >
+            <Text className="pbk-h6 text-center text-base-white">
+              SAVE LINEUP
+            </Text>
+          </Pressable>
+        }
+        header={
+          <Text className="pbk-b1 text-center text-base-white">
+            Edit lineup
+          </Text>
+        }
+        isOpen={showBottomDrawer}
+        onClose={() => setShowBottomDrawer(false)}
+        snapPoints={["66%"]}
+      >
+        <View className="flex-1 border-t-2 border-gray-900">
+          {lineup.map((slot) => (
+            <View className="border-b-2 border-gray-900" key={slot.position}>
+              <PlayerSlot playerData={slot.player} position={slot.position} />
+            </View>
+          ))}
+        </View>
+      </BottomSheet>
     </SafeAreaView>
   );
 };
