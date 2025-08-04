@@ -8,10 +8,15 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PlayerSlot from "@/components/PlayerSlot";
 import TeamBudget from "@/components/TeamBudget";
+import { useAppSelector } from "@/state/hooks";
 
 const Roster = () => {
   const router = useRouter();
+  const lineup = useAppSelector((state) => state.team.lineup);
+
+  console.log("team from redux:", lineup);
 
   return (
     <SafeAreaView
@@ -40,9 +45,22 @@ const Roster = () => {
             </View>
 
             <TeamBudget />
+
+            <View className="flex-row justify-between py-2">
+              <Text className="pbk-h8 text-base-white">ROSTER</Text>
+              <Text className="pbk-h8 text-base-white">SELECTED: 0/8</Text>
+            </View>
           </View>
-          <Text className="pbk-h6 text-base-white">Roster</Text>
-          <View className="my-30 h-16" />
+
+          <View className="mx-6 flex-1 bg-red-500">
+            {lineup.map((slot) => (
+              <PlayerSlot
+                key={slot.position}
+                playerData={slot.player}
+                position={slot.position}
+              />
+            ))}
+          </View>
         </KeyboardAvoidingView>
       </Pressable>
     </SafeAreaView>

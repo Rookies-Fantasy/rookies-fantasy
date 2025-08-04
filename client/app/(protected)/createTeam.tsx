@@ -160,6 +160,7 @@ const CreateTeam = () => {
             name: teamData.name,
             abbreviation: teamData.abbreviation,
             logoUrl: teamData.logoUrl,
+            lineup: teamData.lineup,
             balance: teamData.balance,
           }),
         );
