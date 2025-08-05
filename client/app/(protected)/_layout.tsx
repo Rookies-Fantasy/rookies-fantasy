@@ -13,9 +13,8 @@ const ProtectedLayout = () => {
         <Stack.Screen name="createProfile" />
         <Stack.Screen name="createTeam" />
       </Stack.Protected>
-      <Stack.Protected guard={isUserRegistered && isTeamRegistered}>
-        <Stack.Screen name="(tabs)" />
-      </Stack.Protected>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(draft)" />
     </Stack>
   );
 };

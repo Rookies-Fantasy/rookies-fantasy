@@ -160,6 +160,7 @@ const CreateTeam = () => {
             name: teamData.name,
             abbreviation: teamData.abbreviation,
             logoUrl: teamData.logoUrl,
+            balance: teamData.balance,
           }),
         );
       }
@@ -180,7 +181,7 @@ const CreateTeam = () => {
             <View className="flex-1 flex-col px-6 py-4">
               <View className="mb-8 mt-20 flex-row items-center gap-4">
                 <Pressable
-                  className="size-8 items-center justify-center rounded-md border border-gray-900"
+                  className="size-10 items-center justify-center rounded-md border border-gray-900"
                   onPress={() => router.back()}
                 >
                   <ArrowLeft color="white" size={20} weight="bold" />
