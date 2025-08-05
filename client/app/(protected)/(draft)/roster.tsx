@@ -54,7 +54,7 @@ const Roster = () => {
 
               <TeamBudget />
 
-              <View className="flex-row justify-between py-4">
+              <View className="mt-6 flex-row justify-between">
                 <Text className="pbk-h7 text-base-white">ROSTER</Text>
                 <Text className="pbk-h7 text-base-white">
                   SELECTED: {selectedPlayers}/8
@@ -62,7 +62,7 @@ const Roster = () => {
               </View>
             </View>
 
-            <View className="mx-6 flex-1 gap-4">
+            <View className="mx-6 my-2 flex-1 gap-4">
               {lineup.map((slot) => (
                 <PlayerSlot
                   isCard
@@ -106,20 +106,34 @@ const Roster = () => {
         snapPoints={["66%"]}
       >
         <View className="flex-1 border-t-2 border-gray-900">
-          {lineup.map((slot) => (
-            <View className="border-b-2 border-gray-900" key={slot.position}>
-              <PlayerSlot
-                isSelected={selectedPosition === slot.position}
-                onPlayerRemove={() => {
-                  if (selectedPosition === slot.position) {
-                    setSelectedPosition(null);
-                  }
-                }}
-                playerData={slot.player}
-                position={slot.position}
-              />
-            </View>
-          ))}
+          {lineup
+            .filter((slot) => {
+              if (!slot.player || !selectedPosition) return false;
+
+              const isSelectedUtil = ["UTIL1", "UTIL2", "UTIL3"].includes(
+                selectedPosition,
+              );
+
+              // If selected position is UTIL, all players are eligible
+              if (isSelectedUtil) return true;
+
+              // Otherwise, filter by actual eligibility
+              return slot.player.positions.includes(selectedPosition);
+            })
+            .map((slot) => (
+              <View className="border-b-2 border-gray-900" key={slot.position}>
+                <PlayerSlot
+                  isSelected={selectedPosition === slot.position}
+                  onPlayerRemove={() => {
+                    if (selectedPosition === slot.position) {
+                      setSelectedPosition(null);
+                    }
+                  }}
+                  playerData={slot.player}
+                  position={slot.position}
+                />
+              </View>
+            ))}
         </View>
       </BottomSheet>
     </SafeAreaView>

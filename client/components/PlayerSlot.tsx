@@ -48,17 +48,18 @@ const PlayerSlot = ({
           )}
         </View>
 
-        {playerData ? (
-          <IconButton
-            icon={<XCircle color="#535862" size={20} />}
-            onPress={() => {
-              dispatch(removePlayerFromLineup(playerData));
-              onPlayerRemove?.();
-            }}
-          />
-        ) : (
-          <UserPlus color="#6042FF" size={20} />
-        )}
+        {isCard &&
+          (playerData ? (
+            <IconButton
+              icon={<XCircle color="#535862" size={20} />}
+              onPress={() => {
+                dispatch(removePlayerFromLineup(playerData));
+                onPlayerRemove?.();
+              }}
+            />
+          ) : (
+            <UserPlus color="#6042FF" size={20} />
+          ))}
       </View>
     </View>
   );
