@@ -25,6 +25,20 @@ const Roster = () => {
 
   console.log("team from redux:", lineup);
 
+  const eligibleSlots = lineup.filter((slot) => {
+    if (!slot.player || !selectedPosition) return false;
+
+    const isSelectedUtil = ["UTIL1", "UTIL2", "UTIL3"].includes(
+      selectedPosition,
+    );
+
+    // If selected position is UTIL, all players are eligible
+    if (isSelectedUtil) return true;
+
+    // Otherwise, filter by actual eligibility
+    return slot.player.positions.includes(selectedPosition);
+  });
+
   return (
     <SafeAreaView
       className="flex-1 bg-gray-950"
@@ -106,21 +120,8 @@ const Roster = () => {
         snapPoints={["66%"]}
       >
         <View className="flex-1 border-t-2 border-gray-900">
-          {lineup
-            .filter((slot) => {
-              if (!slot.player || !selectedPosition) return false;
-
-              const isSelectedUtil = ["UTIL1", "UTIL2", "UTIL3"].includes(
-                selectedPosition,
-              );
-
-              // If selected position is UTIL, all players are eligible
-              if (isSelectedUtil) return true;
-
-              // Otherwise, filter by actual eligibility
-              return slot.player.positions.includes(selectedPosition);
-            })
-            .map((slot) => (
+          {eligibleSlots.length > 0 ? (
+            eligibleSlots.map((slot) => (
               <View className="border-b-2 border-gray-900" key={slot.position}>
                 <PlayerSlot
                   isSelected={selectedPosition === slot.position}
@@ -133,7 +134,14 @@ const Roster = () => {
                   position={slot.position}
                 />
               </View>
-            ))}
+            ))
+          ) : (
+            <View className="flex-1 items-center justify-center">
+              <Text className="pbk-b2 text-center text-gray-300">
+                No eligible players for this position.
+              </Text>
+            </View>
+          )}
         </View>
       </BottomSheet>
     </SafeAreaView>
