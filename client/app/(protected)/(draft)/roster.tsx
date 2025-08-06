@@ -11,6 +11,7 @@ import {
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BottomSheet from "@/components/BottomSheet";
+import FloatingActionButton from "@/components/FloatingActionButton";
 import PlayerSlot from "@/components/PlayerSlot";
 import TeamBudget from "@/components/TeamBudget";
 import { useAppSelector } from "@/state/hooks";
@@ -41,11 +42,11 @@ const Roster = () => {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-gray-950"
+      className="relative flex-1 bg-gray-950"
       edges={["top", "right", "left"]}
     >
-      <ScrollView>
-        <Pressable className="flex-1" onPress={Keyboard.dismiss}>
+      <Pressable className="relative flex-1" onPress={Keyboard.dismiss}>
+        <ScrollView>
           <KeyboardAvoidingView className="flex-1">
             <View className="px-6">
               <View className="mb-10 flex-row items-center justify-between">
@@ -91,8 +92,14 @@ const Roster = () => {
               ))}
             </View>
           </KeyboardAvoidingView>
-        </Pressable>
-      </ScrollView>
+        </ScrollView>
+      </Pressable>
+      <FloatingActionButton
+        className="bottom-6 w-[90%] self-center"
+        onPress={() => {}}
+      >
+        <Text className="pbk-h6 text-center text-base-white">LOCK IN TEAM</Text>
+      </FloatingActionButton>
       <BottomSheet
         footer={
           <Pressable
