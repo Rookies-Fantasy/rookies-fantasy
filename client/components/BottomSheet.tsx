@@ -161,7 +161,7 @@ const BottomSheet = ({
               {header && <View className="z-[1] pb-4">{header}</View>}
 
               <Animated.ScrollView
-                className="flex-1"
+                contentContainerClassName="flex-1"
                 showsVerticalScrollIndicator
                 style={[scrollViewStyle]}
               >
