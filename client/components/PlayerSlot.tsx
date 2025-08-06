@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { UserPlus, XCircle } from "phosphor-react-native";
 import { View, Text, Pressable } from "react-native";
 import IconButton from "./IconButton";
@@ -24,6 +25,7 @@ const PlayerSlot = ({
   onPlayerRemove,
 }: PlayerSlotProps) => {
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   return (
     <View
@@ -44,7 +46,7 @@ const PlayerSlot = ({
           {playerData ? (
             <PlayerData player={playerData} />
           ) : (
-            <Text className="pbk-b2 text-base-white">Empty</Text>
+            <Text className="pbk-b2 ml-2 text-base-white">Empty slot</Text>
           )}
         </View>
 
@@ -58,7 +60,10 @@ const PlayerSlot = ({
               }}
             />
           ) : (
-            <UserPlus color="#6042FF" size={20} />
+            <IconButton
+              icon={<UserPlus color="#6042FF" size={20} />}
+              onPress={() => router.navigate("/(protected)/(draft)/players")}
+            />
           ))}
       </View>
     </View>
