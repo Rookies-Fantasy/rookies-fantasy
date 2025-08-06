@@ -41,7 +41,7 @@ const Players = () => {
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    await NbaPlayersController.getFreeAgents(PAGE_SIZE, pageParam);
+    await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
 
   const {
     data,
@@ -179,7 +179,7 @@ const Players = () => {
               ]}
               isFetchingNextPage={isFetchingNextPage}
               onEndReached={() => fetchNextPage()}
-              stickyIndexes={[0, 1]}
+              stickyColumns={2}
               widthClasses={[
                 "w-16",
                 "min-w-60",

@@ -4,7 +4,6 @@ import Cell from "./Cell";
 
 type RowProps = {
   rowData: any[];
-  stickyIndexes?: number[];
   widthClasses?: string[];
   variant?: "header" | "row";
   cellVariant?: "scrollable" | "sticky";

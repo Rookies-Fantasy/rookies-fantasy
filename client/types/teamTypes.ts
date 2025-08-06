@@ -1,4 +1,5 @@
 ﻿import { Player } from "./players";
+export const TEAM_BALANCE = 150000000;
 
 export type Team = {
   abbreviation?: string;
@@ -31,6 +32,6 @@ export const SLOT_ORDER: SlotPosition[] = [
 
 export const defaultTeam: Team = {
   id: "",
-  balance: 150000000,
+  balance: TEAM_BALANCE,
   lineup: SLOT_ORDER.map((position) => ({ position, player: null })),
 };

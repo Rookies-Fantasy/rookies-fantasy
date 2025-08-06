@@ -1,5 +1,5 @@
-import firestore from "@react-native-firebase/firestore";
-import { defaultTeam, Team } from "@/types/teamTypes";
+﻿import firestore from "@react-native-firebase/firestore";
+import { defaultTeam, Team, TEAM_BALANCE } from "@/types/teamTypes";
 import { defaultUser, User } from "@/types/userTypes";
 
 const USERS_COLLECTION = "users";
@@ -66,7 +66,7 @@ export class UserController {
         .collection(TEAMS_COLLECTION)
         .add({
           ...params,
-          balance: 100000000,
+          balance: TEAM_BALANCE,
           createdAt: new Date(),
         });
 

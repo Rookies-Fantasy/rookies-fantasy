@@ -12,12 +12,12 @@ type PlayerFetchResult = {
 };
 
 export class NbaPlayersController {
-  static getFreeAgents = async (
+  static getPlayers = async (
     PAGE_SIZE: number,
     pageParam?: FirebaseFirestoreTypes.DocumentSnapshot,
   ): Promise<PlayerFetchResult> => {
     try {
-      let query = await firestore()
+      let query = firestore()
         .collection(PLAYERS_COLLECTION)
         .orderBy("salary", "desc")
         .limit(PAGE_SIZE);

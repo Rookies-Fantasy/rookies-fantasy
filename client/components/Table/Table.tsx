@@ -8,7 +8,7 @@ type TableProps = {
   headers: string[];
   hasNextPage: boolean;
   data: any[][];
-  stickyIndexes: number[];
+  stickyColumns: number;
   widthClasses: string[];
   onEndReached?: () => void;
 };
@@ -18,7 +18,7 @@ const Table = ({
   headers,
   hasNextPage,
   data,
-  stickyIndexes = [],
+  stickyColumns,
   widthClasses,
   onEndReached,
 }: TableProps) => {
@@ -26,30 +26,27 @@ const Table = ({
   const bodyScrollRef = useRef<ScrollView>(null);
   const isSyncingRef = useRef(false);
 
-  const stickyHeaders = headers.slice(0, stickyIndexes.length);
-  const scrollableHeaders = headers.slice(stickyIndexes.length);
+  const stickyHeaders = headers.slice(0, stickyColumns);
+  const scrollableHeaders = headers.slice(stickyColumns);
 
-  const stickyData = data.map((row) => row.slice(0, stickyIndexes.length));
-  const scrollableData = data.map((row) => row.slice(stickyIndexes.length));
+  const stickyData = data.map((row) => row.slice(0, stickyColumns));
+  const scrollableData = data.map((row) => row.slice(stickyColumns));
 
-  const stickyWidths = widthClasses.slice(0, stickyIndexes.length);
-  const scrollableWidths = widthClasses.slice(stickyIndexes.length);
+  const stickyWidths = widthClasses.slice(0, stickyColumns);
+  const scrollableWidths = widthClasses.slice(stickyColumns);
 
   const handleHorizontalScroll = (x: number, source?: "header") => {
     if (isSyncingRef.current) return;
     isSyncingRef.current = true;
 
-    let frameId: number | null = null;
     if (source === "header") {
       bodyScrollRef.current?.scrollTo({ x, animated: false });
     } else {
       horizontalScrollRef.current?.scrollTo({ x, animated: false });
     }
 
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       isSyncingRef.current = false;
-      frameId = null;
     });
   };
 
@@ -65,8 +62,7 @@ const Table = ({
           bounces={false}
           horizontal
           onScroll={(e) => {
-            const x = e.nativeEvent.contentOffset.x;
-            handleHorizontalScroll(x, "header");
+            handleHorizontalScroll(e.nativeEvent.contentOffset.x, "header");
           }}
           ref={horizontalScrollRef}
           scrollEventThrottle={16}
@@ -108,8 +104,7 @@ const Table = ({
             bounces={false}
             horizontal
             onScroll={(e) => {
-              const x = e.nativeEvent.contentOffset.x;
-              handleHorizontalScroll(x);
+              handleHorizontalScroll(e.nativeEvent.contentOffset.x);
             }}
             ref={bodyScrollRef}
             scrollEventThrottle={16}
@@ -123,7 +118,6 @@ const Table = ({
                   <Row
                     cellVariant="scrollable"
                     rowData={item}
-                    stickyIndexes={stickyIndexes}
                     widthClasses={scrollableWidths}
                   />
                 )}
