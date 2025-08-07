@@ -18,6 +18,7 @@ import TeamBudget from "@/components/TeamBudget";
 import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
 import { getLineupPlayerCount } from "@/state/slices/teamSlice";
+import { SlotPosition } from "@/types/teamTypes";
 
 const Roster = () => {
   const router = useRouter();
@@ -25,9 +26,9 @@ const Roster = () => {
   const userId = useAppSelector((state) => state.user.id);
   const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
-
-  console.log("team from redux:", team.lineup);
+  const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
+    null,
+  );
 
   const handleSaveLineup = async () => {
     try {
@@ -91,8 +92,11 @@ const Roster = () => {
 
             <View className="mx-6 my-2 flex-1 gap-4">
               <PlayerRoster
+                lineup={team.lineup}
+                selectedPosition={selectedPosition}
                 setSelectedPosition={setSelectedPosition}
                 setShowBottomDrawer={setShowBottomDrawer}
+                showBottomDrawer={showBottomDrawer}
               />
             </View>
           </KeyboardAvoidingView>

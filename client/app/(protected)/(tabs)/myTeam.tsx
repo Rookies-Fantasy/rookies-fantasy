@@ -5,11 +5,16 @@ import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
+import { useAppSelector } from "@/state/hooks";
+import { SlotPosition } from "@/types/teamTypes";
 
 const MyTeam = () => {
   const router = useRouter();
+  const lineup = useAppSelector((state) => state.team.lineup);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
+    null,
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-gray-950">
@@ -39,8 +44,11 @@ const MyTeam = () => {
         </Pressable>
         <View className="mx-6 my-2 flex-1 gap-4">
           <PlayerRoster
+            lineup={lineup}
+            selectedPosition={selectedPosition}
             setSelectedPosition={setSelectedPosition}
             setShowBottomDrawer={setShowBottomDrawer}
+            showBottomDrawer={showBottomDrawer}
           />
         </View>
       </ScrollView>

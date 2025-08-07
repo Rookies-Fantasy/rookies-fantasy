@@ -1,11 +1,12 @@
 import { Pressable, View, Text } from "react-native";
 import BottomSheet from "./BottomSheet";
-import PlayerSlot from "./PlayerSlot";
+import PlayerRoster from "./PlayerRoster";
 import { useAppSelector } from "@/state/hooks";
+import { SlotPosition } from "@/types/teamTypes";
 
 type RosterDrawerProps = {
-  selectedPosition: string | null;
-  setSelectedPosition: (selectedPosition: string | null) => void;
+  selectedPosition: SlotPosition | null;
+  setSelectedPosition: (selectedPosition: SlotPosition | null) => void;
   setShowBottomDrawer: (showBottomDrawer: boolean) => void;
   showBottomDrawer: boolean;
 };
@@ -25,10 +26,8 @@ const RosterDrawer = ({
       selectedPosition,
     );
 
-    // If selected position is UTIL, all players are eligible
     if (isSelectedUtil) return true;
 
-    // Otherwise, filter by actual eligibility
     return slot.player.positions.includes(selectedPosition);
   });
 
@@ -59,20 +58,13 @@ const RosterDrawer = ({
     >
       <View className="flex-1 border-t-2 border-gray-900">
         {eligibleSlots.length > 0 ? (
-          eligibleSlots.map((slot) => (
-            <View className="border-b-2 border-gray-900" key={slot.position}>
-              <PlayerSlot
-                isSelected={selectedPosition === slot.position}
-                onPlayerRemove={() => {
-                  if (selectedPosition === slot.position) {
-                    setSelectedPosition(null);
-                  }
-                }}
-                playerData={slot.player}
-                position={slot.position}
-              />
-            </View>
-          ))
+          <PlayerRoster
+            lineup={eligibleSlots}
+            selectedPosition={selectedPosition}
+            setSelectedPosition={setSelectedPosition}
+            setShowBottomDrawer={setShowBottomDrawer}
+            showBottomDrawer={showBottomDrawer}
+          />
         ) : (
           <View className="flex-1 items-center justify-center">
             <Text className="pbk-b2 text-center text-gray-300">
