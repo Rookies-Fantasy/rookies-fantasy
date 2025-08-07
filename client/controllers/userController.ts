@@ -1,5 +1,5 @@
 ﻿import firestore from "@react-native-firebase/firestore";
-import { defaultTeam, Team, TEAM_BALANCE } from "@/types/teamTypes";
+import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/teamTypes";
 import { defaultUser, User } from "@/types/userTypes";
 
 const USERS_COLLECTION = "users";
@@ -139,6 +139,24 @@ export class UserController {
           ...params,
           updatedAt: new Date(),
         });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static saveUserTeamLineup = async (
+    userId: string,
+    teamId: string,
+    lineup: LineupSlot[],
+    balance: number,
+  ) => {
+    try {
+      await firestore()
+        .collection(USERS_COLLECTION)
+        .doc(userId)
+        .collection(TEAMS_COLLECTION)
+        .doc(teamId)
+        .update({ lineup, balance, updatedAt: new Date() });
     } catch (error) {
       throw error;
     }

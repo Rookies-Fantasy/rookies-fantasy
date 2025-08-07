@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, X } from "phosphor-react-native";
 import { useState } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -10,35 +11,46 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-import BottomSheet from "@/components/BottomSheet";
 import FloatingActionButton from "@/components/FloatingActionButton";
-import PlayerSlot from "@/components/PlayerSlot";
+import PlayerRoster from "@/components/PlayerRoster";
+import RosterDrawer from "@/components/RosterDrawer";
 import TeamBudget from "@/components/TeamBudget";
+import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
 import { getLineupPlayerCount } from "@/state/slices/teamSlice";
 
 const Roster = () => {
   const router = useRouter();
-  const lineup = useAppSelector((state) => state.team.lineup);
+  const team = useAppSelector((state) => state.team);
+  const userId = useAppSelector((state) => state.user.id);
   const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
 
-  console.log("team from redux:", lineup);
+  console.log("team from redux:", team.lineup);
 
-  const eligibleSlots = lineup.filter((slot) => {
-    if (!slot.player || !selectedPosition) return false;
+  const handleSaveLineup = async () => {
+    try {
+      if (team.balance < 0) {
+        Alert.alert(
+          "Insufficient balance",
+          "Please adjust your selections to stay within your available funds.",
+        );
+        return;
+      }
 
-    const isSelectedUtil = ["UTIL1", "UTIL2", "UTIL3"].includes(
-      selectedPosition,
-    );
+      await UserController.saveUserTeamLineup(
+        userId,
+        team.id,
+        team.lineup,
+        team.balance,
+      );
 
-    // If selected position is UTIL, all players are eligible
-    if (isSelectedUtil) return true;
-
-    // Otherwise, filter by actual eligibility
-    return slot.player.positions.includes(selectedPosition);
-  });
+      router.replace("/(protected)/(tabs)");
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -78,79 +90,28 @@ const Roster = () => {
             </View>
 
             <View className="mx-6 my-2 flex-1 gap-4">
-              {lineup.map((slot) => (
-                <PlayerSlot
-                  isCard
-                  key={slot.position}
-                  openDrawer={() => {
-                    setSelectedPosition(slot.position);
-                    setShowBottomDrawer(true);
-                  }}
-                  playerData={slot.player}
-                  position={slot.position}
-                />
-              ))}
+              <PlayerRoster
+                setSelectedPosition={setSelectedPosition}
+                setShowBottomDrawer={setShowBottomDrawer}
+              />
             </View>
           </KeyboardAvoidingView>
         </ScrollView>
-      </Pressable>
-      <FloatingActionButton
-        className="bottom-6 w-[90%] self-center"
-        onPress={() => {}}
-      >
-        <Text className="pbk-h6 text-center text-base-white">LOCK IN TEAM</Text>
-      </FloatingActionButton>
-      <BottomSheet
-        footer={
-          <Pressable
-            className="min-h-12 w-full justify-center rounded-md bg-purple-600"
-            onPress={() => {
-              setShowBottomDrawer(false);
-              setSelectedPosition(null);
-            }}
-          >
-            <Text className="pbk-h6 text-center text-base-white">
-              SAVE LINEUP
-            </Text>
-          </Pressable>
-        }
-        header={
-          <Text className="pbk-b1 text-center text-base-white">
-            Edit lineup
+        <FloatingActionButton
+          className="bottom-6 w-[90%] self-center"
+          onPress={() => handleSaveLineup()}
+        >
+          <Text className="pbk-h6 text-center text-base-white">
+            LOCK IN TEAM
           </Text>
-        }
-        isOpen={showBottomDrawer}
-        onClose={() => {
-          setShowBottomDrawer(false);
-          setSelectedPosition(null);
-        }}
-        snapPoints={["66%"]}
-      >
-        <View className="flex-1 border-t-2 border-gray-900">
-          {eligibleSlots.length > 0 ? (
-            eligibleSlots.map((slot) => (
-              <View className="border-b-2 border-gray-900" key={slot.position}>
-                <PlayerSlot
-                  isSelected={selectedPosition === slot.position}
-                  onPlayerRemove={() => {
-                    if (selectedPosition === slot.position) {
-                      setSelectedPosition(null);
-                    }
-                  }}
-                  playerData={slot.player}
-                  position={slot.position}
-                />
-              </View>
-            ))
-          ) : (
-            <View className="flex-1 items-center justify-center">
-              <Text className="pbk-b2 text-center text-gray-300">
-                No eligible players for this position.
-              </Text>
-            </View>
-          )}
-        </View>
-      </BottomSheet>
+        </FloatingActionButton>
+      </Pressable>
+      <RosterDrawer
+        selectedPosition={selectedPosition}
+        setSelectedPosition={setSelectedPosition}
+        setShowBottomDrawer={setShowBottomDrawer}
+        showBottomDrawer={showBottomDrawer}
+      />
     </SafeAreaView>
   );
 };
