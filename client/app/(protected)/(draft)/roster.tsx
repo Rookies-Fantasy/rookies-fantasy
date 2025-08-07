@@ -59,7 +59,7 @@ const Roster = () => {
       edges={["top", "right", "left"]}
     >
       <Pressable className="relative flex-1" onPress={Keyboard.dismiss}>
-        <ScrollView>
+        <ScrollView className="">
           <KeyboardAvoidingView className="flex-1">
             <View className="px-6">
               <View className="mb-10 flex-row items-center justify-between">
@@ -90,8 +90,10 @@ const Roster = () => {
               </View>
             </View>
 
-            <View className="mx-6 my-2 flex-1 gap-4">
+            <View className="mx-6 mb-24 mt-4 flex-1 gap-4">
               <PlayerRoster
+                actionIcon
+                isCard
                 lineup={team.lineup}
                 selectedPosition={selectedPosition}
                 setSelectedPosition={setSelectedPosition}

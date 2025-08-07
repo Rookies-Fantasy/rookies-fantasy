@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
 import { useMemo, useState } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -11,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
 import SearchBar from "@/components/SearchBar";
@@ -18,6 +20,7 @@ import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
+import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
@@ -34,9 +37,33 @@ const Players = () => {
   const [query, setQuery] = useState("");
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const lineup = useAppSelector((state) => state.team.lineup);
+  const team = useAppSelector((state) => state.team);
+  const userId = useAppSelector((state) => state.user.id);
   const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
   const PAGE_SIZE = 25;
+
+  const handleSaveLineup = async () => {
+    try {
+      if (team.balance < 0) {
+        Alert.alert(
+          "Insufficient balance",
+          "Please adjust your selections to stay within your available funds.",
+        );
+        return;
+      }
+
+      await UserController.saveUserTeamLineup(
+        userId,
+        team.id,
+        team.lineup,
+        team.balance,
+      );
+
+      router.replace("/(protected)/(tabs)");
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const fetchPlayersWithAverages = async ({
     pageParam,
@@ -65,10 +92,12 @@ const Players = () => {
     return players.map((player) => [
       <IconButton
         className={
-          isPlayerInLineup(lineup, player.id) ? "bg-red-600" : "bg-purple-600"
-        } // TODO: Check if player is on roster
+          isPlayerInLineup(team.lineup, player.id)
+            ? "bg-red-600"
+            : "bg-purple-600"
+        }
         icon={
-          isPlayerInLineup(lineup, player.id) ? (
+          isPlayerInLineup(team.lineup, player.id) ? (
             <Minus color="white" size={12} />
           ) : (
             <Plus color="white" size={12} />
@@ -76,13 +105,11 @@ const Players = () => {
         }
         key={player.id}
         onPress={() => {
-          if (isPlayerInLineup(lineup, player.id)) {
+          if (isPlayerInLineup(team.lineup, player.id)) {
             dispatch(removePlayerFromLineup(player));
           } else {
             dispatch(addPlayerToLineup(player));
           }
-          // Keyboard.dismiss();
-          // setShowBottomDrawer(true);
         }}
       />,
       <PlayerData key={player.id} player={player} />,
@@ -96,7 +123,7 @@ const Players = () => {
       player.averageStats.tov.toFixed(1),
       player.averageStats.fpts,
     ]);
-  }, [data?.pages, dispatch, lineup]);
+  }, [data?.pages, dispatch, team.lineup]);
 
   return (
     <SafeAreaView
@@ -197,6 +224,14 @@ const Players = () => {
             />
           )}
         </KeyboardAvoidingView>
+        <FloatingActionButton
+          className="bottom-6 w-[90%] self-center"
+          onPress={() => handleSaveLineup()}
+        >
+          <Text className="pbk-h6 text-center text-base-white">
+            LOCK IN TEAM
+          </Text>
+        </FloatingActionButton>
       </Pressable>
     </SafeAreaView>
   );

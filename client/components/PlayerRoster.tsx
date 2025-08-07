@@ -2,6 +2,8 @@ import PlayerSlot from "./PlayerSlot";
 import { LineupSlot, SlotPosition } from "@/types/teamTypes";
 
 type PlayerRosterProps = {
+  actionIcon?: boolean;
+  isCard?: boolean;
   lineup: LineupSlot[];
   selectedPosition: SlotPosition | null;
   setSelectedPosition: (position: SlotPosition | null) => void;
@@ -10,6 +12,8 @@ type PlayerRosterProps = {
 };
 
 const PlayerRoster = ({
+  actionIcon = false,
+  isCard = false,
   lineup,
   selectedPosition,
   setSelectedPosition,
@@ -19,7 +23,8 @@ const PlayerRoster = ({
   <>
     {lineup.map((slot) => (
       <PlayerSlot
-        isCard
+        actionIcon={actionIcon}
+        isCard={isCard}
         key={slot.position}
         openDrawer={() => {
           if (showBottomDrawer && slot.position !== selectedPosition) {

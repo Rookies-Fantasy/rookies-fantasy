@@ -17,6 +17,7 @@ const DraftLayout = () => (
       },
       tabBarLabelStyle: {
         fontSize: 12,
+        fontFamily: "Manrope",
       },
     }}
   >
@@ -24,14 +25,14 @@ const DraftLayout = () => (
       name="roster"
       options={{
         title: "ROSTER",
-        tabBarIcon: ({ color }) => <UsersThree color={color} />,
+        tabBarIcon: ({ color }) => <UsersThree color={color} size={20} />,
       }}
     />
     <Tabs.Screen
       name="players"
       options={{
         title: "ADD PLAYERS",
-        tabBarIcon: ({ color }) => <UserPlus color={color} />,
+        tabBarIcon: ({ color }) => <UserPlus color={color} size={20} />,
       }}
     />
   </Tabs>

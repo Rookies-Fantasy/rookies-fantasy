@@ -1,6 +1,6 @@
 import { Pressable, View, Text } from "react-native";
 import BottomSheet from "./BottomSheet";
-import PlayerRoster from "./PlayerRoster";
+import PlayerSlot from "./PlayerSlot";
 import { useAppSelector } from "@/state/hooks";
 import { SlotPosition } from "@/types/teamTypes";
 
@@ -58,13 +58,30 @@ const RosterDrawer = ({
     >
       <View className="flex-1 border-t-2 border-gray-900">
         {eligibleSlots.length > 0 ? (
-          <PlayerRoster
-            lineup={eligibleSlots}
-            selectedPosition={selectedPosition}
-            setSelectedPosition={setSelectedPosition}
-            setShowBottomDrawer={setShowBottomDrawer}
-            showBottomDrawer={showBottomDrawer}
-          />
+          eligibleSlots.map((slot) => (
+            <View className="border-b-2 border-gray-900" key={slot.position}>
+              <PlayerSlot
+                isSelected={selectedPosition === slot.position}
+                onPlayerRemove={() => {
+                  if (selectedPosition === slot.position) {
+                    setSelectedPosition(null);
+                  }
+                }}
+                openDrawer={() => {
+                  if (showBottomDrawer && slot.position !== selectedPosition) {
+                    // TODO: Complete swap functionality here. This if statement checks if the drawer is already open, and also ensures
+                    // that if a user clicks on the initial selected position it does not complete the "swap"
+                    console.log("Drawer out, this should be a swap.");
+                  } else {
+                    setSelectedPosition(slot.position);
+                    setShowBottomDrawer(true);
+                  }
+                }}
+                playerData={slot.player}
+                position={slot.position}
+              />
+            </View>
+          ))
         ) : (
           <View className="flex-1 items-center justify-center">
             <Text className="pbk-b2 text-center text-gray-300">

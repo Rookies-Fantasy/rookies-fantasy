@@ -44,6 +44,7 @@ const MyTeam = () => {
         </Pressable>
         <View className="mx-6 my-2 flex-1 gap-4">
           <PlayerRoster
+            isCard
             lineup={lineup}
             selectedPosition={selectedPosition}
             setSelectedPosition={setSelectedPosition}
