@@ -33,4 +33,4 @@ const MainLayout = () => (
   </Tabs>
 );
 
-export default MainLayout;
+export default AppLayout;

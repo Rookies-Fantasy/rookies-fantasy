@@ -1,5 +1,6 @@
 import "react-native-reanimated";
 import "@/global.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -21,25 +22,28 @@ import { ThemeProvider } from "@/theme/ThemeProvider";
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 const RootLayoutNav = () => {
+  const queryClient = new QueryClient();
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
 
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView>
-        <AuthListener>
-          <StatusBar style="light" />
-          <ThemeWrapper>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
-                <Stack.Screen name="(auth)" />
-              </Stack.Protected>
-              <Stack.Protected guard={isUserSignedIn && isUserVerified}>
-                <Stack.Screen name="(protected)" />
-              </Stack.Protected>
-            </Stack>
-          </ThemeWrapper>
-        </AuthListener>
+        <QueryClientProvider client={queryClient}>
+          <AuthListener>
+            <StatusBar style="light" />
+            <ThemeWrapper>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
+                  <Stack.Screen name="(auth)" />
+                </Stack.Protected>
+                <Stack.Protected guard={isUserSignedIn && isUserVerified}>
+                  <Stack.Screen name="(protected)" />
+                </Stack.Protected>
+              </Stack>
+            </ThemeWrapper>
+          </AuthListener>
+        </QueryClientProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );
