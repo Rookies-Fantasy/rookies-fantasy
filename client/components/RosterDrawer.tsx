@@ -1,7 +1,8 @@
 import { Pressable, View, Text } from "react-native";
 import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
-import { useAppSelector } from "@/state/hooks";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { swapPlayersInLineup } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/teamTypes";
 
 type RosterDrawerProps = {
@@ -18,6 +19,7 @@ const RosterDrawer = ({
   showBottomDrawer,
 }: RosterDrawerProps) => {
   const team = useAppSelector((state) => state.team);
+  const dispatch = useAppDispatch();
 
   const eligibleSlots = team.lineup.filter((slot) => {
     if (!slot.player || !selectedPosition) return false;
@@ -68,9 +70,20 @@ const RosterDrawer = ({
                   }
                 }}
                 openDrawer={() => {
-                  if (showBottomDrawer && slot.position !== selectedPosition) {
+                  if (
+                    showBottomDrawer &&
+                    slot.position !== selectedPosition &&
+                    selectedPosition !== null
+                  ) {
                     // TODO: Complete swap functionality here. This if statement checks if the drawer is already open, and also ensures
                     // that if a user clicks on the initial selected position it does not complete the "swap"
+                    dispatch(
+                      swapPlayersInLineup({
+                        from: selectedPosition,
+                        to: slot.position,
+                      }),
+                    );
+                    setShowBottomDrawer(false);
                     console.log("Drawer out, this should be a swap.");
                   } else {
                     setSelectedPosition(slot.position);

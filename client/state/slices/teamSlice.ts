@@ -9,6 +9,13 @@ import {
   Team,
 } from "@/types/teamTypes";
 
+type SwapPayload = {
+  from: SlotPosition;
+  to: SlotPosition;
+};
+
+const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
+
 const teamSlice = createSlice({
   name: "team",
   initialState: defaultTeam,
@@ -78,6 +85,64 @@ const teamSlice = createSlice({
         slot.player = null;
       }
     },
+    swapPlayersInLineup: (state, action: PayloadAction<SwapPayload>) => {
+      const { from, to } = action.payload;
+
+      console.log(to);
+
+      const fromSlot = state.lineup.find((slot) => slot.position === from);
+      const toSlot = state.lineup.find((slot) => slot.position === to);
+
+      if (!fromSlot || !toSlot) return;
+
+      const playerA = fromSlot.player;
+      const playerB = toSlot.player;
+
+      console.log(playerA?.firstName);
+      console.log(playerB?.firstName);
+
+      if (from === to || (!playerA && !playerB)) return;
+
+      if (playerA && !playerB) {
+        toSlot.player = playerA;
+        fromSlot.player = null;
+        return;
+      }
+
+      if (playerA && playerB) {
+        const playerAEligibility =
+          playerA.positions.includes(to) ||
+          UTIL_POSITIONS.includes(to as FlexPosition);
+        console.log(playerAEligibility);
+
+        if (playerAEligibility) {
+          fromSlot.player = playerB;
+          toSlot.player = playerA;
+          return;
+        } else {
+          const utilSlot = state.lineup.find(
+            (slot) =>
+              UTIL_POSITIONS.includes(slot.position as FlexPosition) &&
+              !slot.player,
+          );
+
+          console.log(utilSlot);
+
+          if (utilSlot) {
+            toSlot.player = null;
+            utilSlot.player = playerA;
+            fromSlot.player = playerB;
+            return;
+          } else {
+            return;
+          }
+        }
+      }
+
+      const tempPlayer = fromSlot.player;
+      fromSlot.player = toSlot.player;
+      toSlot.player = tempPlayer;
+    },
   },
 });
 
@@ -97,7 +162,12 @@ export const isPlayerInLineup = (
   playerId: string,
 ): boolean => lineup.some((slot) => slot.player?.id === playerId);
 
-export const { setTeam, clearTeam, addPlayerToLineup, removePlayerFromLineup } =
-  teamSlice.actions;
+export const {
+  setTeam,
+  clearTeam,
+  addPlayerToLineup,
+  removePlayerFromLineup,
+  swapPlayersInLineup,
+} = teamSlice.actions;
 
 export default teamSlice.reducer;
