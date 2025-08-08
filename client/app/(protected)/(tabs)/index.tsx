@@ -80,7 +80,7 @@ const Home = () => {
           </Pressable>
         </View>
       </View>
-      <View className="w-100 h-100 bg-primary-500 mt-4 justify-center rounded-md p-4">
+      <View className="w-100 h-100 mt-4 justify-center rounded-md bg-primary-500 p-4">
         <Pressable className="text-center">
           <Text>Sample Button</Text>
         </Pressable>
