@@ -37,7 +37,7 @@ const teamSlice = createSlice({
         const slot = findSlotByPosition(primaryPosition);
         if (slot) {
           slot.player = player;
-          state.balance += parseInt(slot.player.salary) * -1;
+          state.balance += slot.player.salary * -1;
           return;
         }
       }
@@ -49,7 +49,7 @@ const teamSlice = createSlice({
           const slot = findSlotByPosition(position);
           if (slot) {
             slot.player = player;
-            state.balance += parseInt(slot.player.salary) * -1;
+            state.balance += slot.player.salary * -1;
             return;
           }
         }
@@ -62,7 +62,7 @@ const teamSlice = createSlice({
           const slot = findSlotByPosition(utilPosition);
           if (slot) {
             slot.player = player;
-            state.balance += parseInt(slot.player.salary) * -1;
+            state.balance += slot.player.salary * -1;
             return;
           }
         }
@@ -74,7 +74,7 @@ const teamSlice = createSlice({
         (slot) => slot.player && slot.player.id === player.id,
       );
       if (slot && slot.player) {
-        state.balance += parseInt(slot.player.salary);
+        state.balance += slot.player.salary;
         slot.player = null;
       }
     },

@@ -29,6 +29,7 @@ const Roster = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
+  const MAX_PLAYERS = 8;
 
   const handleSaveLineup = async () => {
     try {
@@ -49,6 +50,7 @@ const Roster = () => {
 
       router.replace("/(protected)/(tabs)");
     } catch (error) {
+      Alert.alert("Error", "Failed to save your team. Please try agian.");
       console.log(error);
     }
   };
@@ -85,14 +87,14 @@ const Roster = () => {
               <View className="mt-6 flex-row justify-between">
                 <Text className="pbk-h7 text-base-white">ROSTER</Text>
                 <Text className="pbk-h7 text-base-white">
-                  SELECTED: {selectedPlayers}/8
+                  SELECTED: {selectedPlayers}/{MAX_PLAYERS}
                 </Text>
               </View>
             </View>
 
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">
               <PlayerRoster
-                actionIcon
+                enableActionIcon
                 isCard
                 lineup={team.lineup}
                 selectedPosition={selectedPosition}
@@ -107,9 +109,7 @@ const Roster = () => {
           className="bottom-6 w-[90%] self-center"
           onPress={() => handleSaveLineup()}
         >
-          <Text className="pbk-h6 text-center text-base-white">
-            LOCK IN TEAM
-          </Text>
+          <Text className="pbk-h6 text-center text-base-white">SAVE TEAM</Text>
         </FloatingActionButton>
       </Pressable>
       <RosterDrawer

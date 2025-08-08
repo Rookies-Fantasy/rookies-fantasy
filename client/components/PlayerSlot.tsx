@@ -6,10 +6,11 @@ import PlayerData from "./PlayerData";
 import { useAppDispatch } from "@/state/hooks";
 import { removePlayerFromLineup } from "@/state/slices/teamSlice";
 import { Player } from "@/types/players";
+import { cn } from "@/utils/jsUtils";
 
 type PlayerSlotProps = {
   isCard?: boolean;
-  actionIcon?: boolean;
+  enableActionIcon?: boolean;
   position: string;
   playerData: Player | null;
   openDrawer?: () => void;
@@ -19,7 +20,7 @@ type PlayerSlotProps = {
 
 const PlayerSlot = ({
   isCard = false,
-  actionIcon = false,
+  enableActionIcon = false,
   isSelected,
   position,
   playerData,
@@ -29,18 +30,49 @@ const PlayerSlot = ({
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const renderActionIcon = () => {
+    if (!enableActionIcon || !isCard) return null;
+    if (playerData) {
+      return (
+        <IconButton
+          icon={<XCircle color="#535862" size={20} />}
+          onPress={() => {
+            dispatch(removePlayerFromLineup(playerData));
+            onPlayerRemove?.();
+          }}
+        />
+      );
+    }
+    return (
+      <IconButton
+        icon={<UserPlus color="#6042FF" size={20} />}
+        onPress={() => router.push("/(protected)/(draft)/players")}
+      />
+    );
+  };
+
   return (
     <View
-      className={`w-full justify-center ${isCard ? "rounded-2xl border-2 border-gray-900" : ""} ${isSelected ? "bg-gray-900" : "bg-gray-920"}`}
+      className={cn(
+        "w-full justify-center",
+        isCard && "rounded-2xl border-2 border-gray-900",
+        isSelected ? "bg-gray-900" : "bg-gray-920",
+      )}
     >
       <View className="min-h-24 flex-row items-center justify-between p-3">
         <View className="flex-1 flex-row items-center gap-2">
           <Pressable
-            className={`h-8 min-w-16 items-center justify-center rounded-3xl ${isSelected ? "bg-purple-400" : "border border-purple-400"}`}
+            className={cn(
+              "h-8 min-w-16 items-center justify-center rounded-3xl",
+              isSelected ? "bg-purple-400" : "border border-purple-400",
+            )}
             onPress={openDrawer}
           >
             <Text
-              className={`pbk-h8 ${isSelected ? "text-gray-900" : "text-purple-400"}`}
+              className={cn(
+                "pbk-h8",
+                isSelected ? "text-gray-900" : "text-purple-400",
+              )}
             >
               {position}
             </Text>
@@ -54,24 +86,9 @@ const PlayerSlot = ({
           </View>
         </View>
 
-        {actionIcon &&
-          isCard &&
-          (playerData ? (
-            <IconButton
-              icon={<XCircle color="#535862" size={20} />}
-              onPress={() => {
-                dispatch(removePlayerFromLineup(playerData));
-                onPlayerRemove?.();
-              }}
-            />
-          ) : (
-            <IconButton
-              icon={<UserPlus color="#6042FF" size={20} />}
-              onPress={() => router.push("/(protected)/(draft)/players")}
-            />
-          ))}
+        {renderActionIcon()}
       </View>
-      {!actionIcon && isCard && (
+      {!enableActionIcon && isCard && (
         <View className="flex-1 flex-row items-center justify-center gap-2 border-t-2 border-gray-900 p-3">
           <X color="#8175FF" size={20} weight="bold" />
           <Text className="pbk-sh1 text-purple-400">DROP PLAYER</Text>

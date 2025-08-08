@@ -41,6 +41,7 @@ const Players = () => {
   const userId = useAppSelector((state) => state.user.id);
   const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
   const PAGE_SIZE = 25;
+  const MAX_PLAYERS = 8;
 
   const handleSaveLineup = async () => {
     try {
@@ -61,6 +62,7 @@ const Players = () => {
 
       router.replace("/(protected)/(tabs)");
     } catch (error) {
+      Alert.alert("Error", "Failed to save your team. Please try agian.");
       console.log(error);
     }
   };
@@ -166,7 +168,7 @@ const Players = () => {
             <View className="flex-row justify-between py-2">
               <Text className="pbk-h8 text-base-white">PLAYERS</Text>
               <Text className="pbk-h8 text-base-white">
-                SELECTED: {selectedPlayers}/8
+                SELECTED: {selectedPlayers}/{MAX_PLAYERS}
               </Text>
             </View>
           </View>
@@ -228,9 +230,7 @@ const Players = () => {
           className="bottom-6 w-[90%] self-center"
           onPress={() => handleSaveLineup()}
         >
-          <Text className="pbk-h6 text-center text-base-white">
-            LOCK IN TEAM
-          </Text>
+          <Text className="pbk-h6 text-center text-base-white">SAVE TEAM</Text>
         </FloatingActionButton>
       </Pressable>
     </SafeAreaView>
