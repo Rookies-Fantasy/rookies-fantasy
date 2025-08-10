@@ -5,7 +5,7 @@ import { ThemeMode, ThemeName } from "./theme";
 type ThemeContextType = {
   theme: ThemeName;
   setTheme: (theme: ThemeName) => void;
-  mode: ThemeMode;
+  mode: Exclude<ThemeMode, ThemeMode.System>;
   setMode: (mode: ThemeMode) => void;
 };
 
@@ -25,8 +25,15 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     setColorScheme(mode);
   };
 
+  // Default to dark if null gets returned for some reason
+  const systemMode =
+    useColorScheme().colorScheme === "light" ? ThemeMode.Light : ThemeMode.Dark;
+  const resolvedMode = mode === ThemeMode.System ? systemMode : mode;
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, mode, setMode }}>
+    <ThemeContext.Provider
+      value={{ theme, setTheme, mode: resolvedMode, setMode }}
+    >
       {children}
     </ThemeContext.Provider>
   );

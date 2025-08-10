@@ -17,7 +17,8 @@ import {
   selectIsUserSignedIn,
   selectIsUserVerified,
 } from "@/state/slices/userSlice";
-import { ThemeProvider } from "@/theme/ThemeProvider";
+import { ThemeMode } from "@/theme/theme";
+import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
@@ -25,13 +26,14 @@ const RootLayoutNav = () => {
   const queryClient = new QueryClient();
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
+  const { mode } = useAppTheme();
 
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView>
         <QueryClientProvider client={queryClient}>
           <AuthListener>
-            <StatusBar style="light" />
+            <StatusBar style={mode === ThemeMode.Dark ? "light" : "dark"} />
             <ThemeWrapper>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>

@@ -43,8 +43,8 @@ module.exports = {
           900: "rgb(var(--color-primary-900) / <alpha-value>)",
           950: "rgb(var(--color-primary-950) / <alpha-value>)",
         },
-        // background: "rgb(var(--color-background) / <alpha-value>)",
-        // text: "rgb(var(--color-text) / <alpha-value>)",
+        mode: "rgb(var(--color-mode) / <alpha-value>)",
+        modeContrast: "rgb(var(--color-mode-contrast) / <alpha-value>)",
         gray: {
           25: "#FDFDFD",
           50: "#FAFAFA",

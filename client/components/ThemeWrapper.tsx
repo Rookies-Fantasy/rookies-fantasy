@@ -1,6 +1,5 @@
-import { useColorScheme } from "nativewind";
 import { View, ViewStyle } from "react-native";
-import { ThemeMode, themes } from "../theme/theme";
+import { themes } from "../theme/theme";
 import { useAppTheme } from "@/theme/ThemeProvider";
 
 type ThemeWrapperProps = {
@@ -9,9 +8,7 @@ type ThemeWrapperProps = {
 
 export const ThemeWrapper = ({ children }: ThemeWrapperProps) => {
   const { mode, theme } = useAppTheme();
-  const systemMode = useColorScheme().colorScheme ?? "light";
-  const resolvedMode = mode === ThemeMode.System ? systemMode : mode;
-  const style: ViewStyle = themes[theme][resolvedMode];
+  const style: ViewStyle = themes[theme][mode];
 
   return <View style={[{ flex: 1 }, style]}>{children}</View>;
 };

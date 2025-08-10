@@ -41,29 +41,35 @@ const greenColors = {
   "--color-primary-950": "0 52 19",
 };
 
+const darkModeColors = {
+  "--color-mode": "10 13 18",
+  "--color-mode-contrast": "255 255 255",
+};
+
+const lightModeColors = {
+  "--color-mode": "255 255 255",
+  "--color-mode-contrast": "0 0 0",
+};
+
 export const themes = {
   purple: {
     light: vars({
       ...purpleColors,
-      // "--color-background": "96 66 255",
-      // "--color-text": "0 0 0",
+      ...lightModeColors,
     }),
     dark: vars({
       ...purpleColors,
-      // "--color-background": "96 66 255",
-      // "--color-text": "255 255 255",
+      ...darkModeColors,
     }),
   },
   green: {
     light: vars({
       ...greenColors,
-      // "--color-background": "9 222 79",
-      // "--color-text": "0 0 0",
+      ...lightModeColors,
     }),
     dark: vars({
       ...greenColors,
-      // "--color-background": "9 222 79",
-      // "--color-text": "255 255 255",
+      ...darkModeColors,
     }),
   },
   // More themes
