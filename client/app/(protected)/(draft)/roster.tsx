@@ -99,7 +99,7 @@ const Roster = () => {
                 lineup={team.lineup}
                 selectedPosition={selectedPosition}
                 setSelectedPosition={setSelectedPosition}
-                setShowBottomDrawer={setShowBottomDrawer}
+                setShowBottomDrawer={() => setShowBottomDrawer(true)}
                 showBottomDrawer={showBottomDrawer}
               />
             </View>

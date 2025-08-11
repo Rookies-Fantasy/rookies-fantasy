@@ -1,20 +1,54 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FloatingActionButton from "@/components/FloatingActionButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
+import Spinner from "@/components/Spinner";
+import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
 import { SlotPosition } from "@/types/teamTypes";
 
 const MyTeam = () => {
   const router = useRouter();
-  const lineup = useAppSelector((state) => state.team.lineup);
+  const team = useAppSelector((state) => state.team);
+  const userId = useAppSelector((state) => state.user.id);
+  const [isLoading, setIsLoading] = useState(false);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
+  const [showSaveLineupButton, setShowSaveLineupButton] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
+
+  const handleSaveLineup = async () => {
+    try {
+      setIsLoading(true);
+
+      if (team.balance < 0) {
+        Alert.alert(
+          "Insufficient balance",
+          "Please adjust your selections to stay within your available funds.",
+        );
+        return;
+      }
+
+      await UserController.saveUserTeamLineup(
+        userId,
+        team.id,
+        team.lineup,
+        team.balance,
+      );
+
+      setShowSaveLineupButton(false);
+    } catch (error) {
+      Alert.alert("Error", "Failed to save your team. Please try agian.");
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-950">
@@ -45,14 +79,31 @@ const MyTeam = () => {
         <View className="mx-6 my-2 flex-1 gap-4">
           <PlayerRoster
             isCard
-            lineup={lineup}
+            lineup={team.lineup}
             selectedPosition={selectedPosition}
             setSelectedPosition={setSelectedPosition}
-            setShowBottomDrawer={setShowBottomDrawer}
+            setShowBottomDrawer={() => setShowBottomDrawer(true)}
+            setShowFloatingButton={() => setShowSaveLineupButton(true)}
             showBottomDrawer={showBottomDrawer}
           />
         </View>
       </ScrollView>
+      {showSaveLineupButton && (
+        <FloatingActionButton
+          className="bottom-6 w-[90%] self-center"
+          onPress={() => handleSaveLineup()}
+        >
+          {isLoading ? (
+            <View className="items-center justify-center">
+              <Spinner />
+            </View>
+          ) : (
+            <Text className="pbk-h6 text-center text-base-white">
+              SAVE TEAM
+            </Text>
+          )}
+        </FloatingActionButton>
+      )}
       <RosterDrawer
         selectedPosition={selectedPosition}
         setSelectedPosition={setSelectedPosition}

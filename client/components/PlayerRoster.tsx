@@ -7,7 +7,8 @@ type PlayerRosterProps = {
   lineup: LineupSlot[];
   selectedPosition: SlotPosition | null;
   setSelectedPosition: (position: SlotPosition | null) => void;
-  setShowBottomDrawer: (showBottomDrawer: boolean) => void;
+  setShowBottomDrawer: () => void;
+  setShowFloatingButton?: () => void;
   showBottomDrawer: boolean;
 };
 
@@ -18,6 +19,7 @@ const PlayerRoster = ({
   selectedPosition,
   setSelectedPosition,
   setShowBottomDrawer,
+  setShowFloatingButton,
   showBottomDrawer,
 }: PlayerRosterProps) => (
   <>
@@ -33,11 +35,12 @@ const PlayerRoster = ({
             console.log("Drawer out, this should be a swap.");
           } else {
             setSelectedPosition(slot.position);
-            setShowBottomDrawer(true);
+            setShowBottomDrawer();
           }
         }}
         playerData={slot.player}
         position={slot.position}
+        setShowFloatingButton={setShowFloatingButton}
       />
     ))}
   </>
