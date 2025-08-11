@@ -161,6 +161,7 @@ const CreateTeam = () => {
             abbreviation: teamData.abbreviation,
             logoUrl: teamData.logoUrl,
             lineup: teamData.lineup,
+            bench: teamData.bench,
             balance: teamData.balance,
           }),
         );

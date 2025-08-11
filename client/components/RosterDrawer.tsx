@@ -1,4 +1,5 @@
 import { Pressable, View, Text } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
@@ -21,16 +22,41 @@ const RosterDrawer = ({
   const team = useAppSelector((state) => state.team);
   const dispatch = useAppDispatch();
 
-  const eligibleSlots = team.lineup.filter((slot) => {
-    if (!slot.player || !selectedPosition) return false;
+  const getSelectedPlayer = () => {
+    if (!selectedPosition) return null;
 
-    const isSelectedUtil = ["UTIL1", "UTIL2", "UTIL3"].includes(
-      selectedPosition,
+    if (!selectedPosition.startsWith("BEN")) {
+      const lineupSlot = team.lineup.find(
+        (slot) => slot.position === selectedPosition,
+      );
+      return lineupSlot?.player || null;
+    }
+
+    const benchSlot = team.bench.find(
+      (slot) => slot.position === selectedPosition,
     );
+    return benchSlot?.player || null;
+  };
 
-    if (isSelectedUtil) return true;
+  const selectedPlayer = getSelectedPlayer();
 
-    return slot.player.positions.includes(selectedPosition);
+  const eligibleSlots = team.lineup.filter((slot) => {
+    if (!selectedPlayer || !selectedPosition) return false;
+
+    if (slot.position === selectedPosition) return false;
+
+    const canPlayPosition = selectedPlayer.positions.includes(slot.position);
+    const isUtilSlot = ["UTIL1", "UTIL2", "UTIL3"].includes(slot.position);
+
+    return canPlayPosition || isUtilSlot;
+  });
+
+  const eligibleBenchSlots = team.bench.filter((benchSlot) => {
+    if (!selectedPlayer || !selectedPosition) return false;
+
+    if (benchSlot.position === selectedPosition) return false;
+
+    return true;
   });
 
   return (
@@ -58,51 +84,92 @@ const RosterDrawer = ({
       }}
       snapPoints={["66%"]}
     >
-      <View className="flex-1 border-t-2 border-gray-900">
-        {eligibleSlots.length > 0 ? (
-          eligibleSlots.map((slot) => (
-            <View className="border-b-2 border-gray-900" key={slot.position}>
-              <PlayerSlot
-                isSelected={selectedPosition === slot.position}
-                onPlayerRemove={() => {
-                  if (selectedPosition === slot.position) {
-                    setSelectedPosition(null);
-                  }
-                }}
-                openDrawer={() => {
-                  if (
-                    showBottomDrawer &&
-                    slot.position !== selectedPosition &&
-                    selectedPosition !== null
-                  ) {
-                    // TODO: Complete swap functionality here. This if statement checks if the drawer is already open, and also ensures
-                    // that if a user clicks on the initial selected position it does not complete the "swap"
-                    dispatch(
-                      swapPlayersInLineup({
-                        from: selectedPosition,
-                        to: slot.position,
-                      }),
-                    );
-                    setShowBottomDrawer(false);
-                    console.log("Drawer out, this should be a swap.");
-                  } else {
-                    setSelectedPosition(slot.position);
-                    setShowBottomDrawer(true);
-                  }
-                }}
-                playerData={slot.player}
-                position={slot.position}
-              />
-            </View>
-          ))
+      <ScrollView
+        contentContainerClassName="flex-1 border-t-2 border-gray-900"
+        showsVerticalScrollIndicator={false}
+      >
+        {eligibleSlots.length > 0 || eligibleBenchSlots.length > 0 ? (
+          <>
+            {eligibleSlots.map((slot) => (
+              <View className="border-b-2 border-gray-900" key={slot.position}>
+                <PlayerSlot
+                  isSelected={selectedPosition === slot.position}
+                  onPlayerRemove={() => {
+                    if (selectedPosition === slot.position) {
+                      setSelectedPosition(null);
+                    }
+                  }}
+                  openDrawer={() => {
+                    if (
+                      showBottomDrawer &&
+                      slot.position !== selectedPosition &&
+                      selectedPosition !== null
+                    ) {
+                      dispatch(
+                        swapPlayersInLineup({
+                          from: selectedPosition,
+                          to: slot.position,
+                        }),
+                      );
+                      setShowBottomDrawer(false);
+                      console.log("Drawer out, this should be a swap.");
+                    } else {
+                      setSelectedPosition(slot.position);
+                      setShowBottomDrawer(true);
+                    }
+                  }}
+                  playerData={slot.player}
+                  position={slot.position}
+                />
+              </View>
+            ))}
+            {eligibleBenchSlots.map((benchSlot) => (
+              <View
+                className="border-b-2 border-gray-900"
+                key={benchSlot.position}
+              >
+                <PlayerSlot
+                  isSelected={selectedPosition === benchSlot.position}
+                  onPlayerRemove={() => {
+                    if (selectedPosition === benchSlot.position) {
+                      setSelectedPosition(null);
+                    }
+                  }}
+                  openDrawer={() => {
+                    if (
+                      showBottomDrawer &&
+                      benchSlot.position !== selectedPosition &&
+                      selectedPosition !== null
+                    ) {
+                      dispatch(
+                        swapPlayersInLineup({
+                          from: selectedPosition,
+                          to: benchSlot.position,
+                        }),
+                      );
+                      setShowBottomDrawer(false);
+                      console.log(
+                        "Drawer out, this should be a swap with bench.",
+                      );
+                    } else {
+                      setSelectedPosition(benchSlot.position);
+                      setShowBottomDrawer(true);
+                    }
+                  }}
+                  playerData={benchSlot.player}
+                  position={benchSlot.position}
+                />
+              </View>
+            ))}
+          </>
         ) : (
           <View className="flex-1 items-center justify-center">
             <Text className="pbk-b2 text-center text-gray-300">
-              No eligible players for this position.
+              No eligible positions for this player.
             </Text>
           </View>
         )}
-      </View>
+      </ScrollView>
     </BottomSheet>
   );
 };

@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, X } from "phosphor-react-native";
 import { useState } from "react";
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -14,46 +13,25 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
+import Spinner from "@/components/Spinner";
 import TeamBudget from "@/components/TeamBudget";
-import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
 import { getLineupPlayerCount } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/teamTypes";
+import { saveTeamLineup } from "@/utils/teamUtils";
 
 const Roster = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
   const userId = useAppSelector((state) => state.user.id);
   const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
+  const [isLoading, setIsLoading] = useState(false);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
+
   const MAX_PLAYERS = 8;
-
-  const handleSaveLineup = async () => {
-    try {
-      if (team.balance < 0) {
-        Alert.alert(
-          "Insufficient balance",
-          "Please adjust your selections to stay within your available funds.",
-        );
-        return;
-      }
-
-      await UserController.saveUserTeamLineup(
-        userId,
-        team.id,
-        team.lineup,
-        team.balance,
-      );
-
-      router.replace("/(protected)/(tabs)");
-    } catch (error) {
-      Alert.alert("Error", "Failed to save your team. Please try agian.");
-      console.log(error);
-    }
-  };
 
   return (
     <SafeAreaView
@@ -61,7 +39,7 @@ const Roster = () => {
       edges={["top", "right", "left"]}
     >
       <Pressable className="relative flex-1" onPress={Keyboard.dismiss}>
-        <ScrollView className="">
+        <ScrollView showsVerticalScrollIndicator={false}>
           <KeyboardAvoidingView className="flex-1">
             <View className="px-6">
               <View className="mb-10 flex-row items-center justify-between">
@@ -94,6 +72,7 @@ const Roster = () => {
 
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">
               <PlayerRoster
+                bench={team.bench}
                 enableActionIcon
                 isCard
                 lineup={team.lineup}
@@ -107,9 +86,23 @@ const Roster = () => {
         </ScrollView>
         <FloatingActionButton
           className="bottom-6 w-[90%] self-center"
-          onPress={() => handleSaveLineup()}
+          onPress={async () => {
+            await saveTeamLineup(userId, team, {
+              onStart: () => setIsLoading(true),
+              onSuccess: () => router.replace("/(protected)/(tabs)"),
+              onFinally: () => setIsLoading(false),
+            });
+          }}
         >
-          <Text className="pbk-h6 text-center text-base-white">SAVE TEAM</Text>
+          {isLoading ? (
+            <View className="items-center justify-center">
+              <Spinner />
+            </View>
+          ) : (
+            <Text className="pbk-h6 text-center text-base-white">
+              SAVE TEAM
+            </Text>
+          )}
         </FloatingActionButton>
       </Pressable>
       <RosterDrawer

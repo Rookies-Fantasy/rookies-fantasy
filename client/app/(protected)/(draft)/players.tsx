@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
 import { useMemo, useState } from "react";
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -20,7 +19,6 @@ import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
-import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
@@ -28,6 +26,7 @@ import {
   isPlayerInLineup,
   removePlayerFromLineup,
 } from "@/state/slices/teamSlice";
+import { saveTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -35,6 +34,7 @@ type FetchPlayersParams = {
 
 const Players = () => {
   const [query, setQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
   const team = useAppSelector((state) => state.team);
@@ -43,30 +43,6 @@ const Players = () => {
   const PAGE_SIZE = 25;
   const MAX_PLAYERS = 8;
 
-  const handleSaveLineup = async () => {
-    try {
-      if (team.balance < 0) {
-        Alert.alert(
-          "Insufficient balance",
-          "Please adjust your selections to stay within your available funds.",
-        );
-        return;
-      }
-
-      await UserController.saveUserTeamLineup(
-        userId,
-        team.id,
-        team.lineup,
-        team.balance,
-      );
-
-      router.replace("/(protected)/(tabs)");
-    } catch (error) {
-      Alert.alert("Error", "Failed to save your team. Please try agian.");
-      console.log(error);
-    }
-  };
-
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
@@ -74,7 +50,7 @@ const Players = () => {
 
   const {
     data,
-    isLoading,
+    isLoading: isLoadingFetch,
     isError,
     fetchNextPage,
     hasNextPage,
@@ -173,7 +149,7 @@ const Players = () => {
             </View>
           </View>
 
-          {isLoading ? (
+          {isLoadingFetch ? (
             <View className="flex-1 items-center justify-center border-t-2 border-gray-900">
               <Spinner />
             </View>
@@ -228,9 +204,23 @@ const Players = () => {
         </KeyboardAvoidingView>
         <FloatingActionButton
           className="bottom-6 w-[90%] self-center"
-          onPress={() => handleSaveLineup()}
+          onPress={async () => {
+            await saveTeamLineup(userId, team, {
+              onStart: () => setIsLoading(true),
+              onSuccess: () => router.replace("/(protected)/(tabs)"),
+              onFinally: () => setIsLoading(false),
+            });
+          }}
         >
-          <Text className="pbk-h6 text-center text-base-white">SAVE TEAM</Text>
+          {isLoading ? (
+            <View className="items-center justify-center">
+              <Spinner />
+            </View>
+          ) : (
+            <Text className="pbk-h6 text-center text-base-white">
+              SAVE TEAM
+            </Text>
+          )}
         </FloatingActionButton>
       </Pressable>
     </SafeAreaView>

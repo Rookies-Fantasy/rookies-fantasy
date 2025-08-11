@@ -1,15 +1,15 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import Spinner from "@/components/Spinner";
-import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
 import { SlotPosition } from "@/types/teamTypes";
+import { saveTeamLineup } from "@/utils/teamUtils";
 
 const MyTeam = () => {
   const router = useRouter();
@@ -21,34 +21,6 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-
-  const handleSaveLineup = async () => {
-    try {
-      setIsLoading(true);
-
-      if (team.balance < 0) {
-        Alert.alert(
-          "Insufficient balance",
-          "Please adjust your selections to stay within your available funds.",
-        );
-        return;
-      }
-
-      await UserController.saveUserTeamLineup(
-        userId,
-        team.id,
-        team.lineup,
-        team.balance,
-      );
-
-      setShowSaveLineupButton(false);
-    } catch (error) {
-      Alert.alert("Error", "Failed to save your team. Please try agian.");
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-950">
@@ -78,6 +50,7 @@ const MyTeam = () => {
         </Pressable>
         <View className="mx-6 my-2 flex-1 gap-4">
           <PlayerRoster
+            bench={team.bench}
             isCard
             lineup={team.lineup}
             selectedPosition={selectedPosition}
@@ -91,7 +64,13 @@ const MyTeam = () => {
       {showSaveLineupButton && (
         <FloatingActionButton
           className="bottom-6 w-[90%] self-center"
-          onPress={() => handleSaveLineup()}
+          onPress={async () => {
+            await saveTeamLineup(userId, team, {
+              onStart: () => setIsLoading(true),
+              onSuccess: () => setShowSaveLineupButton(false),
+              onFinally: () => setIsLoading(false),
+            });
+          }}
         >
           {isLoading ? (
             <View className="items-center justify-center">

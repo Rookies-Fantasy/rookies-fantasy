@@ -95,6 +95,7 @@ export class UserController {
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
             lineup: team.data()?.lineup ?? defaultTeam.lineup,
+            bench: team.data()?.bench ?? defaultTeam.bench,
             balance: team.data()?.balance ?? 0,
           }
         : defaultTeam;
@@ -117,6 +118,7 @@ export class UserController {
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
         lineup: team.data()?.lineup,
+        bench: team.data()?.bench,
         balance: team.data()?.balance,
       }));
     } catch (error) {

@@ -1,7 +1,8 @@
 import PlayerSlot from "./PlayerSlot";
-import { LineupSlot, SlotPosition } from "@/types/teamTypes";
+import { BenchSlot, LineupSlot, SlotPosition } from "@/types/teamTypes";
 
 type PlayerRosterProps = {
+  bench: BenchSlot[];
   enableActionIcon?: boolean;
   isCard?: boolean;
   lineup: LineupSlot[];
@@ -13,6 +14,7 @@ type PlayerRosterProps = {
 };
 
 const PlayerRoster = ({
+  bench,
   enableActionIcon = false,
   isCard = false,
   lineup,
@@ -43,6 +45,25 @@ const PlayerRoster = ({
         setShowFloatingButton={setShowFloatingButton}
       />
     ))}
+    {bench.length > 0 &&
+      bench.map((benchSlot) => (
+        <PlayerSlot
+          enableActionIcon={enableActionIcon}
+          isCard={isCard}
+          key={benchSlot.position}
+          openDrawer={() => {
+            if (showBottomDrawer && benchSlot.position !== selectedPosition) {
+              console.log("Drawer out, this should be a swap from bench.");
+            } else {
+              setSelectedPosition(benchSlot.position);
+              setShowBottomDrawer();
+            }
+          }}
+          playerData={benchSlot.player}
+          position={benchSlot.position}
+          setShowFloatingButton={setShowFloatingButton}
+        />
+      ))}
   </>
 );
 
