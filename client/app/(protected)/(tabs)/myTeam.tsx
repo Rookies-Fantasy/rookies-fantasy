@@ -9,6 +9,7 @@ import RosterDrawer from "@/components/RosterDrawer";
 import Spinner from "@/components/Spinner";
 import { useAppSelector } from "@/state/hooks";
 import { SlotPosition } from "@/types/teamTypes";
+import { cn } from "@/utils/jsUtils";
 import { saveTeamLineup } from "@/utils/teamUtils";
 
 const MyTeam = () => {
@@ -22,39 +23,22 @@ const MyTeam = () => {
     null,
   );
 
-  // Track initial team state to detect changes
-  const initialTeamRef = useRef(
-    JSON.stringify({
-      lineup: team.lineup,
-      bench: team.bench,
-      balance: team.balance,
-    }),
-  );
-  const isFirstRender = useRef(true);
+  const isInitialMount = useRef(true);
 
-  // Show save button when team changes (swaps, bench moves, etc.)
   useEffect(() => {
-    // Skip the first render
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
       return;
     }
 
-    const currentTeamState = JSON.stringify({
-      lineup: team.lineup,
-      bench: team.bench,
-      balance: team.balance,
-    });
-
-    // Show save button if team state changed OR if there are players on bench
-    if (currentTeamState !== initialTeamRef.current || team.bench.length > 0) {
-      setShowSaveLineupButton(true);
-    }
-  }, [team.lineup, team.bench, team.balance]);
+    setShowSaveLineupButton(true);
+  }, [team]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-950">
-      <ScrollView className="mb-10">
+      <ScrollView
+        contentContainerClassName={cn(showSaveLineupButton ? "pb-10" : "")}
+      >
         <View className="h-[200px] w-full">
           <View className="h-1/2 bg-pink-700" />
           <View className="h-1/2 border-b border-gray-900 bg-gray-950">

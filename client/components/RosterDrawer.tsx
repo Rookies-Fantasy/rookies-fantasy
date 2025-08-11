@@ -174,9 +174,6 @@ const RosterDrawer = ({
                         }),
                       );
                       setShowBottomDrawer(false);
-                      console.log(
-                        "Drawer out, this should be a swap with bench.",
-                      );
                     } else {
                       setSelectedPosition(benchSlot.position);
                       setShowBottomDrawer(true);
