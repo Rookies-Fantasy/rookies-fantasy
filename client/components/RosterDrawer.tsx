@@ -5,6 +5,7 @@ import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { swapPlayersInLineup } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/teamTypes";
+import { cn } from "@/utils/jsUtils";
 
 type RosterDrawerProps = {
   selectedPosition: SlotPosition | null;
@@ -41,23 +42,47 @@ const RosterDrawer = ({
   const selectedPlayer = getSelectedPlayer();
 
   const eligibleSlots = team.lineup.filter((slot) => {
-    if (!selectedPlayer || !selectedPosition) return false;
+    if (!selectedPosition) return false;
 
     if (slot.position === selectedPosition) return false;
 
-    const canPlayPosition = selectedPlayer.positions.includes(slot.position);
-    const isUtilSlot = ["UTIL1", "UTIL2", "UTIL3"].includes(slot.position);
+    if (!selectedPlayer) {
+      if (!slot.player) return false;
 
-    return canPlayPosition || isUtilSlot;
+      const playerCanMoveToSelected =
+        slot.player.positions.includes(selectedPosition) ||
+        selectedPosition.startsWith("BEN") ||
+        ["UTIL1", "UTIL2", "UTIL3"].includes(selectedPosition);
+
+      return playerCanMoveToSelected;
+    } else {
+      const canPlayPosition = selectedPlayer.positions.includes(slot.position);
+      const isUtilSlot = ["UTIL1", "UTIL2", "UTIL3"].includes(slot.position);
+
+      return canPlayPosition || isUtilSlot;
+    }
   });
 
   const eligibleBenchSlots = team.bench.filter((benchSlot) => {
-    if (!selectedPlayer || !selectedPosition) return false;
+    if (!selectedPosition) return false;
 
     if (benchSlot.position === selectedPosition) return false;
 
-    return true;
+    if (!selectedPlayer) {
+      if (!benchSlot.player || selectedPosition.startsWith("BEN")) return false;
+
+      const playerCanMoveToSelected =
+        benchSlot.player.positions.includes(selectedPosition) ||
+        ["UTIL1", "UTIL2", "UTIL3"].includes(selectedPosition);
+
+      return playerCanMoveToSelected;
+    } else {
+      return true;
+    }
   });
+
+  const hasEligibleOptions =
+    eligibleSlots.length > 0 || eligibleBenchSlots.length > 0;
 
   return (
     <BottomSheet
@@ -85,10 +110,11 @@ const RosterDrawer = ({
       snapPoints={["66%"]}
     >
       <ScrollView
-        contentContainerClassName="flex-1 border-t-2 border-gray-900"
+        className="flex-1 border-t-2 border-gray-900"
+        contentContainerClassName={cn("pb-20", !hasEligibleOptions && "flex-1")}
         showsVerticalScrollIndicator={false}
       >
-        {eligibleSlots.length > 0 || eligibleBenchSlots.length > 0 ? (
+        {hasEligibleOptions ? (
           <>
             {eligibleSlots.map((slot) => (
               <View className="border-b-2 border-gray-900" key={slot.position}>

@@ -76,10 +76,8 @@ const Roster = () => {
                 enableActionIcon
                 isCard
                 lineup={team.lineup}
-                selectedPosition={selectedPosition}
                 setSelectedPosition={setSelectedPosition}
                 setShowBottomDrawer={() => setShowBottomDrawer(true)}
-                showBottomDrawer={showBottomDrawer}
               />
             </View>
           </KeyboardAvoidingView>

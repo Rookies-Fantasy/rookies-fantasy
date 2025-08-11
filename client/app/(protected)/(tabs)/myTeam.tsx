@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,9 +22,39 @@ const MyTeam = () => {
     null,
   );
 
+  // Track initial team state to detect changes
+  const initialTeamRef = useRef(
+    JSON.stringify({
+      lineup: team.lineup,
+      bench: team.bench,
+      balance: team.balance,
+    }),
+  );
+  const isFirstRender = useRef(true);
+
+  // Show save button when team changes (swaps, bench moves, etc.)
+  useEffect(() => {
+    // Skip the first render
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const currentTeamState = JSON.stringify({
+      lineup: team.lineup,
+      bench: team.bench,
+      balance: team.balance,
+    });
+
+    // Show save button if team state changed OR if there are players on bench
+    if (currentTeamState !== initialTeamRef.current || team.bench.length > 0) {
+      setShowSaveLineupButton(true);
+    }
+  }, [team.lineup, team.bench, team.balance]);
+
   return (
     <SafeAreaView className="flex-1 bg-gray-950">
-      <ScrollView>
+      <ScrollView className="mb-10">
         <View className="h-[200px] w-full">
           <View className="h-1/2 bg-pink-700" />
           <View className="h-1/2 border-b border-gray-900 bg-gray-950">
@@ -53,11 +83,9 @@ const MyTeam = () => {
             bench={team.bench}
             isCard
             lineup={team.lineup}
-            selectedPosition={selectedPosition}
             setSelectedPosition={setSelectedPosition}
             setShowBottomDrawer={() => setShowBottomDrawer(true)}
             setShowFloatingButton={() => setShowSaveLineupButton(true)}
-            showBottomDrawer={showBottomDrawer}
           />
         </View>
       </ScrollView>

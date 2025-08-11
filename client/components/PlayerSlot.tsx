@@ -4,7 +4,10 @@ import { View, Text, Pressable } from "react-native";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
 import { useAppDispatch } from "@/state/hooks";
-import { removePlayerFromLineup } from "@/state/slices/teamSlice";
+import {
+  removePlayerFromLineup,
+  removePlayerFromBench,
+} from "@/state/slices/teamSlice";
 import { Player } from "@/types/players";
 import { cn } from "@/utils/jsUtils";
 
@@ -95,7 +98,11 @@ const PlayerSlot = ({
           <Pressable
             className="flex-1 flex-row items-center justify-center gap-2"
             onPress={() => {
-              dispatch(removePlayerFromLineup(playerData));
+              if (position.startsWith("BEN")) {
+                dispatch(removePlayerFromBench(playerData));
+              } else {
+                dispatch(removePlayerFromLineup(playerData));
+              }
               setShowFloatingButton?.();
             }}
           >

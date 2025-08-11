@@ -272,6 +272,16 @@ const teamSlice = createSlice({
       targetSlot.player = benchPlayer;
       removeBenchSlotByPosition(state.bench, benchSlot.position);
     },
+    removePlayerFromBench: (state, action: PayloadAction<Player>) => {
+      const player = action.payload;
+      const benchSlot = state.bench.find(
+        (slot) => slot.player && slot.player.id === player.id,
+      );
+      if (benchSlot && benchSlot.player) {
+        state.balance += benchSlot.player.salary;
+        removeBenchSlotByPosition(state.bench, benchSlot.position);
+      }
+    },
     clearBench: (state) => {
       // Move all bench players back to available pool (remove them)
       state.bench = [];
@@ -305,6 +315,7 @@ export const {
   removePlayerFromLineup,
   swapPlayersInLineup,
   movePlayerFromBenchToLineup,
+  removePlayerFromBench,
   clearBench,
 } = teamSlice.actions;
 
