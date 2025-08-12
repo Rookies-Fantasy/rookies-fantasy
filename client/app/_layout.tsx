@@ -1,5 +1,10 @@
 import "react-native-reanimated";
 import "@/global.css";
+import {
+  DefaultTheme,
+  DarkTheme,
+  ThemeProvider as ReactNavigationThemeProvider,
+} from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -17,7 +22,7 @@ import {
   selectIsUserSignedIn,
   selectIsUserVerified,
 } from "@/state/slices/userSlice";
-import { ThemeMode } from "@/theme/theme";
+import { colorPalettes, ThemeMode } from "@/theme/theme";
 import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
@@ -26,7 +31,17 @@ const RootLayoutNav = () => {
   const queryClient = new QueryClient();
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
-  const { mode } = useAppTheme();
+  const { theme, mode } = useAppTheme();
+
+  const testNavTheme = {
+    ...(mode === ThemeMode.Light ? DefaultTheme : DarkTheme),
+    colors: {
+      ...(mode === ThemeMode.Light ? DefaultTheme.colors : DarkTheme.colors),
+      primary: colorPalettes[theme][mode][500],
+      background: colorPalettes[theme][mode].background,
+      text: colorPalettes[theme][mode].contrast,
+    },
+  };
 
   return (
     <SafeAreaProvider>
@@ -35,14 +50,16 @@ const RootLayoutNav = () => {
           <AuthListener>
             <StatusBar style={mode === ThemeMode.Dark ? "light" : "dark"} />
             <ThemeWrapper>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
-                  <Stack.Screen name="(auth)" />
-                </Stack.Protected>
-                <Stack.Protected guard={isUserSignedIn && isUserVerified}>
-                  <Stack.Screen name="(protected)" />
-                </Stack.Protected>
-              </Stack>
+              <ReactNavigationThemeProvider value={testNavTheme}>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
+                    <Stack.Screen name="(auth)" />
+                  </Stack.Protected>
+                  <Stack.Protected guard={isUserSignedIn && isUserVerified}>
+                    <Stack.Screen name="(protected)" />
+                  </Stack.Protected>
+                </Stack>
+              </ReactNavigationThemeProvider>
             </ThemeWrapper>
           </AuthListener>
         </QueryClientProvider>

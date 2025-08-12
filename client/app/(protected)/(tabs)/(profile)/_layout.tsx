@@ -13,13 +13,8 @@ const ProfileLayout = () => (
       headerShown: false,
       tabBarShowLabel: false,
       tabBarPosition: "top",
-      tabBarActiveTintColor: "#6336F5",
       tabBarIconStyle: {
         flex: 1,
-      },
-      tabBarStyle: {
-        backgroundColor: "#0A0D12",
-        borderBottomColor: "#181D27",
       },
     }}
   >

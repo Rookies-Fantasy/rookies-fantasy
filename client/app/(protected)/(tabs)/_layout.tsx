@@ -6,13 +6,8 @@ const MainLayout = () => (
     screenOptions={{
       headerShown: false,
       tabBarShowLabel: false,
-      tabBarActiveTintColor: "#6336F5",
       tabBarIconStyle: {
         flex: 1,
-      },
-      tabBarStyle: {
-        backgroundColor: "#0A0D12",
-        borderTopColor: "#181D27",
       },
     }}
   >
