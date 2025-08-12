@@ -216,18 +216,23 @@ const teamSlice = createSlice({
             UTIL_POSITIONS.includes(from as FlexPosition);
 
           if (playerAEligibility && playerBEligibility) {
-            // Both players can swap positions - direct swap (TODO: Success toast that confirms the swap)
+            // Both players can swap positions - direct swap
+            // (TODO: Success toast that confirms the swap)
             fromSlot.player = toPlayer;
             toSlot.player = fromPlayer;
           } else if (playerAEligibility && !playerBEligibility) {
-            // Player A can go to Player B's position, but Player B cannot go to Player A's position
-            // Move Player A to Player B's position, Player B goes to bench (TODO: Success toast that confirms where player B has gone)
+            // Player A can go to Player B's position, but Player B cannot go to
+            // Player A's position. Move Player A to Player B's position,
+            // Player B goes to bench
+            // (TODO: Success toast that confirms where player B has gone)
             addPlayerToBench(state.bench, toPlayer);
             toSlot.player = fromPlayer;
             fromSlot.player = null;
           } else if (!playerAEligibility && playerBEligibility) {
-            // Player A cannot go to Player B's position, but Player B can go to Player A's position
-            // Move Player B to Player A's position, Player A goes to bench (TODO: Success toast that confirms where player A has gone)
+            // Player A cannot go to Player B's position, but Player B can go to
+            // Player A's position. Move Player B to Player A's position,
+            // Player A goes to bench
+            // (TODO: Success toast that confirms where player A has gone)
             addPlayerToBench(state.bench, fromPlayer);
             fromSlot.player = toPlayer;
             toSlot.player = null;
@@ -246,31 +251,6 @@ const teamSlice = createSlice({
         fromSlot.player = toSlot.player;
         toSlot.player = tempPlayer;
       }
-    },
-    movePlayerFromBenchToLineup: (
-      state,
-      action: PayloadAction<{ playerId: string; position: SlotPosition }>,
-    ) => {
-      const { playerId, position } = action.payload;
-      const benchSlot = state.bench.find(
-        (slot) => slot.player?.id === playerId,
-      );
-      const targetSlot = state.lineup.find(
-        (slot) => slot.position === position,
-      );
-
-      if (!benchSlot || !benchSlot.player || !targetSlot) return;
-
-      const benchPlayer = benchSlot.player;
-
-      // If target slot is occupied, move current player to bench
-      if (targetSlot.player) {
-        addPlayerToBench(state.bench, targetSlot.player);
-      }
-
-      // Move bench player to lineup
-      targetSlot.player = benchPlayer;
-      removeBenchSlotByPosition(state.bench, benchSlot.position);
     },
     removePlayerFromBench: (state, action: PayloadAction<Player>) => {
       const player = action.payload;
@@ -314,7 +294,6 @@ export const {
   addPlayerToLineup,
   removePlayerFromLineup,
   swapPlayersInLineup,
-  movePlayerFromBenchToLineup,
   removePlayerFromBench,
   clearBench,
 } = teamSlice.actions;
