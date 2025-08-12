@@ -138,7 +138,6 @@ const RosterDrawer = ({
                         }),
                       );
                       setShowBottomDrawer(false);
-                      console.log("Drawer out, this should be a swap.");
                     } else {
                       setSelectedPosition(slot.position);
                       setShowBottomDrawer(true);
@@ -169,8 +168,8 @@ const RosterDrawer = ({
                     ) {
                       dispatch(
                         swapPlayersInLineup({
-                          from: selectedPosition,
-                          to: benchSlot.position,
+                          from: benchSlot.position,
+                          to: selectedPosition,
                         }),
                       );
                       setShowBottomDrawer(false);
