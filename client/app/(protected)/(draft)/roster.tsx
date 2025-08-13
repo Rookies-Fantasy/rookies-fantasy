@@ -21,14 +21,14 @@ import { getLineupPlayerCount } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/teamTypes";
 
 const Roster = () => {
-  const router = useRouter();
-  const team = useAppSelector((state) => state.team);
-  const userId = useAppSelector((state) => state.user.id);
-  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
+  const team = useAppSelector((state) => state.team);
+  const userId = useAppSelector((state) => state.user.id);
+  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
+  const router = useRouter();
   const MAX_PLAYERS = 8;
 
   const handleSaveLineup = async () => {

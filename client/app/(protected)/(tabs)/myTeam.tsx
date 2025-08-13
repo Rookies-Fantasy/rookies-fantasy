@@ -9,12 +9,12 @@ import { useAppSelector } from "@/state/hooks";
 import { SlotPosition } from "@/types/teamTypes";
 
 const MyTeam = () => {
-  const router = useRouter();
-  const lineup = useAppSelector((state) => state.team.lineup);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
+  const lineup = useAppSelector((state) => state.team.lineup);
+  const router = useRouter();
 
   return (
     <SafeAreaView className="flex-1 bg-gray-950">

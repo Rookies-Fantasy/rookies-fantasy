@@ -35,11 +35,11 @@ type FetchPlayersParams = {
 
 const Players = () => {
   const [query, setQuery] = useState("");
-  const router = useRouter();
-  const dispatch = useAppDispatch();
   const team = useAppSelector((state) => state.team);
   const userId = useAppSelector((state) => state.user.id);
   const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
+  const dispatch = useAppDispatch();
+  const router = useRouter();
   const PAGE_SIZE = 25;
   const MAX_PLAYERS = 8;
 
