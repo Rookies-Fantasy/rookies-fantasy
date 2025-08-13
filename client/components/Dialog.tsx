@@ -32,7 +32,7 @@ const Dialog = ({ visible, onClose, title, children }: DialogProps) => (
 
         <View className="mb-4">{children}</View>
 
-        <Button onPress={onClose} text="Got It" variant="secondary" />
+        <Button label="Got It" onPress={onClose} variant="secondary" />
       </View>
     </View>
   </Modal>

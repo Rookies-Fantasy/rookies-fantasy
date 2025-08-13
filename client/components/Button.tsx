@@ -5,8 +5,8 @@ type ButtonProps = {
   className?: string;
   disabled?: boolean;
   isLoading?: boolean;
+  label: string;
   onPress?: () => void;
-  text?: string;
   variant?: "primary" | "secondary";
 };
 
@@ -14,8 +14,8 @@ const Button = ({
   className,
   disabled,
   isLoading,
+  label,
   onPress,
-  text,
   variant = "primary",
 }: ButtonProps) => {
   const baseClass = "min-h-12 w-full items-center justify-center rounded-md";
@@ -33,7 +33,7 @@ const Button = ({
         <Spinner />
       ) : (
         <Text className={`pbk-h7 text-center uppercase ${textClass}`}>
-          {text}
+          {label}
         </Text>
       )}
     </Pressable>

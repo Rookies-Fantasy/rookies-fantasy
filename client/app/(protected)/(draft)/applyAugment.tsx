@@ -216,8 +216,8 @@ const ApplyAugment = () => {
             <Button
               disabled={!selectedAugmentId}
               isLoading={isLoading}
+              label="Confirm Selection"
               onPress={() => handleUpdateTeamAugment(selectedAugmentId)}
-              text="Confirm Selection"
             />
           </View>
         </View>

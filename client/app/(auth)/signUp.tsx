@@ -199,8 +199,8 @@ const SignUp = () => {
           </View>
           <Button
             isLoading={isLoading}
+            label="Sign Up"
             onPress={handleSubmit(signUpUser)}
-            text="Sign Up"
           />
 
           <Text className="pbk-b2 my-5 flex-row flex-wrap text-gray-600">

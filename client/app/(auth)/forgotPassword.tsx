@@ -152,8 +152,8 @@ const ForgotPassword = () => {
           <Button
             disabled={!isValid}
             isLoading={isLoading}
+            label="Reset Password"
             onPress={handleSubmit(onSubmit)}
-            text="Reset Password"
           />
 
           <Text

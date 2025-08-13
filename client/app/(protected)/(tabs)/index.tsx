@@ -28,10 +28,10 @@ const Home = () => {
       <View className="my-30 h-16" />
       <Button
         className="mb-4"
+        label="Build your team"
         onPress={() => router.push("/(protected)/(draft)/applyAugment")}
-        text="Build your team"
       />
-      <Button onPress={handleLogout} text="Sign Out" />
+      <Button label="Sign Out" onPress={handleLogout} />
       <Text>{user.username}</Text>
       <Text>{user.email}</Text>
       <Text>{user.id}</Text>

@@ -308,8 +308,8 @@ const CreateTeam = () => {
           <View className="mb-8 justify-end bg-gray-950 px-6">
             <Button
               isLoading={isLoading}
+              label="Finish Account Creation"
               onPress={handleSubmit(handleCreateTeam)}
-              text="Finish Account Creation"
             />
           </View>
         </View>

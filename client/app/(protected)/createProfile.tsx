@@ -285,13 +285,13 @@ const CreateProfile = () => {
                               value={value ? new Date(value) : new Date()}
                             />
                             <Button
+                              label="Done"
                               onPress={() => {
                                 if (selectedDate) {
                                   onChange(selectedDate);
                                 }
                                 setShowDatePicker(false);
                               }}
-                              text="Done"
                             />
                           </View>
                         </View>
@@ -343,8 +343,8 @@ const CreateProfile = () => {
           <View className="mb-8 justify-end bg-gray-950 px-6">
             <Button
               isLoading={isLoading}
+              label="Continue"
               onPress={handleSubmit(handleCreateProfile)}
-              text="Continue"
             />
           </View>
         </View>

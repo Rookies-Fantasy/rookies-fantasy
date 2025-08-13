@@ -195,8 +195,8 @@ const Login = () => {
 
           <Button
             isLoading={isLoading}
+            label="Login"
             onPress={handleSubmit(handleLogin)}
-            text="Login"
           />
 
           <Text
