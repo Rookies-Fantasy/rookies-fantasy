@@ -5,10 +5,9 @@ import Button from "./Button";
 
 type DialogProps = {
   children: React.ReactNode;
-
-  visible: boolean;
   onClose: () => void;
   title: string;
+  visible: boolean;
 };
 
 const Dialog = ({ visible, onClose, title, children }: DialogProps) => (
