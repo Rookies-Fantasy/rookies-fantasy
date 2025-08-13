@@ -1,6 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { defaultTeam, Team } from "@/types/teamTypes";
+import { defaultTeam, Team } from "@/types/team";
 
 const teamSlice = createSlice({
   name: "team",

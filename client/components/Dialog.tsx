@@ -5,12 +5,19 @@ import Button from "./Button";
 
 type DialogProps = {
   children: React.ReactNode;
+  closeLabel?: string;
   onClose: () => void;
   title: string;
   visible: boolean;
 };
 
-const Dialog = ({ visible, onClose, title, children }: DialogProps) => (
+const Dialog = ({
+  children,
+  closeLabel,
+  onClose,
+  title,
+  visible,
+}: DialogProps) => (
   <Modal
     animationType="fade"
     onRequestClose={onClose}
@@ -31,7 +38,11 @@ const Dialog = ({ visible, onClose, title, children }: DialogProps) => (
 
         <View className="mb-4">{children}</View>
 
-        <Button label="Got It" onPress={onClose} variant="secondary" />
+        <Button
+          label={closeLabel ?? "Got It"}
+          onPress={onClose}
+          variant="secondary"
+        />
       </View>
     </View>
   </Modal>

@@ -1,6 +1,6 @@
 ﻿import firestore from "@react-native-firebase/firestore";
-import { defaultTeam, Team } from "@/types/teamTypes";
-import { defaultUser, User } from "@/types/userTypes";
+import { defaultTeam, Team } from "@/types/team";
+import { defaultUser, User } from "@/types/user";
 
 const USERS_COLLECTION = "users";
 const TEAMS_COLLECTION = "teams";

@@ -1,5 +1,5 @@
 ﻿import firestore from "@react-native-firebase/firestore";
-import { Augment } from "@/types/augmentTypes";
+import { Augment } from "@/types/augment";
 
 const AUGMENTS_COLLECTION = "augments";
 

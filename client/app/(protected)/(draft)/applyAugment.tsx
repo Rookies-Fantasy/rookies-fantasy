@@ -12,13 +12,14 @@ import {
   ImageBackground,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "@/components/Button";
 import HelpDialogButton from "@/components/HelpDialogButton";
 import { AugmentController } from "@/controllers/augmentController";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setAugmentId } from "@/state/slices/teamSlice";
-import { Augment } from "@/types/augmentTypes";
+import { Augment } from "@/types/augment";
 
 // TODO: Once migrated to S3 blob storage, remove this hardcoded mapping and use the actual URLs from the API.
 const iconMap: Record<string, any> = {
@@ -66,9 +67,9 @@ const ApplyAugment = () => {
   const dispatch = useAppDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAugmentId, setSelectedAugmentId] = useState<string>(
-    augmentId || "",
-  );
+  const [selectedAugmentId, setSelectedAugmentId] = useState<
+    string | undefined
+  >(augmentId);
   const [augments, setAugments] = useState<Augment[]>([]);
 
   useEffect(() => {
@@ -79,6 +80,7 @@ const ApplyAugment = () => {
 
         // Shuffle the array and take the first 4
         // TODO: Replace this random selection logic with a more meaningful selection process that persists weekly in the backend.
+        // Look into a shuffle algorithm to use, such as the Fisher-Yates (aka Knuth) algorithm.
         const shuffled = data.sort(() => 0.5 - Math.random());
         const randomFour = shuffled.slice(0, 4);
 
@@ -107,7 +109,7 @@ const ApplyAugment = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-950">
+    <SafeAreaView className="flex-1 bg-gray-950">
       <Pressable className="flex-1" onPress={Keyboard.dismiss}>
         <View className="flex-1">
           <KeyboardAvoidingView behavior="padding" className="flex-1">
@@ -120,15 +122,33 @@ const ApplyAugment = () => {
                   <ArrowLeft color="white" size={20} weight="bold" />
                 </Pressable>
                 <Text className="pbk-h5 text-base-white">
-                  Select one augment
+                  Select an augment
                 </Text>
                 <HelpDialogButton title="What are Augments?">
-                  <Text className="pbk-b2 text-gray-500">
-                    {`Augments are strategic bonuses that reward how you build your team.\n\nEach Augment comes with a unique condition. When certain players on your roster meet that condition, only those players get a boost to their stats.\n\nWhether you're stacking sharpshooters, loading up on defenders, or betting on underdogs, Augments let you shape your playstyle and gain a competitive edge.`}
-                  </Text>
+                  <View>
+                    <Text className="pbk-b2 text-gray-500">
+                      Augments are strategic bonuses that reward how you build
+                      your team.
+                    </Text>
+                    <Text className="pbk-b2 mt-4 text-gray-500">
+                      Each Augment comes with a unique condition. When certain
+                      players on your roster meet that condition, only those
+                      players get a boost to their stats.
+                    </Text>
+                    <Text className="pbk-b2 mt-4 text-gray-500">
+                      Whether you&apos;re stacking sharpshooters, loading up on
+                      defenders, or betting on underdogs, Augments let you shape
+                      your playstyle and gain a competitive edge.
+                    </Text>
+                  </View>
                   <View className="mt-3 rounded-md bg-gray-900 p-3">
-                    <Text className="pbk-b2 text-base-white">
-                      {`Example\n\nThe “Deep Threat” Augment gives a +15% Points boost to players shooting 40%+ from three — but only if you have 3 such players on your team.`}
+                    <Text className="pbk-b2 text-center text-base-white">
+                      Example
+                    </Text>
+                    <Text className="pbk-b2 mt-3 text-base-white">
+                      The “Deep Threat” Augment gives a +15% Points boost to
+                      players shooting 40%+ from three — but only if you have 3
+                      such players on your team.
                     </Text>
                   </View>
                 </HelpDialogButton>
@@ -222,7 +242,7 @@ const ApplyAugment = () => {
           </View>
         </View>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 };
 
