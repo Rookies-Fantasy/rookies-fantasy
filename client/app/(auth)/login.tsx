@@ -221,12 +221,12 @@ const Login = () => {
           <SSOButtons />
 
           <Text className="pbk-b1 my-2 text-center text-gray-600">
-            Don&apos;t have an account?{" "}
+            Don&apos;t have an account?
             <Text
               className="text-purple-600"
               onPress={() => router.push("/(auth)/signUp")}
             >
-              Sign up
+              {` Sign up`}
             </Text>
           </Text>
         </KeyboardAvoidingView>
