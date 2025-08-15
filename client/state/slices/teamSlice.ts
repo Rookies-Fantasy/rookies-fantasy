@@ -110,7 +110,6 @@ export const selectEligibleSlotsForPosition = createSelector(
   },
 );
 
-// Helper function (non-selector)
 export const isPlayerInLineup = (
   lineup: LineupSlot[],
   playerId: string,

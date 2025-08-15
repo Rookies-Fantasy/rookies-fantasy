@@ -17,7 +17,7 @@ import RosterDrawer from "@/components/RosterDrawer";
 import TeamBudget from "@/components/TeamBudget";
 import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
-import { getLineupPlayerCount } from "@/state/slices/teamSlice";
+import { selectLineupPlayerCount } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/teamTypes";
 
 const Roster = () => {
@@ -27,7 +27,7 @@ const Roster = () => {
   );
   const team = useAppSelector((state) => state.team);
   const userId = useAppSelector((state) => state.user.id);
-  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
+  const selectedPlayers = useAppSelector(selectLineupPlayerCount) ?? 0;
   const router = useRouter();
   const MAX_PLAYERS = 8;
 

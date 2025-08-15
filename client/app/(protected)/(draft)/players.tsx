@@ -24,7 +24,7 @@ import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
-  getLineupPlayerCount,
+  selectLineupPlayerCount,
   isPlayerInLineup,
   removePlayerFromLineup,
 } from "@/state/slices/teamSlice";
@@ -37,7 +37,7 @@ const Players = () => {
   const [query, setQuery] = useState("");
   const team = useAppSelector((state) => state.team);
   const userId = useAppSelector((state) => state.user.id);
-  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
+  const selectedPlayers = useAppSelector(selectLineupPlayerCount) ?? 0;
   const dispatch = useAppDispatch();
   const router = useRouter();
   const PAGE_SIZE = 25;
