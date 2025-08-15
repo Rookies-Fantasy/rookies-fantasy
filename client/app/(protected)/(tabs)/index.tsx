@@ -1,5 +1,7 @@
 import auth from "@react-native-firebase/auth";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { Text, View } from "react-native";
 import Button from "@/components/Button";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
@@ -10,6 +12,13 @@ const Home = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
   const router = useRouter();
+
+  const [isNavigating, setIsNavigating] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setIsNavigating(false);
+    }, []),
+  );
 
   const handleLogout = async () => {
     try {
@@ -29,7 +38,12 @@ const Home = () => {
       <Button
         className="mb-4"
         label="Build your team"
-        onPress={() => router.push("/(protected)/(draft)/applyAugment")}
+        onPress={() => {
+          if (!isNavigating) {
+            setIsNavigating(true);
+            router.push("/(protected)/(draft)/applyAugment");
+          }
+        }}
       />
       <Button label="Sign Out" onPress={handleLogout} />
       <Text>{user.username}</Text>
