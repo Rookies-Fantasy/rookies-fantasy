@@ -1,4 +1,4 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice, createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Player } from "@/types/players";
 import {
@@ -37,7 +37,7 @@ const teamSlice = createSlice({
         const slot = findSlotByPosition(primaryPosition);
         if (slot) {
           slot.player = player;
-          state.balance += slot.player.salary * -1;
+          state.balance -= slot.player.salary;
           return;
         }
       }
@@ -49,7 +49,7 @@ const teamSlice = createSlice({
           const slot = findSlotByPosition(position);
           if (slot) {
             slot.player = player;
-            state.balance += slot.player.salary * -1;
+            state.balance -= slot.player.salary;
             return;
           }
         }
@@ -62,7 +62,7 @@ const teamSlice = createSlice({
           const slot = findSlotByPosition(utilPosition);
           if (slot) {
             slot.player = player;
-            state.balance += slot.player.salary * -1;
+            state.balance -= slot.player.salary;
             return;
           }
         }
@@ -81,17 +81,36 @@ const teamSlice = createSlice({
   },
 });
 
+export const selectTeam = (state: RootState) => state.team;
 export const selectTeamId = (state: RootState) => state.team.id;
+export const selectLineup = (state: RootState) => state.team.lineup;
 
-export const selectIsTeamRegistered = (state: RootState): boolean =>
-  !!state.team.id &&
-  !!state.team.abbreviation &&
-  !!state.team.logoUrl &&
-  !!state.team.name;
+export const selectIsTeamRegistered = createSelector(
+  [selectTeam],
+  (team): boolean =>
+    !!team.id && !!team.abbreviation && !!team.logoUrl && !!team.name,
+);
 
-export const getLineupPlayerCount = (state: RootState): number =>
-  state.team.lineup.filter((slot) => slot.player !== null).length;
+export const selectLineupPlayerCount = createSelector(
+  [selectLineup],
+  (lineup): number => lineup.filter((slot) => slot.player !== null).length,
+);
 
+export const selectEligibleSlotsForPosition = createSelector(
+  [selectLineup, (_: RootState, position: SlotPosition) => position],
+  (lineup, position): LineupSlot[] => {
+    const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
+    const isUtilPosition = UTIL_POSITIONS.includes(position as FlexPosition);
+
+    return lineup.filter((slot) => {
+      if (!slot.player) return false;
+
+      return isUtilPosition || slot.player.positions.includes(position);
+    });
+  },
+);
+
+// Helper function (non-selector)
 export const isPlayerInLineup = (
   lineup: LineupSlot[],
   playerId: string,

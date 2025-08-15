@@ -29,6 +29,7 @@ const PlayerSlot = ({
 }: PlayerSlotProps) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const showDropButton = !enableActionIcon && isCard && playerData;
 
   const renderActionIcon = () => {
     if (!enableActionIcon || !isCard) return null;
@@ -88,7 +89,7 @@ const PlayerSlot = ({
 
         {renderActionIcon()}
       </View>
-      {!enableActionIcon && isCard && playerData && (
+      {showDropButton && (
         <View className="border-t-2 border-gray-900 p-3">
           <Pressable
             className="flex-1 flex-row items-center justify-center gap-2"

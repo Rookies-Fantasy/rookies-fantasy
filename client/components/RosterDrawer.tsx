@@ -2,6 +2,7 @@ import { Pressable, View, Text } from "react-native";
 import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppSelector } from "@/state/hooks";
+import { selectEligibleSlotsForPosition } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/teamTypes";
 
 type RosterDrawerProps = {
@@ -17,19 +18,11 @@ const RosterDrawer = ({
   setShowBottomDrawer,
   showBottomDrawer,
 }: RosterDrawerProps) => {
-  const team = useAppSelector((state) => state.team);
-
-  const eligibleSlots = team.lineup.filter((slot) => {
-    if (!slot.player || !selectedPosition) return false;
-
-    const isSelectedUtil = ["UTIL1", "UTIL2", "UTIL3"].includes(
-      selectedPosition,
-    );
-
-    if (isSelectedUtil) return true;
-
-    return slot.player.positions.includes(selectedPosition);
-  });
+  const eligibleSlots = useAppSelector((state) =>
+    selectedPosition
+      ? selectEligibleSlotsForPosition(state, selectedPosition)
+      : [],
+  );
 
   return (
     <BottomSheet
