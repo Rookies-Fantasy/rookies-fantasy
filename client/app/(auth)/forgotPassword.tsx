@@ -92,9 +92,9 @@ const ForgotPassword = () => {
     <Screen>
       <KeyboardAvoidingView
         behavior="padding"
-        className="flex-1 flex-col px-6 py-4"
+        className="mt-8 flex-1 flex-col px-6"
       >
-        <View className="my-20 flex-row items-center gap-4">
+        <View className="flex-row items-center gap-4">
           <Pressable
             className="size-8 items-center justify-center rounded-md border border-gray-900 p-4"
             onPress={() => router.dismissAll()}
@@ -104,7 +104,7 @@ const ForgotPassword = () => {
           <Text className="pbk-h5 text-base-white">Forgot password?</Text>
         </View>
 
-        <Text className="pbk-b1 mb-8 text-base-white">
+        <Text className="pbk-b1 mb-8 mt-8 text-base-white">
           Enter your email address or username and we will send you a link to
           reset your password.
         </Text>

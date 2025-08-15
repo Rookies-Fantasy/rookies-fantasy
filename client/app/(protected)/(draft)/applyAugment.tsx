@@ -3,7 +3,6 @@ import { ArrowLeft, CheckCircle } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import {
   View,
-  KeyboardAvoidingView,
   Text,
   Pressable,
   ScrollView,
@@ -109,125 +108,121 @@ const ApplyAugment = () => {
 
   return (
     <Screen>
-      <KeyboardAvoidingView behavior="padding" className="flex-1">
-        <View className="flex-1 flex-col px-6 py-4">
-          <View className="mb-4 mt-20 flex-row items-center gap-4">
-            <Pressable
-              className="size-8 items-center justify-center rounded-md border border-gray-900"
-              onPress={() => router.back()}
-            >
-              <ArrowLeft color="white" size={20} weight="bold" />
-            </Pressable>
-            <Text className="pbk-h5 text-base-white">Select an augment</Text>
-            <HelpDialogButton title="What are Augments?">
-              <View>
-                <Text className="pbk-b2 text-gray-500">
-                  Augments are strategic bonuses that reward how you build your
-                  team.
-                </Text>
-                <Text className="pbk-b2 mt-4 text-gray-500">
-                  Each Augment comes with a unique condition. When certain
-                  players on your roster meet that condition, only those players
-                  get a boost to their stats.
-                </Text>
-                <Text className="pbk-b2 mt-4 text-gray-500">
-                  Whether you&apos;re stacking sharpshooters, loading up on
-                  defenders, or betting on underdogs, Augments let you shape
-                  your playstyle and gain a competitive edge.
-                </Text>
-              </View>
-              <View className="mt-3 rounded-md bg-gray-900 p-3">
-                <Text className="pbk-b2 text-center text-base-white">
-                  Example
-                </Text>
-                <Text className="pbk-b2 mt-3 text-base-white">
-                  The “Deep Threat” Augment gives a +15% Points boost to players
-                  shooting 40%+ from three — but only if you have 3 such players
-                  on your team.
-                </Text>
-              </View>
-            </HelpDialogButton>
-          </View>
-
-          <ScrollView className="p-2">
-            <View className="flex-row flex-wrap justify-between gap-y-4">
-              {augments.map((card) => {
-                const isSelected = selectedAugmentId === card.id;
-
-                return (
-                  <View
-                    className="relative mb-4 w-[48%] rounded-xl"
-                    key={card.id}
-                  >
-                    {isSelected && (
-                      <LinearGradient
-                        colors={[
-                          "#CCE8FE",
-                          "#CDA0FF",
-                          "#8489F5",
-                          "#CDF1FF",
-                          "#B591E9",
-                        ]}
-                        end={{ x: 1, y: 1 }}
-                        start={{ x: 0, y: 0 }}
-                        style={{
-                          position: "absolute",
-                          top: -3,
-                          right: -3,
-                          bottom: -3,
-                          left: -3,
-                          borderRadius: 12,
-                        }}
-                      />
-                    )}
-
-                    <Pressable
-                      className="flex-1 overflow-hidden rounded-xl"
-                      onPress={() => setSelectedAugmentId(card.id)}
-                    >
-                      <ImageBackground
-                        className="flex-1 overflow-hidden rounded-xl px-3 py-4"
-                        resizeMode="cover"
-                        source={require("@/assets/images/augments/background-image.png")}
-                      >
-                        <View className="flex-1 justify-between">
-                          <View>
-                            <Text className="pbk-b1 mb-2 text-center text-base-white">
-                              {card.title}
-                            </Text>
-                            <Image
-                              className="mb-4 h-24 w-24 self-center rounded-xl"
-                              resizeMode="cover"
-                              source={iconMap[card.iconUrl]}
-                            />
-                            <Text className="pbk-b3 text-center text-base-white">
-                              {card.description}
-                            </Text>
-                            <Text className="pbk-b3 mt-2 text-center text-green-400">
-                              {card.info}
-                            </Text>
-                          </View>
-
-                          <View className="flex-row justify-end">
-                            <CheckCircle
-                              color="white"
-                              size={20}
-                              style={{ opacity: isSelected ? 1 : 0 }}
-                              weight="bold"
-                            />
-                          </View>
-                        </View>
-                      </ImageBackground>
-                    </Pressable>
-                  </View>
-                );
-              })}
+      <View className="mt-8 flex-1 flex-col px-6">
+        <View className="mb-4 flex-row items-center gap-4">
+          <Pressable
+            className="size-8 items-center justify-center rounded-md border border-gray-900"
+            onPress={() => router.back()}
+          >
+            <ArrowLeft color="white" size={20} weight="bold" />
+          </Pressable>
+          <Text className="pbk-h5 text-base-white">Select an augment</Text>
+          <HelpDialogButton title="What are Augments?">
+            <View>
+              <Text className="pbk-b2 text-gray-500">
+                Augments are strategic bonuses that reward how you build your
+                team.
+              </Text>
+              <Text className="pbk-b2 mt-4 text-gray-500">
+                Each Augment comes with a unique condition. When certain players
+                on your roster meet that condition, only those players get a
+                boost to their stats.
+              </Text>
+              <Text className="pbk-b2 mt-4 text-gray-500">
+                Whether you&apos;re stacking sharpshooters, loading up on
+                defenders, or betting on underdogs, Augments let you shape your
+                playstyle and gain a competitive edge.
+              </Text>
             </View>
-          </ScrollView>
+            <View className="mt-3 rounded-md bg-gray-900 p-3">
+              <Text className="pbk-b2 text-center text-base-white">
+                Example
+              </Text>
+              <Text className="pbk-b2 mt-3 text-base-white">
+                The “Deep Threat” Augment gives a +15% Points boost to players
+                shooting 40%+ from three — but only if you have 3 such players
+                on your team.
+              </Text>
+            </View>
+          </HelpDialogButton>
         </View>
-      </KeyboardAvoidingView>
 
-      <View className="mb-8 justify-end gap-2 bg-gray-950 px-6">
+        <ScrollView className="p-2">
+          <View className="flex-row flex-wrap justify-between gap-y-4">
+            {augments.map((card) => {
+              const isSelected = selectedAugmentId === card.id;
+
+              return (
+                <View
+                  className="relative mb-4 w-[48%] rounded-xl"
+                  key={card.id}
+                >
+                  {isSelected && (
+                    <LinearGradient
+                      colors={[
+                        "#CCE8FE",
+                        "#CDA0FF",
+                        "#8489F5",
+                        "#CDF1FF",
+                        "#B591E9",
+                      ]}
+                      end={{ x: 1, y: 1 }}
+                      start={{ x: 0, y: 0 }}
+                      style={{
+                        position: "absolute",
+                        top: -3,
+                        right: -3,
+                        bottom: -3,
+                        left: -3,
+                        borderRadius: 12,
+                      }}
+                    />
+                  )}
+
+                  <Pressable
+                    className="flex-1 overflow-hidden rounded-xl"
+                    onPress={() => setSelectedAugmentId(card.id)}
+                  >
+                    <ImageBackground
+                      className="flex-1 overflow-hidden rounded-xl px-3 py-4"
+                      resizeMode="cover"
+                      source={require("@/assets/images/augments/background-image.png")}
+                    >
+                      <View className="flex-1 justify-between">
+                        <View>
+                          <Text className="pbk-b1 mb-2 text-center text-base-white">
+                            {card.title}
+                          </Text>
+                          <Image
+                            className="mb-4 h-24 w-24 self-center rounded-xl"
+                            resizeMode="cover"
+                            source={iconMap[card.iconUrl]}
+                          />
+                          <Text className="pbk-b3 text-center text-base-white">
+                            {card.description}
+                          </Text>
+                          <Text className="pbk-b3 mt-2 text-center text-green-400">
+                            {card.info}
+                          </Text>
+                        </View>
+
+                        <View
+                          className="flex-row justify-end"
+                          style={{ opacity: isSelected ? 1 : 0 }}
+                        >
+                          <CheckCircle color="white" size={20} weight="bold" />
+                        </View>
+                      </View>
+                    </ImageBackground>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+
+      <View className="justify-end gap-2 bg-gray-950 px-6">
         <Button
           disabled={!selectedAugmentId}
           isLoading={isLoading}

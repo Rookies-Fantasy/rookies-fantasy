@@ -161,9 +161,12 @@ const CreateProfile = () => {
   return (
     <Screen>
       <View className="flex-1">
-        <KeyboardAvoidingView behavior="padding" className="flex-1">
-          <View className="flex-1 flex-col px-6 py-4">
-            <Text className="pbk-h5 mb-8 mt-20 text-base-white">
+        <KeyboardAvoidingView
+          behavior="padding"
+          className="mt-8 flex-1 flex-col px-6"
+        >
+          <View className="flex-1 flex-col">
+            <Text className="pbk-h5 mb-8 text-base-white">
               Tell us who you are
             </Text>
 
@@ -335,7 +338,7 @@ const CreateProfile = () => {
           </View>
         </KeyboardAvoidingView>
 
-        <View className="mb-8 justify-end bg-gray-950 px-6">
+        <View className="justify-end bg-gray-950 px-6">
           <Button
             isLoading={isLoading}
             label="Continue"

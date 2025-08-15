@@ -175,9 +175,12 @@ const CreateTeam = () => {
   return (
     <Screen>
       <View className="flex-1">
-        <KeyboardAvoidingView behavior="padding" className="flex-1">
-          <View className="flex-1 flex-col px-6 py-4">
-            <View className="mb-8 mt-20 flex-row items-center gap-4">
+        <KeyboardAvoidingView
+          behavior="padding"
+          className="mt-8 flex-1 flex-col px-6"
+        >
+          <View className="flex-1 flex-col">
+            <View className="mb-8 flex-row items-center gap-4">
               <Pressable
                 className="size-8 items-center justify-center rounded-md border border-gray-900"
                 onPress={() => router.back()}
@@ -296,7 +299,7 @@ const CreateTeam = () => {
           </View>
         </KeyboardAvoidingView>
 
-        <View className="mb-8 justify-end bg-gray-950 px-6">
+        <View className="justify-end bg-gray-950 px-6">
           <Button
             isLoading={isLoading}
             label="Finish Account Creation"
