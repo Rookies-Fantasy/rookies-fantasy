@@ -1,15 +1,9 @@
 import { getAuth, sendPasswordResetEmail } from "@react-native-firebase/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  View,
-  Text,
-  Pressable,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAvoidingView, View, Text, Pressable } from "react-native";
 import MailIcon from "@/assets/icons/mail.svg";
+import Screen from "@/components/Screen";
 import Spinner from "@/components/Spinner";
 import { cn } from "@/utils/jsUtils";
 
@@ -56,66 +50,64 @@ const ConfirmReset = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-950">
-      <Pressable className="flex-1" onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior="padding"
-          className="my-16 flex-1 flex-col px-6 py-4"
-        >
-          <View className="items-center">
-            <MailIcon height={180} width={180} />
-            <Text className="pbk-h5 mb-8 text-center text-base-white">
-              Reset password email sent!
-            </Text>
-            <Text className="pbk-b1 mb-8 text-center text-base-white">
-              We sent a password reset link to {email}. Please reset your
-              password within 24 hours.
-            </Text>
-          </View>
+    <Screen>
+      <KeyboardAvoidingView
+        behavior="padding"
+        className="my-16 flex-1 flex-col px-6 py-4"
+      >
+        <View className="items-center">
+          <MailIcon height={180} width={180} />
+          <Text className="pbk-h5 mb-8 text-center text-base-white">
+            Reset password email sent!
+          </Text>
+          <Text className="pbk-b1 mb-8 text-center text-base-white">
+            We sent a password reset link to {email}. Please reset your password
+            within 24 hours.
+          </Text>
+        </View>
 
-          <View className="flex w-full flex-1 justify-end gap-4">
-            {cooldown > 0 && (
-              <Text className="pbk-b2 p-3 text-center text-base-white">
-                Resend email again in {cooldown} seconds.
+        <View className="flex w-full flex-1 justify-end gap-4">
+          {cooldown > 0 && (
+            <Text className="pbk-b2 p-3 text-center text-base-white">
+              Resend email again in {cooldown} seconds.
+            </Text>
+          )}
+          {errorMessage && (
+            <Text className="pbk-1 p-3 text-center text-red-600">
+              {errorMessage}
+            </Text>
+          )}
+          <Pressable
+            className="rounded-md bg-purple-600 p-3"
+            onPress={() => {
+              router.dismissTo("/(auth)/login");
+            }}
+          >
+            <Text className="pbk-h7 text-center uppercase text-base-white">
+              RETURN TO LOGIN
+            </Text>
+          </Pressable>
+          <Pressable
+            className="p-3"
+            disabled={cooldown > 0 || isLoading}
+            onPress={handleResendEmail}
+          >
+            {isLoading ? (
+              <Spinner />
+            ) : (
+              <Text
+                className={cn(
+                  "pbk-h7 text-center",
+                  cooldown > 0 ? "text-gray-400" : "text-base-white",
+                )}
+              >
+                RESEND EMAIL
               </Text>
             )}
-            {errorMessage && (
-              <Text className="pbk-1 p-3 text-center text-red-600">
-                {errorMessage}
-              </Text>
-            )}
-            <Pressable
-              className="rounded-md bg-purple-600 p-3"
-              onPress={() => {
-                router.dismissTo("/(auth)/login");
-              }}
-            >
-              <Text className="pbk-h7 text-center uppercase text-base-white">
-                RETURN TO LOGIN
-              </Text>
-            </Pressable>
-            <Pressable
-              className="p-3"
-              disabled={cooldown > 0 || isLoading}
-              onPress={handleResendEmail}
-            >
-              {isLoading ? (
-                <Spinner />
-              ) : (
-                <Text
-                  className={cn(
-                    "pbk-h7 text-center",
-                    cooldown > 0 ? "text-gray-400" : "text-base-white",
-                  )}
-                >
-                  RESEND EMAIL
-                </Text>
-              )}
-            </Pressable>
-          </View>
-        </KeyboardAvoidingView>
-      </Pressable>
-    </SafeAreaView>
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 };
 

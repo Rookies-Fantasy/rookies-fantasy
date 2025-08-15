@@ -65,18 +65,16 @@ const BottomSheet = ({
       "worklet";
       if (destination === 0) {
         backdropOpacity.value = withTiming(0, { duration: 100 });
-      }
 
-      translateY.value = withSpring(
-        destination,
-        { damping: 50 },
-        (finished) => {
-          if (finished && destination === 0) {
+        translateY.value = withTiming(0, { duration: 400 }, (finished) => {
+          if (finished) {
             runOnJS(setVisible)(false);
             runOnJS(onClose)();
           }
-        },
-      );
+        });
+      } else {
+        translateY.value = withSpring(destination, { damping: 50 });
+      }
 
       sheetTop.value = SCREEN_HEIGHT + destination;
     },
