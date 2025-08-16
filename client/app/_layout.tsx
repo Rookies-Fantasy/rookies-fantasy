@@ -22,7 +22,7 @@ import {
   selectIsUserSignedIn,
   selectIsUserVerified,
 } from "@/state/slices/userSlice";
-import { colorPalettes, ThemeMode } from "@/theme/theme";
+import { themes, ThemeMode } from "@/theme/theme";
 import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
@@ -37,9 +37,9 @@ const RootLayoutNav = () => {
     ...(mode === ThemeMode.Light ? DefaultTheme : DarkTheme),
     colors: {
       ...(mode === ThemeMode.Light ? DefaultTheme.colors : DarkTheme.colors),
-      primary: colorPalettes[theme][mode][500],
-      background: colorPalettes[theme][mode].background,
-      text: colorPalettes[theme][mode].contrast,
+      primary: `rgb(${themes[theme][mode][500]})`,
+      background: `rgb(${themes[theme][mode].mode})`,
+      text: `rgb(${themes[theme][mode].modeContrast})`,
     },
   };
 

@@ -1,5 +1,5 @@
-import { View, ViewStyle } from "react-native";
-import { themes } from "../theme/theme";
+import { View } from "react-native";
+import { applyCssTheme } from "@/theme/theme";
 import { useAppTheme } from "@/theme/ThemeProvider";
 
 type ThemeWrapperProps = {
@@ -8,7 +8,7 @@ type ThemeWrapperProps = {
 
 export const ThemeWrapper = ({ children }: ThemeWrapperProps) => {
   const { mode, theme } = useAppTheme();
-  const style: ViewStyle = themes[theme][mode];
+  const cssTheme = applyCssTheme(theme, mode);
 
-  return <View style={[{ flex: 1 }, style]}>{children}</View>;
+  return <View style={[{ flex: 1 }, cssTheme]}>{children}</View>;
 };
