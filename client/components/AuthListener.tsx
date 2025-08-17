@@ -54,7 +54,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
     );
   }
 
-  return <>{children}</>;
+  return children;
 };
 
 export default AuthListener;
