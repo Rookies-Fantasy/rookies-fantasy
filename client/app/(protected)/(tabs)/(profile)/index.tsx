@@ -43,8 +43,12 @@ const Roaster = () => {
           </View>
         </View>
       </View>
-      <View className="flex flex-1 justify-center">
-        <Text className="text-white">Roaster</Text>
+      <View className="flex-1 flex-row items-end p-8">
+        <Pressable className="flex-1 rounded-md bg-purple-600 p-4">
+          <Text className="text-center uppercase text-white">
+            Build Your Team
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
