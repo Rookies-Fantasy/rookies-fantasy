@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable, View, Text } from "react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
 import { UserController } from "@/controllers/userController";

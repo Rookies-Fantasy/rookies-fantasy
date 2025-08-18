@@ -13,6 +13,7 @@ import {
   Pressable,
 } from "react-native";
 import * as yup from "yup";
+import IconButton from "@/components/IconButton";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 
@@ -90,19 +91,19 @@ const ForgotPassword = () => {
 
   return (
     <Screen>
-      <KeyboardAvoidingView
-        behavior="padding"
-        className="mt-8 flex-1 flex-col px-6"
-      >
-        <View className="flex-row items-center gap-4">
-          <Pressable
-            className="size-8 items-center justify-center rounded-md border border-gray-900 p-4"
-            onPress={() => router.dismissAll()}
-          >
-            <ArrowLeft color="white" size={20} weight="bold" />
-          </Pressable>
-          <Text className="pbk-h5 text-base-white">Forgot password?</Text>
-        </View>
+      <Pressable className="flex-1" onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          behavior="padding"
+          className="flex-1 flex-col px-6 py-4"
+        >
+          <View className="my-20 flex-row items-center gap-4">
+            <IconButton
+              className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
+              icon={<ArrowLeft color="white" size={20} weight="bold" />}
+              onPress={() => router.dismissAll()}
+            />
+            <Text className="pbk-h5 text-base-white">Forgot password?</Text>
+          </View>
 
         <Text className="pbk-b1 mb-8 mt-8 text-base-white">
           Enter your email address or username and we will send you a link to

@@ -1,5 +1,5 @@
 ﻿import firestore from "@react-native-firebase/firestore";
-import { defaultTeam, Team } from "@/types/team";
+import { defaultTeam, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
 
 const USERS_COLLECTION = "users";
@@ -67,6 +67,7 @@ export class UserController {
         .collection(TEAMS_COLLECTION)
         .add({
           ...params,
+          balance: TEAM_BALANCE,
           createdAt: new Date(),
         });
 
@@ -95,6 +96,7 @@ export class UserController {
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
+            balance: team.data()?.balance ?? 0,
           }
         : defaultTeam;
     } catch (error) {
@@ -115,6 +117,7 @@ export class UserController {
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
+        balance: team.data()?.balance,
       }));
     } catch (error) {
       throw error;
