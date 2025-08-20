@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
 import { useMemo, useState } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -26,6 +27,7 @@ import {
   removePlayerFromLineup,
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
+import { FlexPosition, UTIL_POSITIONS } from "@/types/teamTypes";
 import { resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
@@ -64,6 +66,18 @@ const Players = () => {
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
 
+    const checkRosterAvailability = (player: any) => {
+      const positions = player.positions || [];
+      const hasAvailablePosition = team.lineup.some(
+        (slot) =>
+          slot.player === null &&
+          (positions.includes(slot.position) ||
+            UTIL_POSITIONS.includes(slot.position as FlexPosition)),
+      );
+
+      return hasAvailablePosition;
+    };
+
     return players.map((player) => [
       <IconButton
         className={
@@ -83,7 +97,11 @@ const Players = () => {
           if (isPlayerInLineup(team.lineup, player.id)) {
             dispatch(removePlayerFromLineup(player));
           } else {
-            dispatch(addPlayerToLineup(player));
+            if (checkRosterAvailability(player)) {
+              dispatch(addPlayerToLineup(player));
+            } else {
+              Alert.alert("Cannot add player", "No eligible spot available");
+            }
           }
         }}
       />,

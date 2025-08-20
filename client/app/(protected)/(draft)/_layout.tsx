@@ -1,10 +1,10 @@
 import { Tabs } from "expo-router";
 import { UserPlus, UsersThree } from "phosphor-react-native";
 import { useAppSelector } from "@/state/hooks";
-import { getLineupPlayerCount } from "@/state/slices/teamSlice";
+import { getRosterPlayerCount } from "@/state/slices/teamSlice";
 
 const DraftLayout = () => {
-  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
+  const selectedPlayers = useAppSelector(getRosterPlayerCount) ?? 0;
   const MAX_PLAYERS = 8;
 
   return (

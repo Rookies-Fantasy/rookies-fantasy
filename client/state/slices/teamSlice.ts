@@ -301,8 +301,13 @@ export const selectIsTeamRegistered = (state: RootState): boolean =>
   !!state.team.logoUrl &&
   !!state.team.name;
 
-export const getLineupPlayerCount = (state: RootState): number =>
-  state.team.lineup.filter((slot) => slot.player !== null).length;
+export const getRosterPlayerCount = (state: RootState): number => {
+  const lineupCount = state.team.lineup.filter(
+    (slot) => slot.player !== null,
+  ).length;
+  const benchCount = state.team.bench.length;
+  return lineupCount + benchCount;
+};
 
 export const isPlayerInLineup = (
   lineup: LineupSlot[],
