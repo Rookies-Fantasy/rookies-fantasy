@@ -1,4 +1,4 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice, createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Player } from "@/types/players";
 import {
@@ -293,13 +293,15 @@ const teamSlice = createSlice({
   },
 });
 
+export const selectTeam = (state: RootState) => state.team;
 export const selectTeamId = (state: RootState) => state.team.id;
+export const selectLineup = (state: RootState) => state.team.lineup;
 
-export const selectIsTeamRegistered = (state: RootState): boolean =>
-  !!state.team.id &&
-  !!state.team.abbreviation &&
-  !!state.team.logoUrl &&
-  !!state.team.name;
+export const selectIsTeamRegistered = createSelector(
+  [selectTeam],
+  (team): boolean =>
+    !!team.id && !!team.abbreviation && !!team.logoUrl && !!team.name,
+);
 
 export const getRosterPlayerCount = (state: RootState): number => {
   const lineupCount = state.team.lineup.filter(
