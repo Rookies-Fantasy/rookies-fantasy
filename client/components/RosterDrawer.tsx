@@ -1,10 +1,10 @@
-import { Pressable, View, Text } from "react-native";
+import { View, Text } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { swapPlayersInLineup } from "@/state/slices/teamSlice";
-import { SlotPosition } from "@/types/teamTypes";
+import { FlexPosition, SlotPosition, UTIL_POSITIONS } from "@/types/teamTypes";
 import { cn } from "@/utils/jsUtils";
 
 type RosterDrawerProps = {
@@ -42,43 +42,38 @@ const RosterDrawer = ({
   const selectedPlayer = getSelectedPlayer();
 
   const eligibleSlots = team.lineup.filter((slot) => {
-    if (!selectedPosition) return false;
-
-    if (slot.position === selectedPosition) return false;
+    if (!selectedPosition || slot.position === selectedPosition) return false;
 
     if (!selectedPlayer) {
       if (!slot.player) return false;
 
-      const playerCanMoveToSelected =
+      return (
         slot.player.positions.includes(selectedPosition) ||
         selectedPosition.startsWith("BEN") ||
-        ["UTIL1", "UTIL2", "UTIL3"].includes(selectedPosition);
-
-      return playerCanMoveToSelected;
-    } else {
-      const canPlayPosition = selectedPlayer.positions.includes(slot.position);
-      const isUtilSlot = ["UTIL1", "UTIL2", "UTIL3"].includes(slot.position);
-
-      return canPlayPosition || isUtilSlot;
+        UTIL_POSITIONS.includes(selectedPosition as FlexPosition)
+      );
     }
+
+    return (
+      selectedPlayer.positions.includes(slot.position) ||
+      UTIL_POSITIONS.includes(slot.position as FlexPosition)
+    );
   });
 
   const eligibleBenchSlots = team.bench.filter((benchSlot) => {
-    if (!selectedPosition) return false;
-
-    if (benchSlot.position === selectedPosition) return false;
+    if (!selectedPosition || benchSlot.position === selectedPosition)
+      return false;
 
     if (!selectedPlayer) {
       if (!benchSlot.player || selectedPosition.startsWith("BEN")) return false;
 
-      const playerCanMoveToSelected =
+      return (
         benchSlot.player.positions.includes(selectedPosition) ||
-        ["UTIL1", "UTIL2", "UTIL3"].includes(selectedPosition);
-
-      return playerCanMoveToSelected;
-    } else {
-      return true;
+        UTIL_POSITIONS.includes(selectedPosition as FlexPosition)
+      );
     }
+
+    return true;
   });
 
   const hasEligibleOptions =
@@ -86,19 +81,6 @@ const RosterDrawer = ({
 
   return (
     <BottomSheet
-      footer={
-        <Pressable
-          className="min-h-12 w-full justify-center rounded-md bg-purple-600"
-          onPress={() => {
-            setShowBottomDrawer(false);
-            setSelectedPosition(null);
-          }}
-        >
-          <Text className="pbk-h6 text-center text-base-white">
-            SAVE LINEUP
-          </Text>
-        </Pressable>
-      }
       header={
         <Text className="pbk-b1 text-center text-base-white">Edit lineup</Text>
       }

@@ -11,22 +11,22 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
+import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
-  getLineupPlayerCount,
   isPlayerInLineup,
   removePlayerFromLineup,
+  resetToSavedTeam,
 } from "@/state/slices/teamSlice";
-import { saveTeamLineup } from "@/utils/teamUtils";
+import { resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -34,14 +34,11 @@ type FetchPlayersParams = {
 
 const Players = () => {
   const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
   const team = useAppSelector((state) => state.team);
   const userId = useAppSelector((state) => state.user.id);
-  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
   const PAGE_SIZE = 25;
-  const MAX_PLAYERS = 8;
 
   const fetchPlayersWithAverages = async ({
     pageParam,
@@ -116,7 +113,16 @@ const Players = () => {
                 <IconButton
                   className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
                   icon={<ArrowLeft color="white" size={20} weight="bold" />}
-                  onPress={() => router.back()}
+                  onPress={async () => {
+                    const savedData = await resetTeamLineup(userId, team.id);
+                    dispatch(
+                      resetToSavedTeam({
+                        lineup: savedData.lineup,
+                        balance: savedData.balance,
+                      }),
+                    );
+                    router.back();
+                  }}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
@@ -139,13 +145,6 @@ const Players = () => {
                 icon={<Sliders color="white" />}
                 onPress={() => {}}
               />
-            </View>
-
-            <View className="flex-row justify-between py-2">
-              <Text className="pbk-h8 text-base-white">PLAYERS</Text>
-              <Text className="pbk-h8 text-base-white">
-                SELECTED: {selectedPlayers}/{MAX_PLAYERS}
-              </Text>
             </View>
           </View>
 
@@ -202,26 +201,7 @@ const Players = () => {
             />
           )}
         </KeyboardAvoidingView>
-        <FloatingActionButton
-          className="bottom-6 w-[90%] self-center"
-          onPress={async () => {
-            await saveTeamLineup(userId, team, {
-              onStart: () => setIsLoading(true),
-              onSuccess: () => router.replace("/(protected)/(tabs)"),
-              onFinally: () => setIsLoading(false),
-            });
-          }}
-        >
-          {isLoading ? (
-            <View className="items-center justify-center">
-              <Spinner />
-            </View>
-          ) : (
-            <Text className="pbk-h6 text-center text-base-white">
-              SAVE TEAM
-            </Text>
-          )}
-        </FloatingActionButton>
+        <TeamActionButtons />
       </Pressable>
     </SafeAreaView>
   );

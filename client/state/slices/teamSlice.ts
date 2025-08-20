@@ -9,14 +9,13 @@ import {
   Team,
   BenchSlot,
   BenchPosition,
+  UTIL_POSITIONS,
 } from "@/types/teamTypes";
 
 type SwapPayload = {
   from: SlotPosition;
   to: SlotPosition;
 };
-
-const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
 
 const getNextBenchPosition = (bench: BenchSlot[]): BenchPosition =>
   `BEN${bench.length + 1}` as BenchPosition;
@@ -48,7 +47,10 @@ const teamSlice = createSlice({
   name: "team",
   initialState: defaultTeam,
   reducers: {
-    setTeam: (_, action: PayloadAction<Team>) => action.payload,
+    setTeam: (_, action: PayloadAction<Team>) => ({
+      ...action.payload,
+      hasUserChanges: false,
+    }),
     clearTeam: () => defaultTeam,
     addPlayerToLineup: (state, action: PayloadAction<Player>) => {
       const player = action.payload;
@@ -72,7 +74,8 @@ const teamSlice = createSlice({
         const slot = findSlotByPosition(primaryPosition);
         if (slot) {
           slot.player = player;
-          state.balance += slot.player.salary * -1;
+          state.balance -= slot.player.salary;
+          state.hasUserChanges = true;
           return;
         }
       }
@@ -84,20 +87,21 @@ const teamSlice = createSlice({
           const slot = findSlotByPosition(position);
           if (slot) {
             slot.player = player;
-            state.balance += slot.player.salary * -1;
+            state.balance -= slot.player.salary;
+            state.hasUserChanges = true;
             return;
           }
         }
       }
 
       // Check UTIL positions if no eligible positions are available
-      const utilPositions: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
-      for (const utilPosition of utilPositions) {
+      for (const utilPosition of UTIL_POSITIONS) {
         if (isPositionAvailable(utilPosition)) {
           const slot = findSlotByPosition(utilPosition);
           if (slot) {
             slot.player = player;
-            state.balance += slot.player.salary * -1;
+            state.balance -= slot.player.salary;
+            state.hasUserChanges = true;
             return;
           }
         }
@@ -111,6 +115,7 @@ const teamSlice = createSlice({
       if (slot && slot.player) {
         state.balance += slot.player.salary;
         slot.player = null;
+        state.hasUserChanges = true;
       }
     },
     swapPlayersInLineup: (state, action: PayloadAction<SwapPayload>) => {
@@ -169,6 +174,7 @@ const teamSlice = createSlice({
 
           toSlot.player = fromPlayer;
         }
+        state.hasUserChanges = true;
         return;
       }
 
@@ -183,6 +189,7 @@ const teamSlice = createSlice({
           addPlayerToBench(state.bench, fromPlayer);
           fromSlot.player = null;
         }
+        state.hasUserChanges = true;
         return;
       }
 
@@ -193,6 +200,7 @@ const teamSlice = createSlice({
         const tempPlayer = fromBenchSlot.player;
         fromBenchSlot.player = toBenchSlot.player;
         toBenchSlot.player = tempPlayer;
+        state.hasUserChanges = true;
         return;
       }
 
@@ -203,6 +211,7 @@ const teamSlice = createSlice({
         if (fromPlayer && !toPlayer) {
           toSlot.player = fromPlayer;
           fromSlot.player = null;
+          state.hasUserChanges = true;
           return;
         }
 
@@ -244,12 +253,14 @@ const teamSlice = createSlice({
             fromSlot.player = null;
             toSlot.player = null;
           }
+          state.hasUserChanges = true;
           return;
         }
 
         const tempPlayer = fromSlot.player;
         fromSlot.player = toSlot.player;
         toSlot.player = tempPlayer;
+        state.hasUserChanges = true;
       }
     },
     removePlayerFromBench: (state, action: PayloadAction<Player>) => {
@@ -260,11 +271,24 @@ const teamSlice = createSlice({
       if (benchSlot && benchSlot.player) {
         state.balance += benchSlot.player.salary;
         removeBenchSlotByPosition(state.bench, benchSlot.position);
+        state.hasUserChanges = true;
       }
     },
     clearBench: (state) => {
-      // Move all bench players back to available pool (remove them)
       state.bench = [];
+      state.hasUserChanges = true;
+    },
+    resetToSavedTeam: (
+      state,
+      action: PayloadAction<{ lineup: LineupSlot[]; balance: number }>,
+    ) => {
+      state.lineup = action.payload.lineup;
+      state.bench = [];
+      state.balance = action.payload.balance;
+      state.hasUserChanges = false;
+    },
+    saveTeam: (state) => {
+      state.hasUserChanges = false;
     },
   },
 });
@@ -296,6 +320,8 @@ export const {
   swapPlayersInLineup,
   removePlayerFromBench,
   clearBench,
+  resetToSavedTeam,
+  saveTeam,
 } = teamSlice.actions;
 
 export default teamSlice.reducer;

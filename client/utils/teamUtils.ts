@@ -1,6 +1,6 @@
 import { Alert } from "react-native";
 import { UserController } from "@/controllers/userController";
-import { Team } from "@/types/teamTypes";
+import { LineupSlot, Team } from "@/types/teamTypes";
 
 export type SaveLineupOptions = {
   onSuccess?: () => void;
@@ -49,5 +49,18 @@ export const saveTeamLineup = async (
     onError?.(error);
   } finally {
     onFinally?.();
+  }
+};
+
+export const resetTeamLineup = async (
+  userId: string,
+  teamId: string,
+): Promise<{ lineup: LineupSlot[]; balance: number }> => {
+  try {
+    const savedData = await UserController.getSavedTeamLineup(userId, teamId);
+    return savedData;
+  } catch (error) {
+    console.log(error);
+    return { lineup: [], balance: 0 };
   }
 };

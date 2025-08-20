@@ -1,43 +1,26 @@
 import { useRouter } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FloatingActionButton from "@/components/FloatingActionButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
-import Spinner from "@/components/Spinner";
+import TeamActionButtons from "@/components/TeamActionButtons";
 import { useAppSelector } from "@/state/hooks";
 import { SlotPosition } from "@/types/teamTypes";
-import { cn } from "@/utils/jsUtils";
-import { saveTeamLineup } from "@/utils/teamUtils";
 
 const MyTeam = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
-  const userId = useAppSelector((state) => state.user.id);
-  const [isLoading, setIsLoading] = useState(false);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
-  const [showSaveLineupButton, setShowSaveLineupButton] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
 
-  const isInitialMount = useRef(true);
-
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    setShowSaveLineupButton(true);
-  }, [team]);
-
   return (
     <SafeAreaView className="flex-1 bg-gray-950">
       <ScrollView
-        contentContainerClassName={cn(showSaveLineupButton ? "pb-10" : "")}
+        contentContainerClassName={team.hasUserChanges ? "pb-10" : ""}
       >
         <View className="h-[200px] w-full">
           <View className="h-1/2 bg-pink-700" />
@@ -65,36 +48,15 @@ const MyTeam = () => {
         <View className="mx-6 my-2 flex-1 gap-4">
           <PlayerRoster
             bench={team.bench}
+            enableActionIcon
             isCard
             lineup={team.lineup}
             setSelectedPosition={setSelectedPosition}
             setShowBottomDrawer={() => setShowBottomDrawer(true)}
-            setShowFloatingButton={() => setShowSaveLineupButton(true)}
           />
         </View>
       </ScrollView>
-      {showSaveLineupButton && (
-        <FloatingActionButton
-          className="bottom-6 w-[90%] self-center"
-          onPress={async () => {
-            await saveTeamLineup(userId, team, {
-              onStart: () => setIsLoading(true),
-              onSuccess: () => setShowSaveLineupButton(false),
-              onFinally: () => setIsLoading(false),
-            });
-          }}
-        >
-          {isLoading ? (
-            <View className="items-center justify-center">
-              <Spinner />
-            </View>
-          ) : (
-            <Text className="pbk-h6 text-center text-base-white">
-              SAVE TEAM
-            </Text>
-          )}
-        </FloatingActionButton>
-      )}
+      <TeamActionButtons />
       <RosterDrawer
         selectedPosition={selectedPosition}
         setSelectedPosition={setSelectedPosition}

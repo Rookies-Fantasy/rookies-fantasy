@@ -1,41 +1,48 @@
 import { Tabs } from "expo-router";
 import { UserPlus, UsersThree } from "phosphor-react-native";
+import { useAppSelector } from "@/state/hooks";
+import { getLineupPlayerCount } from "@/state/slices/teamSlice";
 
-const DraftLayout = () => (
-  <Tabs
-    screenOptions={{
-      headerShown: false,
-      animation: "none",
-      tabBarActiveTintColor: "#6336F5",
-      tabBarIconStyle: {
-        flex: 1,
-      },
-      tabBarStyle: {
-        backgroundColor: "#0A0D12",
-        borderTopColor: "#373843",
-        borderTopWidth: 1,
-      },
-      tabBarLabelStyle: {
-        fontSize: 12,
-        fontFamily: "Manrope",
-      },
-    }}
-  >
-    <Tabs.Screen
-      name="roster"
-      options={{
-        title: "ROSTER",
-        tabBarIcon: ({ color }) => <UsersThree color={color} size={20} />,
+const DraftLayout = () => {
+  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
+  const MAX_PLAYERS = 8;
+
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        animation: "none",
+        tabBarActiveTintColor: "#6336F5",
+        tabBarIconStyle: {
+          flex: 1,
+        },
+        tabBarStyle: {
+          backgroundColor: "#0A0D12",
+          borderTopColor: "#373843",
+          borderTopWidth: 1,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontFamily: "Manrope",
+        },
       }}
-    />
-    <Tabs.Screen
-      name="players"
-      options={{
-        title: "ADD PLAYERS",
-        tabBarIcon: ({ color }) => <UserPlus color={color} size={20} />,
-      }}
-    />
-  </Tabs>
-);
+    >
+      <Tabs.Screen
+        name="roster"
+        options={{
+          title: `ROSTER (${selectedPlayers}/${MAX_PLAYERS})`,
+          tabBarIcon: ({ color }) => <UsersThree color={color} size={20} />,
+        }}
+      />
+      <Tabs.Screen
+        name="players"
+        options={{
+          title: "ADD PLAYERS",
+          tabBarIcon: ({ color }) => <UserPlus color={color} size={20} />,
+        }}
+      />
+    </Tabs>
+  );
+};
 
 export default DraftLayout;

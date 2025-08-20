@@ -18,9 +18,9 @@ import {
 } from "@/state/slices/userSlice";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+const queryClient = new QueryClient();
 
 const RootLayoutNav = () => {
-  const queryClient = new QueryClient();
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
 

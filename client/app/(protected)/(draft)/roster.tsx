@@ -10,28 +10,25 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FloatingActionButton from "@/components/FloatingActionButton";
+import IconButton from "@/components/IconButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
-import Spinner from "@/components/Spinner";
+import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
-import { useAppSelector } from "@/state/hooks";
-import { getLineupPlayerCount } from "@/state/slices/teamSlice";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { resetToSavedTeam } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/teamTypes";
-import { saveTeamLineup } from "@/utils/teamUtils";
+import { resetTeamLineup } from "@/utils/teamUtils";
 
 const Roster = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
   const userId = useAppSelector((state) => state.user.id);
-  const selectedPlayers = useAppSelector(getLineupPlayerCount) ?? 0;
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-
-  const MAX_PLAYERS = 8;
 
   return (
     <SafeAreaView
@@ -44,12 +41,20 @@ const Roster = () => {
             <View className="px-6">
               <View className="mb-10 flex-row items-center justify-between">
                 <View className="flex-row items-center gap-2">
-                  <Pressable
+                  <IconButton
                     className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                    onPress={() => router.back()}
-                  >
-                    <ArrowLeft color="white" size={20} weight="bold" />
-                  </Pressable>
+                    icon={<ArrowLeft color="white" size={20} weight="bold" />}
+                    onPress={async () => {
+                      const savedData = await resetTeamLineup(userId, team.id);
+                      dispatch(
+                        resetToSavedTeam({
+                          lineup: savedData.lineup,
+                          balance: savedData.balance,
+                        }),
+                      );
+                      router.back();
+                    }}
+                  />
                   <Text className="pbk-h5 text-base-white">Team builder</Text>
                 </View>
                 <Pressable
@@ -61,13 +66,6 @@ const Roster = () => {
               </View>
 
               <TeamBudget />
-
-              <View className="mt-6 flex-row justify-between">
-                <Text className="pbk-h7 text-base-white">ROSTER</Text>
-                <Text className="pbk-h7 text-base-white">
-                  SELECTED: {selectedPlayers}/{MAX_PLAYERS}
-                </Text>
-              </View>
             </View>
 
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">
@@ -82,26 +80,7 @@ const Roster = () => {
             </View>
           </KeyboardAvoidingView>
         </ScrollView>
-        <FloatingActionButton
-          className="bottom-6 w-[90%] self-center"
-          onPress={async () => {
-            await saveTeamLineup(userId, team, {
-              onStart: () => setIsLoading(true),
-              onSuccess: () => router.replace("/(protected)/(tabs)"),
-              onFinally: () => setIsLoading(false),
-            });
-          }}
-        >
-          {isLoading ? (
-            <View className="items-center justify-center">
-              <Spinner />
-            </View>
-          ) : (
-            <Text className="pbk-h6 text-center text-base-white">
-              SAVE TEAM
-            </Text>
-          )}
-        </FloatingActionButton>
+        <TeamActionButtons />
       </Pressable>
       <RosterDrawer
         selectedPosition={selectedPosition}

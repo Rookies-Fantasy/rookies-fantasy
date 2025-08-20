@@ -1,4 +1,4 @@
-﻿import { Player } from "./players";
+import { Player } from "./players";
 export const TEAM_BALANCE = 150000000;
 
 export type Team = {
@@ -9,6 +9,7 @@ export type Team = {
   balance: number;
   lineup: LineupSlot[];
   bench: BenchSlot[];
+  hasUserChanges?: boolean;
 };
 
 export type Position = "PG" | "SG" | "SF" | "PF" | "C";
@@ -26,15 +27,15 @@ export type BenchSlot = {
   player: Player | null;
 };
 
+export const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
+
 export const SLOT_ORDER: SlotPosition[] = [
   "PG",
   "SG",
   "SF",
   "PF",
   "C",
-  "UTIL1",
-  "UTIL2",
-  "UTIL3",
+  ...UTIL_POSITIONS,
 ];
 
 export const defaultTeam: Team = {
@@ -42,4 +43,5 @@ export const defaultTeam: Team = {
   balance: TEAM_BALANCE,
   lineup: SLOT_ORDER.map((position) => ({ position, player: null })),
   bench: [],
+  hasUserChanges: false,
 };

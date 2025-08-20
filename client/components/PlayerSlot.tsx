@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { UserPlus, X, XCircle } from "phosphor-react-native";
+import { UserPlus, XCircle } from "phosphor-react-native";
 import { View, Text, Pressable } from "react-native";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
@@ -19,7 +19,6 @@ type PlayerSlotProps = {
   openDrawer?: () => void;
   isSelected?: boolean;
   onPlayerRemove?: () => void;
-  setShowFloatingButton?: () => void;
 };
 
 const PlayerSlot = ({
@@ -30,7 +29,6 @@ const PlayerSlot = ({
   playerData,
   openDrawer,
   onPlayerRemove,
-  setShowFloatingButton,
 }: PlayerSlotProps) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -42,7 +40,11 @@ const PlayerSlot = ({
         <IconButton
           icon={<XCircle color="#535862" size={20} />}
           onPress={() => {
-            dispatch(removePlayerFromLineup(playerData));
+            if (position.startsWith("BEN")) {
+              dispatch(removePlayerFromBench(playerData));
+            } else {
+              dispatch(removePlayerFromLineup(playerData));
+            }
             onPlayerRemove?.();
           }}
         />
@@ -93,24 +95,6 @@ const PlayerSlot = ({
 
         {renderActionIcon()}
       </View>
-      {!enableActionIcon && isCard && playerData && (
-        <View className="border-t-2 border-gray-900 p-3">
-          <Pressable
-            className="flex-1 flex-row items-center justify-center gap-2"
-            onPress={() => {
-              if (position.startsWith("BEN")) {
-                dispatch(removePlayerFromBench(playerData));
-              } else {
-                dispatch(removePlayerFromLineup(playerData));
-              }
-              setShowFloatingButton?.();
-            }}
-          >
-            <X color="#8175FF" size={20} weight="bold" />
-            <Text className="pbk-sh1 text-purple-400">DROP PLAYER</Text>
-          </Pressable>
-        </View>
-      )}
     </View>
   );
 };

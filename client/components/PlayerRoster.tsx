@@ -8,7 +8,6 @@ type PlayerRosterProps = {
   lineup: LineupSlot[];
   setSelectedPosition: (position: SlotPosition | null) => void;
   setShowBottomDrawer: () => void;
-  setShowFloatingButton?: () => void;
 };
 
 const PlayerRoster = ({
@@ -18,7 +17,6 @@ const PlayerRoster = ({
   lineup,
   setSelectedPosition,
   setShowBottomDrawer,
-  setShowFloatingButton,
 }: PlayerRosterProps) => (
   <>
     {lineup.map((slot) => (
@@ -32,7 +30,6 @@ const PlayerRoster = ({
         }}
         playerData={slot.player}
         position={slot.position}
-        setShowFloatingButton={setShowFloatingButton}
       />
     ))}
     {bench.length > 0 &&
@@ -47,7 +44,6 @@ const PlayerRoster = ({
           }}
           playerData={benchSlot.player}
           position={benchSlot.position}
-          setShowFloatingButton={setShowFloatingButton}
         />
       ))}
   </>
