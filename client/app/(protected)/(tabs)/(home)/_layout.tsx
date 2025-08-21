@@ -7,7 +7,7 @@ import {
   UsersThree,
 } from "phosphor-react-native";
 
-const MyTeamLayout = () => (
+const HomeLayout = () => (
   <Tabs
     screenOptions={{
       headerShown: false,
@@ -21,7 +21,7 @@ const MyTeamLayout = () => (
     <Tabs.Screen
       name="index"
       options={{
-        title: "Roaster",
+        title: "My Team",
         tabBarIcon: ({ color }) => <UsersThree color={color} />,
       }}
     />
@@ -56,4 +56,4 @@ const MyTeamLayout = () => (
   </Tabs>
 );
 
-export default MyTeamLayout;
+export default HomeLayout;

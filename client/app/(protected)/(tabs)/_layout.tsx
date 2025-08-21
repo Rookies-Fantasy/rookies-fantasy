@@ -14,14 +14,14 @@ const MainLayout = () => (
     <Tabs.Screen
       name="index"
       options={{
-        title: "Home",
+        title: "Dev",
         tabBarIcon: ({ color }) => <House color={color} />,
       }}
     />
     <Tabs.Screen
-      name="(myTeam)"
+      name="(home)"
       options={{
-        title: "My Team",
+        title: "Home",
         tabBarIcon: ({ color }) => <IdentificationBadge color={color} />,
       }}
     />

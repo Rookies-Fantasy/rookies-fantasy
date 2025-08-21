@@ -2,7 +2,7 @@ import { Pressable, Text, View, Image } from "react-native";
 import { useAppSelector } from "@/state/hooks";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 
-const Roster = () => {
+const MyTeam = () => {
   const team = useAppSelector((state) => state.team);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
@@ -54,4 +54,4 @@ const Roster = () => {
   );
 };
 
-export default Roster;
+export default MyTeam;
