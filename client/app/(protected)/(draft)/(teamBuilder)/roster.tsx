@@ -71,7 +71,6 @@ const Roster = () => {
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">
               <PlayerRoster
                 bench={team.bench}
-                enableActionIcon
                 isCard
                 lineup={team.lineup}
                 setSelectedPosition={setSelectedPosition}

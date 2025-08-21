@@ -18,6 +18,11 @@ export type TeamEditModel = {
   name: string;
 };
 
+export type LineupUpdateModel = Partial<{
+  lineup: LineupSlot[];
+  balance: number;
+}>;
+
 export class UserController {
   static getUser = async (userId: string): Promise<User> => {
     try {
@@ -149,8 +154,7 @@ export class UserController {
   static saveUserTeamLineup = async (
     userId: string,
     teamId: string,
-    lineup: LineupSlot[],
-    balance: number,
+    params: LineupUpdateModel,
   ) => {
     try {
       await firestore()
@@ -158,7 +162,10 @@ export class UserController {
         .doc(userId)
         .collection(TEAMS_COLLECTION)
         .doc(teamId)
-        .update({ lineup, balance, updatedAt: new Date() });
+        .update({
+          ...params,
+          updatedAt: new Date(),
+        });
     } catch (error) {
       throw error;
     }

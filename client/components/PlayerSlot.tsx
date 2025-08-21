@@ -4,16 +4,12 @@ import { View, Text, Pressable } from "react-native";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
 import { useAppDispatch } from "@/state/hooks";
-import {
-  removePlayerFromLineup,
-  removePlayerFromBench,
-} from "@/state/slices/teamSlice";
+import { removePlayerFromLineup } from "@/state/slices/teamSlice";
 import { Player } from "@/types/players";
 import { cn } from "@/utils/jsUtils";
 
 type PlayerSlotProps = {
   isCard?: boolean;
-  enableActionIcon?: boolean;
   position: string;
   playerData: Player | null;
   openDrawer?: () => void;
@@ -23,7 +19,6 @@ type PlayerSlotProps = {
 
 const PlayerSlot = ({
   isCard = false,
-  enableActionIcon = false,
   isSelected,
   position,
   playerData,
@@ -32,31 +27,6 @@ const PlayerSlot = ({
 }: PlayerSlotProps) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  const renderActionIcon = () => {
-    if (!enableActionIcon || !isCard) return null;
-    if (playerData) {
-      return (
-        <IconButton
-          icon={<XCircle color="#535862" size={20} />}
-          onPress={() => {
-            if (position.startsWith("BEN")) {
-              dispatch(removePlayerFromBench(playerData));
-            } else {
-              dispatch(removePlayerFromLineup(playerData));
-            }
-            onPlayerRemove?.();
-          }}
-        />
-      );
-    }
-    return (
-      <IconButton
-        icon={<UserPlus color="#6042FF" size={20} />}
-        onPress={() => router.push("/(protected)/(draft)/(teamBuilder)/roster")}
-      />
-    );
-  };
 
   return (
     <View
@@ -67,7 +37,13 @@ const PlayerSlot = ({
       )}
     >
       <View className="min-h-24 flex-row items-center justify-between p-3">
-        <View className="flex-1 flex-row items-center gap-2">
+        <Pressable
+          className="flex-1 flex-row items-center gap-2"
+          onPress={() => {
+            if (!playerData)
+              router.push("/(protected)/(draft)/(teamBuilder)/players");
+          }}
+        >
           <Pressable
             className={cn(
               "h-8 min-w-16 items-center justify-center rounded-3xl",
@@ -91,9 +67,25 @@ const PlayerSlot = ({
               <Text className="pbk-b2 ml-2 text-base-white">Empty slot</Text>
             )}
           </View>
-        </View>
+        </Pressable>
 
-        {renderActionIcon()}
+        {isCard &&
+          (playerData ? (
+            <IconButton
+              icon={<XCircle color="#535862" size={20} />}
+              onPress={() => {
+                dispatch(removePlayerFromLineup(playerData));
+                onPlayerRemove?.();
+              }}
+            />
+          ) : (
+            <IconButton
+              icon={<UserPlus color="#6042FF" size={20} />}
+              onPress={() =>
+                router.push("/(protected)/(draft)/(teamBuilder)/players")
+              }
+            />
+          ))}
       </View>
     </View>
   );

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Pressable, Text, View, Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { useAppSelector } from "@/state/hooks";
@@ -10,14 +11,14 @@ import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/teamTypes";
 
 const MyTeam = () => {
-  const [showBottomDrawer, setShowBottomDrawer] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
-    null,
-  );
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
+  );
+  const [showBottomDrawer, setShowBottomDrawer] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
+    null,
   );
 
   return (
@@ -69,6 +70,15 @@ const MyTeam = () => {
               Build Your Team
             </Text>
           </Pressable>
+        </View>
+        <View className="mx-6 my-2 flex-1 gap-4">
+          <PlayerRoster
+            bench={team.bench}
+            isCard
+            lineup={team.lineup}
+            setSelectedPosition={setSelectedPosition}
+            setShowBottomDrawer={() => setShowBottomDrawer(true)}
+          />
         </View>
       </ScrollView>
       <TeamActionButtons />

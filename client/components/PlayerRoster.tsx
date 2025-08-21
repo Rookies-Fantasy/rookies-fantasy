@@ -3,7 +3,6 @@ import { BenchSlot, LineupSlot, SlotPosition } from "@/types/teamTypes";
 
 type PlayerRosterProps = {
   bench: BenchSlot[];
-  enableActionIcon?: boolean;
   isCard?: boolean;
   lineup: LineupSlot[];
   setSelectedPosition: (position: SlotPosition | null) => void;
@@ -12,7 +11,6 @@ type PlayerRosterProps = {
 
 const PlayerRoster = ({
   bench,
-  enableActionIcon = false,
   isCard = false,
   lineup,
   setSelectedPosition,
@@ -21,7 +19,6 @@ const PlayerRoster = ({
   <>
     {lineup.map((slot) => (
       <PlayerSlot
-        enableActionIcon={enableActionIcon}
         isCard={isCard}
         key={slot.position}
         openDrawer={() => {
@@ -35,7 +32,6 @@ const PlayerRoster = ({
     {bench.length > 0 &&
       bench.map((benchSlot) => (
         <PlayerSlot
-          enableActionIcon={enableActionIcon}
           isCard={isCard}
           key={benchSlot.position}
           openDrawer={() => {
