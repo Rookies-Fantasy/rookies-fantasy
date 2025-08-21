@@ -53,14 +53,12 @@ const Players = () => {
         return;
       }
 
-      await UserController.saveUserTeamLineup(
-        userId,
-        team.id,
-        team.lineup,
-        team.balance,
-      );
+      await UserController.saveUserTeamLineup(userId, team.id, {
+        lineup: team.lineup,
+        balance: team.balance,
+      });
 
-      router.replace("/(protected)/(tabs)");
+      router.replace("/(protected)/(tabs)/myTeam");
     } catch (error) {
       Alert.alert("Error", "Failed to save your team. Please try agian.");
       console.log(error);
@@ -227,8 +225,8 @@ const Players = () => {
           )}
         </KeyboardAvoidingView>
         <FloatingActionButton
-          className="bottom-6 w-[90%] self-center"
-          onPress={() => handleSaveLineup()}
+          className="bottom-3 w-[90%] self-center"
+          onPress={handleSaveLineup}
         >
           <Text className="pbk-h6 text-center text-base-white">SAVE TEAM</Text>
         </FloatingActionButton>

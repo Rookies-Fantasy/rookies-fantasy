@@ -8,6 +8,7 @@ import {
   SlotPosition,
   Team,
 } from "@/types/teamTypes";
+import { isNotNil } from "@/utils/jsUtils";
 
 const teamSlice = createSlice({
   name: "team",
@@ -28,7 +29,7 @@ const teamSlice = createSlice({
 
       const isPositionAvailable = (position: SlotPosition) => {
         const slot = findSlotByPosition(position);
-        return slot && slot.player === null;
+        return isNotNil(slot) && !isNotNil(slot.player);
       };
 
       // Check if primary position (positions[0]) is available
@@ -93,20 +94,21 @@ export const selectIsTeamRegistered = createSelector(
 
 export const selectLineupPlayerCount = createSelector(
   [selectLineup],
-  (lineup): number => lineup.filter((slot) => slot.player !== null).length,
+  (lineup): number => lineup.filter((slot) => isNotNil(slot.player)).length,
 );
 
 export const selectEligibleSlotsForPosition = createSelector(
   [selectLineup, (_: RootState, position: SlotPosition) => position],
   (lineup, position): LineupSlot[] => {
-    const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
-    const isUtilPosition = UTIL_POSITIONS.includes(position as FlexPosition);
+    const isUtilPosition = ["UTIL1", "UTIL2", "UTIL3"].includes(
+      position as FlexPosition,
+    );
 
-    return lineup.filter((slot) => {
-      if (!slot.player) return false;
-
-      return isUtilPosition || slot.player.positions.includes(position);
-    });
+    return lineup.filter(
+      (slot) =>
+        !!slot.player &&
+        (isUtilPosition || slot.player.positions.includes(position)),
+    );
   },
 );
 

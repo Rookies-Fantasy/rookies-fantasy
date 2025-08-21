@@ -31,27 +31,6 @@ const PlayerSlot = ({
   const router = useRouter();
   const showDropButton = !enableActionIcon && isCard && playerData;
 
-  const renderActionIcon = () => {
-    if (!enableActionIcon || !isCard) return null;
-    if (playerData) {
-      return (
-        <IconButton
-          icon={<XCircle color="#535862" size={20} />}
-          onPress={() => {
-            dispatch(removePlayerFromLineup(playerData));
-            onPlayerRemove?.();
-          }}
-        />
-      );
-    }
-    return (
-      <IconButton
-        icon={<UserPlus color="#6042FF" size={20} />}
-        onPress={() => router.push("/(protected)/(draft)/players")}
-      />
-    );
-  };
-
   return (
     <View
       className={cn(
@@ -61,7 +40,12 @@ const PlayerSlot = ({
       )}
     >
       <View className="min-h-24 flex-row items-center justify-between p-3">
-        <View className="flex-1 flex-row items-center gap-2">
+        <Pressable
+          className="flex-1 flex-row items-center gap-2"
+          onPress={() => {
+            if (!playerData) router.push("/(protected)/(draft)/players");
+          }}
+        >
           <Pressable
             className={cn(
               "h-8 min-w-16 items-center justify-center rounded-3xl",
@@ -85,9 +69,24 @@ const PlayerSlot = ({
               <Text className="pbk-b2 ml-2 text-base-white">Empty slot</Text>
             )}
           </View>
-        </View>
+        </Pressable>
 
-        {renderActionIcon()}
+        {enableActionIcon &&
+          isCard &&
+          (playerData ? (
+            <IconButton
+              icon={<XCircle color="#535862" size={20} />}
+              onPress={() => {
+                dispatch(removePlayerFromLineup(playerData));
+                onPlayerRemove?.();
+              }}
+            />
+          ) : (
+            <IconButton
+              icon={<UserPlus color="#6042FF" size={20} />}
+              onPress={() => router.push("/(protected)/(draft)/players")}
+            />
+          ))}
       </View>
       {showDropButton && (
         <View className="border-t-2 border-gray-900 p-3">
