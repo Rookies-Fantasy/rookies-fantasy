@@ -90,4 +90,3 @@ export const teamLogoOptions: Asset[] = [
 ];
 
 export const defaultTeamLogo = teamLogoOptions[0];
-
