@@ -35,12 +35,10 @@ export const saveTeamLineup = async (
       return;
     }
 
-    await UserController.saveUserTeamLineup(
-      userId,
-      team.id,
-      team.lineup,
-      team.balance,
-    );
+    await UserController.saveUserTeamLineup(userId, team.id, {
+      lineup: team.lineup,
+      balance: team.balance,
+    });
 
     onSuccess?.();
   } catch (error) {
