@@ -11,6 +11,7 @@ import {
   BenchPosition,
   UTIL_POSITIONS,
 } from "@/types/teamTypes";
+import { isNotNil } from "@/utils/jsUtils";
 
 type SwapPayload = {
   from: SlotPosition;
@@ -65,7 +66,7 @@ const teamSlice = createSlice({
 
       const isPositionAvailable = (position: SlotPosition) => {
         const slot = findSlotByPosition(position);
-        return slot && slot.player === null;
+        return isNotNil(slot) && !isNotNil(slot.player);
       };
 
       // Check if primary position (positions[0]) is available
