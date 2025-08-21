@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Text,
   TextInput,
-  ImageSourcePropType,
   Keyboard,
   Pressable,
 } from "react-native";
@@ -20,50 +19,7 @@ import Spinner from "@/components/Spinner";
 import { TeamEditModel, UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setTeam } from "@/state/slices/teamSlice";
-
-type LogoOption = {
-  url: string;
-  source: ImageSourcePropType;
-};
-
-const logoOptions: LogoOption[] = [
-  {
-    url: "../../assets/images/placeholder-avatar.png",
-    source: require("../../assets/images/placeholder-avatar.png"),
-  },
-  {
-    url: "../../assets/images/team/1.png",
-    source: require("../../assets/images/team/1.png"),
-  },
-  {
-    url: "../../assets/images/team/2.png",
-    source: require("../../assets/images/team/2.png"),
-  },
-  {
-    url: "../../assets/images/team/3.png",
-    source: require("../../assets/images/team/3.png"),
-  },
-  {
-    url: "../../assets/images/team/4.png",
-    source: require("../../assets/images/team/4.png"),
-  },
-  {
-    url: "../../assets/images/team/5.png",
-    source: require("../../assets/images/team/5.png"),
-  },
-  {
-    url: "../../assets/images/team/6.png",
-    source: require("../../assets/images/team/6.png"),
-  },
-  {
-    url: "../../assets/images/team/7.png",
-    source: require("../../assets/images/team/7.png"),
-  },
-  {
-    url: "../../assets/images/team/8.png",
-    source: require("../../assets/images/team/8.png"),
-  },
-];
+import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 
 const schema = yup.object({
   abbreviation: yup
@@ -77,7 +33,7 @@ const schema = yup.object({
     .test(
       "not-default-logo",
       "Logo is required",
-      (value) => value !== logoOptions[0].url,
+      (value) => value !== defaultTeamLogo.url,
     ),
 });
 
@@ -88,9 +44,8 @@ const CreateTeam = () => {
   const dispatch = useAppDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedLogoOption, setSelectedLogoOption] = useState<LogoOption>(
-    logoOptions[0],
-  );
+  const [selectedLogoOption, setSelectedLogoOption] =
+    useState<Asset>(defaultTeamLogo);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
 
   const {
@@ -116,10 +71,10 @@ const CreateTeam = () => {
 
           // A user should only have either 0 or 1 team on the createTeam screen.
           if (teams?.length === 1) {
-            const matchedLogo = logoOptions.find(
+            const matchedLogo = teamLogoOptions.find(
               (option) => option.url === teams[0].logoUrl,
             );
-            setSelectedLogoOption(matchedLogo || logoOptions[0]);
+            setSelectedLogoOption(matchedLogo || defaultTeamLogo);
 
             reset({
               abbreviation: teams[0].abbreviation,
@@ -347,7 +302,7 @@ const CreateTeam = () => {
           name="logoUrl"
           render={({ field: { onChange } }) => (
             <View className="mb-6 flex-1 flex-row flex-wrap justify-between px-6 py-4">
-              {logoOptions.map((teamLogoOption, index) => {
+              {teamLogoOptions.map((teamLogoOption, index) => {
                 const isSelected =
                   selectedLogoOption.url === teamLogoOption.url;
                 return (
