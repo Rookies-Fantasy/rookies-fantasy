@@ -46,7 +46,7 @@ const Roster = () => {
         balance: team.balance,
       });
 
-      router.replace("/(protected)/(tabs)/myTeam");
+      router.replace("/(protected)/(tabs)/(home)");
     } catch (error) {
       Alert.alert("Error", "Failed to save your team. Please try agian.");
       console.log(error);
@@ -92,7 +92,6 @@ const Roster = () => {
 
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">
               <PlayerRoster
-                enableActionIcon
                 isCard
                 lineup={team.lineup}
                 selectedPosition={selectedPosition}

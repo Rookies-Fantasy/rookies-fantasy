@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { UserPlus, X, XCircle } from "phosphor-react-native";
+import { UserPlus, XCircle } from "phosphor-react-native";
 import { View, Text, Pressable } from "react-native";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
@@ -10,7 +10,6 @@ import { cn } from "@/utils/jsUtils";
 
 type PlayerSlotProps = {
   isCard?: boolean;
-  enableActionIcon?: boolean;
   position: string;
   playerData: Player | null;
   openDrawer?: () => void;
@@ -20,7 +19,6 @@ type PlayerSlotProps = {
 
 const PlayerSlot = ({
   isCard = false,
-  enableActionIcon = false,
   isSelected,
   position,
   playerData,
@@ -29,7 +27,6 @@ const PlayerSlot = ({
 }: PlayerSlotProps) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const showDropButton = !enableActionIcon && isCard && playerData;
 
   return (
     <View
@@ -43,7 +40,8 @@ const PlayerSlot = ({
         <Pressable
           className="flex-1 flex-row items-center gap-2"
           onPress={() => {
-            if (!playerData) router.push("/(protected)/(draft)/players");
+            if (!playerData)
+              router.push("/(protected)/(draft)/(teamBuilder)/players");
           }}
         >
           <Pressable
@@ -71,8 +69,7 @@ const PlayerSlot = ({
           </View>
         </Pressable>
 
-        {enableActionIcon &&
-          isCard &&
+        {isCard &&
           (playerData ? (
             <IconButton
               icon={<XCircle color="#535862" size={20} />}
@@ -84,21 +81,12 @@ const PlayerSlot = ({
           ) : (
             <IconButton
               icon={<UserPlus color="#6042FF" size={20} />}
-              onPress={() => router.push("/(protected)/(draft)/players")}
+              onPress={() =>
+                router.push("/(protected)/(draft)/(teamBuilder)/players")
+              }
             />
           ))}
       </View>
-      {showDropButton && (
-        <View className="border-t-2 border-gray-900 p-3">
-          <Pressable
-            className="flex-1 flex-row items-center justify-center gap-2"
-            onPress={() => dispatch(removePlayerFromLineup(playerData))}
-          >
-            <X color="#8175FF" size={20} weight="bold" />
-            <Text className="pbk-sh1 text-purple-400">DROP PLAYER</Text>
-          </Pressable>
-        </View>
-      )}
     </View>
   );
 };

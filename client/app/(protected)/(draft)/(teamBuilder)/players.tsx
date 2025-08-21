@@ -58,7 +58,7 @@ const Players = () => {
         balance: team.balance,
       });
 
-      router.replace("/(protected)/(tabs)/myTeam");
+      router.replace("/(protected)/(tabs)/(home)");
     } catch (error) {
       Alert.alert("Error", "Failed to save your team. Please try agian.");
       console.log(error);

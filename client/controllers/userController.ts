@@ -1,4 +1,4 @@
-﻿import firestore from "@react-native-firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/teamTypes";
 import { defaultUser, User } from "@/types/userTypes";
 
