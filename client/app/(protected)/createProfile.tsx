@@ -21,7 +21,7 @@ import Spinner from "@/components/Spinner";
 import { UserController, UserEditModel } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
-import { Avatar, avatarOptions, defaultAvatar } from "@/types/avatars";
+import { Asset, avatarOptions, defaultAvatar } from "@/types/asset";
 
 export type UserEditFormModel = Pick<
   Required<UserEditModel>,
@@ -48,7 +48,7 @@ const CreateProfile = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAvatarOption, setSelectedAvatarOption] =
-    useState<Avatar>(defaultAvatar);
+    useState<Asset>(defaultAvatar);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();

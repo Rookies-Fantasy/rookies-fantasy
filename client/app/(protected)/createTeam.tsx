@@ -19,7 +19,7 @@ import Spinner from "@/components/Spinner";
 import { TeamEditModel, UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setTeam } from "@/state/slices/teamSlice";
-import { defaultTeamLogo, TeamLogo, teamLogoOptions } from "@/types/teamLogos";
+import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 
 const schema = yup.object({
   abbreviation: yup
@@ -45,7 +45,7 @@ const CreateTeam = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLogoOption, setSelectedLogoOption] =
-    useState<TeamLogo>(defaultTeamLogo);
+    useState<Asset>(defaultTeamLogo);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
 
   const {

@@ -19,9 +19,9 @@ const MainLayout = () => (
       }}
     />
     <Tabs.Screen
-      name="(profile)"
+      name="(myTeam)"
       options={{
-        title: "Profile",
+        title: "My Team",
         tabBarIcon: ({ color }) => <IdentificationBadge color={color} />,
       }}
     />

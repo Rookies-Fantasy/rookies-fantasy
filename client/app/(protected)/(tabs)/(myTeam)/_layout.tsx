@@ -7,7 +7,7 @@ import {
   UsersThree,
 } from "phosphor-react-native";
 
-const ProfileLayout = () => (
+const MyTeamLayout = () => (
   <Tabs
     screenOptions={{
       headerShown: false,
@@ -56,4 +56,4 @@ const ProfileLayout = () => (
   </Tabs>
 );
 
-export default ProfileLayout;
+export default MyTeamLayout;

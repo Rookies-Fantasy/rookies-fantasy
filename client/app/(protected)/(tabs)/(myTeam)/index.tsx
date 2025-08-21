@@ -1,8 +1,8 @@
 import { Pressable, Text, View, Image } from "react-native";
 import { useAppSelector } from "@/state/hooks";
-import { defaultTeamLogo, teamLogoOptions } from "@/types/teamLogos";
+import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 
-const Roaster = () => {
+const Roster = () => {
   const team = useAppSelector((state) => state.team);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
@@ -10,7 +10,7 @@ const Roaster = () => {
 
   return (
     <View className="h-full w-full items-center justify-center bg-gray-950">
-      <View className="h-[250px] w-full">
+      <View className="h-72 w-full">
         <View className="h-1/2 bg-pink-700" />
         <View className="h-1/2 border-b border-gray-900 bg-gray-950">
           <View className="-my-[37.5px] w-full flex-row justify-between px-8">
@@ -54,4 +54,4 @@ const Roaster = () => {
   );
 };
 
-export default Roaster;
+export default Roster;
