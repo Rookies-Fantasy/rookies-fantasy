@@ -1,4 +1,4 @@
-import { View, ImageBackground, StatusBar } from "react-native";
+import { View, ImageBackground } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Carousel } from "@/components/Carousel";
 import { PressableLink } from "@/components/PressableLink";
@@ -50,7 +50,6 @@ const Onboarding = () => (
     source={require("@/assets/images/onboarding/onboarding-background.png")}
   >
     <SafeAreaView className="flex-1 items-center justify-between">
-      <StatusBar barStyle="light-content" />
       <Carousel data={carouselData} />
       <View className="flex w-full gap-4 px-8 pb-8">
         <PressableLink
