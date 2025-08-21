@@ -53,7 +53,7 @@ const PlayerSlot = ({
     return (
       <IconButton
         icon={<UserPlus color="#6042FF" size={20} />}
-        onPress={() => router.push("/(protected)/(draft)/players")}
+        onPress={() => router.push("/(protected)/(draft)/(teamBuilder)/roster")}
       />
     );
   };
