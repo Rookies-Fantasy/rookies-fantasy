@@ -14,17 +14,18 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT + 50;
+export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT + 150;
 
-type SnapPoint = "0%" | "33%" | "50%" | "66%" | "100%";
+type SnapPoint = "0%" | "33%" | "50%" | "66%" | "90%" | "100%";
 const snapPointMap: Record<SnapPoint, number> = {
   "0%": 0,
   "33%": -SCREEN_HEIGHT / 3,
   "50%": -SCREEN_HEIGHT / 2,
   "66%": (-SCREEN_HEIGHT * 2) / 3,
+  "90%": 0.9 * MAX_TRANSLATE_Y,
   "100%": MAX_TRANSLATE_Y,
 };
-const defaultSnapPoints: SnapPoint[] = ["0%", "33%", "66%", "100%"];
+const defaultSnapPoints: SnapPoint[] = ["0%", "33%", "66%", "90%", "100%"];
 
 type BottomSheetProps = {
   children?: ReactNode;

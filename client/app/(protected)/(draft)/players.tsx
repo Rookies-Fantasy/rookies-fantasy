@@ -2,7 +2,7 @@ import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Plus, Sliders, X } from "phosphor-react-native";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -12,12 +12,15 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
+import { NbaTeamsController } from "@/controllers/nbaTeamsController";
+import { NbaTeam } from "@/types/nbaTeams";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -25,6 +28,8 @@ type FetchPlayersParams = {
 
 const Players = () => {
   const [query, setQuery] = useState("");
+  const [teams, setTeams] = useState<NbaTeam[]>([]);
+  const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
   const router = useRouter();
   const PAGE_SIZE = 25;
 
@@ -48,6 +53,21 @@ const Players = () => {
       lastPage.hasMore ? lastPage.lastDoc : undefined,
     initialPageParam: undefined,
   });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log("Fetching teams...");
+        const teamsData = await NbaTeamsController.getAllTeams();
+        console.log("Teams fetched:", teamsData.length);
+        setTeams(teamsData);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
@@ -152,7 +172,7 @@ const Players = () => {
               <IconButton
                 className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
                 icon={<Sliders color="white" />}
-                onPress={() => {}}
+                onPress={() => setShowFiltersDrawer(true)}
               />
             </View>
 
@@ -216,6 +236,11 @@ const Players = () => {
           )}
         </KeyboardAvoidingView>
       </Pressable>
+      <FiltersDrawer
+        setShowFiltersDrawer={() => setShowFiltersDrawer(false)}
+        showFiltersDrawer={showFiltersDrawer}
+        teams={teams}
+      />
     </SafeAreaView>
   );
 };
