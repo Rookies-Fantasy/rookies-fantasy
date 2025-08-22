@@ -13,6 +13,8 @@ export type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
 export type BenchPosition = `BEN${number}`;
 export type SlotPosition = Position | FlexPosition | BenchPosition;
 
+export const POSITIONS = ["PG", "SG", "SF", "PF", "C"];
+
 export const defaultTeam: Team = {
   id: "",
   balance: TEAM_BALANCE,
