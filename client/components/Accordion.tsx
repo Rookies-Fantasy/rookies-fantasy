@@ -45,7 +45,7 @@ const Accordion = ({
         className="mx-3 flex-row items-center justify-between py-8"
         onPress={toggleAccordion}
       >
-        <Text className="pbk-b1 text-base-white">{title}</Text>
+        <Text className="pbk-b1 ml-3 text-base-white">{title}</Text>
         <Animated.View style={rotationStyle}>
           <CaretRight color="white" size={20} />
         </Animated.View>

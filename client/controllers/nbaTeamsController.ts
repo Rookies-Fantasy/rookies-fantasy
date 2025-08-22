@@ -8,7 +8,7 @@ export class NbaTeamsController {
     try {
       const teamsSnapshot = await firestore()
         .collection(NBA_TEAMS_COLLECTION)
-        .orderBy("abbreviation")
+        .orderBy("fullName")
         .get();
 
       const teams: NbaTeam[] = teamsSnapshot.docs.map((doc) => {

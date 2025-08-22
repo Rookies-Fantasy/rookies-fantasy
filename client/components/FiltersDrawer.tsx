@@ -1,7 +1,12 @@
+import { Image } from "expo-image";
+import { Check } from "phosphor-react-native";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
 import { NbaTeam } from "@/types/nbaTeams";
+import { Position } from "@/types/teamTypes";
+import { cn } from "@/utils/jsUtils";
 
 type FilterDrawerProps = {
   teams: NbaTeam[];
@@ -9,18 +14,53 @@ type FilterDrawerProps = {
   setShowFiltersDrawer: () => void;
 };
 
+type Filters = {
+  selectedTeams: NbaTeam[];
+  selectedPositions: Position[];
+  salaryRange: { min: number; max: number };
+};
+
 const FiltersDrawer = ({
   teams,
   showFiltersDrawer,
   setShowFiltersDrawer,
 }: FilterDrawerProps) => {
-  const test = 2;
+  const [filters, setFilters] = useState<Filters>({
+    selectedTeams: [],
+    selectedPositions: [],
+    salaryRange: { min: 0, max: 75000000 },
+  });
+
+  const handleTeamPress = (team: NbaTeam) => {
+    setFilters((prev) => {
+      const isSelected = prev.selectedTeams.some(
+        (selectedTeam) => selectedTeam.id === team.id,
+      );
+
+      if (isSelected) {
+        return {
+          ...prev,
+          selectedTeams: prev.selectedTeams.filter(
+            (selectedTeam) => selectedTeam.id !== team.id,
+          ),
+        };
+      } else {
+        return {
+          ...prev,
+          selectedTeams: [...prev.selectedTeams, team],
+        };
+      }
+    });
+  };
+
+  const isTeamSelected = (team: NbaTeam) =>
+    filters.selectedTeams.some((selectedTeam) => selectedTeam.id === team.id);
 
   return (
     <BottomSheet
       header={
         <Text className="pbk-b1 text-center text-base-white">
-          Filter players {test}
+          Filter players
         </Text>
       }
       isOpen={showFiltersDrawer}
@@ -28,34 +68,31 @@ const FiltersDrawer = ({
       snapPoints={["90%"]}
     >
       <Accordion title="Team">
-        <View className="flex-row flex-wrap">
+        <View className="flex-row flex-wrap justify-center gap-x-8">
           {teams.map((team) => (
-            <Pressable
-              className="w-1/3 flex-1 flex-row items-center gap-2 p-2"
-              key={team.id}
-              onPress={() => {}}
-            >
-              {/* <Image
-                contentFit="contain"
-                source={{ uri: team.logoUrl }}
-                style={{ width: 32, height: 32 }}
-              /> */}
-              <Text className="pbk-b2 text-center text-base-white">
-                {team.abbreviation}
-              </Text>
-            </Pressable>
+            <View className="w-1/4" key={team.id}>
+              <Pressable
+                className={cn(
+                  "my-3 flex-row items-center justify-between rounded-md px-2 py-3",
+                  isTeamSelected(team) && "bg-gray-800",
+                )}
+                onPress={() => handleTeamPress(team)}
+              >
+                <View className="flex-row items-center gap-1">
+                  <Image
+                    contentFit="contain"
+                    source={{ uri: team.logoUrl }}
+                    style={{ width: 32, height: 32 }}
+                  />
+                  <Text className="pbk-b2 text-center text-base-white">
+                    {team.abbreviation}
+                  </Text>
+                </View>
+                {isTeamSelected(team) && <Check color="#FFFFFF" size={20} />}
+              </Pressable>
+            </View>
           ))}
         </View>
-        {/* <Text className="pbk-b2 mb-2 text-base-white">
-          Teams count: {teams.length}
-        </Text>
-        <View className="flex-row flex-wrap">
-          {teams.map((team) => (
-            <Text className="pbk-b2 p-2 text-base-white" key={team.id}>
-              {team.abbreviation}
-            </Text>
-          ))}
-        </View> */}
       </Accordion>
       <Accordion title="Position">
         <Text>Test</Text>
