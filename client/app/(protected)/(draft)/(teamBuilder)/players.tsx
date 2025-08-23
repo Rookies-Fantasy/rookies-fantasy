@@ -62,10 +62,25 @@ const Players = () => {
   const router = useRouter();
 
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
+
+  const activeFilters =
+    filters.selectedTeams.length +
+    filters.selectedPositions.length +
+    (filters.salaryRange.min !== 1000000 ||
+    filters.salaryRange.max !== 150000000
+      ? 1
+      : 0);
+
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
+    activeFilters
+      ? await NbaPlayersController.getFilteredPlayers(
+          filters,
+          PAGE_SIZE,
+          pageParam,
+        )
+      : await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
 
   const {
     data,
@@ -76,7 +91,13 @@ const Players = () => {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["nbaPlayers"],
+    queryKey: [
+      "nbaPlayers",
+      filters.selectedTeams.map((team) => team.id).sort(),
+      filters.selectedPositions.sort(),
+      filters.salaryRange.min,
+      filters.salaryRange.max,
+    ],
     queryFn: fetchPlayersWithAverages,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.lastDoc : undefined,
@@ -86,9 +107,7 @@ const Players = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("Fetching teams...");
         const teamsData = await NbaTeamsController.getAllTeams();
-        console.log("Teams fetched:", teamsData.length);
         setTeams(teamsData);
       } catch (error) {
         console.error("Error fetching teams:", error);
@@ -193,11 +212,20 @@ const Players = () => {
                 <SearchBar onChangeText={setQuery} value={query} />
               </View>
 
-              <IconButton
-                className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
-                icon={<Sliders color="white" />}
-                onPress={() => setShowFiltersDrawer(true)}
-              />
+              <View className="relative">
+                <IconButton
+                  className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
+                  icon={<Sliders color="white" />}
+                  onPress={() => setShowFiltersDrawer(true)}
+                />
+                {activeFilters > 0 && (
+                  <View className="absolute -right-2 -top-2 h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1">
+                    <Text className="pbk-h8 text-base-white">
+                      {activeFilters}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
 

@@ -1,10 +1,12 @@
 import { Image } from "expo-image";
 import { Check } from "phosphor-react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
+import FloatingActionButton from "./FloatingActionButton";
 import RangeSlider from "./RangeSlider";
+import Spinner from "./Spinner";
 import {
   Filters,
   PositionOption,
@@ -27,32 +29,40 @@ const FiltersDrawer = ({
   filters,
   setFilters,
 }: FilterDrawerProps) => {
+  const [isApplyLoading, setIsApplyLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
+  const [localFilters, setLocalFilters] = useState<Filters>(filters);
+
+  useEffect(() => {
+    if (showFiltersDrawer) {
+      setLocalFilters(filters);
+    }
+  }, [showFiltersDrawer, filters]);
+
   const handleTeamPress = (team: NbaTeam) => {
-    const isSelected = filters.selectedTeams.some(
+    const isSelected = localFilters.selectedTeams.some(
       (selectedTeam) => selectedTeam.id === team.id,
     );
 
     if (isSelected) {
-      setFilters({
-        ...filters,
-        selectedTeams: filters.selectedTeams.filter(
+      setLocalFilters({
+        ...localFilters,
+        selectedTeams: localFilters.selectedTeams.filter(
           (selectedTeam) => selectedTeam.id !== team.id,
         ),
       });
     } else {
-      setFilters({
-        ...filters,
-        selectedTeams: [...filters.selectedTeams, team],
+      setLocalFilters({
+        ...localFilters,
+        selectedTeams: [...localFilters.selectedTeams, team],
       });
     }
   };
 
-  useEffect(() => {
-    console.log(filters);
-  }, [filters]);
-
   const isTeamSelected = (team: NbaTeam) =>
-    filters.selectedTeams.some((selectedTeam) => selectedTeam.id === team.id);
+    localFilters.selectedTeams.some(
+      (selectedTeam) => selectedTeam.id === team.id,
+    );
 
   const positionOptions: PositionOption[] = [
     "ALL",
@@ -66,29 +76,29 @@ const FiltersDrawer = ({
   ];
 
   const handlePositionPress = (position: PositionOption) => {
-    const isSelected = filters.selectedPositions.includes(position);
+    const isSelected = localFilters.selectedPositions.includes(position);
 
     if (isSelected) {
-      setFilters({
-        ...filters,
-        selectedPositions: filters.selectedPositions.filter(
+      setLocalFilters({
+        ...localFilters,
+        selectedPositions: localFilters.selectedPositions.filter(
           (p) => p !== position,
         ),
       });
     } else {
-      setFilters({
-        ...filters,
-        selectedPositions: [...filters.selectedPositions, position],
+      setLocalFilters({
+        ...localFilters,
+        selectedPositions: [...localFilters.selectedPositions, position],
       });
     }
   };
 
   const isPositionSelected = (position: PositionOption) =>
-    filters.selectedPositions.includes(position);
+    localFilters.selectedPositions.includes(position);
 
   const handleSalaryChange = (minValue: number, maxValue: number) => {
-    setFilters({
-      ...filters,
+    setLocalFilters({
+      ...localFilters,
       salaryRange: { min: minValue, max: maxValue },
     });
   };
@@ -96,17 +106,70 @@ const FiltersDrawer = ({
   const formatSalaryValue = (value: number) =>
     `$${(value / 1000000).toFixed(0)}M`;
 
+  const handleApply = () => {
+    try {
+      setIsApplyLoading(true);
+      setFilters(localFilters);
+      setShowFiltersDrawer();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsApplyLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    try {
+      setIsResetLoading(true);
+      const resetFilters: Filters = {
+        selectedTeams: [],
+        selectedPositions: [],
+        salaryRange: { min: 1000000, max: 150000000 },
+      };
+      setLocalFilters(resetFilters);
+      setFilters(resetFilters);
+      setShowFiltersDrawer();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
   return (
     <BottomSheet
       footer={
-        <Pressable
-          className="min-h-12 w-full justify-center rounded-md bg-purple-600"
-          onPress={() => {}}
-        >
-          <Text className="pbk-h6 text-center text-base-white">
-            SAVE LINEUP
-          </Text>
-        </Pressable>
+        <View className="absolute left-6 right-6 flex-row gap-4">
+          <FloatingActionButton
+            absolute={false}
+            buttonBackground="bg-gray-900 border border-gray-800"
+            className="flex-1"
+            onPress={handleReset}
+          >
+            {isResetLoading ? (
+              <View className="items-center justify-center">
+                <Spinner />
+              </View>
+            ) : (
+              <Text className="pbk-h6 text-center text-base-white">RESET</Text>
+            )}
+          </FloatingActionButton>
+
+          <FloatingActionButton
+            absolute={false}
+            buttonBackground="bg-purple-500"
+            className="flex-1"
+            onPress={handleApply}
+          >
+            {isApplyLoading ? (
+              <View className="items-center justify-center">
+                <Spinner />
+              </View>
+            ) : (
+              <Text className="pbk-h6 text-center text-base-white">APPLY</Text>
+            )}
+          </FloatingActionButton>
+        </View>
       }
       header={
         <Text className="pbk-b1 text-center text-base-white">
@@ -172,8 +235,8 @@ const FiltersDrawer = ({
         <View className="flex-row justify-center">
           <RangeSlider
             formatValue={formatSalaryValue}
-            initialMaxValue={filters.salaryRange.max}
-            initialMinValue={filters.salaryRange.min}
+            initialMaxValue={localFilters.salaryRange.max}
+            initialMinValue={localFilters.salaryRange.min}
             max={150000000}
             min={1000000}
             onValueChange={handleSalaryChange}
