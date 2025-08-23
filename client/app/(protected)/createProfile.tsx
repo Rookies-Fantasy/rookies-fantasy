@@ -11,7 +11,6 @@ import {
   Text,
   TextInput,
   Keyboard,
-  ImageSourcePropType,
   Modal,
   Pressable,
 } from "react-native";
@@ -22,54 +21,7 @@ import Spinner from "@/components/Spinner";
 import { UserController, UserEditModel } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
-
-type AvatarOption = {
-  url: string;
-  source: ImageSourcePropType;
-};
-
-const avatarOptions: AvatarOption[] = [
-  {
-    url: "../../assets/images/placeholder-avatar.png",
-    source: require("../../assets/images/placeholder-avatar.png"),
-  },
-  {
-    url: "../../assets/images/profile/1.png",
-    source: require("../../assets/images/profile/1.png"),
-  },
-  {
-    url: "../../assets/images/profile/2.png",
-    source: require("../../assets/images/profile/2.png"),
-  },
-  {
-    url: "../../assets/images/profile/3.png",
-    source: require("../../assets/images/profile/3.png"),
-  },
-  {
-    url: "../../assets/images/profile/4.png",
-    source: require("../../assets/images/profile/4.png"),
-  },
-  {
-    url: "../../assets/images/profile/5.png",
-    source: require("../../assets/images/profile/5.png"),
-  },
-  {
-    url: "../../assets/images/profile/6.png",
-    source: require("../../assets/images/profile/6.png"),
-  },
-  {
-    url: "../../assets/images/profile/7.png",
-    source: require("../../assets/images/profile/7.png"),
-  },
-  {
-    url: "../../assets/images/profile/8.png",
-    source: require("../../assets/images/profile/8.png"),
-  },
-  {
-    url: "../../assets/images/profile/9.png",
-    source: require("../../assets/images/profile/9.png"),
-  },
-];
+import { Asset, avatarOptions, defaultAvatar } from "@/types/asset";
 
 export type UserEditFormModel = Pick<
   Required<UserEditModel>,
@@ -83,7 +35,7 @@ const schema = yup.object({
     .test(
       "not-default-avatar",
       "Avatar is required",
-      (value) => value !== avatarOptions[0].url,
+      (value) => value !== defaultAvatar.url,
     ),
   dateOfBirth: yup.date().required("Date of Birth is required"),
   username: yup.string().required("Username is required"),
@@ -96,7 +48,7 @@ const CreateProfile = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAvatarOption, setSelectedAvatarOption] =
-    useState<AvatarOption>(avatarOptions[0]);
+    useState<Asset>(defaultAvatar);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -124,7 +76,7 @@ const CreateProfile = () => {
           const matchedAvatar = avatarOptions.find(
             (option) => option.url === userData.avatarUrl,
           );
-          setSelectedAvatarOption(matchedAvatar || avatarOptions[0]);
+          setSelectedAvatarOption(matchedAvatar || defaultAvatar);
 
           reset({
             avatarUrl: userData.avatarUrl,

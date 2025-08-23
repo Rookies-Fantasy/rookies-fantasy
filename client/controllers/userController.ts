@@ -1,5 +1,5 @@
-﻿import firestore from "@react-native-firebase/firestore";
-import { defaultTeam, Team, TEAM_BALANCE } from "@/types/teamTypes";
+import firestore from "@react-native-firebase/firestore";
+import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/teamTypes";
 import { defaultUser, User } from "@/types/userTypes";
 
 const USERS_COLLECTION = "users";
@@ -17,6 +17,11 @@ export type TeamEditModel = {
   logoUrl: string;
   name: string;
 };
+
+export type LineupUpdateModel = Partial<{
+  lineup: LineupSlot[];
+  balance: number;
+}>;
 
 export class UserController {
   static getUser = async (userId: string): Promise<User> => {
@@ -94,6 +99,8 @@ export class UserController {
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
+            lineup: team.data()?.lineup ?? defaultTeam.lineup,
+            bench: team.data()?.bench ?? defaultTeam.bench,
             balance: team.data()?.balance ?? 0,
           }
         : defaultTeam;
@@ -115,6 +122,8 @@ export class UserController {
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
+        lineup: team.data()?.lineup,
+        bench: team.data()?.bench,
         balance: team.data()?.balance,
       }));
     } catch (error) {
@@ -137,6 +146,54 @@ export class UserController {
           ...params,
           updatedAt: new Date(),
         });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static saveUserTeamLineup = async (
+    userId: string,
+    teamId: string,
+    params: LineupUpdateModel,
+  ) => {
+    try {
+      await firestore()
+        .collection(USERS_COLLECTION)
+        .doc(userId)
+        .collection(TEAMS_COLLECTION)
+        .doc(teamId)
+        .update({
+          ...params,
+          updatedAt: new Date(),
+        });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static getSavedTeamLineup = async (
+    userId: string,
+    teamId: string,
+  ): Promise<{ lineup: LineupSlot[]; balance: number }> => {
+    try {
+      const team = await firestore()
+        .collection(USERS_COLLECTION)
+        .doc(userId)
+        .collection(TEAMS_COLLECTION)
+        .doc(teamId)
+        .get();
+
+      if (team.exists()) {
+        return {
+          lineup: team.data()?.lineup ?? defaultTeam.lineup,
+          balance: team.data()?.balance ?? TEAM_BALANCE,
+        };
+      }
+
+      return {
+        lineup: defaultTeam.lineup,
+        balance: TEAM_BALANCE,
+      };
     } catch (error) {
       throw error;
     }

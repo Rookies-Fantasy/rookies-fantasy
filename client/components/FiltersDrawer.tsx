@@ -5,7 +5,10 @@ import { Pressable, Text, View } from "react-native";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
 import RangeSlider from "./RangeSlider";
-import { Filters, PositionOption } from "@/app/(protected)/(draft)/players";
+import {
+  Filters,
+  PositionOption,
+} from "@/app/(protected)/(draft)/(teamBuilder)/players";
 import { NbaTeam } from "@/types/nbaTeams";
 import { cn } from "@/utils/jsUtils";
 

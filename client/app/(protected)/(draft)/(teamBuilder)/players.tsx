@@ -1,10 +1,10 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Plus, Sliders, X } from "phosphor-react-native";
+import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Image,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -14,14 +14,25 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
+import PlayerData from "@/components/PlayerData";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
+import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
 import { NbaTeamsController } from "@/controllers/nbaTeamsController";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  addPlayerToLineup,
+  isPlayerInLineup,
+  removePlayerFromLineup,
+  resetToSavedTeam,
+} from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
-import { Position } from "@/types/teamTypes";
+import { Position, FlexPosition, UTIL_POSITIONS } from "@/types/teamTypes";
+
+import { resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -45,9 +56,12 @@ const Players = () => {
     selectedPositions: [],
     salaryRange: { min: 1000000, max: 150000000 },
   });
+  const team = useAppSelector((state) => state.team);
+  const userId = useAppSelector((state) => state.user.id);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
-  const router = useRouter();
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
@@ -55,7 +69,7 @@ const Players = () => {
 
   const {
     data,
-    isLoading,
+    isLoading: isLoadingFetch,
     isError,
     fetchNextPage,
     hasNextPage,
@@ -87,60 +101,46 @@ const Players = () => {
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
 
+    const checkRosterAvailability = (player: any) => {
+      const positions = player.positions || [];
+      const hasAvailablePosition = team.lineup.some(
+        (slot) =>
+          slot.player === null &&
+          (positions.includes(slot.position) ||
+            UTIL_POSITIONS.includes(slot.position as FlexPosition)),
+      );
+
+      return hasAvailablePosition;
+    };
+
     return players.map((player) => [
       <IconButton
-        className={false ? "bg-red-600" : "bg-purple-600"} // TODO: Check if player is on roster
+        className={
+          isPlayerInLineup(team.lineup, player.id)
+            ? "bg-red-600"
+            : "bg-purple-600"
+        }
         icon={
-          <Plus color="white" size={12} />
-
-          // TODO:
-          //isPlayerInLineup(player.id) ? (
-          //   <Minus color="white" size={12} />
-          // ) : (
-          //   <Plus color="white" size={12} />
-          // )
+          isPlayerInLineup(team.lineup, player.id) ? (
+            <Minus color="white" size={12} />
+          ) : (
+            <Plus color="white" size={12} />
+          )
         }
         key={player.id}
-        onPress={
-          () => {}
-          /* TODO: 
-          // isPlayerInLineup(player.id)
-          //   ? dispatch(removePlayerFromLineup(player.id))
-          //   : dispatch(
-          //       addPlayerToLineup({
-          //         player: player,
-          //         position: player.positions[0] as keyof Lineup,
-          //       }),
-          //     )
-          */
-        }
+        onPress={() => {
+          if (isPlayerInLineup(team.lineup, player.id)) {
+            dispatch(removePlayerFromLineup(player));
+          } else {
+            if (checkRosterAvailability(player)) {
+              dispatch(addPlayerToLineup(player));
+            } else {
+              Alert.alert("Cannot add player", "No eligible spot available");
+            }
+          }
+        }}
       />,
-      <View key={player.id}>
-        <View className="flex-row gap-2">
-          <Image
-            className="size-14 rounded-full"
-            source={{ uri: player.headshotUrl }}
-          />
-          <View className="max-w-32">
-            <Text
-              className="pbk-b2 text-base-white"
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              {player.firstName.slice(0, 1)}. {player.secondName}
-            </Text>
-            <Text className="pbk-b2 text-green-200">${player.salary}</Text>
-            <View className="flex-1 flex-row gap-2">
-              <Text className="pbk-b2 text-base-white">
-                {player.teamAbbreviation}
-              </Text>
-              <Text className="pbk-b2 text-base-white">
-                {player.positions.join(", ")}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>,
+      <PlayerData key={player.id} player={player} />,
       player.gamesPlayed,
       player.averageStats.min.toFixed(1),
       player.averageStats.pts.toFixed(1),
@@ -151,7 +151,7 @@ const Players = () => {
       player.averageStats.tov.toFixed(1),
       player.averageStats.fpts,
     ]);
-  }, [data?.pages]);
+  }, [data?.pages, dispatch, team.lineup]);
 
   return (
     <SafeAreaView
@@ -166,7 +166,16 @@ const Players = () => {
                 <IconButton
                   className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
                   icon={<ArrowLeft color="white" size={20} weight="bold" />}
-                  onPress={() => router.back()}
+                  onPress={async () => {
+                    const savedData = await resetTeamLineup(userId, team.id);
+                    dispatch(
+                      resetToSavedTeam({
+                        lineup: savedData.lineup,
+                        balance: savedData.balance,
+                      }),
+                    );
+                    router.back();
+                  }}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
@@ -190,14 +199,9 @@ const Players = () => {
                 onPress={() => setShowFiltersDrawer(true)}
               />
             </View>
-
-            <View className="flex-row justify-between py-2">
-              <Text className="pbk-h8 text-base-white">PLAYERS</Text>
-              <Text className="pbk-h8 text-base-white">SELECTED: 0/8</Text>
-            </View>
           </View>
 
-          {isLoading ? (
+          {isLoadingFetch ? (
             <View className="flex-1 items-center justify-center border-t-2 border-gray-900">
               <Spinner />
             </View>
@@ -250,6 +254,7 @@ const Players = () => {
             />
           )}
         </KeyboardAvoidingView>
+        <TeamActionButtons />
       </Pressable>
       <FiltersDrawer
         filters={filters}
