@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
+import RangeSlider from "./RangeSlider";
 import { NbaTeam } from "@/types/nbaTeams";
 import { Position } from "@/types/teamTypes";
 import { cn } from "@/utils/jsUtils";
@@ -30,7 +31,7 @@ const FiltersDrawer = ({
   const [filters, setFilters] = useState<Filters>({
     selectedTeams: [],
     selectedPositions: [],
-    salaryRange: { min: 0, max: 75000000 },
+    salaryRange: { min: 1000000, max: 150000000 },
   });
 
   const handleTeamPress = (team: NbaTeam) => {
@@ -55,9 +56,9 @@ const FiltersDrawer = ({
     });
   };
 
-  useEffect(() => {
-    console.log(filters);
-  }, [filters]);
+  // useEffect(() => {
+  //   console.log(filters);
+  // }, [filters]);
 
   const isTeamSelected = (team: NbaTeam) =>
     filters.selectedTeams.some((selectedTeam) => selectedTeam.id === team.id);
@@ -95,6 +96,16 @@ const FiltersDrawer = ({
 
   const isPositionSelected = (position: PositionOption) =>
     filters.selectedPositions.includes(position);
+
+  const handleSalaryChange = (minValue: number, maxValue: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      salaryRange: { min: minValue, max: maxValue },
+    }));
+  };
+
+  const formatSalaryValue = (value: number) =>
+    `$${(value / 1000000).toFixed(0)}M`;
 
   return (
     <BottomSheet
@@ -159,7 +170,15 @@ const FiltersDrawer = ({
         </View>
       </Accordion>
       <Accordion title="Salary">
-        <Text>Test</Text>
+        <RangeSlider
+          formatValue={formatSalaryValue}
+          initialMaxValue={filters.salaryRange.max}
+          initialMinValue={filters.salaryRange.min}
+          max={150000000}
+          min={1000000}
+          onValueChange={handleSalaryChange}
+          step={1000000}
+        />
       </Accordion>
     </BottomSheet>
   );
