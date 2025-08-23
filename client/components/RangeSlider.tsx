@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, Text } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -6,6 +6,7 @@ import Animated, {
   useSharedValue,
   runOnJS,
 } from "react-native-reanimated";
+import { cn } from "@/utils/jsUtils";
 
 type RangeSliderProps = {
   min: number;
@@ -17,6 +18,10 @@ type RangeSliderProps = {
   formatValue?: (value: number) => string;
 };
 
+const TRACK_WIDTH = 280;
+const THUMB_SIZE = 24;
+const TRACK_HEIGHT = 8;
+
 const RangeSlider = ({
   min,
   max,
@@ -26,19 +31,14 @@ const RangeSlider = ({
   onValueChange,
   formatValue = (value) => value.toString(),
 }: RangeSliderProps) => {
-  const TRACK_WIDTH = 280;
-  const THUMB_SIZE = 20;
-
   const [minValue, setMinValue] = useState(initialMinValue);
   const [maxValue, setMaxValue] = useState(initialMaxValue);
 
-  // Convert value to position on track
   const valueToPosition = (val: number) => {
     "worklet";
     return ((val - min) / (max - min)) * TRACK_WIDTH;
   };
 
-  // Convert position to value
   const positionToValue = (position: number) => {
     "worklet";
     return min + (position / TRACK_WIDTH) * (max - min);
@@ -119,51 +119,81 @@ const RangeSlider = ({
   }));
 
   return (
-    <View className="px-4 py-6">
+    <View className="px-6 py-6">
       <View
         className="relative"
         style={{ height: 60, justifyContent: "center" }}
       >
-        {/* Track background */}
+        {/* Background track */}
         <View
-          className="rounded-full bg-gray-600"
-          style={{ width: TRACK_WIDTH, height: 4 }}
+          className={cn("rounded-full bg-gray-800")}
+          style={{
+            width: TRACK_WIDTH,
+            height: TRACK_HEIGHT,
+          }}
         />
 
         {/* Active track */}
         <Animated.View
-          className="absolute rounded-full bg-blue-500"
-          style={[{ height: 4 }, activeTrackStyle]}
+          className="absolute rounded-full bg-purple-600"
+          style={[
+            {
+              height: TRACK_HEIGHT,
+            },
+            activeTrackStyle,
+          ]}
         />
 
         {/* Min Thumb */}
         <GestureDetector gesture={minGesture}>
           <Animated.View
-            className="absolute rounded-full border-2 border-white bg-blue-500"
+            className="absolute rounded-full bg-purple-600"
             style={[
               {
                 width: THUMB_SIZE,
                 height: THUMB_SIZE,
-                top: 20, // Center thumb on track
+                top: (60 - THUMB_SIZE) / 2,
               },
               minThumbStyle,
             ]}
-          />
+          >
+            {/* Inner white circle */}
+            <View
+              className="absolute rounded-full bg-white"
+              style={{
+                width: THUMB_SIZE - 6,
+                height: THUMB_SIZE - 6,
+                top: 3,
+                left: 3,
+              }}
+            />
+          </Animated.View>
         </GestureDetector>
 
         {/* Max Thumb */}
         <GestureDetector gesture={maxGesture}>
           <Animated.View
-            className="absolute rounded-full border-2 border-white bg-blue-500"
+            className="absolute rounded-full bg-purple-600"
             style={[
               {
                 width: THUMB_SIZE,
                 height: THUMB_SIZE,
-                top: 20, // Center thumb on track
+                top: (60 - THUMB_SIZE) / 2,
               },
               maxThumbStyle,
             ]}
-          />
+          >
+            {/* Inner white circle */}
+            <View
+              className="absolute rounded-full bg-white"
+              style={{
+                width: THUMB_SIZE - 6,
+                height: THUMB_SIZE - 6,
+                top: 3,
+                left: 3,
+              }}
+            />
+          </Animated.View>
         </GestureDetector>
 
         {/* Min Value label under thumb */}

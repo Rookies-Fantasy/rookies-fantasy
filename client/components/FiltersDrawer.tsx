@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { Check } from "phosphor-react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
@@ -170,15 +170,17 @@ const FiltersDrawer = ({
         </View>
       </Accordion>
       <Accordion title="Salary">
-        <RangeSlider
-          formatValue={formatSalaryValue}
-          initialMaxValue={filters.salaryRange.max}
-          initialMinValue={filters.salaryRange.min}
-          max={150000000}
-          min={1000000}
-          onValueChange={handleSalaryChange}
-          step={1000000}
-        />
+        <View className="flex-row justify-center">
+          <RangeSlider
+            formatValue={formatSalaryValue}
+            initialMaxValue={filters.salaryRange.max}
+            initialMinValue={filters.salaryRange.min}
+            max={150000000}
+            min={1000000}
+            onValueChange={handleSalaryChange}
+            step={1000000}
+          />
+        </View>
       </Accordion>
     </BottomSheet>
   );
