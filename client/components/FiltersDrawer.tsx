@@ -1,64 +1,52 @@
 import { Image } from "expo-image";
 import { Check } from "phosphor-react-native";
-import { useState } from "react";
+import React, { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
 import RangeSlider from "./RangeSlider";
+import { Filters, PositionOption } from "@/app/(protected)/(draft)/players";
 import { NbaTeam } from "@/types/nbaTeams";
-import { Position } from "@/types/teamTypes";
 import { cn } from "@/utils/jsUtils";
 
 type FilterDrawerProps = {
   teams: NbaTeam[];
   showFiltersDrawer: boolean;
   setShowFiltersDrawer: () => void;
-};
-
-type PositionOption = Position | "ALL" | "G" | "F";
-
-type Filters = {
-  selectedTeams: NbaTeam[];
-  selectedPositions: PositionOption[];
-  salaryRange: { min: number; max: number };
+  filters: Filters;
+  setFilters: (filters: Filters) => void;
 };
 
 const FiltersDrawer = ({
   teams,
   showFiltersDrawer,
   setShowFiltersDrawer,
+  filters,
+  setFilters,
 }: FilterDrawerProps) => {
-  const [filters, setFilters] = useState<Filters>({
-    selectedTeams: [],
-    selectedPositions: [],
-    salaryRange: { min: 1000000, max: 150000000 },
-  });
-
   const handleTeamPress = (team: NbaTeam) => {
-    setFilters((prev) => {
-      const isSelected = prev.selectedTeams.some(
-        (selectedTeam) => selectedTeam.id === team.id,
-      );
+    const isSelected = filters.selectedTeams.some(
+      (selectedTeam) => selectedTeam.id === team.id,
+    );
 
-      if (isSelected) {
-        return {
-          ...prev,
-          selectedTeams: prev.selectedTeams.filter(
-            (selectedTeam) => selectedTeam.id !== team.id,
-          ),
-        };
-      } else {
-        return {
-          ...prev,
-          selectedTeams: [...prev.selectedTeams, team],
-        };
-      }
-    });
+    if (isSelected) {
+      setFilters({
+        ...filters,
+        selectedTeams: filters.selectedTeams.filter(
+          (selectedTeam) => selectedTeam.id !== team.id,
+        ),
+      });
+    } else {
+      setFilters({
+        ...filters,
+        selectedTeams: [...filters.selectedTeams, team],
+      });
+    }
   };
 
-  // useEffect(() => {
-  //   console.log(filters);
-  // }, [filters]);
+  useEffect(() => {
+    console.log(filters);
+  }, [filters]);
 
   const isTeamSelected = (team: NbaTeam) =>
     filters.selectedTeams.some((selectedTeam) => selectedTeam.id === team.id);
@@ -75,33 +63,31 @@ const FiltersDrawer = ({
   ];
 
   const handlePositionPress = (position: PositionOption) => {
-    setFilters((prev) => {
-      const isSelected = prev.selectedPositions.includes(position);
+    const isSelected = filters.selectedPositions.includes(position);
 
-      if (isSelected) {
-        return {
-          ...prev,
-          selectedPositions: prev.selectedPositions.filter(
-            (p) => p !== position,
-          ),
-        };
-      } else {
-        return {
-          ...prev,
-          selectedPositions: [...prev.selectedPositions, position],
-        };
-      }
-    });
+    if (isSelected) {
+      setFilters({
+        ...filters,
+        selectedPositions: filters.selectedPositions.filter(
+          (p) => p !== position,
+        ),
+      });
+    } else {
+      setFilters({
+        ...filters,
+        selectedPositions: [...filters.selectedPositions, position],
+      });
+    }
   };
 
   const isPositionSelected = (position: PositionOption) =>
     filters.selectedPositions.includes(position);
 
   const handleSalaryChange = (minValue: number, maxValue: number) => {
-    setFilters((prev) => ({
-      ...prev,
+    setFilters({
+      ...filters,
       salaryRange: { min: minValue, max: maxValue },
-    }));
+    });
   };
 
   const formatSalaryValue = (value: number) =>
@@ -109,6 +95,16 @@ const FiltersDrawer = ({
 
   return (
     <BottomSheet
+      footer={
+        <Pressable
+          className="min-h-12 w-full justify-center rounded-md bg-purple-600"
+          onPress={() => {}}
+        >
+          <Text className="pbk-h6 text-center text-base-white">
+            SAVE LINEUP
+          </Text>
+        </Pressable>
+      }
       header={
         <Text className="pbk-b1 text-center text-base-white">
           Filter players

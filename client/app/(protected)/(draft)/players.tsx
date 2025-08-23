@@ -21,18 +21,33 @@ import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
 import { NbaTeamsController } from "@/controllers/nbaTeamsController";
 import { NbaTeam } from "@/types/nbaTeams";
+import { Position } from "@/types/teamTypes";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
 
+export type PositionOption = Position | "ALL" | "G" | "F";
+
+export type Filters = {
+  selectedTeams: NbaTeam[];
+  selectedPositions: PositionOption[];
+  salaryRange: { min: number; max: number };
+};
+
+const PAGE_SIZE = 25;
+
 const Players = () => {
   const [query, setQuery] = useState("");
   const [teams, setTeams] = useState<NbaTeam[]>([]);
+  const [filters, setFilters] = useState<Filters>({
+    selectedTeams: [],
+    selectedPositions: [],
+    salaryRange: { min: 1000000, max: 150000000 },
+  });
+
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
   const router = useRouter();
-  const PAGE_SIZE = 25;
-
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
@@ -237,6 +252,8 @@ const Players = () => {
         </KeyboardAvoidingView>
       </Pressable>
       <FiltersDrawer
+        filters={filters}
+        setFilters={setFilters}
         setShowFiltersDrawer={() => setShowFiltersDrawer(false)}
         showFiltersDrawer={showFiltersDrawer}
         teams={teams}
