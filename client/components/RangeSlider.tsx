@@ -59,12 +59,10 @@ const RangeSlider = ({
   animationDuration = 200,
 }: RangeSliderProps) => {
   const finalDefaultValue = defaultValue || [min, max];
-
   const [internalValue, setInternalValue] =
     useState<RangeSliderValue>(finalDefaultValue);
   const isControlled = controlledValue !== undefined;
   const currentValue = isControlled ? controlledValue : internalValue;
-
   const [minValue, maxValue] = currentValue;
 
   const valueToPosition = useCallback(
@@ -174,25 +172,18 @@ const RangeSlider = ({
       runOnJS(updateMaxValue)(steppedValue);
     });
 
-  const minThumbStyle = useAnimatedStyle(() => ({
+  const minElementStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: minThumbPosition.value - thumbSize / 2 }],
   }));
 
-  const maxThumbStyle = useAnimatedStyle(() => ({
+  const maxElementStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: maxThumbPosition.value - thumbSize / 2 }],
   }));
 
   const activeTrackStyle = useAnimatedStyle(() => ({
+    height: trackHeight,
     left: minThumbPosition.value,
     width: maxThumbPosition.value - minThumbPosition.value,
-  }));
-
-  const minLabelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: minThumbPosition.value - thumbSize / 2 }],
-  }));
-
-  const maxLabelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: maxThumbPosition.value - thumbSize / 2 }],
   }));
 
   const containerHeight =
@@ -202,8 +193,8 @@ const RangeSlider = ({
   return (
     <View className={cn("px-6 py-3", containerClassName)}>
       <View
-        className="relative"
-        style={{ height: containerHeight, justifyContent: "center" }}
+        className="relative justify-center"
+        style={{ height: containerHeight }}
       >
         <View
           className={cn("rounded-full bg-gray-800", trackClassName)}
@@ -218,12 +209,7 @@ const RangeSlider = ({
             "absolute rounded-full bg-purple-600",
             activeTrackClassName,
           )}
-          style={[
-            {
-              height: trackHeight,
-            },
-            activeTrackStyle,
-          ]}
+          style={[activeTrackStyle]}
         />
 
         <GestureDetector gesture={minGesture}>
@@ -238,7 +224,7 @@ const RangeSlider = ({
                 width: thumbSize,
                 height: thumbSize,
               },
-              minThumbStyle,
+              minElementStyle,
             ]}
           >
             <View
@@ -265,7 +251,7 @@ const RangeSlider = ({
                 width: thumbSize,
                 height: thumbSize,
               },
-              maxThumbStyle,
+              maxElementStyle,
             ]}
           >
             <View
@@ -290,7 +276,7 @@ const RangeSlider = ({
                   width: 60,
                   marginLeft: -20,
                 },
-                minLabelStyle,
+                minElementStyle,
               ]}
             >
               <Text
@@ -311,7 +297,7 @@ const RangeSlider = ({
                   width: 60,
                   marginLeft: -20,
                 },
-                maxLabelStyle,
+                maxElementStyle,
               ]}
             >
               <Text
