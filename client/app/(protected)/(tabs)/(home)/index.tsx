@@ -1,3 +1,6 @@
+import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { Pressable, Text, View, Image } from "react-native";
 import { useAppSelector } from "@/state/hooks";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
@@ -6,6 +9,14 @@ const MyTeam = () => {
   const team = useAppSelector((state) => state.team);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
+  );
+
+  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setIsNavigating(false);
+    }, []),
   );
 
   return (
@@ -45,7 +56,15 @@ const MyTeam = () => {
       </View>
       <View className="flex-1 flex-row items-end p-8">
         <Pressable className="flex-1 rounded-md bg-purple-600 p-4">
-          <Text className="text-center uppercase text-white">
+          <Text
+            className="text-center uppercase text-white"
+            onPress={() => {
+              if (!isNavigating) {
+                setIsNavigating(true);
+                router.push("/(protected)/(draft)/applyAugment");
+              }
+            }}
+          >
             Build Your Team
           </Text>
         </Pressable>
