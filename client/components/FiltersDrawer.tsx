@@ -208,7 +208,7 @@ const FiltersDrawer = ({
         </View>
       </Accordion>
       <Accordion title="Position">
-        <View className="flex-row flex-wrap items-center justify-center gap-x-2">
+        <View className="ml-4 flex-row flex-wrap items-center justify-center gap-x-7">
           {positionOptions.map((position) => (
             <View className="w-1/5" key={position}>
               <Pressable

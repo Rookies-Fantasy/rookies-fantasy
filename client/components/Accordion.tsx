@@ -1,33 +1,72 @@
 import { CaretRight } from "phosphor-react-native";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { cn } from "@/utils/jsUtils";
 
-type AccordionProps = {
+export type AccordionItem = {
+  id: string;
+  title: string;
+  content: ReactNode;
+  disabled?: boolean;
+  defaultOpen?: boolean;
+};
+
+export type AccordionProps = {
   title: string;
   children: ReactNode;
   defaultExpanded?: boolean;
+  disabled?: boolean;
+  onChange?: (isExpanded: boolean) => void;
+  isExpanded?: boolean;
+  className?: string;
+  headerClassName?: string;
+  contentClassName?: string;
+  animationDuration?: number;
 };
 
 const Accordion = ({
   title,
   children,
   defaultExpanded = false,
+  disabled = false,
+  onChange,
+  isExpanded: controlledIsExpanded,
+  className,
+  headerClassName,
+  contentClassName,
+  animationDuration = 200,
 }: AccordionProps) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const rotation = useSharedValue(defaultExpanded ? 90 : 0);
-  const height = useSharedValue(defaultExpanded ? 1 : 0);
+  const [localIsExpanded, setLocalIsExpanded] = useState(defaultExpanded);
+  const isControlled = controlledIsExpanded !== undefined;
+  const isExpanded = isControlled ? controlledIsExpanded : localIsExpanded;
+
+  const rotation = useSharedValue(isExpanded ? 90 : 0);
+  const height = useSharedValue(isExpanded ? 1 : 0);
+
+  useEffect(() => {
+    rotation.value = withTiming(isExpanded ? 90 : 0, {
+      duration: animationDuration,
+    });
+    height.value = withTiming(isExpanded ? 1 : 0, {
+      duration: animationDuration,
+    });
+  }, [isExpanded, animationDuration, rotation, height]);
 
   const toggleAccordion = () => {
-    const newExpandedState = !isExpanded;
-    setIsExpanded(newExpandedState);
+    if (disabled) return;
 
-    rotation.value = withTiming(newExpandedState ? 90 : 0, { duration: 200 });
-    height.value = withTiming(newExpandedState ? 1 : 0, { duration: 200 });
+    const newExpandedState = !isExpanded;
+
+    if (!isControlled) {
+      setLocalIsExpanded(newExpandedState);
+    }
+
+    onChange?.(newExpandedState);
   };
 
   const rotationStyle = useAnimatedStyle(() => ({
@@ -36,23 +75,30 @@ const Accordion = ({
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity: height.value,
-    overflow: "hidden" as const,
+    overflow: "hidden",
   }));
 
   return (
-    <View className="mx-3 border-b border-gray-800">
+    <View className={cn("mx-3 border-b border-gray-800", className)}>
       <Pressable
-        className="mx-3 flex-row items-center justify-between py-8"
+        className={cn(
+          "mx-3 flex-row items-center justify-between py-8",
+          disabled && "opacity-50",
+          headerClassName,
+        )}
+        disabled={disabled}
         onPress={toggleAccordion}
       >
-        <Text className="pbk-b1 ml-3 text-base-white">{title}</Text>
+        <Text className="pbk-b1 ml-3 text-gray-400">{title}</Text>
         <Animated.View style={rotationStyle}>
           <CaretRight color="white" size={20} />
         </Animated.View>
       </Pressable>
 
       <Animated.View style={contentStyle}>
-        {isExpanded && <View className="pb-4">{children}</View>}
+        {isExpanded && (
+          <View className={cn("pb-4", contentClassName)}>{children}</View>
+        )}
       </Animated.View>
     </View>
   );

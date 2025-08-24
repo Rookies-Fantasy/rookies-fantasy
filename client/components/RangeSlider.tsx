@@ -119,7 +119,7 @@ const RangeSlider = ({
   }));
 
   return (
-    <View className="px-6 py-6">
+    <View className="px-6 pb-6">
       <View
         className="relative"
         style={{ height: 60, justifyContent: "center" }}
