@@ -35,10 +35,7 @@ const EmailVerification = () => {
     }
   }, [cooldown]);
 
-  /**
-   * TODO: Remove polling and introduce cloud func and an onSnapshot listener
-   * to handle verification check
-   */
+  // TODO: Remove polling and introduce cloud func and an onSnapshot listener to handle verification check
   useEffect(() => {
     const intervalId = setInterval(async () => {
       await auth.currentUser?.reload();
@@ -51,9 +48,7 @@ const EmailVerification = () => {
         await UserController.editUser(auth.currentUser.uid, {
           emailVerified: auth.currentUser.emailVerified,
         });
-
         clearInterval(intervalId);
-
         dispatch(
           setUser({
             id: auth.currentUser.uid,
@@ -61,7 +56,6 @@ const EmailVerification = () => {
             emailVerified: auth.currentUser.emailVerified,
           }),
         );
-
         setIsLoading(false);
         router.replace("/(protected)/createProfile");
       }
@@ -81,7 +75,6 @@ const EmailVerification = () => {
         await sendEmailVerification(auth.currentUser);
         Alert.alert("Verification email sent!");
       }
-
       setCooldown(60);
     } catch (error) {
       console.error("Resend error:", error);
@@ -107,7 +100,6 @@ const EmailVerification = () => {
             verify this email to move to the next step.
           </Text>
         </View>
-
         <View className="flex w-full flex-1 justify-end gap-4">
           {cooldown > 0 && (
             <Text className="pbk-b2 p-3 text-center text-base-white">

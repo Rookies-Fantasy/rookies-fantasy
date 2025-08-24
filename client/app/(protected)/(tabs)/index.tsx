@@ -2,7 +2,7 @@ import auth from "@react-native-firebase/auth";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Button from "@/components/Button";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { clearTeam } from "@/state/slices/teamSlice";

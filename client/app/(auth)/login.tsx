@@ -65,7 +65,6 @@ const Login = () => {
       console.log(error);
       if (typeof error === "object" && error !== null && "code" in error) {
         const firebaseError = error as { code: string };
-
         if (
           firebaseError.code === "auth/invalid-email" ||
           firebaseError.code === "auth/wrong-password" ||
@@ -139,7 +138,6 @@ const Login = () => {
             {errors.email.message}
           </Text>
         )}
-
         <Controller
           control={control}
           name="password"
@@ -189,26 +187,22 @@ const Login = () => {
             </Text>
           )}
         </View>
-
         <Button
           isLoading={isLoading}
           label="Login"
           onPress={handleSubmit(handleLogin)}
         />
-
         <Text
           className="pbk-b1 mx-auto my-5 text-center text-purple-600"
           onPress={() => router.push("/forgotPassword")}
         >
           Forgot password?
         </Text>
-
         <View className="flex-row items-center gap-2 pb-5">
           <View className="h-px flex-1 bg-gray-800" />
           <Text className="pbk-b1 text-center text-gray-800">or</Text>
           <View className="h-px flex-1 bg-gray-800" />
         </View>
-
         <SSOButtons />
       </KeyboardAvoidingView>
     </Screen>

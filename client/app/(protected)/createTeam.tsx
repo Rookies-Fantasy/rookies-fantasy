@@ -40,7 +40,6 @@ const schema = yup.object({
 const CreateTeam = () => {
   const userId = useAppSelector((state) => state.user.id);
   const teamId = useAppSelector((state) => state.team.id);
-
   const dispatch = useAppDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +74,6 @@ const CreateTeam = () => {
               (option) => option.url === teams[0].logoUrl,
             );
             setSelectedLogoOption(matchedLogo || defaultTeamLogo);
-
             reset({
               abbreviation: teams[0].abbreviation,
               name: teams[0].name,
@@ -95,7 +93,6 @@ const CreateTeam = () => {
     setIsLoading(true);
     try {
       const teams = await UserController.getUserTeams(userId);
-
       let newTeamId: string;
 
       if (teams?.length === 0) {
@@ -119,7 +116,6 @@ const CreateTeam = () => {
           }),
         );
       }
-
       router.replace("/(protected)/(tabs)");
     } catch (error) {
       console.error("Failed to create team:", error);
@@ -145,7 +141,6 @@ const CreateTeam = () => {
               </Pressable>
               <Text className="pbk-h5 text-base-white">Create your team</Text>
             </View>
-
             <Controller
               control={control}
               name="name"
@@ -185,7 +180,6 @@ const CreateTeam = () => {
                 </Text>
               )}
             </View>
-
             <Controller
               control={control}
               name="abbreviation"
@@ -222,7 +216,6 @@ const CreateTeam = () => {
                 </Text>
               )}
             </View>
-
             <Text className="pbk-b2 mb-1.5 text-base-white">Team logo</Text>
             <View className="mb-2 mt-4 flex-row items-center justify-between">
               <Pressable
@@ -254,7 +247,6 @@ const CreateTeam = () => {
             )}
           </View>
         </KeyboardAvoidingView>
-
         <View className="justify-end bg-gray-950 px-6">
           <Button
             isLoading={isLoading}

@@ -19,7 +19,6 @@ const HelpDialogButton = ({ children, title }: HelpDialogButtonProps) => {
       >
         <Question color="#6336F5" size={20} weight="bold" />
       </Pressable>
-
       <Dialog onClose={() => setVisible(false)} title={title} visible={visible}>
         {children}
       </Dialog>

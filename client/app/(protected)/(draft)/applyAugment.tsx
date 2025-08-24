@@ -61,7 +61,6 @@ const ApplyAugment = () => {
   const userId = useAppSelector((state) => state.user.id);
   const teamId = useAppSelector((state) => state.team.id);
   const augmentId = useAppSelector((state) => state.team.augmentId);
-
   const dispatch = useAppDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -146,12 +145,10 @@ const ApplyAugment = () => {
             </View>
           </HelpDialogButton>
         </View>
-
         <ScrollView className="p-2">
           <View className="flex-row flex-wrap justify-between gap-y-4">
             {augments.map((card) => {
               const isSelected = selectedAugmentId === card.id;
-
               return (
                 <View
                   className="relative mb-4 w-[48%] rounded-xl"
@@ -205,7 +202,6 @@ const ApplyAugment = () => {
                             {card.info}
                           </Text>
                         </View>
-
                         <View
                           className="flex-row justify-end"
                           style={{ opacity: isSelected ? 1 : 0 }}
@@ -221,7 +217,6 @@ const ApplyAugment = () => {
           </View>
         </ScrollView>
       </View>
-
       <View className="justify-end gap-2 bg-gray-950 px-6">
         <Button
           disabled={!selectedAugmentId}

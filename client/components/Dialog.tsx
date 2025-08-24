@@ -35,9 +35,7 @@ const Dialog = ({
             <X color="white" size={20} weight="bold" />
           </Pressable>
         </View>
-
         <View className="mb-4">{children}</View>
-
         <Button
           label={closeLabel ?? "Got It"}
           onPress={onClose}

@@ -47,7 +47,6 @@ export const avatarOptions: Asset[] = [
     source: require("../assets/images/profile/9.png"),
   },
 ];
-
 export const defaultAvatar = avatarOptions[0];
 
 export const teamLogoOptions: Asset[] = [
@@ -88,5 +87,4 @@ export const teamLogoOptions: Asset[] = [
     source: require("../assets/images/team/8.png"),
   },
 ];
-
 export const defaultTeamLogo = teamLogoOptions[0];

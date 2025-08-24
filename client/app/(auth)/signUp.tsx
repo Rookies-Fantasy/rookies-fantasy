@@ -68,14 +68,11 @@ const SignUp = () => {
       if (auth.currentUser) {
         await sendEmailVerification(auth.currentUser);
       }
-
       router.replace("/(auth)/emailVerification");
     } catch (error) {
       console.log(error);
-
       if (typeof error === "object" && error !== null && "code" in error) {
         const firebaseError = error as { code: string };
-
         if (firebaseError.code === "auth/email-already-in-use") {
           setError("email", {
             type: "manual",
@@ -142,7 +139,6 @@ const SignUp = () => {
             {errors.email.message}
           </Text>
         )}
-
         <Controller
           control={control}
           name="password"
@@ -198,19 +194,16 @@ const SignUp = () => {
           label="Sign Up"
           onPress={handleSubmit(signUpUser)}
         />
-
         <Text className="pbk-b2 my-5 flex-row flex-wrap text-gray-600">
           By signing up, you agree to our
           <Text className="text-purple-600">{` Terms of Service `}</Text> and
           <Text className="text-purple-600">{` Privacy Policy`}</Text>.
         </Text>
-
         <View className="flex-row items-center gap-2 pb-5">
           <View className="h-px flex-1 bg-gray-800" />
           <Text className="pbk-b1 text-center text-gray-800">or</Text>
           <View className="h-px flex-1 bg-gray-800" />
         </View>
-
         <SSOButtons />
       </KeyboardAvoidingView>
     </Screen>

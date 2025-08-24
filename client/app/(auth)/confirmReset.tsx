@@ -65,7 +65,6 @@ const ConfirmReset = () => {
             within 24 hours.
           </Text>
         </View>
-
         <View className="flex w-full flex-1 justify-end gap-4">
           {cooldown > 0 && (
             <Text className="pbk-b2 p-3 text-center text-base-white">

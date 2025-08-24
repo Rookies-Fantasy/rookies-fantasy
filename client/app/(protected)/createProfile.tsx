@@ -43,7 +43,6 @@ const schema = yup.object({
 
 const CreateProfile = () => {
   const userId = useAppSelector((state) => state.user.id);
-
   const dispatch = useAppDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +76,6 @@ const CreateProfile = () => {
             (option) => option.url === userData.avatarUrl,
           );
           setSelectedAvatarOption(matchedAvatar || defaultAvatar);
-
           reset({
             avatarUrl: userData.avatarUrl,
             dateOfBirth: userData.dateOfBirth
@@ -88,7 +86,6 @@ const CreateProfile = () => {
         }
       }
     };
-
     setDefaultUserData();
   }, [userId, reset]);
 
@@ -121,7 +118,6 @@ const CreateProfile = () => {
             <Text className="pbk-h5 mb-8 text-base-white">
               Tell us who you are
             </Text>
-
             <Controller
               control={control}
               name="username"
@@ -161,7 +157,6 @@ const CreateProfile = () => {
                 </Text>
               )}
             </View>
-
             <Controller
               control={control}
               name="dateOfBirth"
@@ -208,7 +203,6 @@ const CreateProfile = () => {
                       )}
                     </View>
                   </Pressable>
-
                   <Modal
                     animationType="slide"
                     onRequestClose={() => setShowDatePicker(false)}
@@ -257,7 +251,6 @@ const CreateProfile = () => {
                 </Text>
               )}
             </View>
-
             <Text className="pbk-b2 mb-1.5 text-base-white">Avatar</Text>
             <View className="mb-2 mt-4 flex-row items-center justify-between">
               <Pressable
@@ -289,7 +282,6 @@ const CreateProfile = () => {
             )}
           </View>
         </KeyboardAvoidingView>
-
         <View className="justify-end bg-gray-950 px-6">
           <Button
             isLoading={isLoading}

@@ -56,19 +56,16 @@ const ForgotPassword = () => {
 
     try {
       const identifier = data.emailOrUsername.trim();
-
       const emailToUse = await findEmail(identifier);
-
       await sendPasswordResetEmail(auth, emailToUse);
-
       router.push({
         pathname: "/(auth)/confirmReset",
         params: { email: emailToUse },
       });
     } catch (error) {
       const firebaseError = error as { code: string };
-
       console.error("Forgot password error:", error);
+
       if (firebaseError.code === "auth/invalid-email") {
         setError("emailOrUsername", {
           message: "Please enter a valid email address.",
@@ -97,12 +94,10 @@ const ForgotPassword = () => {
           />
           <Text className="pbk-h5 text-base-white">Forgot password?</Text>
         </View>
-
         <Text className="pbk-b1 mb-8 mt-8 text-base-white">
           Enter your email address or username and we will send you a link to
           reset your password.
         </Text>
-
         <Controller
           control={control}
           name="emailOrUsername"
@@ -132,7 +127,6 @@ const ForgotPassword = () => {
             </>
           )}
         />
-
         <View className="mb-5">
           {errors.emailOrUsername && (
             <Text className="pbk-b3 mb-4 text-red-600">
@@ -140,14 +134,12 @@ const ForgotPassword = () => {
             </Text>
           )}
         </View>
-
         <Button
           disabled={!isValid}
           isLoading={isLoading}
           label="Reset Password"
           onPress={handleSubmit(onSubmit)}
         />
-
         <Text
           className="pbk-b1 mt-5 text-center text-purple-600"
           onPress={() => router.back()}

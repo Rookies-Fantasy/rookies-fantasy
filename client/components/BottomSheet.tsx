@@ -13,10 +13,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type SnapPoint = "0%" | "33%" | "50%" | "66%" | "100%";
+
 export const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT + 50;
 
-type SnapPoint = "0%" | "33%" | "50%" | "66%" | "100%";
 const snapPointMap: Record<SnapPoint, number> = {
   "0%": 0,
   "33%": -SCREEN_HEIGHT / 3,
@@ -65,7 +66,6 @@ const BottomSheet = ({
       "worklet";
       if (destination === 0) {
         backdropOpacity.value = withTiming(0, { duration: 100 });
-
         translateY.value = withTiming(0, { duration: 400 }, (finished) => {
           if (finished) {
             runOnJS(setVisible)(false);
@@ -75,7 +75,6 @@ const BottomSheet = ({
       } else {
         translateY.value = withSpring(destination, { damping: 50 });
       }
-
       sheetTop.value = SCREEN_HEIGHT + destination;
     },
     [backdropOpacity, onClose, sheetTop, translateY],
@@ -125,7 +124,6 @@ const BottomSheet = ({
       [20, 5],
       Extrapolation.CLAMP,
     );
-
     return {
       transform: [{ translateY: translateY.value }],
       borderRadius,
@@ -147,7 +145,6 @@ const BottomSheet = ({
       <Pressable className="absolute inset-0" onPress={onClose}>
         <Animated.View className="flex-1 bg-black/50" style={[backdropStyle]} />
       </Pressable>
-
       <GestureDetector gesture={gesture}>
         <Animated.View
           className="absolute top-full h-screen w-full border border-gray-900 bg-gray-920"
