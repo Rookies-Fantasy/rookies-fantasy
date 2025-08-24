@@ -13,7 +13,7 @@ type DialogProps = {
 
 const Dialog = ({
   children,
-  closeLabel,
+  closeLabel = "Got It",
   onClose,
   title,
   visible,
@@ -36,11 +36,7 @@ const Dialog = ({
           </Pressable>
         </View>
         <View className="mb-4">{children}</View>
-        <Button
-          label={closeLabel ?? "Got It"}
-          onPress={onClose}
-          variant="secondary"
-        />
+        <Button label={closeLabel} onPress={onClose} variant="secondary" />
       </View>
     </View>
   </Modal>

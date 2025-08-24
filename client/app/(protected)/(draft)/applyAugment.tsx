@@ -96,8 +96,7 @@ const ApplyAugment = () => {
     try {
       await UserController.editUserTeam(userId, teamId, { augmentId });
       dispatch(setAugmentId(augmentId));
-
-      router.replace("/(protected)/(tabs)");
+      router.dismiss();
     } catch (error) {
       console.error("Failed to set augmentId:", error);
     } finally {
@@ -128,9 +127,9 @@ const ApplyAugment = () => {
                 boost to their stats.
               </Text>
               <Text className="pbk-b2 mt-4 text-gray-500">
-                Whether you&apos;re stacking sharpshooters, loading up on
-                defenders, or betting on underdogs, Augments let you shape your
-                playstyle and gain a competitive edge.
+                {`Whether you're stacking sharpshooters, loading up on
+                  defenders, or betting on underdogs, augments let you shape your
+                  playstyle and gain a competitive edge.`.replace(/\s+/g, " ")}
               </Text>
             </View>
             <View className="mt-3 rounded-md bg-gray-900 p-3">
