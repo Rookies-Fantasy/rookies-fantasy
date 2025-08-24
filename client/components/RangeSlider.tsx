@@ -1,65 +1,142 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { View, Text } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   runOnJS,
+  withTiming,
 } from "react-native-reanimated";
 import { cn } from "@/utils/jsUtils";
 
-type RangeSliderProps = {
+export type RangeSliderValue = [number, number];
+
+export type RangeSliderProps = {
   min: number;
   max: number;
-  initialMinValue: number;
-  initialMaxValue: number;
   step?: number;
-  onValueChange: (minValue: number, maxValue: number) => void;
+  value?: RangeSliderValue;
+  defaultValue?: RangeSliderValue;
+  onChange?: (value: RangeSliderValue) => void;
+  trackWidth?: number;
+  thumbSize?: number;
+  trackHeight?: number;
+  containerClassName?: string;
+  trackClassName?: string;
+  activeTrackClassName?: string;
+  thumbClassName?: string;
+  labelClassName?: string;
+  showLabels?: boolean;
+  labelPosition?: "top" | "bottom" | "none";
   formatValue?: (value: number) => string;
+  disabled?: boolean;
+  animationDuration?: number;
 };
 
-const TRACK_WIDTH = 280;
-const THUMB_SIZE = 24;
-const TRACK_HEIGHT = 8;
+const DEFAULT_TRACK_WIDTH = 280;
+const DEFAULT_THUMB_SIZE = 24;
+const DEFAULT_TRACK_HEIGHT = 8;
 
 const RangeSlider = ({
   min,
   max,
-  initialMinValue,
-  initialMaxValue,
   step = 1,
-  onValueChange,
+  value: controlledValue,
+  defaultValue,
+  onChange,
+  trackWidth = DEFAULT_TRACK_WIDTH,
+  thumbSize = DEFAULT_THUMB_SIZE,
+  trackHeight = DEFAULT_TRACK_HEIGHT,
+  containerClassName,
+  trackClassName,
+  activeTrackClassName,
+  thumbClassName,
+  labelClassName,
+  showLabels = true,
+  labelPosition = "bottom",
   formatValue = (value) => value.toString(),
+  disabled = false,
+  animationDuration = 200,
 }: RangeSliderProps) => {
-  const [minValue, setMinValue] = useState(initialMinValue);
-  const [maxValue, setMaxValue] = useState(initialMaxValue);
+  const finalDefaultValue = defaultValue || [min, max];
 
-  const valueToPosition = (val: number) => {
-    "worklet";
-    return ((val - min) / (max - min)) * TRACK_WIDTH;
-  };
+  // State management - controlled/uncontrolled pattern
+  const [internalValue, setInternalValue] =
+    useState<RangeSliderValue>(finalDefaultValue);
+  const isControlled = controlledValue !== undefined;
+  const currentValue = isControlled ? controlledValue : internalValue;
 
-  const positionToValue = (position: number) => {
-    "worklet";
-    return min + (position / TRACK_WIDTH) * (max - min);
-  };
+  const [minValue, maxValue] = currentValue;
 
-  const minThumbPosition = useSharedValue(valueToPosition(initialMinValue));
-  const maxThumbPosition = useSharedValue(valueToPosition(initialMaxValue));
+  const valueToPosition = useCallback(
+    (val: number) => {
+      "worklet";
+      return ((val - min) / (max - min)) * trackWidth;
+    },
+    [min, max, trackWidth],
+  );
+
+  const positionToValue = useCallback(
+    (position: number) => {
+      "worklet";
+      return min + (position / trackWidth) * (max - min);
+    },
+    [min, max, trackWidth],
+  );
+
+  const minThumbPosition = useSharedValue(valueToPosition(minValue));
+  const maxThumbPosition = useSharedValue(valueToPosition(maxValue));
   const startMinPosition = useSharedValue(0);
   const startMaxPosition = useSharedValue(0);
 
-  const updateMinValue = (newValue: number) => {
-    setMinValue(newValue);
-    onValueChange(newValue, maxValue);
-  };
+  useEffect(() => {
+    if (isControlled) {
+      minThumbPosition.value = withTiming(valueToPosition(minValue), {
+        duration: animationDuration,
+      });
+      maxThumbPosition.value = withTiming(valueToPosition(maxValue), {
+        duration: animationDuration,
+      });
+    }
+  }, [
+    minValue,
+    maxValue,
+    isControlled,
+    animationDuration,
+    valueToPosition,
+    minThumbPosition,
+    maxThumbPosition,
+  ]);
 
-  const updateMaxValue = (newValue: number) => {
-    setMaxValue(newValue);
-    onValueChange(minValue, newValue);
-  };
+  const updateValue = useCallback(
+    (newMinValue: number, newMaxValue: number) => {
+      const newValue: RangeSliderValue = [newMinValue, newMaxValue];
+
+      if (!isControlled) {
+        setInternalValue(newValue);
+      }
+
+      onChange?.(newValue);
+    },
+    [isControlled, onChange],
+  );
+
+  const updateMinValue = useCallback(
+    (newValue: number) => {
+      updateValue(newValue, maxValue);
+    },
+    [updateValue, maxValue],
+  );
+
+  const updateMaxValue = useCallback(
+    (newValue: number) => {
+      updateValue(minValue, newValue);
+    },
+    [updateValue, minValue],
+  );
 
   const minGesture = Gesture.Pan()
+    .enabled(!disabled)
     .onStart(() => {
       startMinPosition.value = minThumbPosition.value;
     })
@@ -68,7 +145,7 @@ const RangeSlider = ({
         0,
         Math.min(
           startMinPosition.value + event.translationX,
-          maxThumbPosition.value - THUMB_SIZE,
+          maxThumbPosition.value - thumbSize,
         ),
       );
       minThumbPosition.value = newPosition;
@@ -79,15 +156,16 @@ const RangeSlider = ({
     });
 
   const maxGesture = Gesture.Pan()
+    .enabled(!disabled)
     .onStart(() => {
       startMaxPosition.value = maxThumbPosition.value;
     })
     .onUpdate((event) => {
       const newPosition = Math.min(
-        TRACK_WIDTH,
+        trackWidth,
         Math.max(
           startMaxPosition.value + event.translationX,
-          minThumbPosition.value + THUMB_SIZE,
+          minThumbPosition.value + thumbSize,
         ),
       );
       maxThumbPosition.value = newPosition;
@@ -98,11 +176,11 @@ const RangeSlider = ({
     });
 
   const minThumbStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: minThumbPosition.value - THUMB_SIZE / 2 }],
+    transform: [{ translateX: minThumbPosition.value - thumbSize / 2 }],
   }));
 
   const maxThumbStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: maxThumbPosition.value - THUMB_SIZE / 2 }],
+    transform: [{ translateX: maxThumbPosition.value - thumbSize / 2 }],
   }));
 
   const activeTrackStyle = useAnimatedStyle(() => ({
@@ -111,58 +189,64 @@ const RangeSlider = ({
   }));
 
   const minLabelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: minThumbPosition.value - THUMB_SIZE / 2 }],
+    transform: [{ translateX: minThumbPosition.value - thumbSize / 2 }],
   }));
 
   const maxLabelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: maxThumbPosition.value - THUMB_SIZE / 2 }],
+    transform: [{ translateX: maxThumbPosition.value - thumbSize / 2 }],
   }));
 
+  const containerHeight =
+    thumbSize + (showLabels && labelPosition !== "none" ? 30 : 10);
+  const labelTop = labelPosition === "top" ? -5 : containerHeight - 10;
+
   return (
-    <View className="px-6 pb-6">
+    <View className={cn("px-6 py-3", containerClassName)}>
       <View
         className="relative"
-        style={{ height: 60, justifyContent: "center" }}
+        style={{ height: containerHeight, justifyContent: "center" }}
       >
-        {/* Background track */}
         <View
-          className={cn("rounded-full bg-gray-800")}
+          className={cn("rounded-full bg-gray-800", trackClassName)}
           style={{
-            width: TRACK_WIDTH,
-            height: TRACK_HEIGHT,
+            width: trackWidth,
+            height: trackHeight,
           }}
         />
 
-        {/* Active track */}
         <Animated.View
-          className="absolute rounded-full bg-purple-600"
+          className={cn(
+            "absolute rounded-full bg-purple-600",
+            activeTrackClassName,
+          )}
           style={[
             {
-              height: TRACK_HEIGHT,
+              height: trackHeight,
             },
             activeTrackStyle,
           ]}
         />
 
-        {/* Min Thumb */}
         <GestureDetector gesture={minGesture}>
           <Animated.View
-            className="absolute rounded-full bg-purple-600"
+            className={cn(
+              "absolute rounded-full bg-purple-600",
+              disabled && "opacity-50",
+              thumbClassName,
+            )}
             style={[
               {
-                width: THUMB_SIZE,
-                height: THUMB_SIZE,
-                top: (60 - THUMB_SIZE) / 2,
+                width: thumbSize,
+                height: thumbSize,
               },
               minThumbStyle,
             ]}
           >
-            {/* Inner white circle */}
             <View
               className="absolute rounded-full bg-white"
               style={{
-                width: THUMB_SIZE - 6,
-                height: THUMB_SIZE - 6,
+                width: thumbSize - 6,
+                height: thumbSize - 6,
                 top: 3,
                 left: 3,
               }}
@@ -170,25 +254,26 @@ const RangeSlider = ({
           </Animated.View>
         </GestureDetector>
 
-        {/* Max Thumb */}
         <GestureDetector gesture={maxGesture}>
           <Animated.View
-            className="absolute rounded-full bg-purple-600"
+            className={cn(
+              "absolute rounded-full bg-purple-600",
+              disabled && "opacity-50",
+              thumbClassName,
+            )}
             style={[
               {
-                width: THUMB_SIZE,
-                height: THUMB_SIZE,
-                top: (60 - THUMB_SIZE) / 2,
+                width: thumbSize,
+                height: thumbSize,
               },
               maxThumbStyle,
             ]}
           >
-            {/* Inner white circle */}
             <View
               className="absolute rounded-full bg-white"
               style={{
-                width: THUMB_SIZE - 6,
-                height: THUMB_SIZE - 6,
+                width: thumbSize - 6,
+                height: thumbSize - 6,
                 top: 3,
                 left: 3,
               }}
@@ -196,39 +281,51 @@ const RangeSlider = ({
           </Animated.View>
         </GestureDetector>
 
-        {/* Min Value label under thumb */}
-        <Animated.View
-          className="absolute items-center"
-          style={[
-            {
-              top: 45,
-              width: 60,
-              marginLeft: -20,
-            },
-            minLabelStyle,
-          ]}
-        >
-          <Text className="pbk-b2 text-center text-base-white">
-            {formatValue(minValue)}
-          </Text>
-        </Animated.View>
+        {showLabels && labelPosition !== "none" && (
+          <>
+            <Animated.View
+              className="absolute items-center"
+              style={[
+                {
+                  top: labelTop,
+                  width: 60,
+                  marginLeft: -20,
+                },
+                minLabelStyle,
+              ]}
+            >
+              <Text
+                className={cn(
+                  "pbk-b2 text-center text-base-white",
+                  labelClassName,
+                )}
+              >
+                {formatValue(minValue)}
+              </Text>
+            </Animated.View>
 
-        {/* Max Value label under thumb */}
-        <Animated.View
-          className="absolute items-center"
-          style={[
-            {
-              top: 45,
-              width: 60,
-              marginLeft: -20,
-            },
-            maxLabelStyle,
-          ]}
-        >
-          <Text className="pbk-b2 text-center text-base-white">
-            {formatValue(maxValue)}
-          </Text>
-        </Animated.View>
+            <Animated.View
+              className="absolute items-center"
+              style={[
+                {
+                  top: labelTop,
+                  width: 60,
+                  marginLeft: -20,
+                },
+                maxLabelStyle,
+              ]}
+            >
+              <Text
+                className={cn(
+                  "pbk-b2 text-center text-base-white",
+                  labelClassName,
+                )}
+              >
+                {formatValue(maxValue)}
+              </Text>
+            </Animated.View>
+          </>
+        )}
       </View>
     </View>
   );

@@ -235,12 +235,11 @@ const FiltersDrawer = ({
         <View className="flex-row justify-center">
           <RangeSlider
             formatValue={formatSalaryValue}
-            initialMaxValue={localFilters.salaryRange.max}
-            initialMinValue={localFilters.salaryRange.min}
             max={150000000}
             min={1000000}
-            onValueChange={handleSalaryChange}
+            onChange={([min, max]) => handleSalaryChange(min, max)}
             step={1000000}
+            value={[localFilters.salaryRange.min, localFilters.salaryRange.max]}
           />
         </View>
       </Accordion>
