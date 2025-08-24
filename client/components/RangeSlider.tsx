@@ -60,7 +60,6 @@ const RangeSlider = ({
 }: RangeSliderProps) => {
   const finalDefaultValue = defaultValue || [min, max];
 
-  // State management - controlled/uncontrolled pattern
   const [internalValue, setInternalValue] =
     useState<RangeSliderValue>(finalDefaultValue);
   const isControlled = controlledValue !== undefined;
