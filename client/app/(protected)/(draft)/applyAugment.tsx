@@ -96,11 +96,11 @@ const ApplyAugment = () => {
     try {
       await UserController.editUserTeam(userId, teamId, { augmentId });
       dispatch(setAugmentId(augmentId));
-      router.dismiss();
     } catch (error) {
       console.error("Failed to set augmentId:", error);
     } finally {
       setIsLoading(false);
+      router.push("/(protected)/(draft)/(teamBuilder)/roster");
     }
   };
 
