@@ -2,6 +2,7 @@ export const TEAM_BALANCE = 150000000;
 
 export type Team = {
   abbreviation?: string;
+  augmentId?: string;
   id: string;
   logoUrl?: string;
   name?: string;

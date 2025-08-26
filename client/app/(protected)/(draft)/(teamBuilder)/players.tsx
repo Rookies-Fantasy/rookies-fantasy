@@ -141,27 +141,22 @@ const Players = () => {
                 onPress={() => router.dismissAll()}
               />
             </View>
-
             <TeamBudget />
-
             <View className="my-10 w-full flex-row items-center gap-4">
               <View className="flex-1">
                 <SearchBar onChangeText={setQuery} value={query} />
               </View>
-
               <IconButton
                 className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
                 icon={<Sliders color="white" />}
                 onPress={() => {}}
               />
             </View>
-
             <View className="flex-row justify-between py-2">
               <Text className="pbk-h8 text-base-white">PLAYERS</Text>
               <Text className="pbk-h8 text-base-white">SELECTED: 0/8</Text>
             </View>
           </View>
-
           {isLoading ? (
             <View className="flex-1 items-center justify-center border-t-2 border-gray-900">
               <Spinner />
