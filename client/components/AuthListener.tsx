@@ -39,7 +39,6 @@ const AuthListener = ({ children }: AuthListenerProps) => {
       } else {
         dispatch(clearUser());
       }
-
       setInitializing(false);
     });
 

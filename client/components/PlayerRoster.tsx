@@ -1,5 +1,5 @@
 import PlayerSlot from "./PlayerSlot";
-import { BenchSlot, LineupSlot, SlotPosition } from "@/types/teamTypes";
+import { BenchSlot, LineupSlot, SlotPosition } from "@/types/team";
 
 type PlayerRosterProps = {
   bench: BenchSlot[];

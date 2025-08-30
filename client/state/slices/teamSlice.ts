@@ -10,7 +10,7 @@ import {
   BenchSlot,
   BenchPosition,
   UTIL_POSITIONS,
-} from "@/types/teamTypes";
+} from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
 
 type SwapPayload = {
@@ -291,6 +291,9 @@ const teamSlice = createSlice({
     saveTeam: (state) => {
       state.hasUserChanges = false;
     },
+    setAugmentId: (state, action: PayloadAction<string | undefined>) => {
+      state.augmentId = action.payload;
+    },
   },
 });
 
@@ -330,6 +333,7 @@ export const {
   clearBench,
   resetToSavedTeam,
   saveTeam,
+  setAugmentId,
 } = teamSlice.actions;
 
 export default teamSlice.reducer;

@@ -30,7 +30,7 @@ import {
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
-import { Position, FlexPosition, UTIL_POSITIONS } from "@/types/teamTypes";
+import { Position, FlexPosition, UTIL_POSITIONS } from "@/types/team";
 
 import { resetTeamLineup } from "@/utils/teamUtils";
 
@@ -204,9 +204,7 @@ const Players = () => {
                 onPress={() => router.dismissAll()}
               />
             </View>
-
             <TeamBudget />
-
             <View className="my-10 w-full flex-row items-center gap-4">
               <View className="flex-1">
                 <SearchBar onChangeText={setQuery} value={query} />
