@@ -18,7 +18,7 @@ import TeamBudget from "@/components/TeamBudget";
 import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
 import { selectLineupPlayerCount } from "@/state/slices/teamSlice";
-import { SlotPosition } from "@/types/teamTypes";
+import { SlotPosition } from "@/types/team";
 
 const Roster = () => {
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);

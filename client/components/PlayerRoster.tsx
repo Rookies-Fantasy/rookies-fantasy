@@ -1,5 +1,5 @@
 import PlayerSlot from "./PlayerSlot";
-import { LineupSlot, SlotPosition } from "@/types/teamTypes";
+import { LineupSlot, SlotPosition } from "@/types/team";
 
 type PlayerRosterProps = {
   isCard?: boolean;

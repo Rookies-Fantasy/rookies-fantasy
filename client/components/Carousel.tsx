@@ -53,7 +53,6 @@ const CarouselDot = ({
       [defaultDotWidth, defaultDotWidth * 2, defaultDotWidth],
       Extrapolation.CLAMP,
     );
-
     return { width: dotWidth };
   });
 

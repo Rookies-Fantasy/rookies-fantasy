@@ -3,7 +3,7 @@ import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppSelector } from "@/state/hooks";
 import { selectEligibleSlotsForPosition } from "@/state/slices/teamSlice";
-import { SlotPosition } from "@/types/teamTypes";
+import { SlotPosition } from "@/types/team";
 
 type RosterDrawerProps = {
   selectedPosition: SlotPosition | null;

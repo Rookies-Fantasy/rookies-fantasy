@@ -7,7 +7,7 @@ import {
   LineupSlot,
   SlotPosition,
   Team,
-} from "@/types/teamTypes";
+} from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
 
 const teamSlice = createSlice({
@@ -79,6 +79,9 @@ const teamSlice = createSlice({
         slot.player = null;
       }
     },
+    setAugmentId: (state, action: PayloadAction<string | undefined>) => {
+      state.augmentId = action.payload;
+    },
   },
 });
 
@@ -117,7 +120,12 @@ export const isPlayerInLineup = (
   playerId: string,
 ): boolean => lineup.some((slot) => slot.player?.id === playerId);
 
-export const { setTeam, clearTeam, addPlayerToLineup, removePlayerFromLineup } =
-  teamSlice.actions;
+export const {
+  setTeam,
+  clearTeam,
+  addPlayerToLineup,
+  removePlayerFromLineup,
+  setAugmentId,
+} = teamSlice.actions;
 
 export default teamSlice.reducer;

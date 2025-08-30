@@ -12,10 +12,10 @@ import {
   Keyboard,
   Pressable,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
-import Spinner from "@/components/Spinner";
+import Button from "@/components/Button";
+import Screen from "@/components/Screen";
 import { TeamEditModel, UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setTeam } from "@/state/slices/teamSlice";
@@ -40,7 +40,6 @@ const schema = yup.object({
 const CreateTeam = () => {
   const userId = useAppSelector((state) => state.user.id);
   const teamId = useAppSelector((state) => state.team.id);
-
   const dispatch = useAppDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +74,6 @@ const CreateTeam = () => {
               (option) => option.url === teams[0].logoUrl,
             );
             setSelectedLogoOption(matchedLogo || defaultTeamLogo);
-
             reset({
               abbreviation: teams[0].abbreviation,
               name: teams[0].name,
@@ -95,7 +93,6 @@ const CreateTeam = () => {
     setIsLoading(true);
     try {
       const teams = await UserController.getUserTeams(userId);
-
       let newTeamId: string;
 
       if (teams?.length === 0) {
@@ -120,7 +117,6 @@ const CreateTeam = () => {
           }),
         );
       }
-
       router.replace("/(protected)/(tabs)");
     } catch (error) {
       console.error("Failed to create team:", error);
@@ -130,163 +126,143 @@ const CreateTeam = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-950">
-      <Pressable className="flex-1" onPress={Keyboard.dismiss}>
-        <View className="flex-1">
-          <KeyboardAvoidingView behavior="padding" className="flex-1">
-            <View className="flex-1 flex-col px-6 py-4">
-              <View className="mb-8 mt-20 flex-row items-center gap-4">
-                <Pressable
-                  className="size-10 items-center justify-center rounded-md border border-gray-900"
-                  onPress={() => router.back()}
-                >
-                  <ArrowLeft color="white" size={20} weight="bold" />
-                </Pressable>
-                <Text className="pbk-h5 text-base-white">Create your team</Text>
-              </View>
-
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, value } }) => (
-                  <>
-                    <Text className="pbk-b2 mb-1.5 text-base-white">
-                      Team Name
-                    </Text>
-                    <View
-                      className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.name ? "border-red-600" : "border-gray-920"} px-2 py-2`}
-                    >
-                      <TextInput
-                        autoCapitalize="none"
-                        className="flex-1 text-base-white placeholder:pbk-b1"
-                        onChangeText={(text) => {
-                          onChange(text);
-                        }}
-                        placeholder="Enter team name"
-                        placeholderTextColor="gray"
-                        value={value}
-                      />
-                      {errors.name && (
-                        <WarningCircle
-                          color="#dc2626"
-                          size={20}
-                          weight="bold"
-                        />
-                      )}
-                    </View>
-                  </>
-                )}
-              />
-              <View className="mb-4">
-                {errors.name ? (
-                  <Text className="pbk-b3 text-red-600">
-                    {errors.name.message}
+    <Screen>
+      <View className="flex-1">
+        <KeyboardAvoidingView
+          behavior="padding"
+          className="mt-8 flex-1 flex-col px-6"
+        >
+          <View className="flex-1 flex-col">
+            <View className="mb-8 flex-row items-center gap-4">
+              <Pressable
+                className="size-8 items-center justify-center rounded-md border border-gray-900"
+                onPress={() => router.back()}
+              >
+                <ArrowLeft color="white" size={20} weight="bold" />
+              </Pressable>
+              <Text className="pbk-h5 text-base-white">Create your team</Text>
+            </View>
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <Text className="pbk-b2 mb-1.5 text-base-white">
+                    Team Name
                   </Text>
-                ) : (
-                  <Text className="pbk-b3 text-gray-600">
-                    This is your team name. You can change it later.
-                  </Text>
-                )}
-              </View>
-
-              <Controller
-                control={control}
-                name="abbreviation"
-                render={({ field: { onChange, value } }) => (
-                  <>
-                    <Text className="pbk-b2 mb-1.5 text-base-white">
-                      Team Abbreviation
-                    </Text>
-                    <View
-                      className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.abbreviation ? "border-red-600" : "border-gray-920"} px-2 py-2`}
-                    >
-                      <TextInput
-                        autoCapitalize="characters"
-                        className="flex-1 text-base-white placeholder:pbk-b1"
-                        maxLength={3}
-                        onChangeText={(text) => {
-                          onChange(text);
-                        }}
-                        placeholder="Enter team abbreviation"
-                        placeholderTextColor="gray"
-                        value={value}
-                      />
-                      {errors.abbreviation && (
-                        <WarningCircle
-                          color="#dc2626"
-                          size={20}
-                          weight="bold"
-                        />
-                      )}
-                    </View>
-                  </>
-                )}
-              />
-              <View className="mb-4">
-                {errors.abbreviation && (
-                  <Text className="pbk-b3 text-red-600">
-                    {errors.abbreviation.message}
-                  </Text>
-                )}
-              </View>
-
-              <Text className="pbk-b2 mb-1.5 text-base-white">Team logo</Text>
-              <View className="mb-2 mt-4 flex-row items-center justify-between">
-                <Pressable
-                  onPress={() => {
-                    Keyboard.dismiss();
-                    setShowBottomDrawer(true);
-                  }}
-                >
-                  <Image
-                    className="h-24 w-24 rounded-full border-2 border-purple-600"
-                    source={selectedLogoOption.source}
-                  />
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    Keyboard.dismiss();
-                    setShowBottomDrawer(true);
-                  }}
-                >
-                  <Text className="pbk-b2 p-4 text-purple-600">
-                    Change team logo
-                  </Text>
-                </Pressable>
-              </View>
-              {errors.logoUrl && (
-                <Text className="pbk-b3 mb-4 text-red-600">
-                  {errors.logoUrl.message}
+                  <View
+                    className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.name ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      className="flex-1 text-base-white placeholder:pbk-b1"
+                      onChangeText={(text) => {
+                        onChange(text);
+                      }}
+                      placeholder="Enter team name"
+                      placeholderTextColor="gray"
+                      value={value}
+                    />
+                    {errors.name && (
+                      <WarningCircle color="#dc2626" size={20} weight="bold" />
+                    )}
+                  </View>
+                </>
+              )}
+            />
+            <View className="mb-4">
+              {errors.name ? (
+                <Text className="pbk-b3 text-red-600">
+                  {errors.name.message}
+                </Text>
+              ) : (
+                <Text className="pbk-b3 text-gray-600">
+                  This is your team name. You can change it later.
                 </Text>
               )}
             </View>
-          </KeyboardAvoidingView>
-
-          <View className="mb-8 justify-end bg-gray-950 px-6">
-            <Pressable
-              className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-              disabled={isLoading}
-              onPress={handleSubmit(handleCreateTeam)}
-            >
-              {isLoading ? (
-                <Spinner />
-              ) : (
-                <Text className="pbk-h6 text-center text-base-white">
-                  FINISH ACCOUNT CREATION
+            <Controller
+              control={control}
+              name="abbreviation"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <Text className="pbk-b2 mb-1.5 text-base-white">
+                    Team Abbreviation
+                  </Text>
+                  <View
+                    className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.abbreviation ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                  >
+                    <TextInput
+                      autoCapitalize="characters"
+                      className="flex-1 text-base-white placeholder:pbk-b1"
+                      maxLength={3}
+                      onChangeText={(text) => {
+                        onChange(text);
+                      }}
+                      placeholder="Enter team abbreviation"
+                      placeholderTextColor="gray"
+                      value={value}
+                    />
+                    {errors.abbreviation && (
+                      <WarningCircle color="#dc2626" size={20} weight="bold" />
+                    )}
+                  </View>
+                </>
+              )}
+            />
+            <View className="mb-4">
+              {errors.abbreviation && (
+                <Text className="pbk-b3 text-red-600">
+                  {errors.abbreviation.message}
                 </Text>
               )}
-            </Pressable>
+            </View>
+            <Text className="pbk-b2 mb-1.5 text-base-white">Team logo</Text>
+            <View className="mb-2 mt-4 flex-row items-center justify-between">
+              <Pressable
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setShowBottomDrawer(true);
+                }}
+              >
+                <Image
+                  className="h-24 w-24 rounded-full border-2 border-purple-600"
+                  source={selectedLogoOption.source}
+                />
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setShowBottomDrawer(true);
+                }}
+              >
+                <Text className="pbk-b2 p-4 text-purple-600">
+                  Change team logo
+                </Text>
+              </Pressable>
+            </View>
+            {errors.logoUrl && (
+              <Text className="pbk-b3 mb-4 text-red-600">
+                {errors.logoUrl.message}
+              </Text>
+            )}
           </View>
+        </KeyboardAvoidingView>
+        <View className="justify-end bg-gray-950 px-6">
+          <Button
+            isLoading={isLoading}
+            label="Finish Account Creation"
+            onPress={handleSubmit(handleCreateTeam)}
+          />
         </View>
-      </Pressable>
-
+      </View>
       <BottomSheet
         footer={
           <Pressable
             className="min-h-12 w-full justify-center rounded-md bg-purple-600"
             onPress={() => setShowBottomDrawer(false)}
           >
-            <Text className="pbk-h6 text-center text-base-white">SAVE</Text>
+            <Text className="pbk-h7 text-center text-base-white">SAVE</Text>
           </Pressable>
         }
         header={
@@ -331,7 +307,7 @@ const CreateTeam = () => {
           )}
         />
       </BottomSheet>
-    </SafeAreaView>
+    </Screen>
   );
 };
 

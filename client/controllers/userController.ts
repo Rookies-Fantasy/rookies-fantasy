@@ -1,6 +1,6 @@
 import firestore from "@react-native-firebase/firestore";
-import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/teamTypes";
-import { defaultUser, User } from "@/types/userTypes";
+import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/team";
+import { defaultUser, User } from "@/types/user";
 
 const USERS_COLLECTION = "users";
 const TEAMS_COLLECTION = "teams";
@@ -14,6 +14,7 @@ export type UserEditModel = Partial<{
 
 export type TeamEditModel = {
   abbreviation: string;
+  augmentId?: string;
   logoUrl: string;
   name: string;
 };
@@ -96,6 +97,7 @@ export class UserController {
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
+            augmentId: team.data()?.augmentId,
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
@@ -132,7 +134,7 @@ export class UserController {
   static editUserTeam = async (
     userId: string,
     teamId: string,
-    params: TeamEditModel,
+    params: Partial<TeamEditModel>,
   ) => {
     try {
       await firestore()
