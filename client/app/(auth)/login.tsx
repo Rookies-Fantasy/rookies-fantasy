@@ -18,7 +18,6 @@ import * as yup from "yup";
 import Button from "@/components/Button";
 import IconButton from "@/components/IconButton";
 import Screen from "@/components/Screen";
-import Spinner from "@/components/Spinner";
 import SSOButtons from "@/components/SSOButtons";
 
 const schema = yup.object({
