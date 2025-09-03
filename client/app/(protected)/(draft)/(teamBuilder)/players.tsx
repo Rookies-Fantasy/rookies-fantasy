@@ -27,7 +27,7 @@ import {
   removePlayerFromLineup,
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
-import { FlexPosition, UTIL_POSITIONS } from "@/types/teamTypes";
+import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
@@ -150,14 +150,11 @@ const Players = () => {
                 onPress={() => router.dismissAll()}
               />
             </View>
-
             <TeamBudget />
-
             <View className="my-10 w-full flex-row items-center gap-4">
               <View className="flex-1">
                 <SearchBar onChangeText={setQuery} value={query} />
               </View>
-
               <IconButton
                 className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
                 icon={<Sliders color="white" />}

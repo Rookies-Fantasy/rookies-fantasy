@@ -17,7 +17,7 @@ import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { resetToSavedTeam } from "@/state/slices/teamSlice";
-import { SlotPosition } from "@/types/teamTypes";
+import { SlotPosition } from "@/types/team";
 import { resetTeamLineup } from "@/utils/teamUtils";
 
 const Roster = () => {

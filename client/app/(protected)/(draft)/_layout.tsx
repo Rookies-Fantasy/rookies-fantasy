@@ -7,8 +7,8 @@ const AugmentLayout = () => (
       animation: "default",
     }}
   >
-    <Stack.Screen name="augments" />
     <Stack.Screen name="(teamBuilder)" />
+    <Stack.Screen name="applyAugment" />
   </Stack>
 );
 

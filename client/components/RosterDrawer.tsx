@@ -4,7 +4,7 @@ import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { swapPlayersInLineup } from "@/state/slices/teamSlice";
-import { FlexPosition, SlotPosition, UTIL_POSITIONS } from "@/types/teamTypes";
+import { FlexPosition, SlotPosition, UTIL_POSITIONS } from "@/types/team";
 import { cn } from "@/utils/jsUtils";
 
 type RosterDrawerProps = {
