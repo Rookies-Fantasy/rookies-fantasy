@@ -30,7 +30,7 @@ import {
 import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { resetTeamLineup } from "@/utils/teamUtils";
 
-type FetchPlayersParams = {
+export type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
 

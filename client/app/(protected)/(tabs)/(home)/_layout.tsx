@@ -40,9 +40,9 @@ const HomeLayout = () => (
       }}
     />
     <Tabs.Screen
-      name="players"
+      name="freeAgents"
       options={{
-        title: "Players",
+        title: "Free Agents",
         tabBarIcon: ({ color }) => <ListBullets color={color} />,
       }}
     />
