@@ -14,7 +14,7 @@ import { useAppSelector } from "@/state/hooks";
 
 const PAGE_SIZE = 25;
 
-const Players = () => {
+const FreeAgents = () => {
   const [query, setQuery] = useState("");
   const team = useAppSelector((state) => state.team);
 
@@ -35,7 +35,7 @@ const Players = () => {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["freeAgents"],
+    queryKey: ["freeAgents", team.hasUserChanges],
     queryFn: fetchFreeAgents,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.lastDoc : undefined,
@@ -132,4 +132,4 @@ const Players = () => {
   );
 };
 
-export default Players;
+export default FreeAgents;
