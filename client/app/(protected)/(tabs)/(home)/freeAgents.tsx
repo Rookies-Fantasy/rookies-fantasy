@@ -17,6 +17,8 @@ const PAGE_SIZE = 25;
 const FreeAgents = () => {
   const [query, setQuery] = useState("");
   const team = useAppSelector((state) => state.team);
+  const teamComposition =
+    team.lineup.filter((slot) => slot.player).length + team.bench.length;
 
   const fetchFreeAgents = async ({ pageParam }: FetchPlayersParams = {}) =>
     await NbaPlayersController.getFreeAgents(
@@ -35,7 +37,7 @@ const FreeAgents = () => {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["freeAgents", team.hasUserChanges],
+    queryKey: ["freeAgents", teamComposition],
     queryFn: fetchFreeAgents,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.lastDoc : undefined,
