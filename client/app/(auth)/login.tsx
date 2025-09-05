@@ -138,69 +138,57 @@ const Login = () => {
             {errors.email.message}
           </Text>
         )}
+
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, value } }) => (
+            <>
+              <Text className="pbk-b2 mb-1.5 text-base-white">Password</Text>
+
+              <View
+                className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password ? "border-red-600" : "border-gray-920"} px-3 py-2`}
+              >
+                <TextInput
+                  className="flex-1 text-base-white placeholder:pbk-b1"
+                  onChangeText={(text) => {
+                    onChange(text);
+                  }}
+                  placeholder="Enter password"
+                  placeholderTextColor="gray"
+                  secureTextEntry={hidePassword}
+                  value={value}
+                />
+                <Pressable
+                  className="flex-row gap-2"
+                  onPress={() => setHidePassword(!hidePassword)}
+                >
+                  {hidePassword ? (
+                    <EyeSlash color="gray" size={20} weight="bold" />
+                  ) : (
+                    <Eye color="gray" size={20} weight="bold" />
+                  )}
+                  {errors.password && (
+                    <WarningCircle color="red" size={20} weight="bold" />
+                  )}
+                </Pressable>
+              </View>
+            </>
+          )}
+        />
         <View className="mb-5">
           {errors.password && (
             <Text className="pbk-b3 mb-4 text-red-600">
               {errors.password.message}
             </Text>
           )}
-
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, value } }) => (
-              <>
-                <Text className="pbk-b2 mb-1.5 text-base-white">Password</Text>
-
-                <View
-                  className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password ? "border-red-600" : "border-gray-920"} px-3 py-2`}
-                >
-                  <TextInput
-                    className="flex-1 text-base-white placeholder:pbk-b1"
-                    onChangeText={(text) => {
-                      onChange(text);
-                    }}
-                    placeholder="Enter password"
-                    placeholderTextColor="gray"
-                    secureTextEntry={hidePassword}
-                    value={value}
-                  />
-                  <Pressable
-                    className="flex-row gap-2"
-                    onPress={() => setHidePassword(!hidePassword)}
-                  >
-                    {hidePassword ? (
-                      <EyeSlash color="gray" size={20} weight="bold" />
-                    ) : (
-                      <Eye color="gray" size={20} weight="bold" />
-                    )}
-                    {errors.password && (
-                      <WarningCircle color="red" size={20} weight="bold" />
-                    )}
-                  </Pressable>
-                </View>
-              </>
-            )}
-          />
-          <View className="mb-5">
-            {errors.password && (
-              <Text className="pbk-b3 mb-4 text-red-600">
-                {errors.password.message}
-              </Text>
-            )}
-            {errors.root && (
-              <Text className="pbk-b3 mb-4 text-red-600">
-                {errors.root.message}
-              </Text>
-            )}
-          </View>
-
           {errors.root && (
             <Text className="pbk-b3 mb-4 text-red-600">
               {errors.root.message}
             </Text>
           )}
         </View>
+
         <Button
           isLoading={isLoading}
           label="Login"
