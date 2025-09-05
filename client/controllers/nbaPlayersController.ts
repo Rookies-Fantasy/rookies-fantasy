@@ -33,6 +33,10 @@ export class NbaPlayersController {
         const data = doc.data();
         const avg = data.averageStats ?? {};
 
+        console.log(
+          `Player: ${data.firstName} | LastName: "${data.lastName}" | Length: ${data.lastName?.length || 0}`,
+        );
+
         return {
           averageStats: {
             ast: avg.assists ?? 0,
@@ -52,7 +56,7 @@ export class NbaPlayersController {
           jerseyNumber: data.jerseyNumber,
           positions: data.positions,
           salary: data.salary,
-          secondName: data.lastName,
+          lastName: data.lastName,
           teamAbbreviation: data.teamAbbreviation,
           teamId: data.teamId,
           weight: data.weight,
