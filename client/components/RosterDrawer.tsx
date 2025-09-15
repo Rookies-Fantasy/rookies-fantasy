@@ -24,15 +24,17 @@ const RosterDrawer = ({
       : [],
   );
 
+  const onClose = () => {
+    setShowBottomDrawer(false);
+    setSelectedPosition(null);
+  };
+
   return (
     <BottomSheet
       footer={
         <Pressable
           className="min-h-12 w-full justify-center rounded-md bg-purple-600"
-          onPress={() => {
-            setShowBottomDrawer(false);
-            setSelectedPosition(null);
-          }}
+          onPress={onClose}
         >
           <Text className="pbk-h6 text-center text-base-white">
             SAVE LINEUP
@@ -43,10 +45,7 @@ const RosterDrawer = ({
         <Text className="pbk-b1 text-center text-base-white">Edit lineup</Text>
       }
       isOpen={showBottomDrawer}
-      onClose={() => {
-        setShowBottomDrawer(false);
-        setSelectedPosition(null);
-      }}
+      onClose={onClose}
       snapPoints={["66%"]}
     >
       <View className="flex-1 border-t-2 border-gray-900">
