@@ -1,10 +1,10 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Plus, Sliders, X } from "phosphor-react-native";
+import { ArrowLeft, Minus, Plus, Sliders } from "phosphor-react-native";
 import { useMemo, useState } from "react";
 import {
-  Image,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -12,21 +12,61 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
+import PlayerData from "@/components/PlayerData";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
+import { UserController } from "@/controllers/userController";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  addPlayerToLineup,
+  selectLineupPlayerCount,
+  isPlayerInLineup,
+  removePlayerFromLineup,
+} from "@/state/slices/teamSlice";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
 
+const PAGE_SIZE = 25;
+
+// TODO: DO we need this?
+const MAX_PLAYERS = 8;
+
 const Players = () => {
   const [query, setQuery] = useState("");
+  const team = useAppSelector((state) => state.team);
+  const userId = useAppSelector((state) => state.user.id);
+  const selectedPlayers = useAppSelector(selectLineupPlayerCount) ?? 0;
+  const dispatch = useAppDispatch();
   const router = useRouter();
-  const PAGE_SIZE = 25;
+
+  const handleSaveLineup = async () => {
+    try {
+      if (team.balance < 0) {
+        Alert.alert(
+          "Insufficient balance",
+          "Please adjust your selections to stay within your available funds.",
+        );
+        return;
+      }
+
+      await UserController.saveUserTeamLineup(userId, team.id, {
+        lineup: team.lineup,
+        balance: team.balance,
+      });
+
+      router.dismissTo("/(protected)/(tabs)/(home)");
+    } catch (error) {
+      Alert.alert("Error", "Failed to save your team. Please try agian.");
+      console.log(error);
+    }
+  };
 
   const fetchPlayersWithAverages = async ({
     pageParam,
@@ -54,58 +94,28 @@ const Players = () => {
 
     return players.map((player) => [
       <IconButton
-        className={false ? "bg-red-600" : "bg-purple-600"} // TODO: Check if player is on roster
+        className={
+          isPlayerInLineup(team.lineup, player.id)
+            ? "bg-red-600"
+            : "bg-purple-600"
+        }
         icon={
-          <Plus color="white" size={12} />
-
-          // TODO:
-          //isPlayerInLineup(player.id) ? (
-          //   <Minus color="white" size={12} />
-          // ) : (
-          //   <Plus color="white" size={12} />
-          // )
+          isPlayerInLineup(team.lineup, player.id) ? (
+            <Minus color="white" size={12} />
+          ) : (
+            <Plus color="white" size={12} />
+          )
         }
         key={player.id}
-        onPress={
-          () => {}
-          /* TODO: 
-          // isPlayerInLineup(player.id)
-          //   ? dispatch(removePlayerFromLineup(player.id))
-          //   : dispatch(
-          //       addPlayerToLineup({
-          //         player: player,
-          //         position: player.positions[0] as keyof Lineup,
-          //       }),
-          //     )
-          */
-        }
+        onPress={() => {
+          if (isPlayerInLineup(team.lineup, player.id)) {
+            dispatch(removePlayerFromLineup(player));
+          } else {
+            dispatch(addPlayerToLineup(player));
+          }
+        }}
       />,
-      <View key={player.id}>
-        <View className="flex-row gap-2">
-          <Image
-            className="size-14 rounded-full"
-            source={{ uri: player.headshotUrl }}
-          />
-          <View className="max-w-32">
-            <Text
-              className="pbk-b2 text-base-white"
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              {player.firstName.slice(0, 1)}. {player.secondName}
-            </Text>
-            <Text className="pbk-b2 text-green-200">${player.salary}</Text>
-            <View className="flex-1 flex-row gap-2">
-              <Text className="pbk-b2 text-base-white">
-                {player.teamAbbreviation}
-              </Text>
-              <Text className="pbk-b2 text-base-white">
-                {player.positions.join(", ")}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>,
+      <PlayerData key={player.id} player={player} />,
       player.gamesPlayed,
       player.averageStats.min.toFixed(1),
       player.averageStats.pts.toFixed(1),
@@ -116,7 +126,7 @@ const Players = () => {
       player.averageStats.tov.toFixed(1),
       player.averageStats.fpts,
     ]);
-  }, [data?.pages]);
+  }, [data?.pages, dispatch, team.lineup]);
 
   return (
     <SafeAreaView
@@ -131,15 +141,10 @@ const Players = () => {
                 <IconButton
                   className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
                   icon={<ArrowLeft color="white" size={20} weight="bold" />}
-                  onPress={() => router.back()}
+                  onPress={() => router.dismissTo("/(protected)/(tabs)/(home)")}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
-              <IconButton
-                className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                icon={<X color="white" size={20} weight="bold" />}
-                onPress={() => router.dismissAll()}
-              />
             </View>
             <TeamBudget />
             <View className="my-10 w-full flex-row items-center gap-4">
@@ -154,7 +159,9 @@ const Players = () => {
             </View>
             <View className="flex-row justify-between py-2">
               <Text className="pbk-h8 text-base-white">PLAYERS</Text>
-              <Text className="pbk-h8 text-base-white">SELECTED: 0/8</Text>
+              <Text className="pbk-h8 text-base-white">
+                SELECTED: {selectedPlayers}/{MAX_PLAYERS}
+              </Text>
             </View>
           </View>
           {isLoading ? (
@@ -210,6 +217,12 @@ const Players = () => {
             />
           )}
         </KeyboardAvoidingView>
+        <FloatingActionButton
+          className="bottom-3 w-[90%] self-center"
+          onPress={handleSaveLineup}
+        >
+          <Text className="pbk-h6 text-center text-base-white">SAVE TEAM</Text>
+        </FloatingActionButton>
       </Pressable>
     </SafeAreaView>
   );

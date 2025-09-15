@@ -1,5 +1,5 @@
 import firestore from "@react-native-firebase/firestore";
-import { defaultTeam, Team, TEAM_BALANCE } from "@/types/team";
+import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
 
 const USERS_COLLECTION = "users";
@@ -18,6 +18,11 @@ export type TeamEditModel = {
   logoUrl: string;
   name: string;
 };
+
+export type LineupUpdateModel = Partial<{
+  lineup: LineupSlot[];
+  balance: number;
+}>;
 
 export class UserController {
   static getUser = async (userId: string): Promise<User> => {
@@ -96,6 +101,7 @@ export class UserController {
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
+            lineup: team.data()?.lineup ?? defaultTeam.lineup,
             balance: team.data()?.balance ?? 0,
           }
         : defaultTeam;
@@ -117,6 +123,7 @@ export class UserController {
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
+        lineup: team.data()?.lineup,
         balance: team.data()?.balance,
       }));
     } catch (error) {
@@ -128,6 +135,26 @@ export class UserController {
     userId: string,
     teamId: string,
     params: Partial<TeamEditModel>,
+  ) => {
+    try {
+      await firestore()
+        .collection(USERS_COLLECTION)
+        .doc(userId)
+        .collection(TEAMS_COLLECTION)
+        .doc(teamId)
+        .update({
+          ...params,
+          updatedAt: new Date(),
+        });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static saveUserTeamLineup = async (
+    userId: string,
+    teamId: string,
+    params: LineupUpdateModel,
   ) => {
     try {
       await firestore()
