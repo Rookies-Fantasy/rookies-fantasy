@@ -1,7 +1,7 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
+import { ArrowLeft, Minus, Plus, Sliders } from "phosphor-react-native";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -27,12 +27,14 @@ import {
   removePlayerFromLineup,
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
-import { FlexPosition, UTIL_POSITIONS } from "@/types/teamTypes";
+import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
+
+const PAGE_SIZE = 25;
 
 const Players = () => {
   const [query, setQuery] = useState("");
@@ -40,7 +42,6 @@ const Players = () => {
   const userId = useAppSelector((state) => state.user.id);
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const PAGE_SIZE = 25;
 
   const fetchPlayersWithAverages = async ({
     pageParam,
@@ -139,25 +140,17 @@ const Players = () => {
                         balance: savedData.balance,
                       }),
                     );
-                    router.back();
+                    router.dismissTo("/(protected)/(tabs)/(home)");
                   }}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
-              <IconButton
-                className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                icon={<X color="white" size={20} weight="bold" />}
-                onPress={() => router.dismissAll()}
-              />
             </View>
-
             <TeamBudget />
-
             <View className="my-10 w-full flex-row items-center gap-4">
               <View className="flex-1">
                 <SearchBar onChangeText={setQuery} value={query} />
               </View>
-
               <IconButton
                 className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
                 icon={<Sliders color="white" />}

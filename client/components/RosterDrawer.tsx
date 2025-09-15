@@ -4,7 +4,7 @@ import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { swapPlayersInLineup } from "@/state/slices/teamSlice";
-import { FlexPosition, SlotPosition, UTIL_POSITIONS } from "@/types/teamTypes";
+import { FlexPosition, SlotPosition, UTIL_POSITIONS } from "@/types/team";
 import { cn } from "@/utils/jsUtils";
 
 type RosterDrawerProps = {
@@ -79,16 +79,18 @@ const RosterDrawer = ({
   const hasEligibleOptions =
     eligibleSlots.length > 0 || eligibleBenchSlots.length > 0;
 
+  const onClose = () => {
+    setShowBottomDrawer(false);
+    setSelectedPosition(null);
+  };
+
   return (
     <BottomSheet
       header={
         <Text className="pbk-b1 text-center text-base-white">Edit lineup</Text>
       }
       isOpen={showBottomDrawer}
-      onClose={() => {
-        setShowBottomDrawer(false);
-        setSelectedPosition(null);
-      }}
+      onClose={onClose}
       snapPoints={["66%"]}
     >
       <ScrollView

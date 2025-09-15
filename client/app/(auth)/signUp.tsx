@@ -12,14 +12,13 @@ import {
   View,
   Text,
   KeyboardAvoidingView,
-  Keyboard,
   TextInput,
   Pressable,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as yup from "yup";
+import Button from "@/components/Button";
 import IconButton from "@/components/IconButton";
-import Spinner from "@/components/Spinner";
+import Screen from "@/components/Screen";
 import SSOButtons from "@/components/SSOButtons";
 
 const schema = yup.object({
@@ -69,14 +68,11 @@ const SignUp = () => {
       if (auth.currentUser) {
         await sendEmailVerification(auth.currentUser);
       }
-
       router.replace("/(auth)/emailVerification");
     } catch (error) {
       console.log(error);
-
       if (typeof error === "object" && error !== null && "code" in error) {
         const firebaseError = error as { code: string };
-
         if (firebaseError.code === "auth/email-already-in-use") {
           setError("email", {
             type: "manual",
@@ -100,142 +96,128 @@ const SignUp = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-950">
-      <Pressable className="flex-1" onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView behavior="padding" className="flex-col px-6 py-4">
-          <View className="my-20 flex-row items-center gap-4">
-            <IconButton
-              className="size-10 items-center justify-center self-start rounded-md border border-gray-900 p-4"
-              icon={<ArrowLeft color="white" size={20} weight="bold" />}
-              onPress={() => router.back()}
-            />
-            <Text className="pbk-h5 text-base-white">Create an account</Text>
-          </View>
-
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, value } }) => (
-              <>
-                <Text className="pbk-b2 mb-1.5 text-base-white">Email</Text>
-                <View
-                  className={`mb-1 min-h-14 w-full flex-row items-center rounded-xl border ${errors.email ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+    <Screen>
+      <KeyboardAvoidingView behavior="padding" className="flex-col px-6 py-4">
+        <View className="my-20 flex-row items-center gap-4">
+          <IconButton
+            className="size-10 items-center justify-center self-start rounded-md border border-gray-900 p-4"
+            icon={<ArrowLeft color="white" size={20} weight="bold" />}
+            onPress={() => router.back()}
+          />
+          <Text className="pbk-h5 text-base-white">Create an account</Text>
+        </View>
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { onChange, value } }) => (
+            <>
+              <Text className="pbk-b2 mb-1.5 text-base-white">Email</Text>
+              <View
+                className={`mb-1 min-h-14 w-full flex-row items-center rounded-xl border ${errors.email ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+              >
+                <TextInput
+                  autoCapitalize="none"
+                  className="flex-1 text-base-white placeholder:pbk-b1"
+                  onChangeText={(text) => {
+                    onChange(text);
+                    setErrorMessage("");
+                    clearErrors();
+                  }}
+                  placeholder="Enter email"
+                  placeholderTextColor="gray"
+                  value={value}
+                />
+                {errors.email && (
+                  <WarningCircle color="#dc2626" size={20} weight="bold" />
+                )}
+              </View>
+            </>
+          )}
+        />
+        {errors.email && (
+          <Text className="pbk-b3 mb-4 text-red-600">
+            {errors.email.message}
+          </Text>
+        )}
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, value } }) => (
+            <>
+              <Text className="pbk-b2 mb-1.5 text-base-white">Password</Text>
+              <View
+                className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password || errorMessage ? "border-red-600" : "border-gray-920"} px-3 py-2`}
+              >
+                <TextInput
+                  className="flex-1 text-base-white placeholder:pbk-b1"
+                  onChangeText={(text) => {
+                    onChange(text);
+                    setErrorMessage("");
+                    clearErrors();
+                  }}
+                  placeholder="Enter password"
+                  placeholderTextColor="gray"
+                  secureTextEntry={hidePassword}
+                  value={value}
+                />
+                <Pressable
+                  className="ml-2 flex-row gap-2"
+                  onPress={() => setHidePassword(!hidePassword)}
                 >
-                  <TextInput
-                    autoCapitalize="none"
-                    className="flex-1 text-base-white placeholder:pbk-b1"
-                    onChangeText={(text) => {
-                      onChange(text);
-                      setErrorMessage("");
-                      clearErrors();
-                    }}
-                    placeholder="Enter email"
-                    placeholderTextColor="gray"
-                    value={value}
-                  />
-                  {errors.email && (
+                  {hidePassword ? (
+                    <EyeSlash color="gray" size={20} weight="bold" />
+                  ) : (
+                    <Eye color="gray" size={20} weight="bold" />
+                  )}
+                  {(errors.password || errorMessage) && (
                     <WarningCircle color="#dc2626" size={20} weight="bold" />
                   )}
-                </View>
-              </>
-            )}
-          />
-          {errors.email && (
-            <Text className="pbk-b3 mb-4 text-red-600">
-              {errors.email.message}
-            </Text>
+                </Pressable>
+              </View>
+            </>
           )}
-
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, value } }) => (
-              <>
-                <Text className="pbk-b2 mb-1.5 text-base-white">Password</Text>
-                <View
-                  className={`mb-1 min-h-14 flex-row items-center justify-between rounded-xl border ${errors.password || errorMessage ? "border-red-600" : "border-gray-920"} px-3 py-2`}
-                >
-                  <TextInput
-                    className="flex-1 text-base-white placeholder:pbk-b1"
-                    onChangeText={(text) => {
-                      onChange(text);
-                      setErrorMessage("");
-                      clearErrors();
-                    }}
-                    placeholder="Enter password"
-                    placeholderTextColor="gray"
-                    secureTextEntry={hidePassword}
-                    value={value}
-                  />
-                  <Pressable
-                    className="ml-2 flex-row gap-2"
-                    onPress={() => setHidePassword(!hidePassword)}
-                  >
-                    {hidePassword ? (
-                      <EyeSlash color="gray" size={20} weight="bold" />
-                    ) : (
-                      <Eye color="gray" size={20} weight="bold" />
-                    )}
-                    {(errors.password || errorMessage) && (
-                      <WarningCircle color="#dc2626" size={20} weight="bold" />
-                    )}
-                  </Pressable>
-                </View>
-              </>
-            )}
-          />
-          <View className="mb-5">
-            <Text
-              className={`pbk-b2 ${errors.password || errorMessage ? "text-red-600" : "text-gray-600"}`}
-            >
-              {errors.password
-                ? errors.password.message
-                : "Password must be at least 8 characters"}
-            </Text>
-            {errorMessage && (
-              <Text className="pbk-b2 mb-4 text-red-600">{errorMessage}</Text>
-            )}
-          </View>
-          <Pressable
-            className="min-h-12 w-full items-center justify-center rounded-md bg-purple-600"
-            disabled={isLoading}
-            onPress={handleSubmit(signUpUser)}
+        />
+        <View className="mb-5">
+          <Text
+            className={`pbk-b2 ${errors.password || errorMessage ? "text-red-600" : "text-gray-600"}`}
           >
-            {isLoading ? (
-              <Spinner />
-            ) : (
-              <Text className="pbk-h6 text-center text-base-white">
-                SIGN UP
-              </Text>
-            )}
-          </Pressable>
-
-          <Text className="pbk-b2 my-5 flex-row flex-wrap text-gray-600">
-            By signing up, you agree to our
-            <Text className="text-purple-600">{` Terms of Service `}</Text> and
-            <Text className="text-purple-600">{` Privacy Policy`}</Text>.
+            {errors.password
+              ? errors.password.message
+              : "Password must be at least 8 characters"}
           </Text>
 
-          <View className="flex-row items-center gap-2 pb-5">
-            <View className="h-px flex-1 bg-gray-800" />
-            <Text className="pbk-b1 text-center text-gray-800">or</Text>
-            <View className="h-px flex-1 bg-gray-800" />
-          </View>
-
-          <SSOButtons />
-
-          <Text className="pbk-b1 my-2 text-center text-gray-600">
-            Already have an account?
-            <Text
-              className="text-purple-600"
-              onPress={() => router.push("/(auth)/login")}
-            >
-              {` Login`}
-            </Text>
+          {errorMessage && (
+            <Text className="pbk-b2 mb-4 text-red-600">{errorMessage}</Text>
+          )}
+        </View>
+        <Button
+          isLoading={isLoading}
+          label="Sign Up"
+          onPress={handleSubmit(signUpUser)}
+        />
+        <Text className="pbk-b2 my-5 flex-row flex-wrap text-gray-600">
+          By signing up, you agree to our
+          <Text className="text-purple-600">{` Terms of Service `}</Text> and
+          <Text className="text-purple-600">{` Privacy Policy`}</Text>.
+        </Text>
+        <View className="flex-row items-center gap-2 pb-5">
+          <View className="h-px flex-1 bg-gray-800" />
+          <Text className="pbk-b1 text-center text-gray-800">or</Text>
+          <View className="h-px flex-1 bg-gray-800" />
+        </View>
+        <SSOButtons />
+        {/* TODO: Replace with a PressableLink text variant, handle nav animation better*/}
+        <Text className="pbk-b1 my-2 text-center text-gray-600">
+          {`Already have an account? `}
+          <Text
+            className="text-purple-600"
+            onPress={() => router.replace("/(auth)/login")}
+          >
+            Login
           </Text>
-        </KeyboardAvoidingView>
-      </Pressable>
-    </SafeAreaView>
+        </Text>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 };
 

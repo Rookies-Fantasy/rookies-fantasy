@@ -1,24 +1,35 @@
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Pressable, Text, View, Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Button from "@/components/Button";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { useAppSelector } from "@/state/hooks";
+import { selectAugmentId } from "@/state/slices/teamSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
-import { SlotPosition } from "@/types/teamTypes";
+import { SlotPosition } from "@/types/team";
 
 const MyTeam = () => {
-  const router = useRouter();
   const team = useAppSelector((state) => state.team);
+  const augmentId = useAppSelector(selectAugmentId);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
+  );
+
+  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setIsNavigating(false);
+    }, []),
   );
 
   return (
@@ -60,16 +71,18 @@ const MyTeam = () => {
           </View>
         </View>
         <View className="flex-1 flex-row items-end p-8">
-          <Pressable
-            className="flex-1 rounded-md bg-purple-600 p-4"
-            onPress={() =>
-              router.push("/(protected)/(draft)/(teamBuilder)/roster")
-            }
-          >
-            <Text className="text-center uppercase text-white">
-              Build Your Team
-            </Text>
-          </Pressable>
+          <Button
+            label="Build Your Team"
+            onPress={() => {
+              if (!isNavigating) {
+                const route = !augmentId
+                  ? "/(protected)/(draft)/applyAugment"
+                  : "/(protected)/(draft)/(teamBuilder)/roster";
+                setIsNavigating(true);
+                router.push(route);
+              }
+            }}
+          />
         </View>
         <View className="mx-6 my-2 flex-1 gap-4">
           <PlayerRoster

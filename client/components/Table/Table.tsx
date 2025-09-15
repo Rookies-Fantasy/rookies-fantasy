@@ -99,7 +99,6 @@ const Table = ({
               scrollEnabled={false}
             />
           </View>
-
           <ScrollView
             bounces={false}
             horizontal

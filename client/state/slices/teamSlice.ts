@@ -10,7 +10,7 @@ import {
   BenchSlot,
   BenchPosition,
   UTIL_POSITIONS,
-} from "@/types/teamTypes";
+} from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
 
 type SwapPayload = {
@@ -291,12 +291,16 @@ const teamSlice = createSlice({
     saveTeam: (state) => {
       state.hasUserChanges = false;
     },
+    setAugmentId: (state, action: PayloadAction<string | undefined>) => {
+      state.augmentId = action.payload;
+    },
   },
 });
 
 export const selectTeam = (state: RootState) => state.team;
 export const selectTeamId = (state: RootState) => state.team.id;
 export const selectLineup = (state: RootState) => state.team.lineup;
+export const selectAugmentId = (state: RootState) => state.team.augmentId;
 
 export const selectIsTeamRegistered = createSelector(
   [selectTeam],
@@ -330,6 +334,7 @@ export const {
   clearBench,
   resetToSavedTeam,
   saveTeam,
+  setAugmentId,
 } = teamSlice.actions;
 
 export default teamSlice.reducer;
