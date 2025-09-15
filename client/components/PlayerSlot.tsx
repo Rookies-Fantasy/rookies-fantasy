@@ -3,8 +3,11 @@ import { UserPlus, XCircle } from "phosphor-react-native";
 import { View, Text, Pressable } from "react-native";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
-import { useAppDispatch } from "@/state/hooks";
-import { removePlayerFromLineup } from "@/state/slices/teamSlice";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  removePlayerFromLineup,
+  selectAugmentId,
+} from "@/state/slices/teamSlice";
 import { Player } from "@/types/players";
 import { cn } from "@/utils/jsUtils";
 
@@ -26,6 +29,8 @@ const PlayerSlot = ({
   onPlayerRemove,
 }: PlayerSlotProps) => {
   const dispatch = useAppDispatch();
+  const augmentId = useAppSelector(selectAugmentId);
+
   const router = useRouter();
 
   return (
@@ -40,8 +45,12 @@ const PlayerSlot = ({
         <Pressable
           className="flex-1 flex-row items-center gap-2"
           onPress={() => {
-            if (!playerData)
-              router.push("/(protected)/(draft)/(teamBuilder)/players");
+            if (!playerData) {
+              const route = !augmentId
+                ? "/(protected)/(draft)/applyAugment"
+                : "/(protected)/(draft)/(teamBuilder)/players";
+              router.push(route);
+            }
           }}
         >
           <Pressable

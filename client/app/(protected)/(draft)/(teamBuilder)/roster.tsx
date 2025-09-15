@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { ArrowLeft, X } from "phosphor-react-native";
+import { ArrowLeft } from "phosphor-react-native";
 import { useState } from "react";
 import {
   Alert,
@@ -20,6 +20,9 @@ import { useAppSelector } from "@/state/hooks";
 import { selectLineupPlayerCount } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/team";
 
+// TODO: DO we need this?
+const MAX_PLAYERS = 8;
+
 const Roster = () => {
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
@@ -29,7 +32,6 @@ const Roster = () => {
   const userId = useAppSelector((state) => state.user.id);
   const selectedPlayers = useAppSelector(selectLineupPlayerCount) ?? 0;
   const router = useRouter();
-  const MAX_PLAYERS = 8;
 
   const handleSaveLineup = async () => {
     try {
@@ -46,7 +48,7 @@ const Roster = () => {
         balance: team.balance,
       });
 
-      router.replace("/(protected)/(tabs)/(home)");
+      router.dismissTo("/(protected)/(tabs)/(home)");
     } catch (error) {
       Alert.alert("Error", "Failed to save your team. Please try agian.");
       console.log(error);
@@ -59,25 +61,21 @@ const Roster = () => {
       edges={["top", "right", "left"]}
     >
       <Pressable className="relative flex-1" onPress={Keyboard.dismiss}>
-        <ScrollView className="">
+        <ScrollView>
           <KeyboardAvoidingView className="flex-1">
             <View className="px-6">
               <View className="mb-10 flex-row items-center justify-between">
                 <View className="flex-row items-center gap-2">
                   <Pressable
                     className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                    onPress={() => router.back()}
+                    onPress={() =>
+                      router.dismissTo("/(protected)/(tabs)/(home)")
+                    }
                   >
                     <ArrowLeft color="white" size={20} weight="bold" />
                   </Pressable>
                   <Text className="pbk-h5 text-base-white">Team builder</Text>
                 </View>
-                <Pressable
-                  className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                  onPress={() => router.dismissAll()}
-                >
-                  <X color="white" size={20} weight="bold" />
-                </Pressable>
               </View>
 
               <TeamBudget />

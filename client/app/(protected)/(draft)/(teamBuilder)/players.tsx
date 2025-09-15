@@ -1,7 +1,7 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
+import { ArrowLeft, Minus, Plus, Sliders } from "phosphor-react-native";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -33,6 +33,11 @@ type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
 
+const PAGE_SIZE = 25;
+
+// TODO: DO we need this?
+const MAX_PLAYERS = 8;
+
 const Players = () => {
   const [query, setQuery] = useState("");
   const team = useAppSelector((state) => state.team);
@@ -40,8 +45,6 @@ const Players = () => {
   const selectedPlayers = useAppSelector(selectLineupPlayerCount) ?? 0;
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const PAGE_SIZE = 25;
-  const MAX_PLAYERS = 8;
 
   const handleSaveLineup = async () => {
     try {
@@ -58,7 +61,7 @@ const Players = () => {
         balance: team.balance,
       });
 
-      router.replace("/(protected)/(tabs)/(home)");
+      router.dismissTo("/(protected)/(tabs)/(home)");
     } catch (error) {
       Alert.alert("Error", "Failed to save your team. Please try agian.");
       console.log(error);
@@ -138,15 +141,10 @@ const Players = () => {
                 <IconButton
                   className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
                   icon={<ArrowLeft color="white" size={20} weight="bold" />}
-                  onPress={() => router.back()}
+                  onPress={() => router.dismissTo("/(protected)/(tabs)/(home)")}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
-              <IconButton
-                className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                icon={<X color="white" size={20} weight="bold" />}
-                onPress={() => router.dismissAll()}
-              />
             </View>
             <TeamBudget />
             <View className="my-10 w-full flex-row items-center gap-4">

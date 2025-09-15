@@ -8,11 +8,13 @@ import Button from "@/components/Button";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import { useAppSelector } from "@/state/hooks";
+import { selectAugmentId } from "@/state/slices/teamSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 
 const MyTeam = () => {
   const team = useAppSelector((state) => state.team);
+  const augmentId = useAppSelector(selectAugmentId);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
@@ -70,8 +72,11 @@ const MyTeam = () => {
             label="Build Your Team"
             onPress={() => {
               if (!isNavigating) {
+                const route = !augmentId
+                  ? "/(protected)/(draft)/applyAugment"
+                  : "/(protected)/(draft)/(teamBuilder)/roster";
                 setIsNavigating(true);
-                router.push("/(protected)/(draft)/applyAugment");
+                router.push(route);
               }
             }}
           />
