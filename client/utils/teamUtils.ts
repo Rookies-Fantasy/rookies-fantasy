@@ -1,6 +1,6 @@
 import { Alert } from "react-native";
 import { UserController } from "@/controllers/userController";
-import { LineupSlot, Team } from "@/types/teamTypes";
+import { LineupSlot, Team } from "@/types/team";
 
 export type SaveLineupOptions = {
   onSuccess?: () => void;
