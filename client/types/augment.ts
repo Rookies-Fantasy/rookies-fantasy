@@ -44,7 +44,6 @@ export type Prerequisite = {
 };
 
 export type Effect = {
-  target: "qualifying" | "all";
   statBoosts: [
     {
       stat:
