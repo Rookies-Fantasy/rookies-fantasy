@@ -12,6 +12,7 @@ import {
   BenchPosition,
   UTIL_POSITIONS,
 } from "@/types/team";
+import { validateAugment } from "@/utils/augmentValidation";
 import { isNotNil } from "@/utils/jsUtils";
 
 type SwapPayload = {
@@ -42,6 +43,24 @@ const removeBenchSlotByPosition = (
     bench.forEach((slot, i) => {
       slot.position = `BEN${i + 1}` as BenchPosition;
     });
+  }
+};
+
+const validateAndLogAugment = (state: Team): void => {
+  if (state.augment) {
+    const validation = validateAugment(state.augment, state.lineup);
+
+    if (validation.isValid) {
+      console.log(
+        `Augment "${state.augment.title}" is valid. Qualifying players:`,
+        validation.qualifyingPlayers.map((p) => p.firstName + " " + p.lastName),
+      );
+    } else {
+      console.log(
+        `Augment "${state.augment.title}" requirements not met:`,
+        validation.failedPrerequisites,
+      );
+    }
   }
 };
 
@@ -78,6 +97,7 @@ const teamSlice = createSlice({
           slot.player = player;
           state.balance -= slot.player.salary;
           state.hasUserChanges = true;
+          validateAndLogAugment(state);
           return;
         }
       }
@@ -91,6 +111,7 @@ const teamSlice = createSlice({
             slot.player = player;
             state.balance -= slot.player.salary;
             state.hasUserChanges = true;
+            validateAndLogAugment(state);
             return;
           }
         }
@@ -104,6 +125,7 @@ const teamSlice = createSlice({
             slot.player = player;
             state.balance -= slot.player.salary;
             state.hasUserChanges = true;
+            validateAndLogAugment(state);
             return;
           }
         }
@@ -118,6 +140,7 @@ const teamSlice = createSlice({
         state.balance += slot.player.salary;
         slot.player = null;
         state.hasUserChanges = true;
+        validateAndLogAugment(state);
       }
     },
     swapPlayersInLineup: (state, action: PayloadAction<SwapPayload>) => {
@@ -177,6 +200,7 @@ const teamSlice = createSlice({
           toSlot.player = fromPlayer;
         }
         state.hasUserChanges = true;
+        validateAndLogAugment(state);
         return;
       }
 
@@ -192,6 +216,7 @@ const teamSlice = createSlice({
           fromSlot.player = null;
         }
         state.hasUserChanges = true;
+        validateAndLogAugment(state);
         return;
       }
 
@@ -214,6 +239,7 @@ const teamSlice = createSlice({
           toSlot.player = fromPlayer;
           fromSlot.player = null;
           state.hasUserChanges = true;
+          validateAndLogAugment(state);
           return;
         }
 
@@ -256,6 +282,7 @@ const teamSlice = createSlice({
             toSlot.player = null;
           }
           state.hasUserChanges = true;
+          validateAndLogAugment(state);
           return;
         }
 
@@ -263,6 +290,7 @@ const teamSlice = createSlice({
         fromSlot.player = toSlot.player;
         toSlot.player = tempPlayer;
         state.hasUserChanges = true;
+        validateAndLogAugment(state);
       }
     },
     removePlayerFromBench: (state, action: PayloadAction<Player>) => {
@@ -288,12 +316,14 @@ const teamSlice = createSlice({
       state.bench = [];
       state.balance = action.payload.balance;
       state.hasUserChanges = false;
+      validateAndLogAugment(state);
     },
     saveTeam: (state) => {
       state.hasUserChanges = false;
     },
     setAugment: (state, action: PayloadAction<Augment | undefined>) => {
       state.augment = action.payload;
+      validateAndLogAugment(state);
     },
   },
 });
@@ -323,6 +353,32 @@ export const isPlayerInLineup = (
 
 export const getBenchPlayerCount = (state: RootState): number =>
   state.team.bench.filter((slot) => slot.player !== null).length;
+
+export const selectAugmentValidation = createSelector(
+  [selectTeam, selectLineup],
+  (team, lineup) => validateAugment(team.augment, lineup),
+);
+
+export const selectQualifyingPlayers = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.qualifyingPlayers,
+);
+
+export const selectPlayerQualificationMap = createSelector(
+  [selectQualifyingPlayers],
+  (qualifyingPlayers) =>
+    Object.fromEntries(qualifyingPlayers.map((p) => [p.id, true])),
+);
+
+export const selectIsAugmentValid = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.isValid,
+);
+
+export const selectAugmentFailedPrerequisites = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.failedPrerequisites,
+);
 
 export const {
   setTeam,
