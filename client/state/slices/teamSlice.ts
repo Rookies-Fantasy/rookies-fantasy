@@ -335,6 +335,7 @@ const teamSlice = createSlice({
 export const selectTeam = (state: RootState) => state.team;
 export const selectTeamId = (state: RootState) => state.team.id;
 export const selectLineup = (state: RootState) => state.team.lineup;
+export const selectAugment = (state: RootState) => state.team.augment;
 
 export const selectIsTeamRegistered = createSelector(
   [selectTeam],
