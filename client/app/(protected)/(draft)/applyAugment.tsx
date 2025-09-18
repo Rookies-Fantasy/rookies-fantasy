@@ -16,7 +16,7 @@ import Screen from "@/components/Screen";
 import { AugmentController } from "@/controllers/augmentController";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import { setAugmentId } from "@/state/slices/teamSlice";
+import { setAugment } from "@/state/slices/teamSlice";
 import { Augment } from "@/types/augment";
 
 // TODO: Once migrated to S3 blob storage, remove this hardcoded mapping and use the actual URLs from the API.
@@ -60,13 +60,13 @@ const iconMap: Record<string, any> = {
 const ApplyAugment = () => {
   const userId = useAppSelector((state) => state.user.id);
   const teamId = useAppSelector((state) => state.team.id);
-  const augmentId = useAppSelector((state) => state.team.augmentId);
+  const augment = useAppSelector((state) => state.team.augment);
   const dispatch = useAppDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAugmentId, setSelectedAugmentId] = useState<
-    string | undefined
-  >(augmentId);
+  const [selectedAugment, setSelectedAugment] = useState<Augment | undefined>(
+    augment,
+  );
   const [augments, setAugments] = useState<Augment[]>([]);
 
   useEffect(() => {
@@ -91,13 +91,13 @@ const ApplyAugment = () => {
     fetchAugments();
   }, []);
 
-  const handleUpdateTeamAugment = async (augmentId?: string) => {
+  const handleUpdateTeamAugment = async (augment?: Augment) => {
     setIsLoading(true);
     try {
-      await UserController.editUserTeam(userId, teamId, { augmentId });
-      dispatch(setAugmentId(augmentId));
+      await UserController.editUserTeam(userId, teamId, { augment });
+      dispatch(setAugment(augment));
     } catch (error) {
-      console.error("Failed to set augmentId:", error);
+      console.error("Failed to set augment:", error);
     } finally {
       setIsLoading(false);
       router.push("/(protected)/(draft)/(teamBuilder)/roster");
@@ -147,7 +147,7 @@ const ApplyAugment = () => {
         <ScrollView className="p-2">
           <View className="flex-row flex-wrap justify-between gap-y-4">
             {augments.map((card) => {
-              const isSelected = selectedAugmentId === card.id;
+              const isSelected = selectedAugment?.id === card.id;
               return (
                 <View
                   className="relative mb-4 w-[48%] rounded-xl"
@@ -177,7 +177,7 @@ const ApplyAugment = () => {
 
                   <Pressable
                     className="flex-1 overflow-hidden rounded-xl"
-                    onPress={() => setSelectedAugmentId(card.id)}
+                    onPress={() => setSelectedAugment(card)}
                   >
                     <ImageBackground
                       className="flex-1 overflow-hidden rounded-xl px-3 py-4"
@@ -218,10 +218,10 @@ const ApplyAugment = () => {
       </View>
       <View className="justify-end gap-2 bg-gray-950 px-6">
         <Button
-          disabled={!selectedAugmentId}
+          disabled={!selectedAugment}
           isLoading={isLoading}
           label="Confirm Selection"
-          onPress={() => handleUpdateTeamAugment(selectedAugmentId)}
+          onPress={() => handleUpdateTeamAugment(selectedAugment)}
         />
       </View>
     </Screen>
