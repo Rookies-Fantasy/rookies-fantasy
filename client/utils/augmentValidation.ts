@@ -31,7 +31,10 @@ export const validateAugment = (
   let qualifyingPlayers: Player[] = [];
 
   for (const prerequisite of augment.prerequisites) {
-    const result = evaluatePrerequisite(prerequisite, activePlayers);
+    const playersToEvaluate =
+      qualifyingPlayers.length === 0 ? activePlayers : qualifyingPlayers;
+    const result = evaluatePrerequisite(prerequisite, playersToEvaluate);
+
     if (!result.isValid) {
       unmetPrerequisites.push(prerequisite.description);
     } else {
