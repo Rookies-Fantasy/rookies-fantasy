@@ -5,7 +5,8 @@ import { LineupSlot } from "@/types/team";
 export type ValidationResult = {
   isValid: boolean;
   qualifyingPlayers: Player[];
-  failedPrerequisites: string[];
+  unmetPrerequisites: string[];
+  metPrerequisites: string[];
 };
 
 export const validateAugment = (
@@ -16,7 +17,8 @@ export const validateAugment = (
     return {
       isValid: false,
       qualifyingPlayers: [],
-      failedPrerequisites: ["No augment selected"],
+      unmetPrerequisites: ["No augment selected"],
+      metPrerequisites: [],
     };
   }
 
@@ -24,13 +26,14 @@ export const validateAugment = (
     .filter((slot) => slot.player !== null)
     .map((slot) => slot.player!);
 
-  const failedPrerequisites: string[] = [];
+  const unmetPrerequisites: string[] = [];
+  const metPrerequisites: string[] = [];
   let qualifyingPlayers: Player[] = [];
 
   for (const prerequisite of augment.prerequisites) {
     const result = evaluatePrerequisite(prerequisite, activePlayers);
     if (!result.isValid) {
-      failedPrerequisites.push(prerequisite.description);
+      unmetPrerequisites.push(prerequisite.description);
     } else {
       if (qualifyingPlayers.length === 0) {
         qualifyingPlayers = result.qualifyingPlayers;
@@ -39,14 +42,16 @@ export const validateAugment = (
           result.qualifyingPlayers.some((qp) => qp.id === player.id),
         );
       }
+
+      metPrerequisites.push(prerequisite.description);
     }
   }
 
   return {
-    isValid: failedPrerequisites.length === 0,
-    qualifyingPlayers:
-      failedPrerequisites.length === 0 ? qualifyingPlayers : [],
-    failedPrerequisites,
+    isValid: unmetPrerequisites.length === 0,
+    qualifyingPlayers: unmetPrerequisites.length === 0 ? qualifyingPlayers : [],
+    unmetPrerequisites,
+    metPrerequisites,
   };
 };
 

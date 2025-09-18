@@ -58,7 +58,11 @@ const validateAndLogAugment = (state: Team): void => {
     } else {
       console.log(
         `Augment "${state.augment.title}" requirements not met:`,
-        validation.failedPrerequisites,
+        validation.unmetPrerequisites,
+      );
+      console.log(
+        `Augment "${state.augment.title}" requirements are met:`,
+        validation.metPrerequisites,
       );
     }
   }
@@ -375,9 +379,14 @@ export const selectIsAugmentValid = createSelector(
   (validation) => validation.isValid,
 );
 
-export const selectAugmentFailedPrerequisites = createSelector(
+export const selectAugmentMetPrerequisites = createSelector(
   [selectAugmentValidation],
-  (validation) => validation.failedPrerequisites,
+  (validation) => validation.metPrerequisites,
+);
+
+export const selectAugmentUnmetPrerequisites = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.unmetPrerequisites,
 );
 
 export const {
