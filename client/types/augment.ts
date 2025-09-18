@@ -1,3 +1,5 @@
+import { Position } from "./team";
+
 export type Augment = {
   description: string;
   iconUrl: string;
@@ -11,51 +13,46 @@ export type Augment = {
   effects: Effect[];
 };
 
+type Stat =
+  | "points"
+  | "rebounds"
+  | "assists"
+  | "steals"
+  | "blocks"
+  | "threePointers"
+  | "fieldGoalPercentage"
+  | "freeThrowPercentage"
+  | "turnovers"
+  | "minutes"
+  | "threePointerPercentage"
+  | "threePointersAttempted";
+
+type PrerequisiteType =
+  | "statThreshold"
+  | "positionRequirement"
+  | "teamRequirement"
+  | "budgetThreshold"
+  | "playerCount";
+
 export type Condition = {
   count: number;
-  stat?:
-    | "points"
-    | "rebounds"
-    | "assists"
-    | "steals"
-    | "blocks"
-    | "threePointers"
-    | "fieldGoalPercentage"
-    | "freeThrowPercentage"
-    | "turnovers"
-    | "minutes"
-    | "threePointerPercentage"
-    | "threePointersAttempted";
+  stat?: Stat;
   operator?: ">=" | ">" | "<=" | "<" | "=";
   value?: number;
-  position?: ("PG" | "SG" | "SF" | "PF" | "C")[];
+  position?: Position[];
   teamId?: string;
 };
 
 export type Prerequisite = {
   condition: Condition;
-  type:
-    | "statThreshold"
-    | "positionRequirement"
-    | "teamRequirement"
-    | "budgetThreshold"
-    | "playerCount";
+  type: PrerequisiteType;
   description: string;
 };
 
 export type Effect = {
   statBoosts: [
     {
-      stat:
-        | "points"
-        | "rebounds"
-        | "assists"
-        | "steals"
-        | "blocks"
-        | "threePointers"
-        | "fieldGoalPercentage"
-        | "freeThrowPercentage"
-        | "turnovers";
+      stat: Stat;
       multiplier: number;
     },
   ];
