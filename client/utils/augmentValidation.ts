@@ -31,28 +31,35 @@ export const validateAugment = (
   let qualifyingPlayers: Player[] = [];
 
   for (const prerequisite of augment.prerequisites) {
-    const playersToEvaluate =
-      qualifyingPlayers.length === 0 ? activePlayers : qualifyingPlayers;
-    const result = evaluatePrerequisite(prerequisite, playersToEvaluate);
-
+    const result = evaluatePrerequisite(prerequisite, activePlayers);
     if (!result.isValid) {
       unmetPrerequisites.push(prerequisite.description);
     } else {
-      if (qualifyingPlayers.length === 0) {
-        qualifyingPlayers = result.qualifyingPlayers;
-      } else {
-        qualifyingPlayers = qualifyingPlayers.filter((player) =>
-          result.qualifyingPlayers.some((qp) => qp.id === player.id),
-        );
-      }
-
       metPrerequisites.push(prerequisite.description);
+    }
+
+    if (qualifyingPlayers.length === 0) {
+      qualifyingPlayers = result.qualifyingPlayers;
+      console.log(result.qualifyingPlayers);
+    } else {
+      qualifyingPlayers = qualifyingPlayers.filter((player) =>
+        result.qualifyingPlayers.some((qp) => qp.id === player.id),
+      );
     }
   }
 
+  const hasEnoughPlayers = qualifyingPlayers.length >= augment.playerCount;
+  const prerequisitesMet = unmetPrerequisites.length === 0;
+
+  if (!hasEnoughPlayers && prerequisitesMet) {
+    unmetPrerequisites.push(
+      `Need ${augment.playerCount} qualifying players, but only have ${qualifyingPlayers.length}`,
+    );
+  }
+
   return {
-    isValid: unmetPrerequisites.length === 0,
-    qualifyingPlayers: unmetPrerequisites.length === 0 ? qualifyingPlayers : [],
+    isValid: prerequisitesMet && hasEnoughPlayers,
+    qualifyingPlayers,
     unmetPrerequisites,
     metPrerequisites,
   };
