@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AugmentCard from "@/components/AugmentCard";
 import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
@@ -204,6 +205,7 @@ const Players = () => {
                 onPress={() => router.dismissAll()}
               />
             </View>
+            <AugmentCard />
             <TeamBudget />
             <View className="my-10 w-full flex-row items-center gap-4">
               <View className="flex-1">

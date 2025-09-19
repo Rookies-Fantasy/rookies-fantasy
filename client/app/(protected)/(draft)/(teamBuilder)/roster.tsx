@@ -65,11 +65,10 @@ const Roster = () => {
                   <X color="white" size={20} weight="bold" />
                 </Pressable>
               </View>
-              <View className="gap-3">
-                <AugmentCard />
 
-                <TeamBudget />
-              </View>
+              <AugmentCard />
+
+              <TeamBudget />
             </View>
 
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">
