@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Pressable, Text, View, Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AugmentStatusCard from "@/components/AugmentStatusCard";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
@@ -67,7 +68,8 @@ const MyTeam = () => {
             </View>
           </View>
         </View>
-        <View className="flex-1 flex-row items-end p-8">
+        <View className="mx-6 flex-1 gap-3">
+          <AugmentStatusCard />
           <Pressable
             className="flex-1 rounded-md bg-purple-600 p-4"
             onPress={() =>
