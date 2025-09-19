@@ -3,7 +3,6 @@ import { RootState } from "../store";
 import { Player } from "@/types/players";
 import {
   defaultTeam,
-  FlexPosition,
   LineupSlot,
   SlotPosition,
   Team,
@@ -12,31 +11,15 @@ import {
   UTIL_POSITIONS,
 } from "@/types/team";
 import { isNil, isNotNil } from "@/utils/jsUtils";
+import { isPlayerEligibleForPosition } from "@/utils/teamUtils";
 
 type SwapPayload = {
   from: SlotPosition;
   to: SlotPosition;
 };
 
-// Util functions should maybe be separated into teamUtils or something
-
-export const findSlotFromPosition = <T extends LineupSlot | BenchSlot>(
-  arr: T[],
-  selectedPosition: SlotPosition,
-) => arr.find((slot) => slot.position === selectedPosition);
-
-export const isPlayerInLineup = (
-  lineup: LineupSlot[],
-  playerId: string,
-): boolean => lineup.some((slot) => slot.player?.id === playerId);
-
-export const isPlayerEligibleForPosition = (
-  player: Player,
-  position: SlotPosition,
-) =>
-  player.positions.includes(position) ||
-  UTIL_POSITIONS.includes(position as FlexPosition);
-
+// TODO: Take a look at refactoring some of these to not mutate state in the function
+// Possibly move them into teamUtils.ts
 const getSlotAndPlayer = (
   bench: BenchSlot[],
   lineup: LineupSlot[],
@@ -174,7 +157,7 @@ const teamSlice = createSlice({
           removeBenchSlot(state.bench, from as BenchPosition);
         } else {
           const newBench = state.bench.map((o) => {
-            if (o.player.id === fromInfo.player?.id) {
+            if (o.position === fromInfo.benchSlot?.position) {
               return { ...o, player: playerToMoveToBench };
             }
             return o;
@@ -186,7 +169,7 @@ const teamSlice = createSlice({
         if (isNil(playerToMoveToLineup)) return;
 
         const newLineup = state.lineup.map((o) => {
-          if (o.player?.id === toInfo.player?.id) {
+          if (o.position === toInfo.lineupSlot?.position) {
             return { ...o, player: playerToMoveToLineup };
           }
           return o;
@@ -200,6 +183,7 @@ const teamSlice = createSlice({
       const benchFrom = fromInfo.benchSlot;
       const benchTo = toInfo.benchSlot;
 
+      // Case 2: Bench to Bench
       if (isNotNil(benchFrom) && isNotNil(benchTo)) {
         const newBench = state.bench.map((o) => {
           if (o.position === benchFrom.position) {
@@ -235,6 +219,7 @@ const teamSlice = createSlice({
       const lineupTo = fromInfo.lineupSlot;
       const lineupFrom = toInfo.lineupSlot;
 
+      // Case 3: Lineup to Lineup
       if (isNotNil(lineupFrom) && isNotNil(lineupTo)) {
         if (isNil(lineupFrom.player) && isNotNil(lineupTo.player)) {
           const newLineup = state.lineup.map((o) => {
@@ -275,7 +260,7 @@ const teamSlice = createSlice({
           if (playerFromEligibility && playerToEligibility) {
             // Both players can swap positions - direct swap
             // (TODO: Success toast that confirms the swap)
-            const newLineup = state.bench.map((o) => {
+            const newLineup = state.lineup.map((o) => {
               if (o.position === lineupFrom.position) {
                 return { ...o, player: lineupTo.player };
               }

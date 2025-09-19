@@ -3,13 +3,13 @@ import { ScrollView } from "react-native-gesture-handler";
 import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { swapPlayersInLineup } from "@/state/slices/teamSlice";
+import { SlotPosition, Team } from "@/types/team";
+import { cn, isNil } from "@/utils/jsUtils";
 import {
   findSlotFromPosition,
   isPlayerEligibleForPosition,
-  swapPlayersInLineup,
-} from "@/state/slices/teamSlice";
-import { SlotPosition, Team } from "@/types/team";
-import { cn, isNil } from "@/utils/jsUtils";
+} from "@/utils/teamUtils";
 
 type RosterDrawerProps = {
   selectedPosition: SlotPosition;
