@@ -47,9 +47,18 @@ export const validateAugment = (
     }
   }
 
+  const hasEnoughPlayers = qualifyingPlayers.length >= augment.playerCount;
+  const prerequisitesMet = unmetPrerequisites.length === 0;
+
+  if (!hasEnoughPlayers && prerequisitesMet) {
+    unmetPrerequisites.push(
+      `Need ${augment.playerCount} qualifying players, but only have ${qualifyingPlayers.length}`,
+    );
+  }
+
   return {
-    isValid: unmetPrerequisites.length === 0,
-    qualifyingPlayers: unmetPrerequisites.length === 0 ? qualifyingPlayers : [],
+    isValid: prerequisitesMet && hasEnoughPlayers,
+    qualifyingPlayers: prerequisitesMet ? qualifyingPlayers : [],
     unmetPrerequisites,
     metPrerequisites,
   };
