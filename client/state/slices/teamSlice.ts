@@ -20,6 +20,21 @@ type SwapPayload = {
 
 // TODO: Take a look at refactoring some of these to not mutate state in the function
 // Possibly move them into teamUtils.ts
+const swapPlayers = <T extends LineupSlot | BenchSlot>(
+  arrayToSwap: T[],
+  fromSlot?: T,
+  toSlot?: T,
+) =>
+  arrayToSwap.map((o) => {
+    if (o.position === fromSlot?.position) {
+      return { ...o, player: toSlot?.player };
+    }
+    if (o.position === toSlot?.position) {
+      return { ...o, player: fromSlot?.player };
+    }
+    return o;
+  });
+
 const getSlotAndPlayer = (
   bench: BenchSlot[],
   lineup: LineupSlot[],
@@ -71,6 +86,8 @@ const teamSlice = createSlice({
   reducers: {
     setTeam: (_, action: PayloadAction<Team>) => ({
       ...action.payload,
+      // TODO: This is not a true dirty flag, it's more like a touched flag right now
+      // If you make changes and manually change the team back to the original state, this is still true
       hasUserChanges: false,
     }),
     clearTeam: () => defaultTeam,
@@ -148,7 +165,7 @@ const teamSlice = createSlice({
       const fromInfo = getSlotAndPlayer(state.bench, state.lineup, from);
       const toInfo = getSlotAndPlayer(state.bench, state.lineup, to);
 
-      // Case 1: Bench to Lineup or Lineup to Bench
+      // Case 1: Bench to Lineup
       if (isNotNil(fromInfo.benchSlot) && isNotNil(toInfo.lineupSlot)) {
         const playerToMoveToLineup = fromInfo.player;
         const playerToMoveToBench = toInfo.player;
@@ -174,76 +191,65 @@ const teamSlice = createSlice({
           }
           return o;
         });
-
         state.lineup = newLineup;
         state.hasUserChanges = true;
         return;
       }
 
-      const benchFrom = fromInfo.benchSlot;
-      const benchTo = toInfo.benchSlot;
+      // Case 2 Lineup to Bench
+      if (isNotNil(fromInfo.lineupSlot) && isNotNil(toInfo.benchSlot)) {
+        console.log("IN IF");
+        const lineupPlayer = fromInfo.player;
+        const benchPlayer = toInfo.player;
 
-      // Case 2: Bench to Bench
-      if (isNotNil(benchFrom) && isNotNil(benchTo)) {
-        const newBench = state.bench.map((o) => {
-          if (o.position === benchFrom.position) {
-            return { ...o, player: benchTo.player };
-          }
-          if (o.position === benchTo.position) {
-            return { ...o, player: benchFrom.player };
-          }
-          return o;
-        });
-        state.bench = newBench;
-
-        // const indexFrom = state.bench.findIndex(
-        //   (slot) => slot.player?.id === benchFrom.player.id,
-        // );
-        // const indexTo = state.bench.findIndex(
-        //   (slot) => slot.player?.id === benchTo.player.id,
-        // );
-
-        // if (indexFrom === -1 || indexTo === -1) return;
-
-        // const newBench = [...state.bench];
-
-        // newBench[indexFrom] = {
-        //   ...newBench[indexFrom],
-        //   player: benchTo.player,
-        // };
-        // newBench[indexTo] = { ...newBench[indexTo], player: benchFrom.player };
-
-        state.hasUserChanges = true;
-      }
-
-      const lineupTo = fromInfo.lineupSlot;
-      const lineupFrom = toInfo.lineupSlot;
-
-      // Case 3: Lineup to Lineup
-      if (isNotNil(lineupFrom) && isNotNil(lineupTo)) {
-        if (isNil(lineupFrom.player) && isNotNil(lineupTo.player)) {
-          const newLineup = state.lineup.map((o) => {
-            if (o.position === lineupFrom.position) {
-              return { ...o, player: lineupTo.player };
-            }
-            if (o.position === lineupTo.position) {
-              return { ...o, player: null };
+        if (isNil(lineupPlayer)) {
+          removeBenchSlot(state.bench, from as BenchPosition);
+        } else {
+          const newBench = state.bench.map((o) => {
+            if (o.position === toInfo.benchSlot?.position) {
+              return { ...o, player: lineupPlayer };
             }
             return o;
           });
+          state.bench = newBench;
+        }
+
+        // Player cannot be empty if they're from the bench
+        if (isNil(benchPlayer)) return;
+
+        const newLineup = state.lineup.map((o) => {
+          if (o.position === fromInfo.lineupSlot?.position) {
+            return { ...o, player: benchPlayer };
+          }
+          return o;
+        });
+        state.lineup = newLineup;
+        state.hasUserChanges = true;
+        return;
+      }
+
+      // Case 3: Bench to Bench
+      const benchFrom = fromInfo.benchSlot;
+      const benchTo = toInfo.benchSlot;
+
+      if (isNotNil(benchFrom) && isNotNil(benchTo)) {
+        const newBench = swapPlayers(state.bench, benchFrom, benchTo);
+        state.bench = newBench;
+        state.hasUserChanges = true;
+      }
+
+      // Case 4: Lineup to Lineup
+      const lineupFrom = fromInfo.lineupSlot;
+      const lineupTo = toInfo.lineupSlot;
+
+      if (isNotNil(lineupFrom) && isNotNil(lineupTo)) {
+        if (isNil(lineupFrom.player) && isNotNil(lineupTo.player)) {
+          const newLineup = swapPlayers(state.lineup, lineupFrom, lineupTo);
           state.lineup = newLineup;
         }
 
         if (isNil(lineupTo.player) && isNotNil(lineupFrom.player)) {
-          const newLineup = state.lineup.map((o) => {
-            if (o.position === lineupFrom.position) {
-              return { ...o, player: null };
-            }
-            if (o.position === lineupTo.position) {
-              return { ...o, player: lineupFrom.player };
-            }
-            return o;
-          });
+          const newLineup = swapPlayers(state.lineup, lineupFrom, lineupTo);
           state.lineup = newLineup;
         }
 
@@ -260,15 +266,7 @@ const teamSlice = createSlice({
           if (playerFromEligibility && playerToEligibility) {
             // Both players can swap positions - direct swap
             // (TODO: Success toast that confirms the swap)
-            const newLineup = state.lineup.map((o) => {
-              if (o.position === lineupFrom.position) {
-                return { ...o, player: lineupTo.player };
-              }
-              if (o.position === lineupTo.position) {
-                return { ...o, player: lineupFrom.player };
-              }
-              return o;
-            });
+            const newLineup = swapPlayers(state.lineup, lineupFrom, lineupTo);
             state.lineup = newLineup;
           }
 
@@ -278,32 +276,9 @@ const teamSlice = createSlice({
             // Player B goes to bench
             // (TODO: Success toast that confirms where player B has gone)
             addBenchSlot(state.bench, lineupTo.player);
-            const newLineup = state.lineup.map((o) => {
-              if (o.position === lineupFrom.position) {
-                return { ...o, player: null };
-              }
-              if (o.position === lineupTo.position) {
-                return { ...o, player: lineupFrom.player };
-              }
-              return o;
-            });
-            state.lineup = newLineup;
-          }
-
-          if (!playerFromEligibility && playerToEligibility) {
-            // Player A cannot go to Player B's position, but Player B can go to
-            // Player A's position. Move Player B to Player A's position,
-            // Player A goes to bench
-            // (TODO: Success toast that confirms where player A has gone)
-            addBenchSlot(state.bench, lineupFrom.player);
-            const newLineup = state.lineup.map((o) => {
-              if (o.position === lineupFrom.position) {
-                return { ...o, player: lineupTo.player };
-              }
-              if (o.position === lineupTo.position) {
-                return { ...o, player: null };
-              }
-              return o;
+            const newLineup = swapPlayers(state.lineup, lineupFrom, {
+              ...lineupTo,
+              player: null,
             });
             state.lineup = newLineup;
           }
@@ -322,11 +297,6 @@ const teamSlice = createSlice({
         removeBenchSlot(state.bench, benchSlot.position);
         state.hasUserChanges = true;
       }
-    },
-    // This is not used
-    clearBench: (state) => {
-      state.bench = [];
-      state.hasUserChanges = true;
     },
     resetToSavedTeam: (
       state,
@@ -372,7 +342,6 @@ export const {
   removePlayerFromLineup,
   swapPlayersInLineup,
   removePlayerFromBench,
-  clearBench,
   resetToSavedTeam,
   saveTeam,
   setAugmentId,

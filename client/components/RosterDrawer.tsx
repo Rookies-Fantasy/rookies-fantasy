@@ -126,8 +126,8 @@ const RosterDrawer = ({
                     ) {
                       dispatch(
                         swapPlayersInLineup({
-                          from: benchSlot.position,
-                          to: selectedPosition,
+                          from: selectedPosition,
+                          to: benchSlot.position,
                         }),
                       );
                       setShowBottomDrawer(false);
