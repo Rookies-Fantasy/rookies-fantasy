@@ -17,6 +17,7 @@ export class AugmentController {
         isActive: augment.data().isActive,
         prerequisites: augment.data().prerequisites,
         effects: augment.data().effects,
+        playerCount: augment.data().playerCount,
       }));
     } catch (error) {
       throw error;

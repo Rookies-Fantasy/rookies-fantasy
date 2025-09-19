@@ -11,6 +11,7 @@ export type Augment = {
   createdAt?: string;
   prerequisites: Prerequisite[];
   effects: Effect[];
+  playerCount: number;
 };
 
 type Stat =

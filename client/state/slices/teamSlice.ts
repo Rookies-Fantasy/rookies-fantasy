@@ -369,6 +369,11 @@ export const selectQualifyingPlayers = createSelector(
   (validation) => validation.qualifyingPlayers,
 );
 
+export const selectQualifyingPlayersCount = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.qualifyingPlayers.length,
+);
+
 export const selectPlayerQualificationMap = createSelector(
   [selectQualifyingPlayers],
   (qualifyingPlayers) =>

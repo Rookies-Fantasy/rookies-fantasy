@@ -20,7 +20,7 @@ import { setAugment } from "@/state/slices/teamSlice";
 import { Augment } from "@/types/augment";
 
 // TODO: Once migrated to S3 blob storage, remove this hardcoded mapping and use the actual URLs from the API.
-const iconMap: Record<string, any> = {
+export const iconMap: Record<string, any> = {
   "all-around-contributors.png": require("@/assets/images/augments/all-around-contributors.png"),
   "all-star-pedigree.png": require("@/assets/images/augments/all-star-pedigree.png"),
   "assist-leaders.png": require("@/assets/images/augments/assist-leaders.png"),
