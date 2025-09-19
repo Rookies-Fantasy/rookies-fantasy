@@ -23,12 +23,11 @@ import { NbaPlayersController } from "@/controllers/nbaPlayersController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
-  isPlayerInLineup,
   removePlayerFromLineup,
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
 import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
-import { resetTeamLineup } from "@/utils/teamUtils";
+import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
