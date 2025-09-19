@@ -35,15 +35,16 @@ export const validateAugment = (
     if (!result.isValid) {
       unmetPrerequisites.push(prerequisite.description);
     } else {
-      if (qualifyingPlayers.length === 0) {
-        qualifyingPlayers = result.qualifyingPlayers;
-      } else {
-        qualifyingPlayers = qualifyingPlayers.filter((player) =>
-          result.qualifyingPlayers.some((qp) => qp.id === player.id),
-        );
-      }
-
       metPrerequisites.push(prerequisite.description);
+    }
+
+    if (qualifyingPlayers.length === 0) {
+      qualifyingPlayers = result.qualifyingPlayers;
+      console.log(result.qualifyingPlayers);
+    } else {
+      qualifyingPlayers = qualifyingPlayers.filter((player) =>
+        result.qualifyingPlayers.some((qp) => qp.id === player.id),
+      );
     }
   }
 
@@ -58,7 +59,7 @@ export const validateAugment = (
 
   return {
     isValid: prerequisitesMet && hasEnoughPlayers,
-    qualifyingPlayers: prerequisitesMet ? qualifyingPlayers : [],
+    qualifyingPlayers,
     unmetPrerequisites,
     metPrerequisites,
   };
