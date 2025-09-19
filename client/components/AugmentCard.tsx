@@ -41,9 +41,8 @@ const AugmentCard = ({ className }: AugmentCardProps) => {
               <Image
                 className="h-8 w-8 rounded-lg"
                 source={iconMap[augment.iconUrl]}
-                style={{ tintColor: "#6042FF" }}
               />
-              <Text className="pbk-h7 text-purple-500">
+              <Text className="pbk-h7 text-base-white">
                 {augment.title.toUpperCase()}
               </Text>
             </View>
