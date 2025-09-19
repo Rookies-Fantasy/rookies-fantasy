@@ -1,20 +1,17 @@
-import { View, Text, Image } from "react-native";
+import { View, Image, Text } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { iconMap } from "@/app/(protected)/(draft)/applyAugment";
 import { useAppSelector } from "@/state/hooks";
-import {
-  selectAugment,
-  selectQualifyingPlayersCount,
-} from "@/state/slices/teamSlice";
+import { selectAugment, selectIsAugmentValid } from "@/state/slices/teamSlice";
 import { cn } from "@/utils/jsUtils";
 
-type AugmentCardProps = {
+type AugmentStatusCardProps = {
   className?: string;
 };
 
-const AugmentCard = ({ className }: AugmentCardProps) => {
+const AugmentStatusCard = ({ className }: AugmentStatusCardProps) => {
   const augment = useAppSelector(selectAugment);
-  const qualifyingPlayersCount = useAppSelector(selectQualifyingPlayersCount);
+  const augmentValid = useAppSelector(selectIsAugmentValid);
 
   return (
     <View className={cn("relative", className)}>
@@ -34,16 +31,23 @@ const AugmentCard = ({ className }: AugmentCardProps) => {
       />
       <View className="w-full rounded-2xl bg-gray-900 p-4">
         {augment && (
-          <View className="flex-col items-center gap-1">
+          <View className="flex-row items-center justify-between gap-1">
             <View className="flex-row items-center">
               <Image className="h-8 w-8" source={iconMap[augment.iconUrl]} />
               <Text className="pbk-h7 text-base-white">
                 {augment.title.toUpperCase()}
               </Text>
             </View>
-            <Text className="pbk-b2 text-base-white">
-              {`${qualifyingPlayersCount} / ${augment.playerCount} players meet the condition for this augment`}
-            </Text>
+            <View
+              className={cn(
+                `h-5 w-16 items-center justify-center rounded-md`,
+                augmentValid ? "bg-green-600" : "bg-gray-600",
+              )}
+            >
+              <Text className="pbk-b3 text-base-white">
+                {augmentValid ? "Active" : "Inactive"}
+              </Text>
+            </View>
           </View>
         )}
       </View>
@@ -51,4 +55,4 @@ const AugmentCard = ({ className }: AugmentCardProps) => {
   );
 };
 
-export default AugmentCard;
+export default AugmentStatusCard;

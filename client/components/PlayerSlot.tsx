@@ -1,10 +1,15 @@
 import { useRouter } from "expo-router";
 import { UserPlus, XCircle } from "phosphor-react-native";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Image } from "react-native";
+import LinearGradient from "react-native-linear-gradient";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
-import { useAppDispatch } from "@/state/hooks";
-import { removePlayerFromLineup } from "@/state/slices/teamSlice";
+import { iconMap } from "@/app/(protected)/(draft)/applyAugment";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  removePlayerFromLineup,
+  selectPlayerQualificationMap,
+} from "@/state/slices/teamSlice";
 import { Player } from "@/types/players";
 import { cn } from "@/utils/jsUtils";
 
@@ -25,18 +30,38 @@ const PlayerSlot = ({
   openDrawer,
   onPlayerRemove,
 }: PlayerSlotProps) => {
+  const augmentIconURL = useAppSelector((state) => state.team.augment?.iconUrl);
+  const playerQualificationMap = useAppSelector(selectPlayerQualificationMap);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const boostedPlayer = playerData && playerQualificationMap[playerData.id];
+
   return (
-    <View
-      className={cn(
-        "w-full justify-center",
-        isCard && "rounded-2xl border-2 border-gray-900",
-        isSelected ? "bg-gray-900" : "bg-gray-920",
+    <View className={cn("w-full justify-center")}>
+      {boostedPlayer && (
+        <LinearGradient
+          colors={["#CCE8FE", "#CDA0FF", "#8489F5", "#CDF1FF", "#B591E9"]}
+          end={{ x: 1, y: 1 }}
+          start={{ x: 0, y: 0 }}
+          style={{
+            position: "absolute",
+            top: -3,
+            right: -3,
+            bottom: -3,
+            left: -3,
+            borderRadius: 16,
+            borderWidth: 1,
+          }}
+        />
       )}
-    >
-      <View className="min-h-24 flex-row items-center justify-between p-3">
+      <View
+        className={cn(
+          "min-h-24 flex-row items-center justify-between p-3",
+          isCard && "rounded-2xl border-2 border-gray-900",
+          isSelected ? "bg-gray-900" : "bg-gray-920",
+        )}
+      >
         <Pressable
           className="flex-1 flex-row items-center gap-2"
           onPress={() => {
@@ -71,13 +96,18 @@ const PlayerSlot = ({
 
         {isCard &&
           (playerData ? (
-            <IconButton
-              icon={<XCircle color="#535862" size={20} />}
-              onPress={() => {
-                dispatch(removePlayerFromLineup(playerData));
-                onPlayerRemove?.();
-              }}
-            />
+            <>
+              {augmentIconURL && boostedPlayer && (
+                <Image className="h-8 w-8" source={iconMap[augmentIconURL]} />
+              )}
+              <IconButton
+                icon={<XCircle color="#535862" size={20} />}
+                onPress={() => {
+                  dispatch(removePlayerFromLineup(playerData));
+                  onPlayerRemove?.();
+                }}
+              />
+            </>
           ) : (
             <IconButton
               icon={<UserPlus color="#6042FF" size={20} />}
