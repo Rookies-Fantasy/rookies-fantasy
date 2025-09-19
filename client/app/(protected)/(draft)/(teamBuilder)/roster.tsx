@@ -18,6 +18,7 @@ import TeamBudget from "@/components/TeamBudget";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { resetToSavedTeam } from "@/state/slices/teamSlice";
 import { SlotPosition } from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
 import { resetTeamLineup } from "@/utils/teamUtils";
 
 const Roster = () => {
@@ -75,12 +76,14 @@ const Roster = () => {
         </ScrollView>
         <TeamActionButtons />
       </Pressable>
-      <RosterDrawer
-        selectedPosition={selectedPosition}
-        setSelectedPosition={setSelectedPosition}
-        setShowBottomDrawer={setShowBottomDrawer}
-        showBottomDrawer={showBottomDrawer}
-      />
+      {isNotNil(selectedPosition) && (
+        <RosterDrawer
+          selectedPosition={selectedPosition}
+          setSelectedPosition={setSelectedPosition}
+          setShowBottomDrawer={setShowBottomDrawer}
+          showBottomDrawer={showBottomDrawer}
+        />
+      )}
     </SafeAreaView>
   );
 };

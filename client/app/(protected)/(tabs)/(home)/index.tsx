@@ -12,6 +12,7 @@ import { useAppSelector } from "@/state/hooks";
 import { selectAugmentId } from "@/state/slices/teamSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
 
 const MyTeam = () => {
   const team = useAppSelector((state) => state.team);
@@ -95,12 +96,14 @@ const MyTeam = () => {
         </View>
       </ScrollView>
       <TeamActionButtons />
-      <RosterDrawer
-        selectedPosition={selectedPosition}
-        setSelectedPosition={setSelectedPosition}
-        setShowBottomDrawer={setShowBottomDrawer}
-        showBottomDrawer={showBottomDrawer}
-      />
+      {isNotNil(selectedPosition) && (
+        <RosterDrawer
+          selectedPosition={selectedPosition}
+          setSelectedPosition={setSelectedPosition}
+          setShowBottomDrawer={setShowBottomDrawer}
+          showBottomDrawer={showBottomDrawer}
+        />
+      )}
     </SafeAreaView>
   );
 };

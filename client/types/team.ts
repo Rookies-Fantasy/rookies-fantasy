@@ -25,7 +25,7 @@ export type LineupSlot = {
 
 export type BenchSlot = {
   position: BenchPosition;
-  player: Player | null;
+  player: Player;
 };
 
 export const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];

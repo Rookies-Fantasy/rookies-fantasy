@@ -3,15 +3,29 @@ import { ScrollView } from "react-native-gesture-handler";
 import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import { swapPlayersInLineup } from "@/state/slices/teamSlice";
-import { FlexPosition, SlotPosition, UTIL_POSITIONS } from "@/types/team";
-import { cn } from "@/utils/jsUtils";
+import {
+  findSlotFromPosition,
+  isPlayerEligibleForPosition,
+  swapPlayersInLineup,
+} from "@/state/slices/teamSlice";
+import { SlotPosition, Team } from "@/types/team";
+import { cn, isNil } from "@/utils/jsUtils";
 
 type RosterDrawerProps = {
-  selectedPosition: SlotPosition | null;
+  selectedPosition: SlotPosition;
   setSelectedPosition: (selectedPosition: SlotPosition | null) => void;
   setShowBottomDrawer: (showBottomDrawer: boolean) => void;
   showBottomDrawer: boolean;
+};
+
+const getSelectedPlayer = (selectedPosition: SlotPosition, team: Team) => {
+  if (selectedPosition.startsWith("BEN")) {
+    const benchSlot = findSlotFromPosition(team.bench, selectedPosition);
+    return benchSlot?.player ?? null;
+  }
+
+  const lineupSlot = findSlotFromPosition(team.lineup, selectedPosition);
+  return lineupSlot?.player ?? null;
 };
 
 const RosterDrawer = ({
@@ -23,61 +37,21 @@ const RosterDrawer = ({
   const team = useAppSelector((state) => state.team);
   const dispatch = useAppDispatch();
 
-  const getSelectedPlayer = () => {
-    if (!selectedPosition) return null;
-
-    if (!selectedPosition.startsWith("BEN")) {
-      const lineupSlot = team.lineup.find(
-        (slot) => slot.position === selectedPosition,
-      );
-      return lineupSlot?.player || null;
-    }
-
-    const benchSlot = team.bench.find(
-      (slot) => slot.position === selectedPosition,
-    );
-    return benchSlot?.player || null;
-  };
-
-  const selectedPlayer = getSelectedPlayer();
-
   const eligibleSlots = team.lineup.filter((slot) => {
-    if (!selectedPosition || slot.position === selectedPosition) return false;
+    const selectedPlayer = getSelectedPlayer(selectedPosition, team);
+    const selectedSlotIsEmpty = isNil(selectedPlayer);
 
-    if (!selectedPlayer) {
-      if (!slot.player) return false;
-
-      return (
-        slot.player.positions.includes(selectedPosition) ||
-        selectedPosition.startsWith("BEN") ||
-        UTIL_POSITIONS.includes(selectedPosition as FlexPosition)
-      );
+    if (selectedSlotIsEmpty) {
+      if (isNil(slot.player)) {
+        return false;
+      }
+      return isPlayerEligibleForPosition(slot.player, selectedPosition);
     }
 
-    return (
-      selectedPlayer.positions.includes(slot.position) ||
-      UTIL_POSITIONS.includes(slot.position as FlexPosition)
-    );
+    return isPlayerEligibleForPosition(selectedPlayer, slot.position);
   });
 
-  const eligibleBenchSlots = team.bench.filter((benchSlot) => {
-    if (!selectedPosition || benchSlot.position === selectedPosition)
-      return false;
-
-    if (!selectedPlayer) {
-      if (!benchSlot.player || selectedPosition.startsWith("BEN")) return false;
-
-      return (
-        benchSlot.player.positions.includes(selectedPosition) ||
-        UTIL_POSITIONS.includes(selectedPosition as FlexPosition)
-      );
-    }
-
-    return true;
-  });
-
-  const hasEligibleOptions =
-    eligibleSlots.length > 0 || eligibleBenchSlots.length > 0;
+  const hasEligibleOptions = eligibleSlots.length > 0;
 
   const onClose = () => {
     setShowBottomDrawer(false);
@@ -132,7 +106,7 @@ const RosterDrawer = ({
                 />
               </View>
             ))}
-            {eligibleBenchSlots.map((benchSlot) => (
+            {team.bench.map((benchSlot) => (
               <View
                 className="border-b-2 border-gray-900"
                 key={benchSlot.position}
@@ -171,7 +145,7 @@ const RosterDrawer = ({
         ) : (
           <View className="flex-1 items-center justify-center">
             <Text className="pbk-b2 text-center text-gray-300">
-              No eligible positions for this player.
+              No eligible players for this position.
             </Text>
           </View>
         )}
