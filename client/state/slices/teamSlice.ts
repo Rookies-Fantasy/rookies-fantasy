@@ -167,29 +167,27 @@ const teamSlice = createSlice({
 
       // Case 1: Bench to Lineup
       if (isNotNil(fromInfo.benchSlot) && isNotNil(toInfo.lineupSlot)) {
-        const playerToMoveToLineup = fromInfo.player;
-        const playerToMoveToBench = toInfo.player;
+        const benchPlayer = fromInfo.player;
+        const lineupPlayer = toInfo.player;
 
-        if (isNil(playerToMoveToBench)) {
+        if (isNil(lineupPlayer)) {
           removeBenchSlot(state.bench, from as BenchPosition);
         } else {
-          const newBench = state.bench.map((o) => {
-            if (o.position === fromInfo.benchSlot?.position) {
-              return { ...o, player: playerToMoveToBench };
-            }
-            return o;
+          // Find bench slot that the player who is going to move to the lineup is in, swap him out
+          const newBench = swapPlayers(state.bench, fromInfo.benchSlot, {
+            ...fromInfo.benchSlot,
+            player: lineupPlayer,
           });
           state.bench = newBench;
         }
 
         // Player cannot be empty if they're from the bench
-        if (isNil(playerToMoveToLineup)) return;
+        if (isNil(benchPlayer)) return;
 
-        const newLineup = state.lineup.map((o) => {
-          if (o.position === toInfo.lineupSlot?.position) {
-            return { ...o, player: playerToMoveToLineup };
-          }
-          return o;
+        // Find lineup slot that the player who's on the lineup is in right now, swap him out
+        const newLineup = swapPlayers(state.bench, toInfo.lineupSlot, {
+          ...toInfo.lineupSlot,
+          player: benchPlayer,
         });
         state.lineup = newLineup;
         state.hasUserChanges = true;
@@ -198,18 +196,16 @@ const teamSlice = createSlice({
 
       // Case 2 Lineup to Bench
       if (isNotNil(fromInfo.lineupSlot) && isNotNil(toInfo.benchSlot)) {
-        console.log("IN IF");
         const lineupPlayer = fromInfo.player;
         const benchPlayer = toInfo.player;
 
         if (isNil(lineupPlayer)) {
           removeBenchSlot(state.bench, from as BenchPosition);
         } else {
-          const newBench = state.bench.map((o) => {
-            if (o.position === toInfo.benchSlot?.position) {
-              return { ...o, player: lineupPlayer };
-            }
-            return o;
+          // Find bench slot that the player who's on the bench is in right now, swap him out
+          const newBench = swapPlayers(state.bench, toInfo.benchSlot, {
+            ...toInfo.benchSlot,
+            player: lineupPlayer,
           });
           state.bench = newBench;
         }
@@ -217,11 +213,10 @@ const teamSlice = createSlice({
         // Player cannot be empty if they're from the bench
         if (isNil(benchPlayer)) return;
 
-        const newLineup = state.lineup.map((o) => {
-          if (o.position === fromInfo.lineupSlot?.position) {
-            return { ...o, player: benchPlayer };
-          }
-          return o;
+        // Find lineup slot that the player who is going to move to the bench is in, swap him out
+        const newLineup = swapPlayers(state.bench, fromInfo.lineupSlot, {
+          ...fromInfo.lineupSlot,
+          player: benchPlayer,
         });
         state.lineup = newLineup;
         state.hasUserChanges = true;
