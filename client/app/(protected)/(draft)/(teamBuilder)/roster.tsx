@@ -66,9 +66,11 @@ const Roster = () => {
                 </Pressable>
               </View>
 
-              <AugmentCard />
+              <View className="gap-4">
+                <AugmentCard />
 
-              <TeamBudget />
+                <TeamBudget />
+              </View>
             </View>
 
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">

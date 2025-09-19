@@ -205,8 +205,11 @@ const Players = () => {
                 onPress={() => router.dismissAll()}
               />
             </View>
-            <AugmentCard />
-            <TeamBudget />
+            <View className="gap-4">
+              <AugmentCard />
+
+              <TeamBudget />
+            </View>
             <View className="my-10 w-full flex-row items-center gap-4">
               <View className="flex-1">
                 <SearchBar onChangeText={setQuery} value={query} />
