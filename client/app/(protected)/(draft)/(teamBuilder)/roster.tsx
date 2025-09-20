@@ -10,10 +10,10 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AugmentCard from "@/components/AugmentCard";
 import IconButton from "@/components/IconButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
+import SelectedAugment from "@/components/SelectedAugment";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
@@ -67,7 +67,7 @@ const Roster = () => {
               </View>
 
               <View className="gap-4">
-                <AugmentCard />
+                <SelectedAugment />
 
                 <TeamBudget />
               </View>

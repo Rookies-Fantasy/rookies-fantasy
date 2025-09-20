@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { View, Image, Text, Pressable } from "react-native";
+import { View, Text, Image, Pressable } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import AugmentCard, { iconMap } from "./AugmentCard";
 import Dialog from "./Dialog";
 import { useAppSelector } from "@/state/hooks";
-import { selectAugment, selectIsAugmentValid } from "@/state/slices/teamSlice";
-import { cn } from "@/utils/jsUtils";
+import {
+  selectAugment,
+  selectQualifyingPlayersCount,
+} from "@/state/slices/teamSlice";
 
-const AugmentStatusCard = () => {
+const SelectedAugment = () => {
   const augment = useAppSelector(selectAugment);
-  const augmentValid = useAppSelector(selectIsAugmentValid);
+  const qualifyingPlayersCount = useAppSelector(selectQualifyingPlayersCount);
   const [openDialog, setOpenDialog] = useState(false);
 
   return (
@@ -48,23 +50,16 @@ const AugmentStatusCard = () => {
       />
       <View className="w-full rounded-2xl bg-gray-900 p-4">
         {augment && (
-          <View className="flex-row items-center justify-between gap-1">
+          <View className="flex-col items-center gap-1">
             <View className="flex-row items-center">
               <Image className="h-8 w-8" source={iconMap[augment.iconUrl]} />
               <Text className="pbk-h7 text-base-white">
                 {augment.title.toUpperCase()}
               </Text>
             </View>
-            <View
-              className={cn(
-                `h-5 w-16 items-center justify-center rounded-md`,
-                augmentValid ? "bg-green-600" : "bg-gray-600",
-              )}
-            >
-              <Text className="pbk-b3 text-base-white">
-                {augmentValid ? "Active" : "Inactive"}
-              </Text>
-            </View>
+            <Text className="pbk-b2 text-base-white">
+              {`${qualifyingPlayersCount} / ${augment.playerCount} players meet the condition for this augment`}
+            </Text>
           </View>
         )}
       </View>
@@ -72,4 +67,4 @@ const AugmentStatusCard = () => {
   );
 };
 
-export default AugmentStatusCard;
+export default SelectedAugment;

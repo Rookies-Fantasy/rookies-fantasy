@@ -2,9 +2,9 @@ import { useRouter } from "expo-router";
 import { UserPlus, XCircle } from "phosphor-react-native";
 import { View, Text, Pressable, Image } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
+import { iconMap } from "./AugmentCard";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
-import { iconMap } from "@/app/(protected)/(draft)/applyAugment";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   removePlayerFromLineup,
