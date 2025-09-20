@@ -186,7 +186,7 @@ const teamSlice = createSlice({
         if (isNil(benchPlayer)) return;
 
         // Find lineup slot that the player who's on the lineup is in right now, swap him out
-        const newLineup = swapPlayers(state.bench, toInfo.lineupSlot, {
+        const newLineup = swapPlayers(state.lineup, toInfo.lineupSlot, {
           position: toInfo.lineupSlot.position,
           player: benchPlayer,
         });
@@ -215,7 +215,7 @@ const teamSlice = createSlice({
         if (isNil(benchPlayer)) return;
 
         // Find lineup slot that the player who is going to move to the bench is in, swap him out
-        const newLineup = swapPlayers(state.bench, fromInfo.lineupSlot, {
+        const newLineup = swapPlayers(state.lineup, fromInfo.lineupSlot, {
           position: fromInfo.lineupSlot.position,
           player: benchPlayer,
         });
