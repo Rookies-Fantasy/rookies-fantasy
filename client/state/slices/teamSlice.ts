@@ -158,6 +158,7 @@ const teamSlice = createSlice({
       }
     },
     swapPlayersInLineup: (state, action: PayloadAction<SwapPayload>) => {
+      // TODO: Add toasts for all swap actions
       const { from, to } = action.payload;
 
       if (from === to) return;
@@ -175,7 +176,7 @@ const teamSlice = createSlice({
         } else {
           // Find bench slot that the player who is going to move to the lineup is in, swap him out
           const newBench = swapPlayers(state.bench, fromInfo.benchSlot, {
-            ...fromInfo.benchSlot,
+            position: fromInfo.benchSlot.position,
             player: lineupPlayer,
           });
           state.bench = newBench;
@@ -186,7 +187,7 @@ const teamSlice = createSlice({
 
         // Find lineup slot that the player who's on the lineup is in right now, swap him out
         const newLineup = swapPlayers(state.bench, toInfo.lineupSlot, {
-          ...toInfo.lineupSlot,
+          position: toInfo.lineupSlot.position,
           player: benchPlayer,
         });
         state.lineup = newLineup;
@@ -204,7 +205,7 @@ const teamSlice = createSlice({
         } else {
           // Find bench slot that the player who's on the bench is in right now, swap him out
           const newBench = swapPlayers(state.bench, toInfo.benchSlot, {
-            ...toInfo.benchSlot,
+            position: toInfo.benchSlot.position,
             player: lineupPlayer,
           });
           state.bench = newBench;
@@ -215,7 +216,7 @@ const teamSlice = createSlice({
 
         // Find lineup slot that the player who is going to move to the bench is in, swap him out
         const newLineup = swapPlayers(state.bench, fromInfo.lineupSlot, {
-          ...fromInfo.lineupSlot,
+          position: fromInfo.lineupSlot.position,
           player: benchPlayer,
         });
         state.lineup = newLineup;
@@ -259,20 +260,17 @@ const teamSlice = createSlice({
           );
 
           if (playerFromEligibility && playerToEligibility) {
-            // Both players can swap positions - direct swap
-            // (TODO: Success toast that confirms the swap)
+            // Direct swap if both players can swap positions
             const newLineup = swapPlayers(state.lineup, lineupFrom, lineupTo);
             state.lineup = newLineup;
           }
 
           if (playerFromEligibility && !playerToEligibility) {
-            // Player A can go to Player B's position, but Player B cannot go to
-            // Player A's position. Move Player A to Player B's position,
-            // Player B goes to bench
-            // (TODO: Success toast that confirms where player B has gone)
+            // If player A can go to Player B's position, but Player B can't go to Player A's position,
+            // move Player A to Player B's position, then move Player B to the bench
             addBenchSlot(state.bench, lineupTo.player);
             const newLineup = swapPlayers(state.lineup, lineupFrom, {
-              ...lineupTo,
+              position: lineupTo.position,
               player: null,
             });
             state.lineup = newLineup;
