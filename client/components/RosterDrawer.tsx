@@ -5,7 +5,7 @@ import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { swapPlayersInLineup } from "@/state/slices/teamSlice";
 import { SlotPosition, Team } from "@/types/team";
-import { cn, isNil } from "@/utils/jsUtils";
+import { cn, isNil, isNotNil } from "@/utils/jsUtils";
 import {
   findSlotFromPosition,
   isPlayerEligibleForPosition,
@@ -37,21 +37,27 @@ const RosterDrawer = ({
   const team = useAppSelector((state) => state.team);
   const dispatch = useAppDispatch();
 
+  const selectedPlayer = getSelectedPlayer(selectedPosition, team);
+  const selectedSlotIsEmpty = isNil(selectedPlayer);
+
   const eligibleSlots = team.lineup.filter((slot) => {
-    const selectedPlayer = getSelectedPlayer(selectedPosition, team);
-    const selectedSlotIsEmpty = isNil(selectedPlayer);
-
     if (selectedSlotIsEmpty) {
-      if (isNil(slot.player)) {
-        return false;
-      }
-      return isPlayerEligibleForPosition(slot.player, selectedPosition);
+      return (
+        isNotNil(slot.player) &&
+        isPlayerEligibleForPosition(slot.player, selectedPosition)
+      );
     }
-
     return isPlayerEligibleForPosition(selectedPlayer, slot.position);
   });
 
-  const hasEligibleOptions = eligibleSlots.length > 0;
+  const eligibleBenchSlots = team.bench.filter(
+    (slot) =>
+      isPlayerEligibleForPosition(slot.player, selectedPosition) ||
+      selectedPosition.startsWith("BEN"),
+  );
+
+  const hasEligibleOptions =
+    eligibleSlots.length > 0 || eligibleBenchSlots.length > 0;
 
   const onClose = () => {
     setShowBottomDrawer(false);
@@ -91,8 +97,8 @@ const RosterDrawer = ({
                     ) {
                       dispatch(
                         swapPlayersInLineup({
-                          from: selectedPosition,
-                          to: slot.position,
+                          fromPosition: selectedPosition,
+                          toPosition: slot.position,
                         }),
                       );
                       setShowBottomDrawer(false);
@@ -106,7 +112,7 @@ const RosterDrawer = ({
                 />
               </View>
             ))}
-            {team.bench.map((benchSlot) => (
+            {eligibleBenchSlots.map((benchSlot) => (
               <View
                 className="border-b-2 border-gray-900"
                 key={benchSlot.position}
@@ -126,8 +132,8 @@ const RosterDrawer = ({
                     ) {
                       dispatch(
                         swapPlayersInLineup({
-                          from: selectedPosition,
-                          to: benchSlot.position,
+                          fromPosition: selectedPosition,
+                          toPosition: benchSlot.position,
                         }),
                       );
                       setShowBottomDrawer(false);
