@@ -92,40 +92,43 @@ const Players = () => {
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
 
-    return players.map((player) => [
-      <IconButton
-        className={
-          isPlayerInLineup(team.lineup, player.id)
-            ? "bg-red-600"
-            : "bg-purple-600"
-        }
-        icon={
-          isPlayerInLineup(team.lineup, player.id) ? (
-            <Minus color="white" size={12} />
-          ) : (
-            <Plus color="white" size={12} />
-          )
-        }
-        key={player.id}
-        onPress={() => {
-          if (isPlayerInLineup(team.lineup, player.id)) {
-            dispatch(removePlayerFromLineup(player));
-          } else {
-            dispatch(addPlayerToLineup(player));
+    return players.map((player) => ({
+      id: player.id,
+      cells: [
+        <IconButton
+          className={
+            isPlayerInLineup(team.lineup, player.id)
+              ? "bg-red-600"
+              : "bg-purple-600"
           }
-        }}
-      />,
-      <PlayerData key={player.id} player={player} />,
-      player.gamesPlayed,
-      player.averageStats.min.toFixed(1),
-      player.averageStats.pts.toFixed(1),
-      player.averageStats.reb.toFixed(1),
-      player.averageStats.ast.toFixed(1),
-      player.averageStats.stl.toFixed(1),
-      player.averageStats.blk.toFixed(1),
-      player.averageStats.tov.toFixed(1),
-      player.averageStats.fpts,
-    ]);
+          icon={
+            isPlayerInLineup(team.lineup, player.id) ? (
+              <Minus color="white" size={12} />
+            ) : (
+              <Plus color="white" size={12} />
+            )
+          }
+          key={player.id}
+          onPress={() => {
+            if (isPlayerInLineup(team.lineup, player.id)) {
+              dispatch(removePlayerFromLineup(player));
+            } else {
+              dispatch(addPlayerToLineup(player));
+            }
+          }}
+        />,
+        <PlayerData key={player.id} player={player} />,
+        player.gamesPlayed,
+        player.averageStats.min.toFixed(1),
+        player.averageStats.pts.toFixed(1),
+        player.averageStats.reb.toFixed(1),
+        player.averageStats.ast.toFixed(1),
+        player.averageStats.stl.toFixed(1),
+        player.averageStats.blk.toFixed(1),
+        player.averageStats.tov.toFixed(1),
+        player.averageStats.fpts,
+      ],
+    }));
   }, [data?.pages, dispatch, team.lineup]);
 
   return (
