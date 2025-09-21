@@ -1,6 +1,6 @@
 import { PayloadAction, createSlice, createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { Player } from "@/types/players";
+import { Player } from "@/types/player";
 import {
   defaultTeam,
   FlexPosition,

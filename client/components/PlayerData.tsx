@@ -1,5 +1,5 @@
 import { View, Text, Image } from "react-native";
-import { Player } from "@/types/players";
+import { Player } from "@/types/player";
 
 type PlayerDataProps = {
   player: Player;

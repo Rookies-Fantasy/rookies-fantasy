@@ -1,4 +1,4 @@
-import { Player } from "./players";
+import { Player } from "./player";
 export const TEAM_BALANCE = 150000000;
 
 export type Team = {

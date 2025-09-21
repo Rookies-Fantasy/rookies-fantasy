@@ -8,7 +8,7 @@ import {
   removePlayerFromLineup,
   selectAugmentId,
 } from "@/state/slices/teamSlice";
-import { Player } from "@/types/players";
+import { Player } from "@/types/player";
 import { cn } from "@/utils/jsUtils";
 
 type PlayerSlotProps = {
