@@ -20,7 +20,7 @@ export type SaveLineupOptions = {
 export const findSlotFromPosition = <T extends LineupSlot | BenchSlot>(
   arr: T[],
   selectedPosition: SlotPosition,
-) => arr.find((slot) => slot.position === selectedPosition);
+) => arr.find((slot) => slot.position === selectedPosition) ?? null;
 
 export const isPlayerInLineup = (
   lineup: LineupSlot[],
@@ -33,6 +33,9 @@ export const isPlayerEligibleForPosition = (
 ) =>
   player.positions.includes(position) ||
   UTIL_POSITIONS.includes(position as FlexPosition);
+
+export const isBenchPosition = (position: SlotPosition) =>
+  position.startsWith("BEN");
 
 export const saveTeamLineup = async (
   userId: string,
