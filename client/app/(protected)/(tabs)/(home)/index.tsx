@@ -36,6 +36,7 @@ const MyTeam = () => {
   return (
     <SafeAreaView className="h-full w-full items-center justify-center bg-gray-950">
       <ScrollView
+        // TODO: Find a better way to prevent FAB from blocking content (maybe use SafeAreaView bottom inset)
         contentContainerClassName={team.hasUserChanges ? "pb-10" : ""}
       >
         <View className="h-72 w-full">
@@ -90,8 +91,8 @@ const MyTeam = () => {
             bench={team.bench}
             isCard
             lineup={team.lineup}
+            onOpen={() => setShowBottomDrawer(true)}
             setSelectedPosition={setSelectedPosition}
-            setShowBottomDrawer={() => setShowBottomDrawer(true)}
           />
         </View>
       </ScrollView>

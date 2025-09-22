@@ -15,17 +15,13 @@ import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
-import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import { resetToSavedTeam } from "@/state/slices/teamSlice";
+import { useAppSelector } from "@/state/hooks";
 import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
-import { resetTeamLineup } from "@/utils/teamUtils";
 
 const Roster = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
-  const userId = useAppSelector((state) => state.user.id);
-  const dispatch = useAppDispatch();
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
@@ -46,13 +42,6 @@ const Roster = () => {
                     className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
                     icon={<ArrowLeft color="white" size={20} weight="bold" />}
                     onPress={async () => {
-                      const savedData = await resetTeamLineup(userId, team.id);
-                      dispatch(
-                        resetToSavedTeam({
-                          lineup: savedData.lineup,
-                          balance: savedData.balance,
-                        }),
-                      );
                       router.dismissTo("/(protected)/(tabs)/(home)");
                     }}
                   />
@@ -68,8 +57,8 @@ const Roster = () => {
                 bench={team.bench}
                 isCard
                 lineup={team.lineup}
+                onOpen={() => setShowBottomDrawer(true)}
                 setSelectedPosition={setSelectedPosition}
-                setShowBottomDrawer={() => setShowBottomDrawer(true)}
               />
             </View>
           </KeyboardAvoidingView>

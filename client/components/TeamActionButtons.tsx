@@ -63,6 +63,7 @@ const TeamActionButtons = ({
           }
         }}
       >
+        {/* TODO: Move this loading check inside FAB itself*/}
         {isResetLoading ? (
           <View className="items-center justify-center">
             <Spinner />

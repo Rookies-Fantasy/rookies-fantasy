@@ -26,6 +26,7 @@ import {
   removePlayerFromLineup,
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
+import { Player } from "@/types/players";
 import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
@@ -49,7 +50,7 @@ const Players = () => {
 
   const {
     data,
-    isLoading: isLoadingFetch,
+    isLoading,
     isError,
     fetchNextPage,
     hasNextPage,
@@ -66,7 +67,7 @@ const Players = () => {
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
 
-    const checkRosterAvailability = (player: any) => {
+    const playerHasAvailablePosition = (player: Player) => {
       const positions = player.positions || [];
       const hasAvailablePosition = team.lineup.some(
         (slot) =>
@@ -97,7 +98,7 @@ const Players = () => {
           if (isPlayerInLineup(team.lineup, player.id)) {
             dispatch(removePlayerFromLineup(player));
           } else {
-            if (checkRosterAvailability(player)) {
+            if (playerHasAvailablePosition(player)) {
               dispatch(addPlayerToLineup(player));
             } else {
               Alert.alert("Cannot add player", "No eligible spot available");
@@ -158,7 +159,7 @@ const Players = () => {
             </View>
           </View>
 
-          {isLoadingFetch ? (
+          {isLoading ? (
             <View className="flex-1 items-center justify-center border-t-2 border-gray-900">
               <Spinner />
             </View>

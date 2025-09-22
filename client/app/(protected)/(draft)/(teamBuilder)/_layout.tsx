@@ -3,9 +3,10 @@ import { UserPlus, UsersThree } from "phosphor-react-native";
 import { useAppSelector } from "@/state/hooks";
 import { selectRosterPlayerCount } from "@/state/slices/teamSlice";
 
+const MAX_PLAYERS = 8;
+
 const TeamBuilderLayout = () => {
   const selectedPlayers = useAppSelector(selectRosterPlayerCount) ?? 0;
-  const MAX_PLAYERS = 8;
 
   return (
     <Tabs
