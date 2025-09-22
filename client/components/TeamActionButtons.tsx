@@ -7,15 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { resetToSavedTeam, saveTeam } from "@/state/slices/teamSlice";
 import { resetTeamLineup, saveTeamLineup } from "@/utils/teamUtils";
 
-type TeamActionButtonsProps = {
-  onSaveSuccess?: () => void;
-  onResetSuccess?: () => void;
-};
-
-const TeamActionButtons = ({
-  onSaveSuccess,
-  onResetSuccess,
-}: TeamActionButtonsProps) => {
+const TeamActionButtons = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
@@ -31,7 +23,6 @@ const TeamActionButtons = ({
   const handleSave = () => {
     dispatch(saveTeam());
     router.dismissTo("/(protected)/(tabs)/(home)");
-    onSaveSuccess?.();
   };
 
   if (!showFAB) {
@@ -54,7 +45,6 @@ const TeamActionButtons = ({
                 balance: savedData.balance,
               }),
             );
-            onResetSuccess?.();
             router.dismissTo("/(protected)/(tabs)/(home)");
           } catch (error) {
             console.error("Failed to reset lineup:", error);
@@ -63,6 +53,7 @@ const TeamActionButtons = ({
           }
         }}
       >
+        {/* TODO: Move this loading check inside FAB itself*/}
         {isResetLoading ? (
           <View className="items-center justify-center">
             <Spinner />

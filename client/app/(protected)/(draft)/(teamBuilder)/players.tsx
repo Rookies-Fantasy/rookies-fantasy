@@ -1,7 +1,7 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
+import { ArrowLeft, Minus, Plus, Sliders } from "phosphor-react-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -25,14 +25,13 @@ import { NbaTeamsController } from "@/controllers/nbaTeamsController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
-  isPlayerInLineup,
   removePlayerFromLineup,
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
+import { Player } from "@/types/players";
 import { Position, FlexPosition, UTIL_POSITIONS } from "@/types/team";
-
-import { resetTeamLineup } from "@/utils/teamUtils";
+import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -84,7 +83,7 @@ const Players = () => {
 
   const {
     data,
-    isLoading: isLoadingFetch,
+    isLoading,
     isError,
     fetchNextPage,
     hasNextPage,
@@ -120,7 +119,7 @@ const Players = () => {
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
 
-    const checkRosterAvailability = (player: any) => {
+    const playerHasAvailablePosition = (player: Player) => {
       const positions = player.positions || [];
       const hasAvailablePosition = team.lineup.some(
         (slot) =>
@@ -151,7 +150,7 @@ const Players = () => {
           if (isPlayerInLineup(team.lineup, player.id)) {
             dispatch(removePlayerFromLineup(player));
           } else {
-            if (checkRosterAvailability(player)) {
+            if (playerHasAvailablePosition(player)) {
               dispatch(addPlayerToLineup(player));
             } else {
               Alert.alert("Cannot add player", "No eligible spot available");
@@ -193,16 +192,11 @@ const Players = () => {
                         balance: savedData.balance,
                       }),
                     );
-                    router.back();
+                    router.dismissTo("/(protected)/(tabs)/(home)");
                   }}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
-              <IconButton
-                className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                icon={<X color="white" size={20} weight="bold" />}
-                onPress={() => router.dismissAll()}
-              />
             </View>
             <TeamBudget />
             <View className="my-10 w-full flex-row items-center gap-4">
@@ -227,7 +221,7 @@ const Players = () => {
             </View>
           </View>
 
-          {isLoadingFetch ? (
+          {isLoading ? (
             <View className="flex-1 items-center justify-center border-t-2 border-gray-900">
               <Spinner />
             </View>

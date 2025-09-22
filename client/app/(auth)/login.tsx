@@ -206,13 +206,14 @@ const Login = () => {
           <View className="h-px flex-1 bg-gray-800" />
         </View>
         <SSOButtons />
+        {/* TODO: Replace with a PressableLink text variant, handle nav animation better*/}
         <Text className="pbk-b1 my-2 text-center text-gray-600">
-          Don&apos;t have an account?
+          {`Don't have an account? `}
           <Text
             className="text-purple-600"
-            onPress={() => router.push("/(auth)/signUp")}
+            onPress={() => router.replace("/(auth)/signUp")}
           >
-            {` Sign up`}
+            Sign up
           </Text>
         </Text>
       </KeyboardAvoidingView>
