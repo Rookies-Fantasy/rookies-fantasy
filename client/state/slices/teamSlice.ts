@@ -130,7 +130,7 @@ const teamSlice = createSlice({
 
       for (const position of allEligiblePositions as SlotPosition[]) {
         const slot = findSlotFromPosition(state.lineup, position);
-        if (isNotNil(slot) && !isNotNil(slot.player)) {
+        if (isNotNil(slot) && isNil(slot.player)) {
           slot.player = player;
           state.balance -= slot.player.salary;
           state.hasUserChanges = true;
