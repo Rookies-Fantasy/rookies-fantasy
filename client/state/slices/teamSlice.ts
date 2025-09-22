@@ -121,29 +121,20 @@ const teamSlice = createSlice({
       const player = action.payload;
       const positions = player.positions;
 
-      if (!positions || positions.length === 0) {
+      if (positions.length === 0) {
         return;
       }
 
-      // Look through remaining eligible positions
-      for (const position of positions as SlotPosition[]) {
+      // All of the positions the player plays plus any util positions
+      const allEligiblePositions = [...positions, ...UTIL_POSITIONS];
+
+      for (const position of allEligiblePositions as SlotPosition[]) {
         const slot = findSlotFromPosition(state.lineup, position);
         if (isNotNil(slot) && !isNotNil(slot.player)) {
           slot.player = player;
           state.balance -= slot.player.salary;
           state.hasUserChanges = true;
-          return;
-        }
-      }
-
-      // Check UTIL positions if no eligible positions are available
-      for (const utilPosition of UTIL_POSITIONS) {
-        const slot = findSlotFromPosition(state.lineup, utilPosition);
-        if (isNotNil(slot) && !isNotNil(slot.player)) {
-          slot.player = player;
-          state.balance -= slot.player.salary;
-          state.hasUserChanges = true;
-          return;
+          break;
         }
       }
     },
