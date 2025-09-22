@@ -15,6 +15,7 @@ import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
 
 const MyTeam = () => {
+  const router = useRouter();
   const team = useAppSelector((state) => state.team);
   const augmentId = useAppSelector(selectAugmentId);
   const matchedLogo = teamLogoOptions.find(
@@ -24,8 +25,6 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-  const router = useRouter();
-
   const [isNavigating, setIsNavigating] = useState(false);
   useFocusEffect(
     useCallback(() => {

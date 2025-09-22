@@ -44,7 +44,6 @@ const Accordion = ({
   const [localIsExpanded, setLocalIsExpanded] = useState(defaultExpanded);
   const isControlled = controlledIsExpanded !== undefined;
   const isExpanded = isControlled ? controlledIsExpanded : localIsExpanded;
-
   const rotation = useSharedValue(isExpanded ? 90 : 0);
   const height = useSharedValue(isExpanded ? 1 : 0);
 

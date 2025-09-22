@@ -30,14 +30,12 @@ import {
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
 import { Player } from "@/types/players";
-import { Position, FlexPosition, UTIL_POSITIONS } from "@/types/team";
+import { FlexPosition, PositionOption, UTIL_POSITIONS } from "@/types/team";
 import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
-
-export type PositionOption = Position | "ALL" | "G" | "F";
 
 export type Filters = {
   selectedTeams: NbaTeam[];
@@ -103,6 +101,7 @@ const Players = () => {
     initialPageParam: undefined,
   });
 
+  // TODO: Cache or store these assets so we can reduce fetches
   useEffect(() => {
     const fetchData = async () => {
       try {

@@ -12,8 +12,8 @@ import { cn } from "@/utils/jsUtils";
 export type RangeSliderValue = [number, number];
 
 export type RangeSliderProps = {
-  min: number;
-  max: number;
+  min?: number;
+  max?: number;
   step?: number;
   value?: RangeSliderValue;
   defaultValue?: RangeSliderValue;
@@ -38,9 +38,9 @@ const DEFAULT_THUMB_SIZE = 24;
 const DEFAULT_TRACK_HEIGHT = 8;
 
 const RangeSlider = ({
-  min,
-  max,
-  step = 1,
+  min = 1000000,
+  max = 150000000,
+  step = 1000000,
   value: controlledValue,
   defaultValue,
   onChange,

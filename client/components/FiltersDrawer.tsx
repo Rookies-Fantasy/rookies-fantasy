@@ -7,11 +7,9 @@ import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
 import Button from "./Button";
 import RangeSlider from "./RangeSlider";
-import {
-  Filters,
-  PositionOption,
-} from "@/app/(protected)/(draft)/(teamBuilder)/players";
+import { Filters } from "@/app/(protected)/(draft)/(teamBuilder)/players";
 import { NbaTeam } from "@/types/nbaTeams";
+import { POSITION_OPTIONS, PositionOption } from "@/types/team";
 import { cn } from "@/utils/jsUtils";
 
 type FilterDrawerProps = {
@@ -63,17 +61,6 @@ const FiltersDrawer = ({
     localFilters.selectedTeams.some(
       (selectedTeam) => selectedTeam.id === team.id,
     );
-
-  const positionOptions: PositionOption[] = [
-    "ALL",
-    "PG",
-    "SG",
-    "SF",
-    "PF",
-    "C",
-    "G",
-    "F",
-  ];
 
   const handlePositionPress = (position: PositionOption) => {
     const isSelected = localFilters.selectedPositions.includes(position);
@@ -194,7 +181,7 @@ const FiltersDrawer = ({
       </Accordion>
       <Accordion title="Position">
         <View className="ml-4 flex-row flex-wrap items-center justify-center gap-x-7">
-          {positionOptions.map((position) => (
+          {POSITION_OPTIONS.map((position) => (
             <View className="w-1/5" key={position}>
               <Pressable
                 className={cn(
@@ -220,10 +207,7 @@ const FiltersDrawer = ({
         <View className="flex-row justify-center">
           <RangeSlider
             formatValue={formatSalaryValue}
-            max={150000000}
-            min={1000000}
             onChange={([min, max]) => handleSalaryChange(min, max)}
-            step={1000000}
             value={[localFilters.salaryRange.min, localFilters.salaryRange.max]}
           />
         </View>
