@@ -1,12 +1,12 @@
 import { Image } from "expo-image";
 import { Check } from "phosphor-react-native";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
-import FloatingActionButton from "./FloatingActionButton";
+import Button from "./Button";
 import RangeSlider from "./RangeSlider";
-import Spinner from "./Spinner";
 import {
   Filters,
   PositionOption,
@@ -139,36 +139,21 @@ const FiltersDrawer = ({
   return (
     <BottomSheet
       footer={
-        <View className="absolute left-6 right-6 flex-row gap-4">
-          <FloatingActionButton
-            absolute={false}
-            buttonBackground="bg-gray-900 border border-gray-800"
+        <View className="flex-row gap-4">
+          <Button
             className="flex-1"
+            isLoading={isResetLoading}
+            label="RESET"
             onPress={handleReset}
-          >
-            {isResetLoading ? (
-              <View className="items-center justify-center">
-                <Spinner />
-              </View>
-            ) : (
-              <Text className="pbk-h6 text-center text-base-white">RESET</Text>
-            )}
-          </FloatingActionButton>
+            variant="secondary"
+          />
 
-          <FloatingActionButton
-            absolute={false}
-            buttonBackground="bg-purple-500"
+          <Button
             className="flex-1"
+            isLoading={isApplyLoading}
+            label="APPLY"
             onPress={handleApply}
-          >
-            {isApplyLoading ? (
-              <View className="items-center justify-center">
-                <Spinner />
-              </View>
-            ) : (
-              <Text className="pbk-h6 text-center text-base-white">APPLY</Text>
-            )}
-          </FloatingActionButton>
+          />
         </View>
       }
       header={
@@ -181,7 +166,7 @@ const FiltersDrawer = ({
       snapPoints={["90%"]}
     >
       <Accordion title="Team">
-        <View className="flex-row flex-wrap justify-center gap-x-8">
+        <ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 pb-36">
           {teams.map((team) => (
             <View className="w-1/4" key={team.id}>
               <Pressable
@@ -205,7 +190,7 @@ const FiltersDrawer = ({
               </Pressable>
             </View>
           ))}
-        </View>
+        </ScrollView>
       </Accordion>
       <Accordion title="Position">
         <View className="ml-4 flex-row flex-wrap items-center justify-center gap-x-7">
