@@ -9,16 +9,26 @@ export type Team = {
   name?: string;
   balance: number;
   lineup: LineupSlot[];
+  bench: BenchSlot[];
+  hasUserChanges?: boolean;
 };
 
 export type Position = "PG" | "SG" | "SF" | "PF" | "C";
 export type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
-export type SlotPosition = Position | FlexPosition;
+export type BenchPosition = `BEN${number}`;
+export type SlotPosition = Position | FlexPosition | BenchPosition;
 
 export type LineupSlot = {
   position: SlotPosition;
   player: Player | null;
 };
+
+export type BenchSlot = {
+  position: BenchPosition;
+  player: Player;
+};
+
+export const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
 
 export const SLOT_ORDER: SlotPosition[] = [
   "PG",
@@ -26,13 +36,13 @@ export const SLOT_ORDER: SlotPosition[] = [
   "SF",
   "PF",
   "C",
-  "UTIL1",
-  "UTIL2",
-  "UTIL3",
+  ...UTIL_POSITIONS,
 ];
 
 export const defaultTeam: Team = {
   id: "",
   balance: TEAM_BALANCE,
   lineup: SLOT_ORDER.map((position) => ({ position, player: null })),
+  bench: [],
+  hasUserChanges: false,
 };

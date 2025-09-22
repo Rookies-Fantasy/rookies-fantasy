@@ -52,7 +52,7 @@ export class NbaPlayersController {
           jerseyNumber: data.jerseyNumber,
           positions: data.positions,
           salary: data.salary,
-          secondName: data.lastName,
+          lastName: data.lastName,
           teamAbbreviation: data.teamAbbreviation,
           teamId: data.teamId,
           weight: data.weight,

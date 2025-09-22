@@ -26,9 +26,9 @@ import { themes, ThemeMode } from "@/theme/theme";
 import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+const queryClient = new QueryClient();
 
 const RootLayoutNav = () => {
-  const queryClient = new QueryClient();
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
   const isUserVerified = useAppSelector(selectIsUserVerified);
   const { theme, mode } = useAppTheme();
