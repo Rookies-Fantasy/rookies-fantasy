@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
+import PlayerDrawer from "@/components/PlayerDrawer";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
@@ -45,6 +46,9 @@ const Players = () => {
   const selectedPlayers = useAppSelector(selectLineupPlayerCount) ?? 0;
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [showBottomDrawer, setShowBottomDrawer] = useState(false);
 
   const handleSaveLineup = async () => {
     try {
@@ -202,6 +206,10 @@ const Players = () => {
               ]}
               isFetchingNextPage={isFetchingNextPage}
               onEndReached={() => fetchNextPage()}
+              onRowPress={(id) => {
+                setSelectedPlayerId(id);
+                setShowBottomDrawer(true);
+              }}
               stickyColumns={2}
               widthClasses={[
                 "w-16",
@@ -227,6 +235,12 @@ const Players = () => {
           <Text className="pbk-h6 text-center text-base-white">SAVE TEAM</Text>
         </FloatingActionButton>
       </Pressable>
+      <PlayerDrawer
+        playerId={selectedPlayerId}
+        setSelectedPlayerId={setSelectedPlayerId}
+        setShowBottomDrawer={setShowBottomDrawer}
+        showBottomDrawer={showBottomDrawer}
+      />
     </SafeAreaView>
   );
 };
