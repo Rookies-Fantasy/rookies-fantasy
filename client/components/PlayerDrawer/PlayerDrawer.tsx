@@ -68,6 +68,7 @@ const PlayerDrawer = ({
             <Text className="pbk-bl text-center text-base-white">
               {player.firstName} {player.secondName}
             </Text>
+            {/* TODO: Replace with team name when available*/}
             <Text className="pbk-b1 mt-1 text-center text-gray-500">
               {player.teamAbbreviation}
             </Text>
