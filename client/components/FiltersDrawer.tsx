@@ -155,7 +155,7 @@ const FiltersDrawer = ({
       <Accordion title="Team">
         <ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 pb-36">
           {teams.map((team) => (
-            <View className="w-1/4" key={team.id}>
+            <View key={team.id}>
               <Pressable
                 className={cn(
                   "my-3 flex-row items-center justify-between rounded-md px-2 py-3",
@@ -163,7 +163,7 @@ const FiltersDrawer = ({
                 )}
                 onPress={() => handleTeamPress(team)}
               >
-                <View className="flex-row items-center gap-1">
+                <View className="flex-row items-center gap-2">
                   <Image
                     contentFit="contain"
                     source={{ uri: team.logoUrl }}
@@ -172,8 +172,12 @@ const FiltersDrawer = ({
                   <Text className="pbk-b2 text-center text-base-white">
                     {team.abbreviation}
                   </Text>
+                  <View className="h-5 w-5 items-center justify-center">
+                    {isTeamSelected(team) && (
+                      <Check color="#A4A7AE" size={20} />
+                    )}
+                  </View>
                 </View>
-                {isTeamSelected(team) && <Check color="#A4A7AE" size={20} />}
               </Pressable>
             </View>
           ))}
