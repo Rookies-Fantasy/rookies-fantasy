@@ -13,7 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type SnapPoint = "0%" | "33%" | "50%" | "66%" | "80%" | "100%";
+type SnapPoint = "0%" | "33%" | "50%" | "66%" | "75%" | "100%";
 
 export const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT + 50;
@@ -23,7 +23,7 @@ const snapPointMap: Record<SnapPoint, number> = {
   "33%": -SCREEN_HEIGHT * 0.33,
   "50%": -SCREEN_HEIGHT * 0.5,
   "66%": -SCREEN_HEIGHT * 0.66,
-  "80%": -SCREEN_HEIGHT * 0.8,
+  "75%": -SCREEN_HEIGHT * 0.75,
   "100%": MAX_TRANSLATE_Y,
 };
 const defaultSnapPoints: SnapPoint[] = ["0%", "33%", "66%", "100%"];
@@ -53,12 +53,14 @@ const BottomSheet = ({
 
   const [visible, setVisible] = useState(isOpen);
 
+  const FOOTER_HEIGHT = footer ? 135 : 20;
+
   useAnimatedReaction(
     () => translateY.value,
     (currentTranslateY) => {
       // TODO: Find a way to dynamically calculate the scrollViewMaxHeight based on the footer content.
       // The 135 offset value is hardcoded right now to fit the exact height of a button in the footer.
-      scrollViewMaxHeight.value = Math.abs(currentTranslateY + 135);
+      scrollViewMaxHeight.value = Math.abs(currentTranslateY + FOOTER_HEIGHT);
     },
   );
 
@@ -148,7 +150,7 @@ const BottomSheet = ({
       </Pressable>
       <GestureDetector gesture={gesture}>
         <Animated.View
-          className="absolute top-full h-screen w-full border border-gray-900 bg-gray-920"
+          className="absolute top-full h-screen w-full border border-gray-900 bg-gray-950"
           style={[bottomSheetStyle]}
         >
           <SafeAreaView className="flex-1" edges={["bottom"]}>

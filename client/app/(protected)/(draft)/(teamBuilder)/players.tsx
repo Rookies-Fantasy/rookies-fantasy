@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
-import PlayerDrawer from "@/components/PlayerDrawer";
+import PlayerDrawer from "@/components/PlayerDrawer/PlayerDrawer";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
