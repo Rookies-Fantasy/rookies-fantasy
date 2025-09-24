@@ -211,7 +211,12 @@ const FiltersDrawer = ({
         </View>
       </Accordion>
       <Accordion
-        selectedCount={localFilters.salaryRange ? 1 : 0}
+        selectedCount={
+          localFilters.salaryRange.min !== 1000000 ||
+          localFilters.salaryRange.max !== 150000000
+            ? 1
+            : 0
+        }
         title="Salary"
       >
         <View className="flex-row justify-center">
