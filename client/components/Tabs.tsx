@@ -31,7 +31,7 @@ const Tabs = ({ items, defaultKey }: TabsProps) => {
         ))}
       </View>
 
-      <View className="w-full flex-1 px-4 py-4">
+      <View className="w-full flex-1">
         {items.find((i) => i.key === selected)?.content}
       </View>
     </View>

@@ -7,7 +7,7 @@ type PlayerInfoProps = {
 };
 
 const PlayerInfo = ({ player }: PlayerInfoProps) => (
-  <View className="w-full flex-1">
+  <View className="w-full flex-1 px-4 py-4">
     <View className="flex flex-row flex-wrap justify-between">
       <View className="mb-4 w-full items-center rounded-lg border border-gray-800 bg-gray-920 p-3">
         <Text className="pbk-b3 text-center text-gray-500">SALARY</Text>
@@ -45,6 +45,7 @@ const PlayerInfo = ({ player }: PlayerInfoProps) => (
           </Text>
         </View>
         <View className="mb-2 h-px w-full bg-gray-800" />
+        {/* TODO: Add news when available */}
         <Text className="pbk-b2 text-base-white">
           There is no recent news for {player.firstName} {player.secondName}.
         </Text>

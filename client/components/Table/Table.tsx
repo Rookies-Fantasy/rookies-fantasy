@@ -5,9 +5,9 @@ import Row, { RowData } from "./Row";
 
 type TableProps = {
   data: RowData[];
-  hasNextPage: boolean;
+  hasNextPage?: boolean;
   headers: string[];
-  isFetchingNextPage: boolean;
+  isFetchingNextPage?: boolean;
   onEndReached?: () => void;
   onRowPress?: (id: string) => void;
   stickyColumns: number;
@@ -16,9 +16,9 @@ type TableProps = {
 
 const Table = ({
   data,
-  hasNextPage,
+  hasNextPage = false,
   headers,
-  isFetchingNextPage,
+  isFetchingNextPage = false,
   onEndReached,
   onRowPress,
   stickyColumns,

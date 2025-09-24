@@ -5,6 +5,7 @@ import BottomSheet from "../BottomSheet";
 import Spinner from "../Spinner";
 import Tabs from "../Tabs";
 import PlayerInfo from "./PlayerInfo";
+import PlayerStats from "./PlayerStats";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
 import { Player } from "@/types/player";
 
@@ -83,34 +84,7 @@ const PlayerDrawer = ({
                 {
                   key: PlayerTabKey.Stats,
                   icon: (color) => <ChartLine color={color} size={20} />,
-                  content: (
-                    <View className="grid grid-cols-2 gap-4">
-                      <Text className="text-gray-300">
-                        PTS: {player.averageStats.pts}
-                      </Text>
-                      <Text className="text-gray-300">
-                        REB: {player.averageStats.reb}
-                      </Text>
-                      <Text className="text-gray-300">
-                        AST: {player.averageStats.ast}
-                      </Text>
-                      <Text className="text-gray-300">
-                        STL: {player.averageStats.stl}
-                      </Text>
-                      <Text className="text-gray-300">
-                        BLK: {player.averageStats.blk}
-                      </Text>
-                      <Text className="text-gray-300">
-                        TOV: {player.averageStats.tov}
-                      </Text>
-                      <Text className="text-gray-300">
-                        MIN: {player.averageStats.min}
-                      </Text>
-                      <Text className="text-gray-300">
-                        FPTS: {player.averageStats.fpts}
-                      </Text>
-                    </View>
-                  ),
+                  content: <PlayerStats player={player} />,
                 },
               ]}
             />
