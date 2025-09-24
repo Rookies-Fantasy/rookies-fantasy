@@ -1,5 +1,6 @@
 import { PayloadAction, createSlice, createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../store";
+import { Augment } from "@/types/augment";
 import { Player } from "@/types/players";
 import {
   defaultTeam,
@@ -291,8 +292,8 @@ const teamSlice = createSlice({
     saveTeam: (state) => {
       state.hasUserChanges = false;
     },
-    setAugmentId: (state, action: PayloadAction<string | undefined>) => {
-      state.augmentId = action.payload;
+    setAugment: (state, action: PayloadAction<Augment | undefined>) => {
+      state.augment = action.payload;
     },
   },
 });
@@ -333,7 +334,7 @@ export const {
   clearBench,
   resetToSavedTeam,
   saveTeam,
-  setAugmentId,
+  setAugment,
 } = teamSlice.actions;
 
 export default teamSlice.reducer;

@@ -14,6 +14,9 @@ export class AugmentController {
         iconUrl: augment.data().iconUrl,
         info: augment.data().info,
         title: augment.data().title,
+        isActive: augment.data().isActive,
+        prerequisites: augment.data().prerequisites,
+        effects: augment.data().effects,
       }));
     } catch (error) {
       throw error;
