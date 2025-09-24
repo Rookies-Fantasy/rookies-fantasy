@@ -1,3 +1,6 @@
+import { PositionFilters } from "./team";
+import { NbaTeam } from "@/types/nbaTeams";
+
 export type Player = {
   averageStats: {
     ast: number;
@@ -21,4 +24,10 @@ export type Player = {
   teamAbbreviation: string;
   teamId: string;
   weight: string;
+};
+
+export type PlayerFilters = {
+  selectedTeams: NbaTeam[];
+  selectedPositions: PositionFilters[];
+  salaryRange: { min: number; max: number };
 };
