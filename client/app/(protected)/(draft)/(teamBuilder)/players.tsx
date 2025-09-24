@@ -48,7 +48,7 @@ const Players = () => {
   const router = useRouter();
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [showBottomDrawer, setShowBottomDrawer] = useState(false);
+  const [showPlayerDrawer, setShowPlayerDrawer] = useState(false);
 
   const handleSaveLineup = async () => {
     try {
@@ -208,7 +208,7 @@ const Players = () => {
               onEndReached={() => fetchNextPage()}
               onRowPress={(id) => {
                 setSelectedPlayerId(id);
-                setShowBottomDrawer(true);
+                setShowPlayerDrawer(true);
               }}
               stickyColumns={2}
               widthClasses={[
@@ -238,8 +238,8 @@ const Players = () => {
       <PlayerDrawer
         playerId={selectedPlayerId}
         setSelectedPlayerId={setSelectedPlayerId}
-        setShowBottomDrawer={setShowBottomDrawer}
-        showBottomDrawer={showBottomDrawer}
+        setShowPlayerDrawer={setShowPlayerDrawer}
+        showPlayerDrawer={showPlayerDrawer}
       />
     </SafeAreaView>
   );

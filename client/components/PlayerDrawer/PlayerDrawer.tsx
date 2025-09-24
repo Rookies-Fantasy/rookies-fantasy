@@ -16,22 +16,22 @@ enum PlayerTabKey {
 type PlayerDrawerProps = {
   playerId: string | null;
   setSelectedPlayerId: (selectedPlayerId: string) => void;
-  setShowBottomDrawer: (showBottomDrawer: boolean) => void;
-  showBottomDrawer: boolean;
+  setShowPlayerDrawer: (showPlayerDrawer: boolean) => void;
+  showPlayerDrawer: boolean;
 };
 
 const PlayerDrawer = ({
   playerId,
   setSelectedPlayerId,
-  setShowBottomDrawer,
-  showBottomDrawer,
+  setShowPlayerDrawer,
+  showPlayerDrawer,
 }: PlayerDrawerProps) => {
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(false);
 
   const onClose = () => {
     setSelectedPlayerId("");
-    setShowBottomDrawer(false);
+    setShowPlayerDrawer(false);
     setPlayer(null);
   };
 
@@ -47,7 +47,7 @@ const PlayerDrawer = ({
 
   return (
     <BottomSheet
-      isOpen={showBottomDrawer}
+      isOpen={showPlayerDrawer}
       onClose={onClose}
       snapPoints={["75%"]}
     >
