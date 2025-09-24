@@ -46,6 +46,7 @@ const removeBenchSlotByPosition = (
   }
 };
 
+// TODO: Remove func as not needed in prod
 const validateAndLogAugment = (state: Team): void => {
   if (state.augment) {
     const validation = validateAugment(state.augment, state.lineup);
