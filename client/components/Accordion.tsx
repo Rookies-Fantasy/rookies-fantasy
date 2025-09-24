@@ -8,43 +8,32 @@ import Animated, {
 } from "react-native-reanimated";
 import { cn } from "@/utils/jsUtils";
 
-export type AccordionItem = {
-  id: string;
-  title: string;
-  content: ReactNode;
-  disabled?: boolean;
-  defaultOpen?: boolean;
-};
-
-export type AccordionProps = {
-  title: string;
+type AccordionProps = {
+  animationDuration?: number;
   children: ReactNode;
+  className?: string;
+  contentClassName?: string;
   defaultExpanded?: boolean;
   disabled?: boolean;
-  onChange?: (isExpanded: boolean) => void;
-  isExpanded?: boolean;
-  className?: string;
   headerClassName?: string;
-  contentClassName?: string;
-  animationDuration?: number;
+  onToggle?: (isExpanded: boolean) => void;
+  selectedCount?: number;
+  title: string;
 };
 
 const Accordion = ({
-  title,
+  animationDuration = 200,
   children,
+  className,
+  contentClassName,
   defaultExpanded = false,
   disabled = false,
-  onChange,
-  isExpanded: controlledIsExpanded,
-  className,
   headerClassName,
-  contentClassName,
-  animationDuration = 200,
+  onToggle,
+  selectedCount,
+  title,
 }: AccordionProps) => {
-  const [localIsExpanded, setLocalIsExpanded] = useState(defaultExpanded);
-  const isControlled = controlledIsExpanded !== undefined;
-  const isExpanded = isControlled ? controlledIsExpanded : localIsExpanded;
-
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const rotation = useSharedValue(isExpanded ? 90 : 0);
   const height = useSharedValue(isExpanded ? 1 : 0);
 
@@ -61,12 +50,8 @@ const Accordion = ({
     if (disabled) return;
 
     const newExpandedState = !isExpanded;
-
-    if (!isControlled) {
-      setLocalIsExpanded(newExpandedState);
-    }
-
-    onChange?.(newExpandedState);
+    setIsExpanded(newExpandedState);
+    onToggle?.(newExpandedState);
   };
 
   const rotationStyle = useAnimatedStyle(() => ({
@@ -90,9 +75,16 @@ const Accordion = ({
         onPress={toggleAccordion}
       >
         <Text className="pbk-b1 ml-3 text-gray-400">{title}</Text>
-        <Animated.View style={rotationStyle}>
-          <CaretRight color="white" size={20} />
-        </Animated.View>
+        <View className="flex-row items-center gap-6">
+          {(selectedCount ?? 0) > 0 && (
+            <Text className="pbk-b2 rounded-lg bg-gray-800 p-1.5 text-base-white">
+              {selectedCount} Selected
+            </Text>
+          )}
+          <Animated.View style={rotationStyle}>
+            <CaretRight color="white" size={20} />
+          </Animated.View>
+        </View>
       </Pressable>
 
       <Animated.View style={contentStyle}>

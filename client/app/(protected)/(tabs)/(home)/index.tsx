@@ -25,7 +25,6 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-
   const [isNavigating, setIsNavigating] = useState(false);
   useFocusEffect(
     useCallback(() => {

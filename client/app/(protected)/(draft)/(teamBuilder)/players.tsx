@@ -29,20 +29,12 @@ import {
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
-import { Player } from "@/types/players";
-import { FlexPosition, Position, UTIL_POSITIONS } from "@/types/team";
+import { Player, PlayerFilters } from "@/types/players";
+import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
-};
-
-export type PositionOption = Position | "ALL" | "G" | "F";
-
-export type Filters = {
-  selectedTeams: NbaTeam[];
-  selectedPositions: PositionOption[];
-  salaryRange: { min: number; max: number };
 };
 
 const PAGE_SIZE = 25;
@@ -50,7 +42,7 @@ const PAGE_SIZE = 25;
 const Players = () => {
   const [query, setQuery] = useState("");
   const [teams, setTeams] = useState<NbaTeam[]>([]);
-  const [filters, setFilters] = useState<Filters>({
+  const [filters, setFilters] = useState<PlayerFilters>({
     selectedTeams: [],
     selectedPositions: [],
     salaryRange: { min: 1000000, max: 150000000 },
@@ -63,8 +55,8 @@ const Players = () => {
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
 
   const activeFilters =
-    filters.selectedTeams.length +
-    filters.selectedPositions.length +
+    (filters.selectedTeams.length > 0 ? 1 : 0) +
+    (filters.selectedPositions.length > 0 ? 1 : 0) +
     (filters.salaryRange.min !== 1000000 ||
     filters.salaryRange.max !== 150000000
       ? 1
@@ -74,11 +66,7 @@ const Players = () => {
     pageParam,
   }: FetchPlayersParams = {}) =>
     activeFilters
-      ? await NbaPlayersController.getFilteredPlayers(
-          filters,
-          PAGE_SIZE,
-          pageParam,
-        )
+      ? await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, filters)
       : await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
 
   const {
@@ -103,6 +91,7 @@ const Players = () => {
     initialPageParam: undefined,
   });
 
+  // TODO: Cache or store these assets so we can reduce fetches
   useEffect(() => {
     const fetchData = async () => {
       try {

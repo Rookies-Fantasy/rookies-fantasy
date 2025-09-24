@@ -138,7 +138,6 @@ const Login = () => {
             {errors.email.message}
           </Text>
         )}
-
         <Controller
           control={control}
           name="password"
@@ -188,7 +187,6 @@ const Login = () => {
             </Text>
           )}
         </View>
-
         <Button
           isLoading={isLoading}
           label="Login"
