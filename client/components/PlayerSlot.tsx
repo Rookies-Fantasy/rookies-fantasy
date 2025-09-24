@@ -6,7 +6,7 @@ import PlayerData from "./PlayerData";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   removePlayerFromLineup,
-  selectAugmentId,
+  selectAugment,
 } from "@/state/slices/teamSlice";
 import { Player } from "@/types/players";
 import { cn } from "@/utils/jsUtils";
@@ -29,7 +29,7 @@ const PlayerSlot = ({
   onPlayerRemove,
 }: PlayerSlotProps) => {
   const dispatch = useAppDispatch();
-  const augmentId = useAppSelector(selectAugmentId);
+  const augmentId = useAppSelector(selectAugment);
 
   const router = useRouter();
 
