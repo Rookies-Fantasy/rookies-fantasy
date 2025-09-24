@@ -26,7 +26,7 @@ export type LineupSlot = {
 
 export type BenchSlot = {
   position: BenchPosition;
-  player: Player | null;
+  player: Player;
 };
 
 export const POSITIONS = ["PG", "SG", "SF", "PF", "C"];
