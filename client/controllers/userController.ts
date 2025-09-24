@@ -1,4 +1,5 @@
 import firestore from "@react-native-firebase/firestore";
+import { Augment } from "@/types/augment";
 import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
 
@@ -14,7 +15,7 @@ export type UserEditModel = Partial<{
 
 export type TeamEditModel = {
   abbreviation: string;
-  augmentId?: string;
+  augment?: Augment;
   logoUrl: string;
   name: string;
 };
@@ -97,7 +98,7 @@ export class UserController {
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
-            augmentId: team.data()?.augmentId,
+            augment: team.data()?.augment,
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
