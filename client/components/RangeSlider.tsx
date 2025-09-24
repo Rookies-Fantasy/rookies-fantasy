@@ -9,9 +9,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { cn } from "@/utils/jsUtils";
 
-export type RangeSliderValue = [number, number];
+type RangeSliderValue = [number, number];
 
-export type RangeSliderProps = {
+type RangeSliderProps = {
   min?: number;
   max?: number;
   step?: number;

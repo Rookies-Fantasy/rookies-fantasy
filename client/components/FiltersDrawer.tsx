@@ -7,17 +7,17 @@ import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
 import Button from "./Button";
 import RangeSlider from "./RangeSlider";
-import { Filters } from "@/app/(protected)/(draft)/(teamBuilder)/players";
 import { NbaTeam } from "@/types/nbaTeams";
-import { POSITION_OPTIONS, PositionOption } from "@/types/team";
+import { PlayerFilters } from "@/types/players";
+import { POSITION_OPTIONS, PositionFilters } from "@/types/team";
 import { cn } from "@/utils/jsUtils";
 
 type FilterDrawerProps = {
   teams: NbaTeam[];
   showFiltersDrawer: boolean;
   setShowFiltersDrawer: () => void;
-  filters: Filters;
-  setFilters: (filters: Filters) => void;
+  filters: PlayerFilters;
+  setFilters: (filters: PlayerFilters) => void;
 };
 
 const FiltersDrawer = ({
@@ -29,7 +29,7 @@ const FiltersDrawer = ({
 }: FilterDrawerProps) => {
   const [isApplyLoading, setIsApplyLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
-  const [localFilters, setLocalFilters] = useState<Filters>(filters);
+  const [localFilters, setLocalFilters] = useState<PlayerFilters>(filters);
 
   useEffect(() => {
     if (showFiltersDrawer) {
@@ -62,7 +62,7 @@ const FiltersDrawer = ({
       (selectedTeam) => selectedTeam.id === team.id,
     );
 
-  const handlePositionPress = (position: PositionOption) => {
+  const handlePositionPress = (position: PositionFilters) => {
     const isSelected = localFilters.selectedPositions.includes(position);
 
     if (isSelected) {
@@ -80,7 +80,7 @@ const FiltersDrawer = ({
     }
   };
 
-  const isPositionSelected = (position: PositionOption) =>
+  const isPositionSelected = (position: PositionFilters) =>
     localFilters.selectedPositions.includes(position);
 
   const handleSalaryChange = (minValue: number, maxValue: number) => {
@@ -108,7 +108,7 @@ const FiltersDrawer = ({
   const handleReset = () => {
     try {
       setIsResetLoading(true);
-      const resetFilters: Filters = {
+      const resetFilters: PlayerFilters = {
         selectedTeams: [],
         selectedPositions: [],
         salaryRange: { min: 1000000, max: 150000000 },
@@ -150,9 +150,9 @@ const FiltersDrawer = ({
       }
       isOpen={showFiltersDrawer}
       onClose={setShowFiltersDrawer}
-      snapPoints={["90%"]}
+      snapPoints={["80%"]}
     >
-      <Accordion title="Team">
+      <Accordion selectedCount={localFilters.selectedTeams.length} title="Team">
         <ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 pb-36">
           {teams.map((team) => (
             <View key={team.id}>
@@ -183,7 +183,10 @@ const FiltersDrawer = ({
           ))}
         </ScrollView>
       </Accordion>
-      <Accordion title="Position">
+      <Accordion
+        selectedCount={localFilters.selectedPositions.length}
+        title="Position"
+      >
         <View className="ml-4 flex-row flex-wrap items-center justify-center gap-x-7">
           {POSITION_OPTIONS.map((position) => (
             <View className="w-1/5" key={position}>
@@ -207,7 +210,10 @@ const FiltersDrawer = ({
           ))}
         </View>
       </Accordion>
-      <Accordion title="Salary">
+      <Accordion
+        selectedCount={localFilters.salaryRange ? 1 : 0}
+        title="Salary"
+      >
         <View className="flex-row justify-center">
           <RangeSlider
             formatValue={formatSalaryValue}

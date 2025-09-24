@@ -348,11 +348,6 @@ export const selectRosterPlayerCount = (state: RootState): number => {
   return lineupCount + benchCount;
 };
 
-export const isPlayerInLineup = (
-  lineup: LineupSlot[],
-  playerId: string,
-): boolean => lineup.some((slot) => slot.player?.id === playerId);
-
 export const {
   setTeam,
   clearTeam,
