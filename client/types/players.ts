@@ -1,4 +1,4 @@
-import { PositionOption } from "./team";
+import { PositionFilters } from "./team";
 import { NbaTeam } from "@/types/nbaTeams";
 
 export type Player = {
@@ -28,6 +28,6 @@ export type Player = {
 
 export type PlayerFilters = {
   selectedTeams: NbaTeam[];
-  selectedPositions: PositionOption[];
+  selectedPositions: PositionFilters[];
   salaryRange: { min: number; max: number };
 };
