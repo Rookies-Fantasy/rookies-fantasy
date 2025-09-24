@@ -1,4 +1,5 @@
 import { Player } from "./players";
+
 export const TEAM_BALANCE = 150000000;
 
 export type Team = {

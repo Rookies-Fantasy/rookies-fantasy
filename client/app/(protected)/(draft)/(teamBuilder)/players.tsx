@@ -2,7 +2,7 @@ import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Minus, Plus, Sliders } from "phosphor-react-native";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Keyboard,
@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
 import SearchBar from "@/components/SearchBar";
@@ -20,13 +21,15 @@ import Table from "@/components/Table/Table";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
+import { NbaTeamsController } from "@/controllers/nbaTeamsController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
   removePlayerFromLineup,
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
-import { Player } from "@/types/players";
+import { NbaTeam } from "@/types/nbaTeams";
+import { Player, PlayerFilters } from "@/types/players";
 import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
@@ -38,15 +41,33 @@ const PAGE_SIZE = 25;
 
 const Players = () => {
   const [query, setQuery] = useState("");
+  const [teams, setTeams] = useState<NbaTeam[]>([]);
+  const [filters, setFilters] = useState<PlayerFilters>({
+    selectedTeams: [],
+    selectedPositions: [],
+    salaryRange: { min: 1000000, max: 150000000 },
+  });
   const team = useAppSelector((state) => state.team);
   const userId = useAppSelector((state) => state.user.id);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
+
+  const activeFilters =
+    (filters.selectedTeams.length > 0 ? 1 : 0) +
+    (filters.selectedPositions.length > 0 ? 1 : 0) +
+    (filters.salaryRange.min !== 1000000 ||
+    filters.salaryRange.max !== 150000000
+      ? 1
+      : 0);
+
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
+    activeFilters
+      ? await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, filters)
+      : await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
 
   const {
     data,
@@ -57,12 +78,32 @@ const Players = () => {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["nbaPlayers"],
+    queryKey: [
+      "nbaPlayers",
+      filters.selectedTeams.map((team) => team.id).sort(),
+      filters.selectedPositions.sort(),
+      filters.salaryRange.min,
+      filters.salaryRange.max,
+    ],
     queryFn: fetchPlayersWithAverages,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.lastDoc : undefined,
     initialPageParam: undefined,
   });
+
+  // TODO: Cache or store these assets so we can reduce fetches
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const teamsData = await NbaTeamsController.getAllTeams();
+        setTeams(teamsData);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
@@ -151,11 +192,21 @@ const Players = () => {
               <View className="flex-1">
                 <SearchBar onChangeText={setQuery} value={query} />
               </View>
-              <IconButton
-                className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
-                icon={<Sliders color="white" />}
-                onPress={() => {}}
-              />
+
+              <View className="relative">
+                <IconButton
+                  className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
+                  icon={<Sliders color="white" />}
+                  onPress={() => setShowFiltersDrawer(true)}
+                />
+                {activeFilters > 0 && (
+                  <View className="absolute -right-2 -top-2 h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1">
+                    <Text className="pbk-h8 text-base-white">
+                      {activeFilters}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
 
@@ -214,6 +265,13 @@ const Players = () => {
         </KeyboardAvoidingView>
         <TeamActionButtons />
       </Pressable>
+      <FiltersDrawer
+        filters={filters}
+        setFilters={setFilters}
+        setShowFiltersDrawer={() => setShowFiltersDrawer(false)}
+        showFiltersDrawer={showFiltersDrawer}
+        teams={teams}
+      />
     </SafeAreaView>
   );
 };
