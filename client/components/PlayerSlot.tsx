@@ -3,8 +3,11 @@ import { UserPlus, XCircle } from "phosphor-react-native";
 import { View, Text, Pressable } from "react-native";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
-import { useAppDispatch } from "@/state/hooks";
-import { removePlayerFromLineup } from "@/state/slices/teamSlice";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  removePlayerFromLineup,
+  selectAugmentId,
+} from "@/state/slices/teamSlice";
 import { Player } from "@/types/players";
 import { cn } from "@/utils/jsUtils";
 
@@ -26,6 +29,8 @@ const PlayerSlot = ({
   onPlayerRemove,
 }: PlayerSlotProps) => {
   const dispatch = useAppDispatch();
+  const augmentId = useAppSelector(selectAugmentId);
+
   const router = useRouter();
 
   return (
@@ -38,10 +43,14 @@ const PlayerSlot = ({
     >
       <View className="min-h-24 flex-row items-center justify-between p-3">
         <Pressable
-          className="flex-1 flex-row items-center gap-2"
+          className="mx-2 flex-1 flex-row items-center gap-2"
           onPress={() => {
-            if (!playerData)
-              router.push("/(protected)/(draft)/(teamBuilder)/players");
+            if (!playerData) {
+              const route = !augmentId
+                ? "/(protected)/(draft)/applyAugment"
+                : "/(protected)/(draft)/(teamBuilder)/players";
+              router.push(route);
+            }
           }}
         >
           <Pressable
@@ -67,25 +76,20 @@ const PlayerSlot = ({
               <Text className="pbk-b2 ml-2 text-base-white">Empty slot</Text>
             )}
           </View>
-        </Pressable>
 
-        {isCard &&
-          (playerData ? (
-            <IconButton
-              icon={<XCircle color="#535862" size={20} />}
-              onPress={() => {
-                dispatch(removePlayerFromLineup(playerData));
-                onPlayerRemove?.();
-              }}
-            />
-          ) : (
-            <IconButton
-              icon={<UserPlus color="#6042FF" size={20} />}
-              onPress={() =>
-                router.push("/(protected)/(draft)/(teamBuilder)/players")
-              }
-            />
-          ))}
+          {isCard &&
+            (playerData ? (
+              <IconButton
+                icon={<XCircle color="#535862" size={20} />}
+                onPress={() => {
+                  dispatch(removePlayerFromLineup(playerData));
+                  onPlayerRemove?.();
+                }}
+              />
+            ) : (
+              <UserPlus color="#6042FF" size={20} />
+            ))}
+        </Pressable>
       </View>
     </View>
   );

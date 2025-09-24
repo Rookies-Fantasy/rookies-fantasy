@@ -1,6 +1,14 @@
 import { Alert } from "react-native";
 import { UserController } from "@/controllers/userController";
-import { LineupSlot, Team } from "@/types/team";
+import { Player } from "@/types/players";
+import {
+  BenchSlot,
+  FlexPosition,
+  LineupSlot,
+  SlotPosition,
+  Team,
+  UTIL_POSITIONS,
+} from "@/types/team";
 
 export type SaveLineupOptions = {
   onSuccess?: () => void;
@@ -8,6 +16,23 @@ export type SaveLineupOptions = {
   onStart?: () => void;
   onFinally?: () => void;
 };
+
+export const findSlotFromPosition = <T extends LineupSlot | BenchSlot>(
+  arr: T[],
+  selectedPosition: SlotPosition,
+) => arr.find((slot) => slot.position === selectedPosition);
+
+export const isPlayerInLineup = (
+  lineup: LineupSlot[],
+  playerId: string,
+): boolean => lineup.some((slot) => slot.player?.id === playerId);
+
+export const isPlayerEligibleForPosition = (
+  player: Player,
+  position: SlotPosition,
+) =>
+  player.positions.includes(position) ||
+  UTIL_POSITIONS.includes(position as FlexPosition);
 
 export const saveTeamLineup = async (
   userId: string,

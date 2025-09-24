@@ -4,7 +4,6 @@ import { Augment } from "@/types/augment";
 import { Player } from "@/types/players";
 import {
   defaultTeam,
-  FlexPosition,
   LineupSlot,
   SlotPosition,
   Team,
@@ -12,30 +11,60 @@ import {
   BenchPosition,
   UTIL_POSITIONS,
 } from "@/types/team";
-import { isNotNil } from "@/utils/jsUtils";
+import { isNil, isNotNil } from "@/utils/jsUtils";
+import { isPlayerEligibleForPosition } from "@/utils/teamUtils";
 
 type SwapPayload = {
-  from: SlotPosition;
-  to: SlotPosition;
+  fromPosition: SlotPosition;
+  toPosition: SlotPosition;
+};
+
+// TODO: Take a look at refactoring some of these to not mutate state in the function
+// Possibly move them into teamUtils.ts
+const swapPlayers = <T extends LineupSlot | BenchSlot>(
+  arrayToSwap: T[],
+  fromSlot?: T,
+  toSlot?: T,
+) =>
+  arrayToSwap.map((o) => {
+    if (o.position === fromSlot?.position) {
+      return { ...o, player: toSlot?.player };
+    }
+    if (o.position === toSlot?.position) {
+      return { ...o, player: fromSlot?.player };
+    }
+    return o;
+  });
+
+const getSlotfromPosition = (
+  bench: BenchSlot[],
+  lineup: LineupSlot[],
+  position: SlotPosition,
+) => {
+  if (position.toString().startsWith("BEN")) {
+    const benchSlot = findBenchSlotByPosition(bench, position as BenchPosition);
+    return {
+      lineupSlot: null,
+      benchSlot,
+    };
+  }
+
+  const lineupSlot = lineup.find((slot) => slot.position === position) ?? null;
+  return {
+    lineupSlot,
+    benchSlot: null,
+  };
 };
 
 const getNextBenchPosition = (bench: BenchSlot[]): BenchPosition =>
   `BEN${bench.length + 1}` as BenchPosition;
-
-const addPlayerToBench = (bench: BenchSlot[], player: Player): void => {
-  const position = getNextBenchPosition(bench);
-  bench.push({ position, player });
-};
 
 const findBenchSlotByPosition = (
   bench: BenchSlot[],
   position: BenchPosition,
 ): BenchSlot | null => bench.find((slot) => slot.position === position) ?? null;
 
-const removeBenchSlotByPosition = (
-  bench: BenchSlot[],
-  position: BenchPosition,
-): void => {
+const removeBenchSlot = (bench: BenchSlot[], position: BenchPosition) => {
   const index = bench.findIndex((slot) => slot.position === position);
   if (index !== -1) {
     bench.splice(index, 1);
@@ -45,12 +74,19 @@ const removeBenchSlotByPosition = (
   }
 };
 
+const addBenchSlot = (bench: BenchSlot[], player: Player) => {
+  const position = getNextBenchPosition(bench);
+  bench.push({ position, player });
+};
+
 const teamSlice = createSlice({
   name: "team",
   initialState: defaultTeam,
   reducers: {
     setTeam: (_, action: PayloadAction<Team>) => ({
       ...action.payload,
+      // TODO: This is not a true dirty flag, it's more like a touched flag right now
+      // If you make changes and manually change the team back to the original state, this is still true
       hasUserChanges: false,
     }),
     clearTeam: () => defaultTeam,
@@ -121,147 +157,147 @@ const teamSlice = createSlice({
       }
     },
     swapPlayersInLineup: (state, action: PayloadAction<SwapPayload>) => {
-      const { from, to } = action.payload;
+      // TODO: Add toasts for all swap actions
+      const { fromPosition, toPosition } = action.payload;
 
-      if (from === to) return;
+      if (fromPosition === toPosition) return;
 
-      // Handle bench positions
-      const isBenchFrom = from.toString().startsWith("BEN");
-      const isBenchTo = to.toString().startsWith("BEN");
-
-      let fromPlayer: Player | null = null;
-      let toPlayer: Player | null = null;
-
-      let fromSlot: LineupSlot | null = null;
-      let toSlot: LineupSlot | null = null;
-
-      let fromBenchSlot: BenchSlot | null = null;
-      let toBenchSlot: BenchSlot | null = null;
-
-      if (isBenchFrom) {
-        fromBenchSlot = findBenchSlotByPosition(
-          state.bench,
-          from as BenchPosition,
-        );
-        fromPlayer = fromBenchSlot?.player || null;
-      } else {
-        fromSlot = state.lineup.find((slot) => slot.position === from) || null;
-        fromPlayer = fromSlot?.player || null;
-      }
-
-      if (isBenchTo) {
-        toBenchSlot = findBenchSlotByPosition(state.bench, to as BenchPosition);
-        toPlayer = toBenchSlot?.player || null;
-      } else {
-        toSlot = state.lineup.find((slot) => slot.position === to) || null;
-        toPlayer = toSlot?.player || null;
-      }
-
-      if (!fromPlayer && !toPlayer) return;
+      const fromSlot = getSlotfromPosition(
+        state.bench,
+        state.lineup,
+        fromPosition,
+      );
+      const toSlot = getSlotfromPosition(state.bench, state.lineup, toPosition);
+      const { benchSlot: currentBenchSlot, lineupSlot: currentLineupSlot } =
+        fromSlot;
+      const { benchSlot: incomingBenchSlot, lineupSlot: incomingLineupSlot } =
+        toSlot;
 
       // Case 1: Bench to Lineup
-      if (isBenchFrom && !isBenchTo && toSlot) {
-        if (!fromPlayer || !fromBenchSlot) return;
+      if (isNotNil(currentBenchSlot) && isNotNil(incomingLineupSlot)) {
+        const { position: benchPosition, player: benchPlayer } =
+          currentBenchSlot;
+        const { position: lineupPosition, player: lineupPlayer } =
+          incomingLineupSlot;
 
-        const playerEligible =
-          fromPlayer.positions.includes(to) ||
-          UTIL_POSITIONS.includes(to as FlexPosition);
-
-        if (playerEligible) {
-          removeBenchSlotByPosition(state.bench, from as BenchPosition);
-
-          if (toPlayer) {
-            addPlayerToBench(state.bench, toPlayer);
-          }
-
-          toSlot.player = fromPlayer;
+        if (isNotNil(lineupPlayer)) {
+          // Find bench slot that the player who is going to move to the lineup is in, swap him out
+          const newBench = swapPlayers(state.bench, currentBenchSlot, {
+            position: benchPosition,
+            player: lineupPlayer,
+          });
+          state.bench = newBench;
+        } else {
+          removeBenchSlot(state.bench, benchPosition);
         }
+
+        // Find lineup slot that the player who's on the lineup is in right now, swap him out
+        const newLineup = swapPlayers(state.lineup, incomingLineupSlot, {
+          position: lineupPosition,
+          player: benchPlayer,
+        });
+        state.lineup = newLineup;
         state.hasUserChanges = true;
         return;
       }
 
-      // Case 2: Lineup to Bench
-      if (!isBenchFrom && isBenchTo && fromSlot) {
-        if (!fromPlayer) return;
+      // Case 2 Lineup to Bench
+      if (isNotNil(currentLineupSlot) && isNotNil(incomingBenchSlot)) {
+        const { position: benchPosition, player: benchPlayer } =
+          incomingBenchSlot;
+        const { position: lineupPosition, player: lineupPlayer } =
+          currentLineupSlot;
 
-        if (toBenchSlot && toPlayer) {
-          fromSlot.player = toPlayer;
-          toBenchSlot.player = fromPlayer;
+        if (isNotNil(lineupPlayer)) {
+          // Find bench slot that the player who's on the bench is in right now, swap him out
+          const newBench = swapPlayers(state.bench, incomingBenchSlot, {
+            position: benchPosition,
+            player: lineupPlayer,
+          });
+          state.bench = newBench;
         } else {
-          addPlayerToBench(state.bench, fromPlayer);
-          fromSlot.player = null;
+          removeBenchSlot(state.bench, benchPosition);
         }
+
+        // Find lineup slot that the player who is going to move to the bench is in, swap him out
+        const newLineup = swapPlayers(state.lineup, currentLineupSlot, {
+          position: lineupPosition,
+          player: benchPlayer,
+        });
+        state.lineup = newLineup;
         state.hasUserChanges = true;
         return;
       }
 
       // Case 3: Bench to Bench
-      if (isBenchFrom && isBenchTo && fromBenchSlot && toBenchSlot) {
-        if (!fromPlayer && !toPlayer) return;
-
-        const tempPlayer = fromBenchSlot.player;
-        fromBenchSlot.player = toBenchSlot.player;
-        toBenchSlot.player = tempPlayer;
+      if (isNotNil(currentBenchSlot) && isNotNil(incomingBenchSlot)) {
+        const newBench = swapPlayers(
+          state.bench,
+          currentBenchSlot,
+          incomingBenchSlot,
+        );
+        state.bench = newBench;
         state.hasUserChanges = true;
         return;
       }
 
       // Case 4: Lineup to Lineup
-      if (!isBenchFrom && !isBenchTo && fromSlot && toSlot) {
-        if (!fromPlayer && !toPlayer) return;
+      if (isNotNil(currentLineupSlot) && isNotNil(incomingLineupSlot)) {
+        const { position: currentPosition, player: currentPlayer } =
+          currentLineupSlot;
+        const { position: incomingPosition, player: incomingPlayer } =
+          incomingLineupSlot;
 
-        if (fromPlayer && !toPlayer) {
-          toSlot.player = fromPlayer;
-          fromSlot.player = null;
-          state.hasUserChanges = true;
-          return;
+        if (isNil(currentPlayer) && isNotNil(incomingPlayer)) {
+          const newLineup = swapPlayers(
+            state.lineup,
+            currentLineupSlot,
+            incomingLineupSlot,
+          );
+          state.lineup = newLineup;
         }
 
-        if (fromPlayer && toPlayer) {
-          const playerAEligibility =
-            fromPlayer.positions.includes(to) ||
-            UTIL_POSITIONS.includes(to as FlexPosition);
+        if (isNil(incomingPlayer) && isNotNil(currentPlayer)) {
+          const newLineup = swapPlayers(
+            state.lineup,
+            currentLineupSlot,
+            incomingLineupSlot,
+          );
+          state.lineup = newLineup;
+        }
 
-          const playerBEligibility =
-            toPlayer.positions.includes(from) ||
-            UTIL_POSITIONS.includes(from as FlexPosition);
+        if (isNotNil(currentPlayer) && isNotNil(incomingPlayer)) {
+          const playerFromEligibility = isPlayerEligibleForPosition(
+            currentPlayer,
+            incomingPosition,
+          );
+          const playerToEligibility = isPlayerEligibleForPosition(
+            incomingPlayer,
+            currentPosition,
+          );
 
-          if (playerAEligibility && playerBEligibility) {
-            // Both players can swap positions - direct swap
-            // (TODO: Success toast that confirms the swap)
-            fromSlot.player = toPlayer;
-            toSlot.player = fromPlayer;
-          } else if (playerAEligibility && !playerBEligibility) {
-            // Player A can go to Player B's position, but Player B cannot go to
-            // Player A's position. Move Player A to Player B's position,
-            // Player B goes to bench
-            // (TODO: Success toast that confirms where player B has gone)
-            addPlayerToBench(state.bench, toPlayer);
-            toSlot.player = fromPlayer;
-            fromSlot.player = null;
-          } else if (!playerAEligibility && playerBEligibility) {
-            // Player A cannot go to Player B's position, but Player B can go to
-            // Player A's position. Move Player B to Player A's position,
-            // Player A goes to bench
-            // (TODO: Success toast that confirms where player A has gone)
-            addPlayerToBench(state.bench, fromPlayer);
-            fromSlot.player = toPlayer;
-            toSlot.player = null;
-          } else {
-            // Neither player can go to the other's position
-            // Both players go to bench (TODO: Throw an error toast)
-            addPlayerToBench(state.bench, fromPlayer);
-            addPlayerToBench(state.bench, toPlayer);
-            fromSlot.player = null;
-            toSlot.player = null;
+          if (playerFromEligibility && playerToEligibility) {
+            // Direct swap if both players can swap positions
+            const newLineup = swapPlayers(
+              state.lineup,
+              currentLineupSlot,
+              incomingLineupSlot,
+            );
+            state.lineup = newLineup;
           }
-          state.hasUserChanges = true;
-          return;
+
+          if (playerFromEligibility && !playerToEligibility) {
+            // If player A can go to Player B's position, but Player B can't go to Player A's position,
+            // move Player A to Player B's position, then move Player B to the bench
+            addBenchSlot(state.bench, incomingPlayer);
+            const newLineup = swapPlayers(state.lineup, currentLineupSlot, {
+              position: incomingPosition,
+              player: null,
+            });
+            state.lineup = newLineup;
+          }
         }
 
-        const tempPlayer = fromSlot.player;
-        fromSlot.player = toSlot.player;
-        toSlot.player = tempPlayer;
         state.hasUserChanges = true;
       }
     },
@@ -272,13 +308,9 @@ const teamSlice = createSlice({
       );
       if (benchSlot && benchSlot.player) {
         state.balance += benchSlot.player.salary;
-        removeBenchSlotByPosition(state.bench, benchSlot.position);
+        removeBenchSlot(state.bench, benchSlot.position);
         state.hasUserChanges = true;
       }
-    },
-    clearBench: (state) => {
-      state.bench = [];
-      state.hasUserChanges = true;
     },
     resetToSavedTeam: (
       state,
@@ -301,6 +333,7 @@ const teamSlice = createSlice({
 export const selectTeam = (state: RootState) => state.team;
 export const selectTeamId = (state: RootState) => state.team.id;
 export const selectLineup = (state: RootState) => state.team.lineup;
+export const selectAugment = (state: RootState) => state.team.augment;
 
 export const selectIsTeamRegistered = createSelector(
   [selectTeam],
@@ -308,21 +341,13 @@ export const selectIsTeamRegistered = createSelector(
     !!team.id && !!team.abbreviation && !!team.logoUrl && !!team.name,
 );
 
-export const getRosterPlayerCount = (state: RootState): number => {
+export const selectRosterPlayerCount = (state: RootState): number => {
   const lineupCount = state.team.lineup.filter(
     (slot) => slot.player !== null,
   ).length;
   const benchCount = state.team.bench.length;
   return lineupCount + benchCount;
 };
-
-export const isPlayerInLineup = (
-  lineup: LineupSlot[],
-  playerId: string,
-): boolean => lineup.some((slot) => slot.player?.id === playerId);
-
-export const getBenchPlayerCount = (state: RootState): number =>
-  state.team.bench.filter((slot) => slot.player !== null).length;
 
 export const {
   setTeam,
@@ -331,7 +356,6 @@ export const {
   removePlayerFromLineup,
   swapPlayersInLineup,
   removePlayerFromBench,
-  clearBench,
   resetToSavedTeam,
   saveTeam,
   setAugment,

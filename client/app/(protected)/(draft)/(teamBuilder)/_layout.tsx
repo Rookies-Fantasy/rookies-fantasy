@@ -1,11 +1,12 @@
 import { Tabs } from "expo-router";
 import { UserPlus, UsersThree } from "phosphor-react-native";
 import { useAppSelector } from "@/state/hooks";
-import { getRosterPlayerCount } from "@/state/slices/teamSlice";
+import { selectRosterPlayerCount } from "@/state/slices/teamSlice";
+
+const MAX_PLAYERS = 8;
 
 const TeamBuilderLayout = () => {
-  const selectedPlayers = useAppSelector(getRosterPlayerCount) ?? 0;
-  const MAX_PLAYERS = 8;
+  const selectedPlayers = useAppSelector(selectRosterPlayerCount) ?? 0;
 
   return (
     <Tabs

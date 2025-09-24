@@ -6,7 +6,7 @@ type PlayerRosterProps = {
   isCard?: boolean;
   lineup: LineupSlot[];
   setSelectedPosition: (position: SlotPosition | null) => void;
-  setShowBottomDrawer: () => void;
+  onOpen: () => void;
 };
 
 const PlayerRoster = ({
@@ -14,7 +14,7 @@ const PlayerRoster = ({
   isCard = false,
   lineup,
   setSelectedPosition,
-  setShowBottomDrawer,
+  onOpen,
 }: PlayerRosterProps) => (
   <>
     {lineup.map((slot) => (
@@ -23,7 +23,7 @@ const PlayerRoster = ({
         key={slot.position}
         openDrawer={() => {
           setSelectedPosition(slot.position);
-          setShowBottomDrawer();
+          onOpen();
         }}
         playerData={slot.player}
         position={slot.position}
@@ -36,7 +36,7 @@ const PlayerRoster = ({
           key={benchSlot.position}
           openDrawer={() => {
             setSelectedPosition(benchSlot.position);
-            setShowBottomDrawer();
+            onOpen();
           }}
           playerData={benchSlot.player}
           position={benchSlot.position}
