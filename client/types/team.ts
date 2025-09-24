@@ -1,5 +1,6 @@
 import { Augment } from "./augment";
 import { Player } from "./players";
+
 export const TEAM_BALANCE = 150000000;
 
 export type Team = {
@@ -18,7 +19,6 @@ export type Position = "PG" | "SG" | "SF" | "PF" | "C";
 export type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
 export type BenchPosition = `BEN${number}`;
 export type SlotPosition = Position | FlexPosition | BenchPosition;
-export type PositionFilters = Position | "ALL" | "G" | "F";
 
 export type LineupSlot = {
   position: SlotPosition;
@@ -29,15 +29,7 @@ export type BenchSlot = {
   position: BenchPosition;
   player: Player;
 };
-export const POSITION_OPTIONS: PositionFilters[] = [
-  "PG",
-  "SG",
-  "SF",
-  "PF",
-  "C",
-  "G",
-  "F",
-];
+
 export const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
 
 export const SLOT_ORDER: SlotPosition[] = [

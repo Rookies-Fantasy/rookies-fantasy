@@ -20,12 +20,10 @@ export type SaveLineupOptions = {
 export const findSlotFromPosition = <T extends LineupSlot | BenchSlot>(
   arr: T[],
   selectedPosition: SlotPosition,
-) => arr.find((slot) => slot.position === selectedPosition);
+) => arr.find((slot) => slot.position === selectedPosition) ?? null;
 
-export const isPlayerInLineup = (
-  lineup: LineupSlot[],
-  playerId: string,
-): boolean => lineup.some((slot) => slot.player?.id === playerId);
+export const isPlayerInLineup = (lineup: LineupSlot[], playerId: string) =>
+  lineup.some((slot) => slot.player?.id === playerId);
 
 export const isPlayerEligibleForPosition = (
   player: Player,
@@ -33,6 +31,9 @@ export const isPlayerEligibleForPosition = (
 ) =>
   player.positions.includes(position) ||
   UTIL_POSITIONS.includes(position as FlexPosition);
+
+export const isBenchPosition = (position: SlotPosition) =>
+  position.startsWith("BEN");
 
 export const saveTeamLineup = async (
   userId: string,
@@ -75,10 +76,7 @@ export const saveTeamLineup = async (
   }
 };
 
-export const resetTeamLineup = async (
-  userId: string,
-  teamId: string,
-): Promise<{ lineup: LineupSlot[]; balance: number }> => {
+export const resetTeamLineup = async (userId: string, teamId: string) => {
   try {
     const savedData = await UserController.getSavedTeamLineup(userId, teamId);
     return savedData;

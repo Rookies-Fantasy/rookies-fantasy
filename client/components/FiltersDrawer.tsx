@@ -8,8 +8,11 @@ import BottomSheet from "./BottomSheet";
 import Button from "./Button";
 import RangeSlider from "./RangeSlider";
 import { NbaTeam } from "@/types/nbaTeams";
-import { PlayerFilters } from "@/types/players";
-import { POSITION_OPTIONS, PositionFilters } from "@/types/team";
+import {
+  PlayerFilters,
+  POSITION_FILTER_OPTIONS,
+  PositionFilters,
+} from "@/types/players";
 import { cn } from "@/utils/jsUtils";
 
 type FilterDrawerProps = {
@@ -188,7 +191,7 @@ const FiltersDrawer = ({
         title="Position"
       >
         <View className="ml-4 flex-row flex-wrap items-center justify-center gap-x-7">
-          {POSITION_OPTIONS.map((position) => (
+          {POSITION_FILTER_OPTIONS.map((position) => (
             <View className="w-1/5" key={position}>
               <Pressable
                 className={cn(
