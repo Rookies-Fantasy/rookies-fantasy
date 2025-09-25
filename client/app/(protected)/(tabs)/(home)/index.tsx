@@ -5,10 +5,12 @@ import { Pressable, Text, View, Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
+import Button from "@/components/Button";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { useAppSelector } from "@/state/hooks";
+import { selectAugment } from "@/state/slices/teamSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
@@ -16,6 +18,7 @@ import { isNotNil } from "@/utils/jsUtils";
 const MyTeam = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
+  const augment = useAppSelector(selectAugment);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
@@ -71,24 +74,18 @@ const MyTeam = () => {
         </View>
         <View className="mx-6 flex-1 gap-3">
           <AugmentStatusCard />
-          <Pressable
-            className="flex-1 rounded-md bg-purple-600 p-4"
-            onPress={() =>
-              router.push("/(protected)/(draft)/(teamBuilder)/roster")
-            }
-          >
-            <Text
-              className="text-center uppercase text-white"
-              onPress={() => {
-                if (!isNavigating) {
-                  setIsNavigating(true);
-                  router.push("/(protected)/(draft)/applyAugment");
-                }
-              }}
-            >
-              Build Your Team
-            </Text>
-          </Pressable>
+          <Button
+            label="Build Your Team"
+            onPress={() => {
+              if (!isNavigating) {
+                const route = !augment?.id
+                  ? "/(protected)/(draft)/applyAugment"
+                  : "/(protected)/(draft)/(teamBuilder)/roster";
+                setIsNavigating(true);
+                router.push(route);
+              }
+            }}
+          />
         </View>
         <View className="mx-6 my-2 flex-1 gap-4">
           <PlayerRoster
