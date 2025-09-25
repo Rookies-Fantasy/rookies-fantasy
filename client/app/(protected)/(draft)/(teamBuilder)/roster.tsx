@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { ArrowLeft, X } from "phosphor-react-native";
+import { ArrowLeft } from "phosphor-react-native";
 import { useState } from "react";
 import {
   Keyboard,
@@ -16,16 +16,13 @@ import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
-import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import { resetToSavedTeam } from "@/state/slices/teamSlice";
+import { useAppSelector } from "@/state/hooks";
 import { SlotPosition } from "@/types/team";
-import { resetTeamLineup } from "@/utils/teamUtils";
+import { isNotNil } from "@/utils/jsUtils";
 
 const Roster = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
-  const userId = useAppSelector((state) => state.user.id);
-  const dispatch = useAppDispatch();
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
@@ -46,24 +43,11 @@ const Roster = () => {
                     className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
                     icon={<ArrowLeft color="white" size={20} weight="bold" />}
                     onPress={async () => {
-                      const savedData = await resetTeamLineup(userId, team.id);
-                      dispatch(
-                        resetToSavedTeam({
-                          lineup: savedData.lineup,
-                          balance: savedData.balance,
-                        }),
-                      );
-                      router.back();
+                      router.dismissTo("/(protected)/(tabs)/(home)");
                     }}
                   />
                   <Text className="pbk-h5 text-base-white">Team builder</Text>
                 </View>
-                <Pressable
-                  className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                  onPress={() => router.dismissAll()}
-                >
-                  <X color="white" size={20} weight="bold" />
-                </Pressable>
               </View>
 
               <View className="gap-4">
@@ -78,20 +62,22 @@ const Roster = () => {
                 bench={team.bench}
                 isCard
                 lineup={team.lineup}
+                onOpen={() => setShowBottomDrawer(true)}
                 setSelectedPosition={setSelectedPosition}
-                setShowBottomDrawer={() => setShowBottomDrawer(true)}
               />
             </View>
           </KeyboardAvoidingView>
         </ScrollView>
         <TeamActionButtons />
       </Pressable>
-      <RosterDrawer
-        selectedPosition={selectedPosition}
-        setSelectedPosition={setSelectedPosition}
-        setShowBottomDrawer={setShowBottomDrawer}
-        showBottomDrawer={showBottomDrawer}
-      />
+      {isNotNil(selectedPosition) && (
+        <RosterDrawer
+          selectedPosition={selectedPosition}
+          setSelectedPosition={setSelectedPosition}
+          setShowBottomDrawer={setShowBottomDrawer}
+          showBottomDrawer={showBottomDrawer}
+        />
+      )}
     </SafeAreaView>
   );
 };

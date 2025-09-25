@@ -1,25 +1,26 @@
 import { Image } from "expo-image";
 import { Check } from "phosphor-react-native";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
-import FloatingActionButton from "./FloatingActionButton";
+import Button from "./Button";
 import RangeSlider from "./RangeSlider";
-import Spinner from "./Spinner";
-import {
-  Filters,
-  PositionOption,
-} from "@/app/(protected)/(draft)/(teamBuilder)/players";
 import { NbaTeam } from "@/types/nbaTeams";
+import {
+  PlayerFilters,
+  POSITION_FILTER_OPTIONS,
+  PositionFilters,
+} from "@/types/players";
 import { cn } from "@/utils/jsUtils";
 
 type FilterDrawerProps = {
   teams: NbaTeam[];
   showFiltersDrawer: boolean;
   setShowFiltersDrawer: () => void;
-  filters: Filters;
-  setFilters: (filters: Filters) => void;
+  filters: PlayerFilters;
+  setFilters: (filters: PlayerFilters) => void;
 };
 
 const FiltersDrawer = ({
@@ -31,7 +32,7 @@ const FiltersDrawer = ({
 }: FilterDrawerProps) => {
   const [isApplyLoading, setIsApplyLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
-  const [localFilters, setLocalFilters] = useState<Filters>(filters);
+  const [localFilters, setLocalFilters] = useState<PlayerFilters>(filters);
 
   useEffect(() => {
     if (showFiltersDrawer) {
@@ -64,18 +65,7 @@ const FiltersDrawer = ({
       (selectedTeam) => selectedTeam.id === team.id,
     );
 
-  const positionOptions: PositionOption[] = [
-    "ALL",
-    "PG",
-    "SG",
-    "SF",
-    "PF",
-    "C",
-    "G",
-    "F",
-  ];
-
-  const handlePositionPress = (position: PositionOption) => {
+  const handlePositionPress = (position: PositionFilters) => {
     const isSelected = localFilters.selectedPositions.includes(position);
 
     if (isSelected) {
@@ -93,7 +83,7 @@ const FiltersDrawer = ({
     }
   };
 
-  const isPositionSelected = (position: PositionOption) =>
+  const isPositionSelected = (position: PositionFilters) =>
     localFilters.selectedPositions.includes(position);
 
   const handleSalaryChange = (minValue: number, maxValue: number) => {
@@ -121,7 +111,7 @@ const FiltersDrawer = ({
   const handleReset = () => {
     try {
       setIsResetLoading(true);
-      const resetFilters: Filters = {
+      const resetFilters: PlayerFilters = {
         selectedTeams: [],
         selectedPositions: [],
         salaryRange: { min: 1000000, max: 150000000 },
@@ -139,36 +129,21 @@ const FiltersDrawer = ({
   return (
     <BottomSheet
       footer={
-        <View className="absolute left-6 right-6 flex-row gap-4">
-          <FloatingActionButton
-            absolute={false}
-            buttonBackground="bg-gray-900 border border-gray-800"
+        <View className="flex-row gap-4">
+          <Button
             className="flex-1"
+            isLoading={isResetLoading}
+            label="RESET"
             onPress={handleReset}
-          >
-            {isResetLoading ? (
-              <View className="items-center justify-center">
-                <Spinner />
-              </View>
-            ) : (
-              <Text className="pbk-h6 text-center text-base-white">RESET</Text>
-            )}
-          </FloatingActionButton>
+            variant="secondary"
+          />
 
-          <FloatingActionButton
-            absolute={false}
-            buttonBackground="bg-purple-500"
+          <Button
             className="flex-1"
+            isLoading={isApplyLoading}
+            label="APPLY"
             onPress={handleApply}
-          >
-            {isApplyLoading ? (
-              <View className="items-center justify-center">
-                <Spinner />
-              </View>
-            ) : (
-              <Text className="pbk-h6 text-center text-base-white">APPLY</Text>
-            )}
-          </FloatingActionButton>
+          />
         </View>
       }
       header={
@@ -178,12 +153,12 @@ const FiltersDrawer = ({
       }
       isOpen={showFiltersDrawer}
       onClose={setShowFiltersDrawer}
-      snapPoints={["90%"]}
+      snapPoints={["80%"]}
     >
-      <Accordion title="Team">
-        <View className="flex-row flex-wrap justify-center gap-x-8">
+      <Accordion selectedCount={localFilters.selectedTeams.length} title="Team">
+        <ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 pb-36">
           {teams.map((team) => (
-            <View className="w-1/4" key={team.id}>
+            <View key={team.id}>
               <Pressable
                 className={cn(
                   "my-3 flex-row items-center justify-between rounded-md px-2 py-3",
@@ -191,7 +166,7 @@ const FiltersDrawer = ({
                 )}
                 onPress={() => handleTeamPress(team)}
               >
-                <View className="flex-row items-center gap-1">
+                <View className="flex-row items-center gap-2">
                   <Image
                     contentFit="contain"
                     source={{ uri: team.logoUrl }}
@@ -200,16 +175,23 @@ const FiltersDrawer = ({
                   <Text className="pbk-b2 text-center text-base-white">
                     {team.abbreviation}
                   </Text>
+                  <View className="h-5 w-5 items-center justify-center">
+                    {isTeamSelected(team) && (
+                      <Check color="#A4A7AE" size={20} />
+                    )}
+                  </View>
                 </View>
-                {isTeamSelected(team) && <Check color="#A4A7AE" size={20} />}
               </Pressable>
             </View>
           ))}
-        </View>
+        </ScrollView>
       </Accordion>
-      <Accordion title="Position">
+      <Accordion
+        selectedCount={localFilters.selectedPositions.length}
+        title="Position"
+      >
         <View className="ml-4 flex-row flex-wrap items-center justify-center gap-x-7">
-          {positionOptions.map((position) => (
+          {POSITION_FILTER_OPTIONS.map((position) => (
             <View className="w-1/5" key={position}>
               <Pressable
                 className={cn(
@@ -231,14 +213,19 @@ const FiltersDrawer = ({
           ))}
         </View>
       </Accordion>
-      <Accordion title="Salary">
+      <Accordion
+        selectedCount={
+          localFilters.salaryRange.min !== 1000000 ||
+          localFilters.salaryRange.max !== 150000000
+            ? 1
+            : 0
+        }
+        title="Salary"
+      >
         <View className="flex-row justify-center">
           <RangeSlider
             formatValue={formatSalaryValue}
-            max={150000000}
-            min={1000000}
             onChange={([min, max]) => handleSalaryChange(min, max)}
-            step={1000000}
             value={[localFilters.salaryRange.min, localFilters.salaryRange.max]}
           />
         </View>

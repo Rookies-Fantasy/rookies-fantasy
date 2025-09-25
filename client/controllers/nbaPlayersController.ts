@@ -1,8 +1,7 @@
 import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
-import { Filters } from "@/app/(protected)/(draft)/(teamBuilder)/players";
-import { Player } from "@/types/players";
+import { Player, PlayerFilters } from "@/types/players";
 
 const PLAYERS_COLLECTION = "nbaPlayers";
 
@@ -16,12 +15,49 @@ export class NbaPlayersController {
   static getPlayers = async (
     PAGE_SIZE: number,
     pageParam?: FirebaseFirestoreTypes.DocumentSnapshot,
+    filters?: PlayerFilters,
   ): Promise<PlayerFetchResult> => {
     try {
       let query = firestore()
         .collection(PLAYERS_COLLECTION)
-        .orderBy("salary", "desc")
-        .limit(PAGE_SIZE);
+        .orderBy("salary", "desc");
+
+      if (filters) {
+        query = query
+          .where("salary", ">=", filters.salaryRange.min)
+          .where("salary", "<=", filters.salaryRange.max);
+
+        if (filters.selectedTeams.length > 0) {
+          const teamIds = filters.selectedTeams.map((team) => team.id);
+          query = query.where("teamId", "in", teamIds);
+        }
+
+        if (filters.selectedPositions.length > 0) {
+          let positionsToMatch: string[] = [];
+
+          filters.selectedPositions.forEach((pos) => {
+            if (pos === "G") {
+              positionsToMatch.push("PG", "SG");
+            } else if (pos === "F") {
+              positionsToMatch.push("SF", "PF", "C");
+            } else if (["PG", "SG", "SF", "PF", "C"].includes(pos)) {
+              positionsToMatch.push(pos);
+            }
+          });
+
+          positionsToMatch = [...new Set(positionsToMatch)];
+
+          if (positionsToMatch.length > 0) {
+            query = query.where(
+              "positions",
+              "array-contains-any",
+              positionsToMatch,
+            );
+          }
+        }
+      }
+
+      query = query.limit(PAGE_SIZE);
 
       if (pageParam) {
         query = query.startAfter(pageParam);
@@ -71,7 +107,7 @@ export class NbaPlayersController {
   };
 
   static getFilteredPlayers = async (
-    filters: Filters,
+    filters: PlayerFilters,
     PAGE_SIZE: number,
     pageParam?: FirebaseFirestoreTypes.DocumentSnapshot,
   ): Promise<PlayerFetchResult> => {
@@ -91,30 +127,26 @@ export class NbaPlayersController {
       }
 
       if (filters.selectedPositions.length > 0) {
-        const hasAll = filters.selectedPositions.includes("ALL");
+        let positionsToMatch: string[] = [];
 
-        if (!hasAll) {
-          let positionsToMatch: string[] = [];
-
-          filters.selectedPositions.forEach((pos) => {
-            if (pos === "G") {
-              positionsToMatch.push("PG", "SG");
-            } else if (pos === "F") {
-              positionsToMatch.push("SF", "PF", "C");
-            } else if (["PG", "SG", "SF", "PF", "C"].includes(pos)) {
-              positionsToMatch.push(pos);
-            }
-          });
-
-          positionsToMatch = [...new Set(positionsToMatch)];
-
-          if (positionsToMatch.length > 0) {
-            query = query.where(
-              "positions",
-              "array-contains-any",
-              positionsToMatch,
-            );
+        filters.selectedPositions.forEach((pos) => {
+          if (pos === "G") {
+            positionsToMatch.push("PG", "SG");
+          } else if (pos === "F") {
+            positionsToMatch.push("SF", "PF", "C");
+          } else if (["PG", "SG", "SF", "PF", "C"].includes(pos)) {
+            positionsToMatch.push(pos);
           }
+        });
+
+        positionsToMatch = [...new Set(positionsToMatch)];
+
+        if (positionsToMatch.length > 0) {
+          query = query.where(
+            "positions",
+            "array-contains-any",
+            positionsToMatch,
+          );
         }
       }
 

@@ -11,6 +11,7 @@ import TeamActionButtons from "@/components/TeamActionButtons";
 import { useAppSelector } from "@/state/hooks";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
 
 const MyTeam = () => {
   const router = useRouter();
@@ -22,7 +23,6 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-
   const [isNavigating, setIsNavigating] = useState(false);
   useFocusEffect(
     useCallback(() => {
@@ -33,6 +33,7 @@ const MyTeam = () => {
   return (
     <SafeAreaView className="h-full w-full items-center justify-center bg-gray-950">
       <ScrollView
+        // TODO: Find a better way to prevent FAB from blocking content (maybe use SafeAreaView bottom inset)
         contentContainerClassName={team.hasUserChanges ? "pb-10" : ""}
       >
         <View className="h-72 w-full">
@@ -94,18 +95,20 @@ const MyTeam = () => {
             bench={team.bench}
             isCard
             lineup={team.lineup}
+            onOpen={() => setShowBottomDrawer(true)}
             setSelectedPosition={setSelectedPosition}
-            setShowBottomDrawer={() => setShowBottomDrawer(true)}
           />
         </View>
       </ScrollView>
       <TeamActionButtons />
-      <RosterDrawer
-        selectedPosition={selectedPosition}
-        setSelectedPosition={setSelectedPosition}
-        setShowBottomDrawer={setShowBottomDrawer}
-        showBottomDrawer={showBottomDrawer}
-      />
+      {isNotNil(selectedPosition) && (
+        <RosterDrawer
+          selectedPosition={selectedPosition}
+          setSelectedPosition={setSelectedPosition}
+          setShowBottomDrawer={setShowBottomDrawer}
+          showBottomDrawer={showBottomDrawer}
+        />
+      )}
     </SafeAreaView>
   );
 };

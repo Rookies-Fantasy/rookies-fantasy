@@ -1,5 +1,6 @@
 import { Augment } from "./augment";
 import { Player } from "./players";
+
 export const TEAM_BALANCE = 150000000;
 
 export type Team = {
@@ -26,10 +27,9 @@ export type LineupSlot = {
 
 export type BenchSlot = {
   position: BenchPosition;
-  player: Player | null;
+  player: Player;
 };
 
-export const POSITIONS = ["PG", "SG", "SF", "PF", "C"];
 export const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
 
 export const SLOT_ORDER: SlotPosition[] = [
