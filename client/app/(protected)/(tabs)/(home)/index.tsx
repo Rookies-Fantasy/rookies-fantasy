@@ -7,12 +7,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "@/components/Button";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
+import TeamActionButtons from "@/components/TeamActionButtons";
 import { useAppSelector } from "@/state/hooks";
 import { selectAugmentId } from "@/state/slices/teamSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
 
 const MyTeam = () => {
+  const router = useRouter();
   const team = useAppSelector((state) => state.team);
   const augmentId = useAppSelector(selectAugmentId);
   const matchedLogo = teamLogoOptions.find(
@@ -22,8 +25,6 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-
-  const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
   useFocusEffect(
     useCallback(() => {
@@ -33,7 +34,10 @@ const MyTeam = () => {
 
   return (
     <SafeAreaView className="h-full w-full items-center justify-center bg-gray-950">
-      <ScrollView>
+      <ScrollView
+        // TODO: Find a better way to prevent FAB from blocking content (maybe use SafeAreaView bottom inset)
+        contentContainerClassName={team.hasUserChanges ? "pb-10" : ""}
+      >
         <View className="h-72 w-full">
           <View className="h-1/2 bg-pink-700" />
           <View className="h-1/2 border-b border-gray-900 bg-gray-950">
@@ -83,21 +87,23 @@ const MyTeam = () => {
         </View>
         <View className="mx-6 my-2 flex-1 gap-4">
           <PlayerRoster
+            bench={team.bench}
             isCard
             lineup={team.lineup}
-            selectedPosition={selectedPosition}
+            onOpen={() => setShowBottomDrawer(true)}
             setSelectedPosition={setSelectedPosition}
-            setShowBottomDrawer={setShowBottomDrawer}
-            showBottomDrawer={showBottomDrawer}
           />
         </View>
       </ScrollView>
-      <RosterDrawer
-        selectedPosition={selectedPosition}
-        setSelectedPosition={setSelectedPosition}
-        setShowBottomDrawer={setShowBottomDrawer}
-        showBottomDrawer={showBottomDrawer}
-      />
+      <TeamActionButtons />
+      {isNotNil(selectedPosition) && (
+        <RosterDrawer
+          selectedPosition={selectedPosition}
+          setSelectedPosition={setSelectedPosition}
+          setShowBottomDrawer={setShowBottomDrawer}
+          showBottomDrawer={showBottomDrawer}
+        />
+      )}
     </SafeAreaView>
   );
 };

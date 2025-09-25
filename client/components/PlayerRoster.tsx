@@ -1,22 +1,20 @@
 import PlayerSlot from "./PlayerSlot";
-import { LineupSlot, SlotPosition } from "@/types/team";
+import { BenchSlot, LineupSlot, SlotPosition } from "@/types/team";
 
 type PlayerRosterProps = {
+  bench: BenchSlot[];
   isCard?: boolean;
   lineup: LineupSlot[];
-  selectedPosition: SlotPosition | null;
   setSelectedPosition: (position: SlotPosition | null) => void;
-  setShowBottomDrawer: (showBottomDrawer: boolean) => void;
-  showBottomDrawer: boolean;
+  onOpen: () => void;
 };
 
 const PlayerRoster = ({
+  bench,
   isCard = false,
   lineup,
-  selectedPosition,
   setSelectedPosition,
-  setShowBottomDrawer,
-  showBottomDrawer,
+  onOpen,
 }: PlayerRosterProps) => (
   <>
     {lineup.map((slot) => (
@@ -24,19 +22,26 @@ const PlayerRoster = ({
         isCard={isCard}
         key={slot.position}
         openDrawer={() => {
-          if (showBottomDrawer && slot.position !== selectedPosition) {
-            // TODO: Complete swap functionality here. This if statement checks if the drawer is already open, and also ensures
-            // that if a user clicks on the initial selected position it does not complete the "swap"
-            console.log("Drawer out, this should be a swap.");
-          } else {
-            setSelectedPosition(slot.position);
-            setShowBottomDrawer(true);
-          }
+          setSelectedPosition(slot.position);
+          onOpen();
         }}
         playerData={slot.player}
         position={slot.position}
       />
     ))}
+    {bench.length > 0 &&
+      bench.map((benchSlot) => (
+        <PlayerSlot
+          isCard={isCard}
+          key={benchSlot.position}
+          openDrawer={() => {
+            setSelectedPosition(benchSlot.position);
+            onOpen();
+          }}
+          playerData={benchSlot.player}
+          position={benchSlot.position}
+        />
+      ))}
   </>
 );
 

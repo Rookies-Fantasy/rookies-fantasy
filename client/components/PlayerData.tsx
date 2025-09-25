@@ -20,7 +20,7 @@ const PlayerData = ({ player }: PlayerDataProps) => (
             ellipsizeMode="tail"
             numberOfLines={1}
           >
-            {player.firstName.slice(0, 1)}. {player.secondName}
+            {player.firstName.slice(0, 1)}. {player.lastName}
           </Text>
         </View>
         <Text className="pbk-b2 text-green-200">

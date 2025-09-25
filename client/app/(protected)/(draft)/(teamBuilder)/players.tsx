@@ -2,7 +2,7 @@ import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Minus, Plus, Sliders } from "phosphor-react-native";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Keyboard,
@@ -12,23 +12,27 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FloatingActionButton from "@/components/FloatingActionButton";
+import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
 import PlayerDrawer from "@/components/PlayerDrawer/PlayerDrawer";
 import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
+import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
-import { UserController } from "@/controllers/userController";
+import { NbaTeamsController } from "@/controllers/nbaTeamsController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
-  selectLineupPlayerCount,
-  isPlayerInLineup,
   removePlayerFromLineup,
+  resetToSavedTeam,
 } from "@/state/slices/teamSlice";
+import { NbaTeam } from "@/types/nbaTeams";
+import { Player, PlayerFilters } from "@/types/player";
+import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
+import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
@@ -36,46 +40,37 @@ type FetchPlayersParams = {
 
 const PAGE_SIZE = 25;
 
-// TODO: DO we need this?
-const MAX_PLAYERS = 8;
-
 const Players = () => {
   const [query, setQuery] = useState("");
+  const [teams, setTeams] = useState<NbaTeam[]>([]);
+  const [filters, setFilters] = useState<PlayerFilters>({
+    selectedTeams: [],
+    selectedPositions: [],
+    salaryRange: { min: 1000000, max: 150000000 },
+  });
   const team = useAppSelector((state) => state.team);
   const userId = useAppSelector((state) => state.user.id);
-  const selectedPlayers = useAppSelector(selectLineupPlayerCount) ?? 0;
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [showPlayerDrawer, setShowPlayerDrawer] = useState(false);
 
-  const handleSaveLineup = async () => {
-    try {
-      if (team.balance < 0) {
-        Alert.alert(
-          "Insufficient balance",
-          "Please adjust your selections to stay within your available funds.",
-        );
-        return;
-      }
-
-      await UserController.saveUserTeamLineup(userId, team.id, {
-        lineup: team.lineup,
-        balance: team.balance,
-      });
-
-      router.dismissTo("/(protected)/(tabs)/(home)");
-    } catch (error) {
-      Alert.alert("Error", "Failed to save your team. Please try agian.");
-      console.log(error);
-    }
-  };
+  const activeFilters =
+    (filters.selectedTeams.length > 0 ? 1 : 0) +
+    (filters.selectedPositions.length > 0 ? 1 : 0) +
+    (filters.salaryRange.min !== 1000000 ||
+    filters.salaryRange.max !== 150000000
+      ? 1
+      : 0);
 
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
+    activeFilters
+      ? await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, filters)
+      : await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
 
   const {
     data,
@@ -86,15 +81,45 @@ const Players = () => {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["nbaPlayers"],
+    queryKey: [
+      "nbaPlayers",
+      filters.selectedTeams.map((team) => team.id).sort(),
+      filters.selectedPositions.sort(),
+      filters.salaryRange.min,
+      filters.salaryRange.max,
+    ],
     queryFn: fetchPlayersWithAverages,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.lastDoc : undefined,
     initialPageParam: undefined,
   });
 
+  // TODO: Cache or store these assets so we can reduce fetches
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const teamsData = await NbaTeamsController.getAllTeams();
+        setTeams(teamsData);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
+
+    const playerHasAvailablePosition = (player: Player) => {
+      const positions = player.positions || [];
+      return team.lineup.some(
+        (slot) =>
+          slot.player === null &&
+          (positions.includes(slot.position) ||
+            UTIL_POSITIONS.includes(slot.position as FlexPosition)),
+      );
+    };
 
     return players.map((player) => ({
       id: player.id,
@@ -117,7 +142,11 @@ const Players = () => {
             if (isPlayerInLineup(team.lineup, player.id)) {
               dispatch(removePlayerFromLineup(player));
             } else {
-              dispatch(addPlayerToLineup(player));
+              if (playerHasAvailablePosition(player)) {
+                dispatch(addPlayerToLineup(player));
+              } else {
+                Alert.alert("Cannot add player", "No eligible spot available");
+              }
             }
           }}
         />,
@@ -148,7 +177,16 @@ const Players = () => {
                 <IconButton
                   className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
                   icon={<ArrowLeft color="white" size={20} weight="bold" />}
-                  onPress={() => router.dismissTo("/(protected)/(tabs)/(home)")}
+                  onPress={async () => {
+                    const savedData = await resetTeamLineup(userId, team.id);
+                    dispatch(
+                      resetToSavedTeam({
+                        lineup: savedData.lineup,
+                        balance: savedData.balance,
+                      }),
+                    );
+                    router.dismissTo("/(protected)/(tabs)/(home)");
+                  }}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
@@ -158,19 +196,24 @@ const Players = () => {
               <View className="flex-1">
                 <SearchBar onChangeText={setQuery} value={query} />
               </View>
-              <IconButton
-                className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
-                icon={<Sliders color="white" />}
-                onPress={() => {}}
-              />
-            </View>
-            <View className="flex-row justify-between py-2">
-              <Text className="pbk-h8 text-base-white">PLAYERS</Text>
-              <Text className="pbk-h8 text-base-white">
-                SELECTED: {selectedPlayers}/{MAX_PLAYERS}
-              </Text>
+
+              <View className="relative">
+                <IconButton
+                  className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
+                  icon={<Sliders color="white" />}
+                  onPress={() => setShowFiltersDrawer(true)}
+                />
+                {activeFilters > 0 && (
+                  <View className="absolute -right-2 -top-2 h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1">
+                    <Text className="pbk-h8 text-base-white">
+                      {activeFilters}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
+
           {isLoading ? (
             <View className="flex-1 items-center justify-center border-t-2 border-gray-900">
               <Spinner />
@@ -228,13 +271,15 @@ const Players = () => {
             />
           )}
         </KeyboardAvoidingView>
-        <FloatingActionButton
-          className="bottom-3 w-[90%] self-center"
-          onPress={handleSaveLineup}
-        >
-          <Text className="pbk-h6 text-center text-base-white">SAVE TEAM</Text>
-        </FloatingActionButton>
+        <TeamActionButtons />
       </Pressable>
+      <FiltersDrawer
+        filters={filters}
+        setFilters={setFilters}
+        setShowFiltersDrawer={() => setShowFiltersDrawer(false)}
+        showFiltersDrawer={showFiltersDrawer}
+        teams={teams}
+      />
       <PlayerDrawer
         playerId={selectedPlayerId}
         setSelectedPlayerId={setSelectedPlayerId}
