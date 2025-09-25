@@ -8,6 +8,7 @@ import { SlotPosition, Team } from "@/types/team";
 import { cn, isNil, isNotNil } from "@/utils/jsUtils";
 import {
   findSlotFromPosition,
+  isBenchPosition,
   isPlayerEligibleForPosition,
 } from "@/utils/teamUtils";
 
@@ -19,7 +20,7 @@ type RosterDrawerProps = {
 };
 
 const getSelectedPlayer = (selectedPosition: SlotPosition, team: Team) => {
-  if (selectedPosition.startsWith("BEN")) {
+  if (isBenchPosition(selectedPosition)) {
     const benchSlot = findSlotFromPosition(team.bench, selectedPosition);
     return benchSlot?.player ?? null;
   }
@@ -53,7 +54,7 @@ const RosterDrawer = ({
   const eligibleBenchSlots = team.bench.filter(
     (slot) =>
       isPlayerEligibleForPosition(slot.player, selectedPosition) ||
-      selectedPosition.startsWith("BEN"),
+      isBenchPosition(selectedPosition),
   );
 
   const hasEligibleOptions =
