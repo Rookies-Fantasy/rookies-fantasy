@@ -65,9 +65,7 @@ const Players = () => {
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    activeFilters
-      ? await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, filters)
-      : await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
+    await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, query, filters);
 
   const {
     data,
@@ -84,6 +82,7 @@ const Players = () => {
       filters.selectedPositions.sort(),
       filters.salaryRange.min,
       filters.salaryRange.max,
+      query,
     ],
     queryFn: fetchPlayersWithAverages,
     getNextPageParam: (lastPage) =>
