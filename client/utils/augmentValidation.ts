@@ -40,6 +40,7 @@ export const validateAugment = (
 
     if (qualifyingPlayers.length === 0) {
       qualifyingPlayers = result.qualifyingPlayers;
+      // TODO: Remove console.log in ENG-33
       console.log(result.qualifyingPlayers);
     } else {
       qualifyingPlayers = qualifyingPlayers.filter((player) =>

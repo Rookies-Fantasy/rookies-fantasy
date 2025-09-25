@@ -1,7 +1,7 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Minus, Plus, Sliders, X } from "phosphor-react-native";
+import { ArrowLeft, Minus, Plus, Sliders } from "phosphor-react-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -26,25 +26,16 @@ import { NbaTeamsController } from "@/controllers/nbaTeamsController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   addPlayerToLineup,
-  isPlayerInLineup,
   removePlayerFromLineup,
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
-import { Position, FlexPosition, UTIL_POSITIONS } from "@/types/team";
-
-import { resetTeamLineup } from "@/utils/teamUtils";
+import { Player, PlayerFilters } from "@/types/players";
+import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
+import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
 type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
-};
-
-export type PositionOption = Position | "ALL" | "G" | "F";
-
-export type Filters = {
-  selectedTeams: NbaTeam[];
-  selectedPositions: PositionOption[];
-  salaryRange: { min: number; max: number };
 };
 
 const PAGE_SIZE = 25;
@@ -52,7 +43,7 @@ const PAGE_SIZE = 25;
 const Players = () => {
   const [query, setQuery] = useState("");
   const [teams, setTeams] = useState<NbaTeam[]>([]);
-  const [filters, setFilters] = useState<Filters>({
+  const [filters, setFilters] = useState<PlayerFilters>({
     selectedTeams: [],
     selectedPositions: [],
     salaryRange: { min: 1000000, max: 150000000 },
@@ -65,8 +56,8 @@ const Players = () => {
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
 
   const activeFilters =
-    filters.selectedTeams.length +
-    filters.selectedPositions.length +
+    (filters.selectedTeams.length > 0 ? 1 : 0) +
+    (filters.selectedPositions.length > 0 ? 1 : 0) +
     (filters.salaryRange.min !== 1000000 ||
     filters.salaryRange.max !== 150000000
       ? 1
@@ -76,16 +67,12 @@ const Players = () => {
     pageParam,
   }: FetchPlayersParams = {}) =>
     activeFilters
-      ? await NbaPlayersController.getFilteredPlayers(
-          filters,
-          PAGE_SIZE,
-          pageParam,
-        )
+      ? await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, filters)
       : await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
 
   const {
     data,
-    isLoading: isLoadingFetch,
+    isLoading,
     isError,
     fetchNextPage,
     hasNextPage,
@@ -105,6 +92,7 @@ const Players = () => {
     initialPageParam: undefined,
   });
 
+  // TODO: Cache or store these assets so we can reduce fetches
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -121,7 +109,7 @@ const Players = () => {
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
 
-    const checkRosterAvailability = (player: any) => {
+    const playerHasAvailablePosition = (player: Player) => {
       const positions = player.positions || [];
       const hasAvailablePosition = team.lineup.some(
         (slot) =>
@@ -152,7 +140,7 @@ const Players = () => {
           if (isPlayerInLineup(team.lineup, player.id)) {
             dispatch(removePlayerFromLineup(player));
           } else {
-            if (checkRosterAvailability(player)) {
+            if (playerHasAvailablePosition(player)) {
               dispatch(addPlayerToLineup(player));
             } else {
               Alert.alert("Cannot add player", "No eligible spot available");
@@ -194,16 +182,11 @@ const Players = () => {
                         balance: savedData.balance,
                       }),
                     );
-                    router.back();
+                    router.dismissTo("/(protected)/(tabs)/(home)");
                   }}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
-              <IconButton
-                className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
-                icon={<X color="white" size={20} weight="bold" />}
-                onPress={() => router.dismissAll()}
-              />
             </View>
             <View className="gap-4">
               <SelectedAugment />
@@ -232,7 +215,7 @@ const Players = () => {
             </View>
           </View>
 
-          {isLoadingFetch ? (
+          {isLoading ? (
             <View className="flex-1 items-center justify-center border-t-2 border-gray-900">
               <Spinner />
             </View>
