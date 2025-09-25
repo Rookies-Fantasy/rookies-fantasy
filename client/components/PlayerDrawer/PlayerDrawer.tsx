@@ -50,7 +50,7 @@ const PlayerDrawer = ({
     <BottomSheet
       isOpen={showPlayerDrawer}
       onClose={onClose}
-      snapPoints={["75%"]}
+      snapPoints={["80%"]}
     >
       <ScrollView
         className="flex-1 pt-6"
@@ -67,7 +67,7 @@ const PlayerDrawer = ({
               source={{ uri: player.headshotUrl }}
             />
             <Text className="pbk-bl text-center text-base-white">
-              {player.firstName} {player.secondName}
+              {player.firstName} {player.lastName}
             </Text>
             {/* TODO: Replace with team name when available*/}
             <Text className="pbk-b1 mt-1 text-center text-gray-500">

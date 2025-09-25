@@ -128,7 +128,7 @@ export class NbaPlayersController {
           gamesPlayed: data.gamesPlayed,
           headshotUrl: data.headshotURL,
           height: data.height,
-          id: data.playerId,
+          id: doc.id,
           jerseyNumber: data.jerseyNumber,
           positions: data.positions,
           playerId: data.playerId,

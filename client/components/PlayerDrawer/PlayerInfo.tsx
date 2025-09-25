@@ -47,7 +47,7 @@ const PlayerInfo = ({ player }: PlayerInfoProps) => (
         <View className="mb-2 h-px w-full bg-gray-800" />
         {/* TODO: Add news when available */}
         <Text className="pbk-b2 text-base-white">
-          There is no recent news for {player.firstName} {player.secondName}.
+          There is no recent news for {player.firstName} {player.lastName}.
         </Text>
       </View>
     </View>
