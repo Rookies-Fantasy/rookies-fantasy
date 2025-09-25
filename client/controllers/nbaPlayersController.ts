@@ -15,12 +15,22 @@ export class NbaPlayersController {
   static getPlayers = async (
     PAGE_SIZE: number,
     pageParam?: FirebaseFirestoreTypes.DocumentSnapshot,
+    searchQuery?: string,
   ): Promise<PlayerFetchResult> => {
     try {
-      let query = firestore()
-        .collection(PLAYERS_COLLECTION)
-        .orderBy("salary", "desc")
-        .limit(PAGE_SIZE);
+      let query: FirebaseFirestoreTypes.Query =
+        firestore().collection(PLAYERS_COLLECTION);
+
+      if (searchQuery && searchQuery.trim()) {
+        const search = searchQuery.trim();
+
+        query = query
+          .where("firstName", ">=", search)
+          .where("firstName", "<", search + "\uf8ff")
+          .limit(PAGE_SIZE);
+      }
+
+      query = query.orderBy("salary", "desc").limit(PAGE_SIZE);
 
       if (pageParam) {
         query = query.startAfter(pageParam);

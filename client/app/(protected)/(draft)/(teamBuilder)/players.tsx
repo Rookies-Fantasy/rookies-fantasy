@@ -46,7 +46,7 @@ const Players = () => {
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
+    await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, query);
 
   const {
     data,
@@ -57,7 +57,7 @@ const Players = () => {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["nbaPlayers"],
+    queryKey: ["nbaPlayers", query],
     queryFn: fetchPlayersWithAverages,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.lastDoc : undefined,
