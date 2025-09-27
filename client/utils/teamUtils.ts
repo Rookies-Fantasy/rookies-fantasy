@@ -17,6 +17,13 @@ export type SaveLineupOptions = {
   onFinally?: () => void;
 };
 
+export const isTeamReadyForQueue = (lineup: LineupSlot[]) => {
+  const ROSTER_SIZE = 8;
+  const filledSlots = lineup.filter((slot) => slot.player !== null).length;
+
+  return ROSTER_SIZE === lineup.length && filledSlots === ROSTER_SIZE;
+};
+
 export const findSlotFromPosition = <T extends LineupSlot | BenchSlot>(
   arr: T[],
   selectedPosition: SlotPosition,
