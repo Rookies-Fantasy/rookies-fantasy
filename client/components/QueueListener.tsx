@@ -42,7 +42,7 @@ export const QueueListener = ({ children }: QueueListenerProps) => {
   }, [teamId, isTeamRegistered]);
 
   useEffect(() => {
-    dispatch(setQueueStatus({ queueStatus: queue, isInQueue }));
+    dispatch(setQueueStatus({ isInQueue }));
 
     if (previousStatus.current === "waiting" && queue?.status === "matched") {
       Alert.alert(

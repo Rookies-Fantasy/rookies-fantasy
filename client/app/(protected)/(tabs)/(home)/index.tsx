@@ -11,8 +11,11 @@ import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { QueueController } from "@/controllers/queueController";
 import { useAppSelector } from "@/state/hooks";
-import { selectIsInQueue, selectQueueStatus } from "@/state/slices/queueSlice";
-import { selectAugment } from "@/state/slices/teamSlice";
+import { selectIsInQueue } from "@/state/slices/queueSlice";
+import {
+  selectAugment,
+  selectRosterPlayerCount,
+} from "@/state/slices/teamSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
@@ -23,7 +26,7 @@ const MyTeam = () => {
   const team = useAppSelector((state) => state.team);
   const augment = useAppSelector(selectAugment);
   const isInQueue = useAppSelector(selectIsInQueue);
-  const queueStatus = useAppSelector(selectQueueStatus);
+  const playerCount = useAppSelector(selectRosterPlayerCount);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
@@ -37,7 +40,6 @@ const MyTeam = () => {
     useCallback(() => {
       setIsNavigating(false);
 
-      // Auto-join queue if team is ready and not already in queue
       const autoJoinQueue = async () => {
         if (
           isTeamReadyForQueue(team.lineup) &&
@@ -74,7 +76,6 @@ const MyTeam = () => {
     setIsQueueLoading(true);
     try {
       await QueueController.removeTeamFromQueue(team.id);
-      // Navigate back to team builder
       router.push("/(protected)/(draft)/(teamBuilder)/roster");
     } catch (error) {
       Alert.alert("Error", "Failed to leave queue. Please try again.");
@@ -82,21 +83,6 @@ const MyTeam = () => {
     } finally {
       setIsQueueLoading(false);
     }
-  };
-
-  const getQueueButtonLabel = () => {
-    if (isQueueLoading) return "Loading...";
-    if (isInQueue) {
-      if (queueStatus?.status === "matched") return "Match Found!";
-      return "Cancel Queue";
-    }
-    return "Build Your Team";
-  };
-
-  const getQueueButtonStyle = () => {
-    if (queueStatus?.status === "matched") return "bg-green-500";
-    if (isInQueue) return "bg-red-500";
-    return "bg-purple-500";
   };
 
   return (
@@ -139,50 +125,43 @@ const MyTeam = () => {
           </View>
         </View>
         <View className="mx-6 flex-1 gap-3">
-          <AugmentStatusCard />
-          <Button
-            label="Build Your Team"
-            onPress={() => {
-              if (!isNavigating) {
-                const route = !augment?.id
-                  ? "/(protected)/(draft)/applyAugment"
-                  : "/(protected)/(draft)/(teamBuilder)/roster";
-                setIsNavigating(true);
-                router.push(route);
-              }
-            }}
-          />
-          {isInQueue && (
-            <Pressable
-              className={`w-full rounded-lg p-4 ${getQueueButtonStyle()} ${
-                isQueueLoading || queueStatus?.status === "matched"
-                  ? "opacity-50"
-                  : ""
-              }`}
-              disabled={isQueueLoading || queueStatus?.status === "matched"}
-              onPress={handleCancelQueue}
-            >
-              <Text className="pbk-h6 text-center text-white">
-                {getQueueButtonLabel()}
-              </Text>
-              {queueStatus?.status === "waiting" && (
-                <Text className="mt-1 text-center text-xs text-white">
-                  Searching for opponent...
-                </Text>
+          {playerCount > 0 ? (
+            <>
+              {isInQueue && (
+                <Button
+                  className="bg-red-600"
+                  label="Cancel Queue"
+                  onPress={handleCancelQueue}
+                />
               )}
-            </Pressable>
+              <AugmentStatusCard />
+              <View className="my-2 flex-1 gap-4">
+                <PlayerRoster
+                  bench={team.bench}
+                  isCard
+                  lineup={team.lineup}
+                  onOpen={() => setShowBottomDrawer(true)}
+                  setSelectedPosition={setSelectedPosition}
+                />
+              </View>
+            </>
+          ) : (
+            <Button
+              label="Build Your Team"
+              onPress={() => {
+                if (!isNavigating) {
+                  const route = !augment?.id
+                    ? "/(protected)/(draft)/applyAugment"
+                    : "/(protected)/(draft)/(teamBuilder)/roster";
+                  setIsNavigating(true);
+                  router.push(route);
+                }
+              }}
+            />
           )}
         </View>
-        <View className="mx-6 my-2 flex-1 gap-4">
-          <PlayerRoster
-            bench={team.bench}
-            isCard
-            lineup={team.lineup}
-            onOpen={() => setShowBottomDrawer(true)}
-            setSelectedPosition={setSelectedPosition}
-          />
-        </View>
       </ScrollView>
+
       <TeamActionButtons />
       {isNotNil(selectedPosition) && (
         <RosterDrawer
