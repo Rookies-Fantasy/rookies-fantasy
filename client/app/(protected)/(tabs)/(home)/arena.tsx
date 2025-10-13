@@ -1,9 +1,9 @@
+import { CaretLeft, CaretRight } from "phosphor-react-native";
 import { Text, View, Image } from "react-native";
+import IconButton from "@/components/IconButton";
 import { useAppSelector } from "@/state/hooks";
 import { selectTeam } from "@/state/slices/teamSlice";
 import { teamLogoOptions } from "@/types/asset";
-import { CaretLeft, CaretRight } from "phosphor-react-native";
-import IconButton from "@/components/IconButton";
 
 const Arena = () => {
   const team = useAppSelector(selectTeam);
