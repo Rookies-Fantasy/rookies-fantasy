@@ -15,5 +15,5 @@ export type User = {
 export const defaultUser: User = {
   id: "",
   emailVerified: false,
-  queueStatus: "idle"
+  queueStatus: "idle",
 };
