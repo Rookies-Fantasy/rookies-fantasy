@@ -2,6 +2,8 @@ import { Text, View, Image } from "react-native";
 import { useAppSelector } from "@/state/hooks";
 import { selectTeam } from "@/state/slices/teamSlice";
 import { teamLogoOptions } from "@/types/asset";
+import { CaretLeft, CaretRight } from "phosphor-react-native";
+import IconButton from "@/components/IconButton";
 
 const Arena = () => {
   const team = useAppSelector(selectTeam);
@@ -47,6 +49,21 @@ const Arena = () => {
 
           <Text className="pbk-b3 text-base-white">1W 0L (100% WR)</Text>
         </View>
+      </View>
+      <View className="w-full flex-row items-center justify-between border-b border-gray-900 px-6 py-4">
+        <IconButton
+          icon={<CaretLeft color="#6042FF" />}
+          onPress={() => {}}
+          size={24}
+        />
+
+        <Text className="pbk-bl text-primary-500">TODAY (OCT 15, 2025)</Text>
+
+        <IconButton
+          icon={<CaretRight color="#6042FF" />}
+          onPress={() => {}}
+          size={24}
+        />
       </View>
     </View>
   );
