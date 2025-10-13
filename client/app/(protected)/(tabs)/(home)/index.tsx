@@ -1,6 +1,5 @@
-import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Pressable, Text, View, Image, Alert } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,13 +8,13 @@ import Button from "@/components/Button";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
-import { QueueController } from "@/controllers/queueController";
+import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
-import { selectIsInQueue } from "@/state/slices/queueSlice";
 import {
   selectAugment,
   selectRosterPlayerCount,
 } from "@/state/slices/teamSlice";
+import { selectUserId } from "@/state/slices/userSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
@@ -24,9 +23,14 @@ import { isTeamReadyForQueue } from "@/utils/teamUtils";
 const MyTeam = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
+  const user = useAppSelector((state) => state.user);
+  const userId = useAppSelector(selectUserId);
   const augment = useAppSelector(selectAugment);
-  const isInQueue = useAppSelector(selectIsInQueue);
   const playerCount = useAppSelector(selectRosterPlayerCount);
+
+  const queueStatus = user.queueStatus ?? "idle";
+  const isInQueue = queueStatus === "queued";
+  const isMatched = queueStatus === "matched";
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
@@ -35,60 +39,38 @@ const MyTeam = () => {
     null,
   );
   const [isNavigating, setIsNavigating] = useState(false);
-  const [isQueueLoading, setIsQueueLoading] = useState(false);
-  useFocusEffect(
-    useCallback(() => {
-      setIsNavigating(false);
 
-      const autoJoinQueue = async () => {
-        if (
-          isTeamReadyForQueue(team.lineup) &&
-          !isInQueue &&
-          !isQueueLoading &&
-          team.id
-        ) {
-          console.log("Attempting to join queue with team ID:", team.id);
-          setIsQueueLoading(true);
-          try {
-            await QueueController.addTeamToQueue(team.id);
-            console.log("Successfully joined queue");
-          } catch (error) {
-            console.error("Auto queue join error:", error);
-            console.error("Team ID:", team.id);
-          } finally {
-            setIsQueueLoading(false);
-          }
-        } else {
-          console.log("Queue join conditions not met:", {
-            teamReady: isTeamReadyForQueue(team.lineup),
-            notInQueue: !isInQueue,
-            notLoading: !isQueueLoading,
-            hasTeamId: !!team.id,
-          });
+  const handleQueueToggle = async () => {
+    if (isInQueue) {
+      try {
+        await UserController.leaveQueue(userId);
+        console.log("Successfully left queue");
+      } catch (error) {
+        Alert.alert("Error", "Failed to leave queue. Please try again.");
+        console.error("Queue leave error:", error);
+      }
+    } else {
+      if (isTeamReadyForQueue(team.lineup) && team.id) {
+        console.log("Attempting to join queue with team ID:", team.id);
+        try {
+          await UserController.joinQueue(userId, team.id);
+          console.log("Successfully joined queue");
+        } catch (error) {
+          Alert.alert("Error", "Failed to join queue. Please try again.");
+          console.error("Queue join error:", error);
         }
-      };
-
-      autoJoinQueue();
-    }, [team.lineup, isInQueue, isQueueLoading, team.id]),
-  );
-
-  const handleCancelQueue = async () => {
-    setIsQueueLoading(true);
-    try {
-      await QueueController.removeTeamFromQueue(team.id);
-      router.push("/(protected)/(draft)/(teamBuilder)/roster");
-    } catch (error) {
-      Alert.alert("Error", "Failed to leave queue. Please try again.");
-      console.error("Queue leave error:", error);
-    } finally {
-      setIsQueueLoading(false);
+      } else {
+        Alert.alert(
+          "Team Not Ready",
+          "Your team must have all positions filled to enter the queue.",
+        );
+      }
     }
   };
 
   return (
     <SafeAreaView className="h-full w-full items-center justify-center bg-gray-950">
       <ScrollView
-        // TODO: Find a better way to prevent FAB from blocking content (maybe use SafeAreaView bottom inset)
         contentContainerClassName={team.hasUserChanges ? "pb-10" : ""}
       >
         <View className="h-72 w-full">
@@ -127,11 +109,11 @@ const MyTeam = () => {
         <View className="mx-6 flex-1 gap-3">
           {playerCount > 0 ? (
             <>
-              {isInQueue && (
+              {!isMatched && (
                 <Button
-                  className="bg-red-600"
-                  label="Cancel Queue"
-                  onPress={handleCancelQueue}
+                  className={isInQueue ? "bg-red-600" : "bg-purple-800"}
+                  label={isInQueue ? "Cancel Queue" : "Queue"}
+                  onPress={handleQueueToggle}
                 />
               )}
               <AugmentStatusCard />
