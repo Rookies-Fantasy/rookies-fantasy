@@ -1,12 +1,19 @@
 import { CaretLeft, CaretRight } from "phosphor-react-native";
-import { Text, View, Image } from "react-native";
+import { useState } from "react";
+import { Text, View, Image, Pressable } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
+import LinearGradient from "react-native-linear-gradient";
+import AugmentCard, { iconMap } from "@/components/AugmentCard";
+import Dialog from "@/components/Dialog";
 import IconButton from "@/components/IconButton";
 import { useAppSelector } from "@/state/hooks";
-import { selectTeam } from "@/state/slices/teamSlice";
+import { selectAugment, selectTeam } from "@/state/slices/teamSlice";
 import { teamLogoOptions } from "@/types/asset";
 
 const Arena = () => {
   const team = useAppSelector(selectTeam);
+  const augment = useAppSelector(selectAugment);
+  const [openDialog, setOpenDialog] = useState(false);
 
   // Find the matching asset by URL to get the proper source
   const teamLogo = teamLogoOptions.find(
@@ -65,6 +72,112 @@ const Arena = () => {
           size={24}
         />
       </View>
+      <ScrollView
+        className="w-full flex-1 bg-red-500"
+        contentContainerStyle={{ paddingVertical: 20 }}
+      >
+        <View className="flex-row justify-center gap-5">
+          <Pressable onPress={() => setOpenDialog(true)}>
+            {augment && (
+              <Dialog
+                closeLabel="Close"
+                dialogClassname="w-[75%]"
+                onClose={() => setOpenDialog(false)}
+                title="Selected augment"
+                visible={openDialog}
+              >
+                <View className="my-4 items-center justify-center">
+                  <View className="h-80 w-[75%]">
+                    <AugmentCard
+                      cardData={augment}
+                      onPress={() => setOpenDialog(false)}
+                    />
+                  </View>
+                </View>
+              </Dialog>
+            )}
+            <LinearGradient
+              colors={["#CCE8FE", "#CDA0FF", "#8489F5", "#CDF1FF", "#B591E9"]}
+              end={{ x: 1, y: 1 }}
+              start={{ x: 0, y: 0 }}
+              style={{
+                position: "absolute",
+                top: -3,
+                right: -3,
+                bottom: -3,
+                left: -3,
+                borderRadius: 16,
+                borderWidth: 1,
+              }}
+            />
+            <View className="w-full rounded-2xl bg-gray-900 p-4">
+              {augment && (
+                <View className="flex-col items-center gap-1">
+                  <View className="flex-row items-center">
+                    <Image
+                      className="h-8 w-8"
+                      source={iconMap[augment.iconUrl]}
+                    />
+                    <Text className="pbk-h7 text-base-white">
+                      {augment.title.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </Pressable>
+
+          <Pressable onPress={() => setOpenDialog(true)}>
+            {augment && (
+              <Dialog
+                closeLabel="Close"
+                dialogClassname="w-[75%]"
+                onClose={() => setOpenDialog(false)}
+                title="Selected augment"
+                visible={openDialog}
+              >
+                <View className="my-4 items-center justify-center">
+                  <View className="h-80 w-[75%]">
+                    <AugmentCard
+                      cardData={augment}
+                      onPress={() => setOpenDialog(false)}
+                    />
+                  </View>
+                </View>
+              </Dialog>
+            )}
+            <LinearGradient
+              colors={["#CCE8FE", "#CDA0FF", "#8489F5", "#CDF1FF", "#B591E9"]}
+              end={{ x: 1, y: 1 }}
+              start={{ x: 0, y: 0 }}
+              style={{
+                position: "absolute",
+                top: -3,
+                right: -3,
+                bottom: -3,
+                left: -3,
+                borderRadius: 16,
+                borderWidth: 1,
+              }}
+            />
+            <View className="w-full rounded-2xl bg-gray-900 p-4">
+              {augment && (
+                <View className="flex-col items-center gap-1">
+                  <View className="flex-row items-center">
+                    <Image
+                      className="h-8 w-8"
+                      source={iconMap[augment.iconUrl]}
+                    />
+                    <Text className="pbk-h7 text-base-white">
+                      {augment.title.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </Pressable>
+        </View>
+      </ScrollView>
     </View>
   );
 };
