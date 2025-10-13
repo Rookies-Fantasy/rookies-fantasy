@@ -17,11 +17,23 @@ const AuthListener = ({ children }: AuthListenerProps) => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    let userUnsubscribe: (() => void) | null = null;
+
     const subscriber = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
           const userData = await UserController.getUser(user.uid);
           dispatch(setUser(userData));
+
+          // Subscribe to real-time user updates
+          userUnsubscribe = UserController.subscribeToUser(
+            user.uid,
+            (updatedUser) => {
+              if (updatedUser) {
+                dispatch(setUser(updatedUser));
+              }
+            },
+          );
 
           const teams = await UserController.getUserTeams(user.uid);
           if (teams?.length > 0) {
@@ -38,11 +50,20 @@ const AuthListener = ({ children }: AuthListenerProps) => {
         }
       } else {
         dispatch(clearUser());
+        if (userUnsubscribe) {
+          userUnsubscribe();
+          userUnsubscribe = null;
+        }
       }
       setInitializing(false);
     });
 
-    return subscriber;
+    return () => {
+      subscriber();
+      if (userUnsubscribe) {
+        userUnsubscribe();
+      }
+    };
   }, [auth, dispatch]);
 
   if (initializing) {
