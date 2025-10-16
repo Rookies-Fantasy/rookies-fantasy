@@ -73,7 +73,7 @@ const Arena = () => {
         />
       </View>
       <ScrollView
-        className="w-full flex-1 bg-red-500"
+        className="w-full flex-1"
         contentContainerStyle={{ paddingVertical: 20 }}
       >
         <View className="flex-row justify-center gap-5">
@@ -176,6 +176,25 @@ const Arena = () => {
               )}
             </View>
           </Pressable>
+        </View>
+
+        <View className="flex-row rounded-md border border-red-500 bg-gray-920">
+          <View className="flex-col">
+            <View className="flex-row border-b border-red-500 px-2 pt-2">
+              <View className="flex-col pr-2">
+                <Text className="pbk-h8 mb-4 text-base-white">PG</Text>
+                <Text className="pbk-h8 text-base-white">MIKE</Text>
+                <Text className="pbk-h8 mb-2 text-base-white">CONLEY</Text>
+              </View>
+              <Image className="h-16 w-16 self-end" source={teamLogo} />
+            </View>
+          </View>
+          <View className="justify-center border-x border-red-500">
+            <Text className="text-base-white">PG</Text>
+          </View>
+          <View className="flex-col">
+            <View className="border-b border-gray-900"></View>
+          </View>
         </View>
       </ScrollView>
     </View>
