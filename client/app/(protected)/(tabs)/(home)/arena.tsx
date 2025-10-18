@@ -6,19 +6,85 @@ import LinearGradient from "react-native-linear-gradient";
 import AugmentCard, { iconMap } from "@/components/AugmentCard";
 import Dialog from "@/components/Dialog";
 import IconButton from "@/components/IconButton";
+import PlayerMatchupCard from "@/components/PlayerMatchupCard";
 import { useAppSelector } from "@/state/hooks";
 import { selectAugment, selectTeam } from "@/state/slices/teamSlice";
 import { teamLogoOptions } from "@/types/asset";
+import { Player } from "@/types/players";
+import { SLOT_ORDER } from "@/types/team";
 
 const Arena = () => {
   const team = useAppSelector(selectTeam);
   const augment = useAppSelector(selectAugment);
   const [openDialog, setOpenDialog] = useState(false);
 
-  // Find the matching asset by URL to get the proper source
   const teamLogo = teamLogoOptions.find(
     (asset) => asset.url === team.logoUrl,
   )?.source;
+
+  const teamAPlayers: (Player | null)[] = [
+    {
+      id: "1",
+      firstName: "Mike",
+      lastName: "Conley",
+      headshotUrl:
+        "https://cdn.nba.com/headshots/nba/latest/1040x760/201144.png",
+      positions: ["PG"],
+      averageStats: {
+        pts: 11.5,
+        reb: 3.2,
+        ast: 5.6,
+        stl: 0.9,
+        blk: 0.2,
+        tov: 1.4,
+        fpts: 28.4,
+        min: 26.5,
+      },
+      teamAbbreviation: "MIN",
+      teamId: "1610612750",
+      salary: 5500,
+      gamesPlayed: 74,
+      height: "6-1",
+      weight: "175",
+      jerseyNumber: "10",
+    },
+    null,
+    null,
+    null,
+    null,
+  ];
+
+  const teamBPlayers: (Player | null)[] = [
+    {
+      id: "2",
+      firstName: "Damian",
+      lastName: "Lillard",
+      headshotUrl:
+        "https://cdn.nba.com/headshots/nba/latest/1040x760/203081.png",
+      positions: ["PG", "SG"],
+      averageStats: {
+        pts: 32.2,
+        reb: 4.8,
+        ast: 7.3,
+        stl: 0.9,
+        blk: 0.3,
+        tov: 3.1,
+        fpts: 52.1,
+        min: 35.8,
+      },
+      teamAbbreviation: "MIL",
+      teamId: "1610612749",
+      salary: 9200,
+      gamesPlayed: 73,
+      height: "6-2",
+      weight: "195",
+      jerseyNumber: "0",
+    },
+    null,
+    null,
+    null,
+    null,
+  ];
 
   return (
     <View className="flex-1 flex-col items-center bg-gray-950">
@@ -178,24 +244,14 @@ const Arena = () => {
           </Pressable>
         </View>
 
-        <View className="flex-row rounded-md border border-red-500 bg-gray-920">
-          <View className="flex-col">
-            <View className="flex-row border-b border-red-500 px-2 pt-2">
-              <View className="flex-col pr-2">
-                <Text className="pbk-h8 mb-4 text-base-white">PG</Text>
-                <Text className="pbk-h8 text-base-white">MIKE</Text>
-                <Text className="pbk-h8 mb-2 text-base-white">CONLEY</Text>
-              </View>
-              <Image className="h-16 w-16 self-end" source={teamLogo} />
-            </View>
-          </View>
-          <View className="justify-center border-x border-red-500">
-            <Text className="text-base-white">PG</Text>
-          </View>
-          <View className="flex-col">
-            <View className="border-b border-gray-900"></View>
-          </View>
-        </View>
+        {SLOT_ORDER.map((position, index) => (
+          <PlayerMatchupCard
+            key={position}
+            position={position}
+            teamAPlayer={teamAPlayers[index]}
+            teamBPlayer={teamBPlayers[index]}
+          />
+        ))}
       </ScrollView>
     </View>
   );
