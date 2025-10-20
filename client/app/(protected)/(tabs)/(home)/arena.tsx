@@ -142,7 +142,7 @@ const Arena = () => {
         className="w-full flex-1"
         contentContainerStyle={{ paddingVertical: 20 }}
       >
-        <View className="flex-row justify-center gap-5">
+        <View className="mb-5 flex-row justify-center gap-5">
           <Pressable onPress={() => setOpenDialog(true)}>
             {augment && (
               <Dialog

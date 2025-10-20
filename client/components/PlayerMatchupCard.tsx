@@ -13,10 +13,10 @@ const PlayerMatchupCard = ({
   teamBPlayer,
 }: PlayerMatchupCardProps) => (
   <View className="mx-4 mb-4 flex-row overflow-hidden rounded-2xl border border-gray-800 bg-gray-920">
-    <View className="flex-1 border-r border-gray-800 p-3">
+    <View className="flex-1 border-r border-gray-800 py-3">
       {teamAPlayer ? (
         <View className="flex-col">
-          <View className="mb-2 flex-row items-start justify-between gap-2">
+          <View className="mb-2 flex-row items-start justify-between gap-2 px-3">
             <View className="flex-1">
               <Text className="pbk-b3 mb-1 text-gray-400">
                 {teamAPlayer.positions.join("•")}
@@ -34,7 +34,7 @@ const PlayerMatchupCard = ({
             />
           </View>
 
-          <View className="mb-2 flex-row justify-between">
+          <View className="mb-2 flex-row justify-between border-t-2 border-gray-900 px-3 pt-3">
             <View className="items-center">
               <Text className="pbk-b3 text-gray-400">MIN</Text>
               <Text className="pbk-b2 text-base-white">
@@ -61,7 +61,7 @@ const PlayerMatchupCard = ({
             </View>
           </View>
 
-          <View className="mb-2 flex-row justify-between">
+          <View className="mb-2 flex-row justify-between px-3">
             <View className="items-center">
               <Text className="pbk-b3 text-gray-400">STL</Text>
               <Text className="pbk-b2 text-base-white">
@@ -95,14 +95,14 @@ const PlayerMatchupCard = ({
       )}
     </View>
 
-    <View className="items-center justify-center bg-gray-900 px-4">
+    <View className="w-16 items-center justify-center bg-gray-900">
       <Text className="pbk-h7 text-primary-500">{position}</Text>
     </View>
 
-    <View className="flex-1 border-l border-gray-800 p-3">
+    <View className="flex-1 border-l border-gray-800 py-3">
       {teamBPlayer ? (
         <View className="flex-col">
-          <View className="mb-2 flex-row items-start justify-between gap-2">
+          <View className="mb-2 flex-row items-start justify-between gap-2 px-3">
             <View className="flex-1">
               <Text className="pbk-b3 mb-1 text-gray-400">
                 {teamBPlayer.positions.join("•")}
@@ -120,7 +120,7 @@ const PlayerMatchupCard = ({
             />
           </View>
 
-          <View className="mb-2 flex-row justify-between">
+          <View className="mb-2 flex-row justify-between border-t-2 border-gray-900 px-3 pt-3">
             <View className="items-center">
               <Text className="pbk-b3 text-gray-400">MIN</Text>
               <Text className="pbk-b2 text-base-white">
@@ -147,7 +147,7 @@ const PlayerMatchupCard = ({
             </View>
           </View>
 
-          <View className="mb-2 flex-row justify-between">
+          <View className="mb-2 flex-row justify-between px-3">
             <View className="items-center">
               <Text className="pbk-b3 text-gray-400">STL</Text>
               <Text className="pbk-b2 text-base-white">
