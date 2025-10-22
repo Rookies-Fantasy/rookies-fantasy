@@ -191,10 +191,10 @@ const Arena = () => {
 
         {SLOT_ORDER.map((position, index) => (
           <PlayerMatchupCard
+            awayPlayer={teamBPlayers[index]}
+            homePlayer={teamAPlayers[index]}
             key={position}
             position={position}
-            teamAPlayer={teamAPlayers[index]}
-            teamBPlayer={teamBPlayers[index]}
           />
         ))}
       </ScrollView>

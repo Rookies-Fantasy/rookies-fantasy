@@ -3,87 +3,87 @@ import { Player } from "@/types/players";
 
 type PlayerMatchupCardProps = {
   position: string;
-  teamAPlayer?: Player | null;
-  teamBPlayer?: Player | null;
+  homePlayer?: Player | null;
+  awayPlayer?: Player | null;
 };
 
 const PlayerMatchupCard = ({
   position,
-  teamAPlayer,
-  teamBPlayer,
+  homePlayer,
+  awayPlayer,
 }: PlayerMatchupCardProps) => (
   <View className="mx-4 mb-4 flex-row overflow-hidden rounded-2xl border border-gray-800 bg-gray-920">
     <View className="flex-1 border-r border-gray-800 py-3">
-      {teamAPlayer ? (
+      {homePlayer ? (
         <View className="flex-col">
           <View className="mb-2 flex-row items-start justify-between gap-2 px-3">
             <View className="flex-1">
               <Text className="pbk-b3 mb-1 text-gray-400">
-                {teamAPlayer.positions.join("•")}
+                {homePlayer.positions.join("•")}
               </Text>
               <Text className="pbk-h8 text-base-white" numberOfLines={1}>
-                {teamAPlayer.firstName}
+                {homePlayer.firstName}
               </Text>
               <Text className="pbk-h8 text-base-white" numberOfLines={1}>
-                {teamAPlayer.lastName}
+                {homePlayer.lastName}
               </Text>
             </View>
             <Image
               className="h-16 w-16 rounded-full"
-              source={{ uri: teamAPlayer.headshotUrl }}
+              source={{ uri: homePlayer.headshotUrl }}
             />
           </View>
 
           <View className="mb-2 flex-row justify-between border-t-2 border-gray-900 px-3 pt-3">
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">MIN</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamAPlayer.averageStats.min.toFixed(1)}
+                {homePlayer.averageStats.min.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">PTS</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamAPlayer.averageStats.pts.toFixed(1)}
+                {homePlayer.averageStats.pts.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">REB</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamAPlayer.averageStats.reb.toFixed(1)}
+                {homePlayer.averageStats.reb.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">AST</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamAPlayer.averageStats.ast.toFixed(1)}
+                {homePlayer.averageStats.ast.toFixed(1)}
               </Text>
             </View>
           </View>
 
           <View className="mb-2 flex-row justify-between px-3">
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">STL</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamAPlayer.averageStats.stl.toFixed(1)}
+                {homePlayer.averageStats.stl.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">BLK</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamAPlayer.averageStats.blk.toFixed(1)}
+                {homePlayer.averageStats.blk.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">TO</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamAPlayer.averageStats.tov.toFixed(1)}
+                {homePlayer.averageStats.tov.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">FPTS</Text>
               <Text className="pbk-b2 text-green-400">
-                {teamAPlayer.averageStats.fpts.toFixed(1)}
+                {homePlayer.averageStats.fpts.toFixed(1)}
               </Text>
             </View>
           </View>
@@ -100,76 +100,76 @@ const PlayerMatchupCard = ({
     </View>
 
     <View className="flex-1 border-l border-gray-800 py-3">
-      {teamBPlayer ? (
+      {awayPlayer ? (
         <View className="flex-col">
           <View className="mb-2 flex-row items-start justify-between gap-2 px-3">
             <View className="flex-1">
               <Text className="pbk-b3 mb-1 text-gray-400">
-                {teamBPlayer.positions.join("•")}
+                {awayPlayer.positions.join("•")}
               </Text>
               <Text className="pbk-h8 text-base-white" numberOfLines={1}>
-                {teamBPlayer.firstName}
+                {awayPlayer.firstName}
               </Text>
               <Text className="pbk-h8 text-base-white" numberOfLines={1}>
-                {teamBPlayer.lastName}
+                {awayPlayer.lastName}
               </Text>
             </View>
             <Image
               className="h-16 w-16 rounded-full"
-              source={{ uri: teamBPlayer.headshotUrl }}
+              source={{ uri: awayPlayer.headshotUrl }}
             />
           </View>
 
           <View className="mb-2 flex-row justify-between border-t-2 border-gray-900 px-3 pt-3">
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">MIN</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamBPlayer.averageStats.min.toFixed(1)}
+                {awayPlayer.averageStats.min.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">PTS</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamBPlayer.averageStats.pts.toFixed(1)}
+                {awayPlayer.averageStats.pts.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">REB</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamBPlayer.averageStats.reb.toFixed(1)}
+                {awayPlayer.averageStats.reb.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">AST</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamBPlayer.averageStats.ast.toFixed(1)}
+                {awayPlayer.averageStats.ast.toFixed(1)}
               </Text>
             </View>
           </View>
 
           <View className="mb-2 flex-row justify-between px-3">
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">STL</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamBPlayer.averageStats.stl.toFixed(1)}
+                {awayPlayer.averageStats.stl.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">BLK</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamBPlayer.averageStats.blk.toFixed(1)}
+                {awayPlayer.averageStats.blk.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">TO</Text>
               <Text className="pbk-b2 text-base-white">
-                {teamBPlayer.averageStats.tov.toFixed(1)}
+                {awayPlayer.averageStats.tov.toFixed(1)}
               </Text>
             </View>
-            <View className="items-center">
+            <View className="items-start">
               <Text className="pbk-b3 text-gray-400">FPTS</Text>
               <Text className="pbk-b2 text-green-400">
-                {teamBPlayer.averageStats.fpts.toFixed(1)}
+                {awayPlayer.averageStats.fpts.toFixed(1)}
               </Text>
             </View>
           </View>
