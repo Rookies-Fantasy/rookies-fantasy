@@ -152,6 +152,14 @@ const createWeeklyMatchup = async (
       weekStartDate: startDate,
       homeUserId: userId1,
       awayUserId: userId2,
+      homeTeamName: team1Info.name,
+      awayTeamName: team2Info.name,
+      homeTeamId: teamId1,
+      awayTeamId: teamId2,
+      homeAugment: team1Info.augment,
+      awayAugment: team2Info.augment,
+      homeTeamLogo: team1Info.logoUrl,
+      awayTeamLogo: team2Info.logoUrl,
     };
 
     const start = new Date(startDate);
@@ -161,18 +169,12 @@ const createWeeklyMatchup = async (
 
       matchupData[dateStr] = {
         homeTeam: {
-          id: teamId1,
           score: 0,
           lineup: team1Info.lineup || [],
-          qualifyingPlayers: team1Info.lineup || [],
-          metadata: {},
         },
         awayTeam: {
-          id: teamId2,
           score: 0,
           lineup: team2Info.lineup || [],
-          qualifyingPlayers: team2Info.lineup || [],
-          metadata: {},
         },
       };
     }
