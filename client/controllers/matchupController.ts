@@ -37,7 +37,13 @@ export class MatchupController {
 
     const matchup: Matchup = {
       id: doc.id,
+      awayAugment: data.awayAugment,
+      awayTeamId: data.awayTeamId,
+      awayTeamName: data.awayTeamName,
       awayUserId: data.awayUserId,
+      homeAugment: data.homeAugment,
+      homeTeamId: data.homeTeamId,
+      homeTeamName: data.homeTeamName,
       homeUserId: data.homeUserId,
       status: data.status ?? "active",
       weekStartDate: data.weekStartDate,

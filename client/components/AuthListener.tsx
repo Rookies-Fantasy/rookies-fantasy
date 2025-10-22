@@ -30,9 +30,22 @@ const AuthListener = ({ children }: AuthListenerProps) => {
           // Subscribe to real-time user updates
           userUnsubscribe = UserController.subscribeToUser(
             user.uid,
-            (updatedUser) => {
+            async (updatedUser) => {
               if (updatedUser) {
                 dispatch(setUser(updatedUser));
+
+                if (updatedUser.queueStatus === "matched") {
+                  try {
+                    const matchupData = await MatchupController.getUserMatchup(
+                      user.uid,
+                    );
+                    if (matchupData) {
+                      dispatch(setMatchup(matchupData));
+                    }
+                  } catch (error) {
+                    console.error("Error fetching matchup:", error);
+                  }
+                }
               }
             },
           );

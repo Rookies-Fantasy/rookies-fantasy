@@ -1,10 +1,9 @@
+import { Augment } from "./augment";
 import { Player } from "./players";
 import { LineupSlot } from "./team";
 
 export type MatchupTeam = {
-  id: string;
   lineup: LineupSlot[];
-  metadata?: Record<string, any>;
   qualifyingPlayers?: Player[];
   score?: number;
 };
@@ -16,7 +15,13 @@ export type DailyMatchup = {
 
 export type Matchup = {
   id: string;
+  awayAugment?: Augment;
+  awayTeamId: string;
+  awayTeamName: string;
   awayUserId: string;
+  homeAugment?: Augment;
+  homeTeamId: string;
+  homeTeamName: string;
   homeUserId: string;
   status: "active" | "completed";
   weekStartDate: string;
@@ -25,7 +30,11 @@ export type Matchup = {
 
 export const defaultMatchup: Matchup = {
   id: "",
+  awayTeamId: "",
+  awayTeamName: "",
   awayUserId: "",
+  homeTeamId: "",
+  homeTeamName: "",
   homeUserId: "",
   status: "active",
   weekStartDate: "",
