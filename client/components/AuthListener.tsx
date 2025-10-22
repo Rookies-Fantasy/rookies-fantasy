@@ -2,8 +2,10 @@ import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
 import { useState, useEffect, ReactNode } from "react";
 import { View } from "react-native";
 import Spinner from "./Spinner";
+import { MatchupController } from "@/controllers/matchupController";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
+import { setMatchup, clearMatchup } from "@/state/slices/matchupSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { setUser, clearUser } from "@/state/slices/userSlice";
 
@@ -45,11 +47,17 @@ const AuthListener = ({ children }: AuthListenerProps) => {
             );
             dispatch(setTeam(teamData));
           }
+
+          const matchupData = await MatchupController.getUserMatchup(user.uid);
+          if (matchupData) {
+            dispatch(setMatchup(matchupData));
+          }
         } catch (error) {
           console.error("Error fetching user document:", error);
         }
       } else {
         dispatch(clearUser());
+        dispatch(clearMatchup());
         if (userUnsubscribe) {
           userUnsubscribe();
           userUnsubscribe = null;

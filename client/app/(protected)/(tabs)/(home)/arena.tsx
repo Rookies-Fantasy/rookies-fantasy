@@ -8,6 +8,7 @@ import Dialog from "@/components/Dialog";
 import IconButton from "@/components/IconButton";
 import PlayerMatchupCard from "@/components/PlayerMatchupCard";
 import { useAppSelector } from "@/state/hooks";
+import { selectMatchup } from "@/state/slices/matchupSlice";
 import { selectAugment, selectTeam } from "@/state/slices/teamSlice";
 import { teamLogoOptions } from "@/types/asset";
 import { Player } from "@/types/players";
@@ -15,76 +16,31 @@ import { SLOT_ORDER } from "@/types/team";
 
 const Arena = () => {
   const team = useAppSelector(selectTeam);
+  const matchup = useAppSelector(selectMatchup);
   const augment = useAppSelector(selectAugment);
   const [openDialog, setOpenDialog] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+
+  console.log(matchup);
+
+  // Get today's date in YYYY-MM-DD format or use the first available date
+  const availableDates = Object.keys(matchup.dailyMatchups);
+  const currentDate = selectedDate || availableDates[0] || "";
+
+  const dailyMatchup = matchup.dailyMatchups[currentDate];
 
   const teamLogo = teamLogoOptions.find(
     (asset) => asset.url === team.logoUrl,
   )?.source;
 
-  const teamAPlayers: (Player | null)[] = [
-    {
-      id: "1",
-      firstName: "Mike",
-      lastName: "Conley",
-      headshotUrl:
-        "https://cdn.nba.com/headshots/nba/latest/1040x760/201144.png",
-      positions: ["PG"],
-      averageStats: {
-        pts: 11.5,
-        reb: 3.2,
-        ast: 5.6,
-        stl: 0.9,
-        blk: 0.2,
-        tov: 1.4,
-        fpts: 28.4,
-        min: 26.5,
-      },
-      teamAbbreviation: "MIN",
-      teamId: "1610612750",
-      salary: 5500,
-      gamesPlayed: 74,
-      height: "6-1",
-      weight: "175",
-      jerseyNumber: "10",
-    },
-    null,
-    null,
-    null,
-    null,
-  ];
+  // Extract lineups from daily matchup
+  const teamAPlayers: (Player | null)[] = dailyMatchup
+    ? dailyMatchup.awayTeam.lineup.map((slot) => slot.player)
+    : [];
 
-  const teamBPlayers: (Player | null)[] = [
-    {
-      id: "2",
-      firstName: "Damian",
-      lastName: "Lillard",
-      headshotUrl:
-        "https://cdn.nba.com/headshots/nba/latest/1040x760/203081.png",
-      positions: ["PG", "SG"],
-      averageStats: {
-        pts: 32.2,
-        reb: 4.8,
-        ast: 7.3,
-        stl: 0.9,
-        blk: 0.3,
-        tov: 3.1,
-        fpts: 52.1,
-        min: 35.8,
-      },
-      teamAbbreviation: "MIL",
-      teamId: "1610612749",
-      salary: 9200,
-      gamesPlayed: 73,
-      height: "6-2",
-      weight: "195",
-      jerseyNumber: "0",
-    },
-    null,
-    null,
-    null,
-    null,
-  ];
+  const teamBPlayers: (Player | null)[] = dailyMatchup
+    ? dailyMatchup.homeTeam.lineup.map((slot) => slot.player)
+    : [];
 
   return (
     <View className="flex-1 flex-col items-center bg-gray-950">
