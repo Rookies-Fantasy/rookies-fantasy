@@ -1,11 +1,10 @@
-import { CaretLeft, CaretRight } from "phosphor-react-native";
 import { useState } from "react";
 import { Text, View, Image, Pressable } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import LinearGradient from "react-native-linear-gradient";
 import AugmentCard, { iconMap } from "@/components/AugmentCard";
+import DateSelector from "@/components/DateSelector";
 import Dialog from "@/components/Dialog";
-import IconButton from "@/components/IconButton";
 import PlayerMatchupCard from "@/components/PlayerMatchupCard";
 import { useAppSelector } from "@/state/hooks";
 import { selectMatchup } from "@/state/slices/matchupSlice";
@@ -24,7 +23,7 @@ const Arena = () => {
   console.log(matchup);
 
   // Get today's date in YYYY-MM-DD format or use the first available date
-  const availableDates = Object.keys(matchup.dailyMatchups);
+  const availableDates = Object.keys(matchup.dailyMatchups).sort();
   const currentDate = selectedDate || availableDates[0] || "";
 
   const dailyMatchup = matchup.dailyMatchups[currentDate];
@@ -79,21 +78,11 @@ const Arena = () => {
           <Text className="pbk-b3 text-base-white">1W 0L (100% WR)</Text>
         </View>
       </View>
-      <View className="w-full flex-row items-center justify-between border-b border-gray-900 px-6 py-4">
-        <IconButton
-          icon={<CaretLeft color="#6042FF" />}
-          onPress={() => {}}
-          size={24}
-        />
-
-        <Text className="pbk-bl text-primary-500">TODAY (OCT 15, 2025)</Text>
-
-        <IconButton
-          icon={<CaretRight color="#6042FF" />}
-          onPress={() => {}}
-          size={24}
-        />
-      </View>
+      <DateSelector
+        currentDate={currentDate}
+        dates={availableDates}
+        onDateChange={setSelectedDate}
+      />
       <ScrollView
         className="w-full flex-1"
         contentContainerStyle={{ paddingVertical: 20 }}
