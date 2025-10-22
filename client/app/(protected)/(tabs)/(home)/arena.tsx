@@ -8,38 +8,41 @@ import Dialog from "@/components/Dialog";
 import PlayerMatchupCard from "@/components/PlayerMatchupCard";
 import { useAppSelector } from "@/state/hooks";
 import { selectMatchup } from "@/state/slices/matchupSlice";
-import { selectAugment, selectTeam } from "@/state/slices/teamSlice";
 import { teamLogoOptions } from "@/types/asset";
 import { Player } from "@/types/players";
 import { SLOT_ORDER } from "@/types/team";
 
 const Arena = () => {
-  const team = useAppSelector(selectTeam);
   const matchup = useAppSelector(selectMatchup);
-  const augment = useAppSelector(selectAugment);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedAugment, setSelectedAugment] = useState<
+    "away" | "home" | null
+  >(null);
 
-  console.log(matchup);
-
-  // Get today's date in YYYY-MM-DD format or use the first available date
   const availableDates = Object.keys(matchup.dailyMatchups).sort();
   const currentDate = selectedDate || availableDates[0] || "";
 
   const dailyMatchup = matchup.dailyMatchups[currentDate];
 
-  const teamLogo = teamLogoOptions.find(
-    (asset) => asset.url === team.logoUrl,
+  const awayTeamLogo = teamLogoOptions.find(
+    (asset) => asset.url === matchup.awayTeamLogo,
   )?.source;
 
-  // Extract lineups from daily matchup
-  const teamAPlayers: (Player | null)[] = dailyMatchup
+  const homeTeamLogo = teamLogoOptions.find(
+    (asset) => asset.url === matchup.homeTeamLogo,
+  )?.source;
+
+  const awayPlayers: (Player | null)[] = dailyMatchup
     ? dailyMatchup.awayTeam.lineup.map((slot) => slot.player)
     : [];
 
-  const teamBPlayers: (Player | null)[] = dailyMatchup
+  const homePlayers: (Player | null)[] = dailyMatchup
     ? dailyMatchup.homeTeam.lineup.map((slot) => slot.player)
     : [];
+
+  const awayScore = dailyMatchup?.awayTeam.score ?? 0;
+  const homeScore = dailyMatchup?.homeTeam.score ?? 0;
 
   return (
     <View className="flex-1 flex-col items-center bg-gray-950">
@@ -48,34 +51,30 @@ const Arena = () => {
           <View className="mb-2 w-full flex-row items-start justify-between">
             <Image
               className="h-12 w-12 rounded-full border-2"
-              source={teamLogo}
+              source={homeTeamLogo}
             />
 
-            <Text className="pbk-h5 text-base-white">440</Text>
+            <Text className="pbk-h5 text-base-white">{homeScore}</Text>
           </View>
 
           <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            CALGARY GHOSTS
+            {matchup.homeTeamName?.toUpperCase()}
           </Text>
-
-          <Text className="pbk-b3 text-base-white">0W 0L (-% WR)</Text>
         </View>
 
         <View className="w-1/2 items-end border-b border-l border-gray-900 py-4 pl-2 pr-6">
           <View className="mb-2 w-full flex-row items-start justify-between">
-            <Text className="pbk-h5 text-base-white">478</Text>
+            <Text className="pbk-h5 text-base-white">{awayScore}</Text>
 
             <Image
               className="h-12 w-12 rounded-full border-2"
-              source={teamLogo}
+              source={awayTeamLogo}
             />
           </View>
 
           <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            GUNS N ROSES
+            {matchup.awayTeamName?.toUpperCase()}
           </Text>
-
-          <Text className="pbk-b3 text-base-white">1W 0L (100% WR)</Text>
         </View>
       </View>
       <DateSelector
@@ -88,20 +87,31 @@ const Arena = () => {
         contentContainerStyle={{ paddingVertical: 20 }}
       >
         <View className="mb-5 flex-row justify-center gap-5">
-          <Pressable onPress={() => setOpenDialog(true)}>
-            {augment && (
+          <Pressable
+            onPress={() => {
+              setSelectedAugment("home");
+              setOpenDialog(true);
+            }}
+          >
+            {matchup.homeAugment && selectedAugment === "home" && (
               <Dialog
                 closeLabel="Close"
                 dialogClassname="w-[75%]"
-                onClose={() => setOpenDialog(false)}
-                title="Selected augment"
+                onClose={() => {
+                  setOpenDialog(false);
+                  setSelectedAugment(null);
+                }}
+                title="Home Team Augment"
                 visible={openDialog}
               >
                 <View className="my-4 items-center justify-center">
-                  <View className="h-80 w-[75%]">
+                  <View className="h-80">
                     <AugmentCard
-                      cardData={augment}
-                      onPress={() => setOpenDialog(false)}
+                      cardData={matchup.homeAugment}
+                      onPress={() => {
+                        setOpenDialog(false);
+                        setSelectedAugment(null);
+                      }}
                     />
                   </View>
                 </View>
@@ -122,15 +132,15 @@ const Arena = () => {
               }}
             />
             <View className="w-full rounded-2xl bg-gray-900 p-4">
-              {augment && (
+              {matchup.homeAugment && (
                 <View className="flex-col items-center gap-1">
                   <View className="flex-row items-center">
                     <Image
                       className="h-8 w-8"
-                      source={iconMap[augment.iconUrl]}
+                      source={iconMap[matchup.homeAugment.iconUrl]}
                     />
                     <Text className="pbk-h7 text-base-white">
-                      {augment.title.toUpperCase()}
+                      {matchup.homeAugment.title.toUpperCase()}
                     </Text>
                   </View>
                 </View>
@@ -138,20 +148,31 @@ const Arena = () => {
             </View>
           </Pressable>
 
-          <Pressable onPress={() => setOpenDialog(true)}>
-            {augment && (
+          <Pressable
+            onPress={() => {
+              setSelectedAugment("away");
+              setOpenDialog(true);
+            }}
+          >
+            {matchup.awayAugment && selectedAugment === "away" && (
               <Dialog
                 closeLabel="Close"
                 dialogClassname="w-[75%]"
-                onClose={() => setOpenDialog(false)}
-                title="Selected augment"
+                onClose={() => {
+                  setOpenDialog(false);
+                  setSelectedAugment(null);
+                }}
+                title="Away Team Augment"
                 visible={openDialog}
               >
                 <View className="my-4 items-center justify-center">
-                  <View className="h-80 w-[75%]">
+                  <View className="h-80">
                     <AugmentCard
-                      cardData={augment}
-                      onPress={() => setOpenDialog(false)}
+                      cardData={matchup.awayAugment}
+                      onPress={() => {
+                        setOpenDialog(false);
+                        setSelectedAugment(null);
+                      }}
                     />
                   </View>
                 </View>
@@ -172,15 +193,15 @@ const Arena = () => {
               }}
             />
             <View className="w-full rounded-2xl bg-gray-900 p-4">
-              {augment && (
+              {matchup.awayAugment && (
                 <View className="flex-col items-center gap-1">
                   <View className="flex-row items-center">
                     <Image
                       className="h-8 w-8"
-                      source={iconMap[augment.iconUrl]}
+                      source={iconMap[matchup.awayAugment.iconUrl]}
                     />
                     <Text className="pbk-h7 text-base-white">
-                      {augment.title.toUpperCase()}
+                      {matchup.awayAugment.title.toUpperCase()}
                     </Text>
                   </View>
                 </View>
@@ -191,8 +212,8 @@ const Arena = () => {
 
         {SLOT_ORDER.map((position, index) => (
           <PlayerMatchupCard
-            awayPlayer={teamBPlayers[index]}
-            homePlayer={teamAPlayers[index]}
+            awayPlayer={awayPlayers[index]}
+            homePlayer={homePlayers[index]}
             key={position}
             position={position}
           />

@@ -17,10 +17,12 @@ export type Matchup = {
   id: string;
   awayAugment?: Augment;
   awayTeamId: string;
+  awayTeamLogo?: string;
   awayTeamName: string;
   awayUserId: string;
   homeAugment?: Augment;
   homeTeamId: string;
+  homeTeamLogo?: string;
   homeTeamName: string;
   homeUserId: string;
   status: "active" | "completed";
