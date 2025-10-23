@@ -20,11 +20,13 @@ export type Matchup = {
   awayTeamLogo?: string;
   awayTeamName: string;
   awayUserId: string;
+  awayWeeklyAquisitionsUsed: number;
   homeAugment?: Augment;
   homeTeamId: string;
   homeTeamLogo?: string;
   homeTeamName: string;
   homeUserId: string;
+  homeWeeklyAquisitionsUsed: number;
   status: "active" | "completed";
   weekStartDate: string;
   dailyMatchups: Record<string, DailyMatchup>;
@@ -35,9 +37,11 @@ export const defaultMatchup: Matchup = {
   awayTeamId: "",
   awayTeamName: "",
   awayUserId: "",
+  awayWeeklyAquisitionsUsed: 0,
   homeTeamId: "",
   homeTeamName: "",
   homeUserId: "",
+  homeWeeklyAquisitionsUsed: 0,
   status: "active",
   weekStartDate: "",
   dailyMatchups: {},

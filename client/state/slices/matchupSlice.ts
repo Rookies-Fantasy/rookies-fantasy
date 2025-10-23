@@ -18,6 +18,8 @@ export const selectDailyMatchups = (state: RootState) =>
   state.matchup.dailyMatchups;
 export const selectAwayUserId = (state: RootState) => state.matchup.awayUserId;
 export const selectHomeUserId = (state: RootState) => state.matchup.homeUserId;
+export const selectHomeWeeklyAquisitionsUsed = (state: RootState) =>
+  state.matchup.homeWeeklyAquisitionsUsed;
 
 export const { setMatchup, clearMatchup } = matchupSlice.actions;
 
