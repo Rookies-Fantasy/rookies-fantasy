@@ -9,7 +9,6 @@ import PlayerMatchupCard from "@/components/PlayerMatchupCard";
 import { useAppSelector } from "@/state/hooks";
 import { selectMatchup } from "@/state/slices/matchupSlice";
 import { teamLogoOptions } from "@/types/asset";
-import { Player } from "@/types/players";
 import { SLOT_ORDER } from "@/types/team";
 
 const Arena = () => {
@@ -26,20 +25,15 @@ const Arena = () => {
   const dailyMatchup = matchup.dailyMatchups[currentDate];
 
   const awayTeamLogo = teamLogoOptions.find(
-    (asset) => asset.url === matchup.awayTeamLogo,
+    (asset) => asset.url === matchup.away.awayTeamLogo,
   )?.source;
 
   const homeTeamLogo = teamLogoOptions.find(
-    (asset) => asset.url === matchup.homeTeamLogo,
+    (asset) => asset.url === matchup.home.homeTeamLogo,
   )?.source;
 
-  const awayPlayers: (Player | null)[] = dailyMatchup
-    ? dailyMatchup.awayTeam.lineup.map((slot) => slot.player)
-    : [];
-
-  const homePlayers: (Player | null)[] = dailyMatchup
-    ? dailyMatchup.homeTeam.lineup.map((slot) => slot.player)
-    : [];
+  const awayLineup = dailyMatchup?.awayTeam.lineup ?? [];
+  const homeLineup = dailyMatchup?.homeTeam.lineup ?? [];
 
   const awayScore = dailyMatchup?.awayTeam.score ?? 0;
   const homeScore = dailyMatchup?.homeTeam.score ?? 0;
@@ -58,7 +52,7 @@ const Arena = () => {
           </View>
 
           <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            {matchup.homeTeamName?.toUpperCase()}
+            {matchup.home.homeTeamName?.toUpperCase()}
           </Text>
         </View>
 
@@ -73,7 +67,7 @@ const Arena = () => {
           </View>
 
           <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            {matchup.awayTeamName?.toUpperCase()}
+            {matchup.away.awayTeamName?.toUpperCase()}
           </Text>
         </View>
       </View>
@@ -93,7 +87,7 @@ const Arena = () => {
               setOpenDialog(true);
             }}
           >
-            {matchup.homeAugment && selectedAugment === "home" && (
+            {matchup.home.homeAugment && selectedAugment === "home" && (
               <Dialog
                 closeLabel="Close"
                 dialogClassname="w-[75%]"
@@ -107,7 +101,7 @@ const Arena = () => {
                 <View className="my-4 items-center justify-center">
                   <View className="h-80">
                     <AugmentCard
-                      cardData={matchup.homeAugment}
+                      cardData={matchup.home.homeAugment}
                       onPress={() => {
                         setOpenDialog(false);
                         setSelectedAugment(null);
@@ -132,15 +126,15 @@ const Arena = () => {
               }}
             />
             <View className="w-full rounded-2xl bg-gray-900 p-4">
-              {matchup.homeAugment && (
+              {matchup.home.homeAugment && (
                 <View className="flex-col items-center gap-1">
                   <View className="flex-row items-center">
                     <Image
                       className="h-8 w-8"
-                      source={iconMap[matchup.homeAugment.iconUrl]}
+                      source={iconMap[matchup.home.homeAugment.iconUrl]}
                     />
                     <Text className="pbk-h7 text-base-white">
-                      {matchup.homeAugment.title.toUpperCase()}
+                      {matchup.home.homeAugment.title.toUpperCase()}
                     </Text>
                   </View>
                 </View>
@@ -154,7 +148,7 @@ const Arena = () => {
               setOpenDialog(true);
             }}
           >
-            {matchup.awayAugment && selectedAugment === "away" && (
+            {matchup.away.awayAugment && selectedAugment === "away" && (
               <Dialog
                 closeLabel="Close"
                 dialogClassname="w-[75%]"
@@ -168,7 +162,7 @@ const Arena = () => {
                 <View className="my-4 items-center justify-center">
                   <View className="h-80">
                     <AugmentCard
-                      cardData={matchup.awayAugment}
+                      cardData={matchup.away.awayAugment}
                       onPress={() => {
                         setOpenDialog(false);
                         setSelectedAugment(null);
@@ -193,15 +187,15 @@ const Arena = () => {
               }}
             />
             <View className="w-full rounded-2xl bg-gray-900 p-4">
-              {matchup.awayAugment && (
+              {matchup.away.awayAugment && (
                 <View className="flex-col items-center gap-1">
                   <View className="flex-row items-center">
                     <Image
                       className="h-8 w-8"
-                      source={iconMap[matchup.awayAugment.iconUrl]}
+                      source={iconMap[matchup.away.awayAugment.iconUrl]}
                     />
                     <Text className="pbk-h7 text-base-white">
-                      {matchup.awayAugment.title.toUpperCase()}
+                      {matchup.away.awayAugment.title.toUpperCase()}
                     </Text>
                   </View>
                 </View>
@@ -212,8 +206,8 @@ const Arena = () => {
 
         {SLOT_ORDER.map((position, index) => (
           <PlayerMatchupCard
-            awayPlayer={awayPlayers[index]}
-            homePlayer={homePlayers[index]}
+            awaySlot={awayLineup[index]}
+            homeSlot={homeLineup[index]}
             key={position}
             position={position}
           />

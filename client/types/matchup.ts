@@ -15,16 +15,22 @@ export type DailyMatchup = {
 
 export type Matchup = {
   id: string;
-  awayAugment?: Augment;
-  awayTeamId: string;
-  awayTeamLogo?: string;
-  awayTeamName: string;
-  awayUserId: string;
-  homeAugment?: Augment;
-  homeTeamId: string;
-  homeTeamLogo?: string;
-  homeTeamName: string;
-  homeUserId: string;
+  away: {
+    awayAugment?: Augment;
+    awayTeamId: string;
+    awayTeamLogo?: string;
+    awayTeamName: string;
+    awayUserId: string;
+    awayWeeklyAcquisitionsUsed: number;
+  };
+  home: {
+    homeAugment?: Augment;
+    homeTeamId: string;
+    homeTeamLogo?: string;
+    homeTeamName: string;
+    homeUserId: string;
+    homeWeeklyAcquisitionsUsed: number;
+  };
   status: "active" | "completed";
   weekStartDate: string;
   dailyMatchups: Record<string, DailyMatchup>;
@@ -32,12 +38,18 @@ export type Matchup = {
 
 export const defaultMatchup: Matchup = {
   id: "",
-  awayTeamId: "",
-  awayTeamName: "",
-  awayUserId: "",
-  homeTeamId: "",
-  homeTeamName: "",
-  homeUserId: "",
+  away: {
+    awayTeamId: "",
+    awayTeamName: "",
+    awayUserId: "",
+    awayWeeklyAcquisitionsUsed: 4,
+  },
+  home: {
+    homeTeamId: "",
+    homeTeamName: "",
+    homeUserId: "",
+    homeWeeklyAcquisitionsUsed: 4,
+  },
   status: "active",
   weekStartDate: "",
   dailyMatchups: {},
