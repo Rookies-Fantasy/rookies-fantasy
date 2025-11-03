@@ -77,7 +77,7 @@ const Arena = () => {
         onDateChange={setSelectedDate}
       />
       <ScrollView
-        className="w-full flex-1"
+        className="mx-4 w-full flex-1"
         contentContainerStyle={{ paddingVertical: 20 }}
       >
         <View className="mb-5 flex-row justify-center gap-5">
@@ -98,16 +98,14 @@ const Arena = () => {
                 title="Home Team Augment"
                 visible={openDialog}
               >
-                <View className="my-4 items-center justify-center">
-                  <View className="h-80">
-                    <AugmentCard
-                      cardData={matchup.home.homeAugment}
-                      onPress={() => {
-                        setOpenDialog(false);
-                        setSelectedAugment(null);
-                      }}
-                    />
-                  </View>
+                <View className="h-80">
+                  <AugmentCard
+                    cardData={matchup.home.homeAugment}
+                    onPress={() => {
+                      setOpenDialog(false);
+                      setSelectedAugment(null);
+                    }}
+                  />
                 </View>
               </Dialog>
             )}
@@ -159,16 +157,14 @@ const Arena = () => {
                 title="Away Team Augment"
                 visible={openDialog}
               >
-                <View className="my-4 items-center justify-center">
-                  <View className="h-80">
-                    <AugmentCard
-                      cardData={matchup.away.awayAugment}
-                      onPress={() => {
-                        setOpenDialog(false);
-                        setSelectedAugment(null);
-                      }}
-                    />
-                  </View>
+                <View className="h-80">
+                  <AugmentCard
+                    cardData={matchup.away.awayAugment}
+                    onPress={() => {
+                      setOpenDialog(false);
+                      setSelectedAugment(null);
+                    }}
+                  />
                 </View>
               </Dialog>
             )}
