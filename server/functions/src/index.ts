@@ -5,28 +5,118 @@ import { BalldontlieAPI } from "@balldontlie/sdk";
 
 admin.initializeApp();
 
+type GameInfo = {
+  gameStatus: boolean;
+  opponent: string;
+  gameDate: string;
+  isHome: boolean;
+};
+
+type GameStats = {
+  pts: number;
+  ast: number;
+  reb: number;
+  stl: number;
+  blk: number;
+  tov: number;
+  fpts: number;
+  min: number;
+};
+
+type LiveData = Record<
+  number,
+  {
+    gameInfo: GameInfo;
+    gameStats: GameStats;
+  }
+>;
+
 const api = new BalldontlieAPI({ apiKey: process.env.BALLDONTLIE_API_KEY! });
-let cachedData: any = null;
+let cachedData: LiveData = {};
 let lastFetchTime = 0;
 const CACHE_EXPIRY_MS = 60 * 1000;
 
-export const getLiveData = functions.https.onRequest(async (_, res) => {
+function getPlayersFromCache(
+  playerIds: number[],
+): Record<number, LiveData | null> {
+  const result: Record<number, LiveData | null> = {};
+
+  for (const id of playerIds) {
+    result[id] = cachedData[id] ?? null;
+  }
+
+  return result;
+}
+
+export const getLiveData = functions.https.onRequest(async (req, res) => {
   const now = Date.now();
+
+  const { playerIds } = req.body;
+  if (!Array.isArray(playerIds)) {
+    res.status(400).send("Invalid request");
+  }
 
   try {
     if (cachedData && now - lastFetchTime < CACHE_EXPIRY_MS) {
       console.log("Serving from cache");
-      res.json(cachedData);
+      res.json(getPlayersFromCache(playerIds));
       return;
     }
 
     console.log("Fetching fresh data from API...");
     const { data } = await api.nba.getLiveBoxScores();
 
-    cachedData = data;
-    lastFetchTime = now;
+    for (const game of data) {
+      const homeTeam = game.home_team as any;
+      const awayTeam = game.visitor_team as any;
 
-    res.json(data);
+      for (const player of homeTeam.players) {
+        const gameInfo: GameInfo = {
+          gameStatus: game.status !== "Final" ? false : true,
+          opponent: awayTeam.full_name,
+          gameDate: game.date,
+          isHome: true,
+        };
+        cachedData[player.id] = {
+          gameInfo,
+          gameStats: {
+            pts: player.pts,
+            ast: player.ast,
+            reb: player.reb,
+            stl: player.stl,
+            blk: player.blk,
+            tov: player.tov,
+            fpts: player.fpts,
+            min: player.min,
+          },
+        };
+      }
+
+      for (const player of awayTeam.players) {
+        const gameInfo: GameInfo = {
+          gameStatus: game.status !== "Final" ? false : true,
+          opponent: homeTeam.full_name,
+          gameDate: game.date,
+          isHome: false,
+        };
+        cachedData[player.id] = {
+          gameInfo,
+          gameStats: {
+            pts: player.pts,
+            ast: player.ast,
+            reb: player.reb,
+            stl: player.stl,
+            blk: player.blk,
+            tov: player.tov,
+            fpts: player.fpts,
+            min: player.min,
+          },
+        };
+      }
+    }
+
+    res.json(getPlayersFromCache(playerIds));
+    lastFetchTime = now;
     return;
   } catch (err) {
     console.error("Error fetching data:", err);
