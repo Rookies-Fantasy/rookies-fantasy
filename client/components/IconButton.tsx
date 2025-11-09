@@ -7,6 +7,7 @@ type IconButtonProps = {
   onPress: () => void;
   size?: number;
   className?: string;
+  disabled?: boolean;
 };
 
 const IconButton = ({
@@ -14,9 +15,11 @@ const IconButton = ({
   onPress,
   size = 40,
   className = "",
+  disabled = false,
 }: IconButtonProps) => (
   <Pressable
     className={cn("size-8 items-center justify-center rounded-lg", className)}
+    disabled={disabled}
     onPress={onPress}
   >
     {icon}
