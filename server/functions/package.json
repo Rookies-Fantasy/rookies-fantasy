@@ -15,6 +15,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@balldontlie/sdk": "^1.2.2",
     "@faker-js/faker": "^9.8.0",
     "firebase-admin": "^12.6.0",
     "firebase-functions": "^6.0.1"
