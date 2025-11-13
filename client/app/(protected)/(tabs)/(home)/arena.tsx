@@ -6,13 +6,17 @@ import AugmentCard, { iconMap } from "@/components/AugmentCard";
 import DateSelector from "@/components/DateSelector";
 import Dialog from "@/components/Dialog";
 import PlayerMatchupCard from "@/components/PlayerMatchupCard";
-import { useAppSelector } from "@/state/hooks";
-import { selectMatchup } from "@/state/slices/matchupSlice";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  selectMatchup,
+  updateMatchupWithLiveData,
+} from "@/state/slices/matchupSlice";
 import { teamLogoOptions } from "@/types/asset";
 import { SLOT_ORDER } from "@/types/team";
 
 const Arena = () => {
   const matchup = useAppSelector(selectMatchup);
+  const dispatch = useAppDispatch();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedAugment, setSelectedAugment] = useState<
@@ -44,28 +48,33 @@ const Arena = () => {
   useEffect(() => {
     const fetchLiveData = async () => {
       try {
-        const updatedAway = await fetch(
+        const awayRes = await fetch(
           "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
 
-            body: JSON.stringify({ playerIds: [1057263194, 1057384362] }),
+            body: JSON.stringify({ playerIds: awayPlayerIds }),
           },
         );
-        const updatedHome = await fetch(
+        const homeRes = await fetch(
           "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
 
-            body: JSON.stringify({ playerIds: [1057263194, 1057384362] }),
+            body: JSON.stringify({ playerIds: homePlayerIds }),
           },
         );
-        const updatedAway2 = await updatedAway.text();
-        const updatedHome2 = await updatedHome.text();
-        console.log("HOME", updatedAway2);
-        console.log("AWAY", updatedHome2);
+        const updatedAway = await awayRes.json();
+        const updatedHome = await homeRes.json();
+        dispatch(
+          updateMatchupWithLiveData({
+            date: currentDate,
+            updatedHome,
+            updatedAway,
+          }),
+        );
       } catch (error) {
         console.log(error);
       }
@@ -74,7 +83,7 @@ const Arena = () => {
     const intervalId = setInterval(fetchLiveData, 10000);
 
     return () => clearInterval(intervalId);
-  }, [awayPlayerIds, homePlayerIds]);
+  }, [awayPlayerIds, currentDate, dispatch, homePlayerIds]);
 
   return (
     <View className="flex-1 flex-col items-center bg-gray-950">
