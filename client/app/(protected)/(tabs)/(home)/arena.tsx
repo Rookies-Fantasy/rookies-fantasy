@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Text, View, Image, Pressable } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import LinearGradient from "react-native-linear-gradient";
@@ -35,8 +35,46 @@ const Arena = () => {
   const awayLineup = dailyMatchup?.awayTeam.lineup ?? [];
   const homeLineup = dailyMatchup?.homeTeam.lineup ?? [];
 
+  const awayPlayerIds = awayLineup.map((o) => o.player?.id);
+  const homePlayerIds = homeLineup.map((o) => o.player?.id);
+
   const awayScore = dailyMatchup?.awayTeam.score ?? 0;
   const homeScore = dailyMatchup?.homeTeam.score ?? 0;
+
+  useEffect(() => {
+    const fetchLiveData = async () => {
+      try {
+        const updatedAway = await fetch(
+          "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+
+            body: JSON.stringify({ playerIds: [1057263194, 1057384362] }),
+          },
+        );
+        const updatedHome = await fetch(
+          "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+
+            body: JSON.stringify({ playerIds: [1057263194, 1057384362] }),
+          },
+        );
+        const updatedAway2 = await updatedAway.text();
+        const updatedHome2 = await updatedHome.text();
+        console.log("HOME", updatedAway2);
+        console.log("AWAY", updatedHome2);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const intervalId = setInterval(fetchLiveData, 10000);
+
+    return () => clearInterval(intervalId);
+  }, [awayPlayerIds, homePlayerIds]);
 
   return (
     <View className="flex-1 flex-col items-center bg-gray-950">

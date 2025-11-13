@@ -52,6 +52,7 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
   const now = Date.now();
 
   const { playerIds } = req.body;
+
   if (!Array.isArray(playerIds)) {
     res.status(400).send("Invalid request");
   }
@@ -77,7 +78,7 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
           gameDate: game.date,
           isHome: true,
         };
-        cachedData[player.id] = {
+        cachedData[player.player.id] = {
           gameInfo,
           gameStats: {
             pts: player.pts,
@@ -99,7 +100,7 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
           gameDate: game.date,
           isHome: false,
         };
-        cachedData[player.id] = {
+        cachedData[player.player.id] = {
           gameInfo,
           gameStats: {
             pts: player.pts,
@@ -120,7 +121,7 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
     return;
   } catch (err) {
     console.error("Error fetching data:", err);
-    res.status(500).json({ error: "Failed to fetch data" });
+    res.status(500).json({ error: err });
   }
 });
 
