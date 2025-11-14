@@ -10,7 +10,7 @@ import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
-import { selectHomeWeeklyAquisitionsUsed } from "@/state/slices/matchupSlice";
+import { selectWeeklyAquisitionsUsed } from "@/state/slices/matchupSlice";
 import {
   selectAugment,
   selectRosterPlayerCount,
@@ -28,9 +28,7 @@ const MyTeam = () => {
   const userId = useAppSelector(selectUserId);
   const augment = useAppSelector(selectAugment);
   const playerCount = useAppSelector(selectRosterPlayerCount);
-  const homeWeeklyAquisitionsUsed = useAppSelector(
-    selectHomeWeeklyAquisitionsUsed,
-  );
+  const weeklyAquisitionsUsed = useAppSelector(selectWeeklyAquisitionsUsed);
 
   const queueStatus = user.queueStatus ?? "idle";
   const isInQueue = queueStatus === "queued";
@@ -126,7 +124,7 @@ const MyTeam = () => {
                   <Text className="text-modeContrast">
                     Weekly acquisition limit
                   </Text>
-                  <Text className="pbk-h8 text-modeContrast">{`${homeWeeklyAquisitionsUsed}/4 players`}</Text>
+                  <Text className="pbk-h8 text-modeContrast">{`${weeklyAquisitionsUsed}/4 players`}</Text>
                 </View>
               )}
               <View className="my-2 flex-1 gap-4">
