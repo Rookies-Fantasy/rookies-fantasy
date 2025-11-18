@@ -20,11 +20,11 @@ export const selectAwayUserId = (state: RootState) =>
   state.matchup.away.awayUserId;
 export const selectHomeUserId = (state: RootState) =>
   state.matchup.home.homeUserId;
-export const selectWeeklyAquisitionsUsed = (state: RootState) => {
+export const selectWeeklyAcquisitionsUsed = (state: RootState) => {
   if (state.user.id === state.matchup.home.homeUserId) {
-    return state.matchup.home.homeWeeklyAquisitionsUsed;
+    return state.matchup.home.homeWeeklyAcquisitionsUsed;
   }
-  return state.matchup.awayWeeklyAquisitionsUsed;
+  return state.matchup.away.awayWeeklyAcquisitionsUsed;
 };
 
 export const { setMatchup, clearMatchup } = matchupSlice.actions;
