@@ -12,8 +12,8 @@ export class MatchupController {
         .collection(MATCHUPS_COLLECTION)
         .where(
           firestore.Filter.or(
-            firestore.Filter("homeUserId", "==", userId),
-            firestore.Filter("awayUserId", "==", userId),
+            firestore.Filter("home.homeUserId", "==", userId),
+            firestore.Filter("away.awayUserId", "==", userId),
           ),
         )
         .limit(1)
@@ -37,18 +37,8 @@ export class MatchupController {
 
     const matchup: Matchup = {
       id: doc.id,
-      awayAugment: data.awayAugment,
-      awayTeamId: data.awayTeamId,
-      awayTeamLogo: data.awayTeamLogo,
-      awayTeamName: data.awayTeamName,
-      awayUserId: data.awayUserId,
-      awayWeeklyAquisitionsUsed: data.awayWeeklyAquisitionsUsed,
-      homeAugment: data.homeAugment,
-      homeTeamId: data.homeTeamId,
-      homeTeamLogo: data.homeTeamLogo,
-      homeTeamName: data.homeTeamName,
-      homeUserId: data.homeUserId,
-      homeWeeklyAquisitionsUsed: data.homeWeeklyAquisitionsUsed,
+      away: data.away || {},
+      home: data.home || {},
       status: data.status ?? "active",
       weekStartDate: data.weekStartDate,
       dailyMatchups: {},
