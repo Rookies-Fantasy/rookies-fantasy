@@ -311,7 +311,7 @@ export const updateDailyPlayerData = functions
     }));
 
     // Initialize batching
-    let batch = admin.firestore().batch();
+    const batch = admin.firestore().batch();
     let opCount = 0;
     const BATCH_LIMIT = 400;
 
