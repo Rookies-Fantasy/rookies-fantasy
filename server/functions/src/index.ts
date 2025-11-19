@@ -1,8 +1,38 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v1";
+import { BalldontlieAPI } from "@balldontlie/sdk";
 
 admin.initializeApp();
+
+const api = new BalldontlieAPI({ apiKey: process.env.BALLDONTLIE_API_KEY! });
+let cachedData: any = null;
+let lastFetchTime = 0;
+const CACHE_EXPIRY_MS = 60 * 1000;
+
+export const getLiveData = functions.https.onRequest(async (_, res) => {
+  const now = Date.now();
+
+  try {
+    if (cachedData && now - lastFetchTime < CACHE_EXPIRY_MS) {
+      console.log("Serving from cache");
+      res.json(cachedData);
+      return;
+    }
+
+    console.log("Fetching fresh data from API...");
+    const { data } = await api.nba.getLiveBoxScores();
+
+    cachedData = data;
+    lastFetchTime = now;
+
+    res.json(data);
+    return;
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
 
 export const createUserInDatabase = functions.auth
   .user()

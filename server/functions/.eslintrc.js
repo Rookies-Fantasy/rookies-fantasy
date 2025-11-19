@@ -29,4 +29,11 @@ module.exports = {
     "import/no-unresolved": 0,
     indent: ["error", 2],
   },
+  "import/resolver": {
+    typescript: {
+      alwaysTryTypes: true,
+      project: "./tsconfig.json",
+    },
+    node: true,
+  },
 };
