@@ -31,14 +31,15 @@ type LiveData = Record<
   }
 >;
 
-const api = new BalldontlieAPI({ apiKey: process.env.BALLDONTLIE_API_KEY! });
-let cachedData: LiveData = {};
+const apiKey = process.env.BALLDONTLIE_API_KEY || "";
+const api = new BalldontlieAPI({ apiKey });
+const cachedData: LiveData = {};
 let lastFetchTime = 0;
 const CACHE_EXPIRY_MS = 60 * 1000;
 
-function getPlayersFromCache(
+const getPlayersFromCache = (
   playerIds: number[],
-): Record<number, LiveData | null> {
+): Record<number, LiveData | null> => {
   const result: Record<number, LiveData | null> = {};
 
   for (const id of playerIds) {
@@ -46,7 +47,7 @@ function getPlayersFromCache(
   }
 
   return result;
-}
+};
 
 export const getLiveData = functions.https.onRequest(async (req, res) => {
   const now = Date.now();
@@ -410,21 +411,22 @@ const fetchWeekGamesInfo = async (
         weekGamesMap.set(gameDate, new Map());
       }
 
-      const dailyGamesMap = weekGamesMap.get(gameDate)!;
+      const dailyGamesMap = weekGamesMap.get(gameDate);
+      if (dailyGamesMap) {
+        dailyGamesMap.set(game.home_team.id.toString(), {
+          gameStatus: game.status,
+          opponent: game.visitor_team.abbreviation,
+          gameDate: gameDate,
+          isHome: true,
+        });
 
-      dailyGamesMap.set(game.home_team.id.toString(), {
-        gameStatus: game.status,
-        opponent: game.visitor_team.abbreviation,
-        gameDate: gameDate,
-        isHome: true,
-      });
-
-      dailyGamesMap.set(game.visitor_team.id.toString(), {
-        gameStatus: game.status,
-        opponent: game.home_team.abbreviation,
-        gameDate: gameDate,
-        isHome: false,
-      });
+        dailyGamesMap.set(game.visitor_team.id.toString(), {
+          gameStatus: game.status,
+          opponent: game.home_team.abbreviation,
+          gameDate: gameDate,
+          isHome: false,
+        });
+      }
     });
 
     return weekGamesMap;
