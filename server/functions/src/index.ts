@@ -50,12 +50,29 @@ const getPlayersFromCache = (
 };
 
 export const getLiveData = functions.https.onRequest(async (req, res) => {
+  // Verify Firebase ID token
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).send("Unauthorized: Missing or invalid token");
+    return;
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+  try {
+    await admin.auth().verifyIdToken(idToken);
+  } catch (error) {
+    console.error("Error verifying ID token:", error);
+    res.status(401).send("Unauthorized: Invalid token");
+    return;
+  }
+
   const now = Date.now();
 
   const { playerIds } = req.body;
 
   if (!Array.isArray(playerIds)) {
     res.status(400).send("Invalid request");
+    return;
   }
 
   try {
