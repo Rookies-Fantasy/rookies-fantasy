@@ -19,14 +19,14 @@ const matchupSlice = createSlice({
           {
             gameInfo: GameInfo;
             gameStats: GameStats;
-          }
+          } | null
         >;
         updatedAway: Record<
           string,
           {
             gameInfo: GameInfo;
             gameStats: GameStats;
-          }
+          } | null
         >;
       }>,
     ) => {
@@ -34,15 +34,15 @@ const matchupSlice = createSlice({
       newMatchup.homeTeam.lineup.forEach((o) => {
         if (isNotNil(o.player?.id)) {
           const newData = action.payload.updatedHome[o.player?.id];
-          o.gameInfo = newData.gameInfo;
-          o.gameStats = newData.gameStats;
+          o.gameInfo = newData?.gameInfo;
+          o.gameStats = newData?.gameStats;
         }
       });
       newMatchup.awayTeam.lineup.forEach((o) => {
         if (isNotNil(o.player?.id)) {
-          const newData = action.payload.updatedHome[o.player?.id];
-          o.gameInfo = newData.gameInfo;
-          o.gameStats = newData.gameStats;
+          const newData = action.payload.updatedAway[o.player?.id];
+          o.gameInfo = newData?.gameInfo;
+          o.gameStats = newData?.gameStats;
         }
       });
       state.dailyMatchups[action.payload.date] = newMatchup;
