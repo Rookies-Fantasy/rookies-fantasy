@@ -81,14 +81,14 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
         cachedData[player.player.id] = {
           gameInfo,
           gameStats: {
-            pts: player.pts,
-            ast: player.ast,
-            reb: player.reb,
-            stl: player.stl,
-            blk: player.blk,
-            tov: player.tov,
-            fpts: player.fpts,
-            min: player.min,
+            pts: player.pts ?? 0,
+            ast: player.ast ?? 0,
+            reb: player.reb ?? 0,
+            stl: player.stl ?? 0,
+            blk: player.blk ?? 0,
+            tov: player.turnover ?? 0,
+            fpts: player.fpts ?? 0,
+            min: parseInt(player.min, 10) || 0,
           },
         };
       }
@@ -103,14 +103,14 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
         cachedData[player.player.id] = {
           gameInfo,
           gameStats: {
-            pts: player.pts,
-            ast: player.ast,
-            reb: player.reb,
-            stl: player.stl,
-            blk: player.blk,
-            tov: player.tov,
-            fpts: player.fpts,
-            min: player.min,
+            pts: player.pts ?? 0,
+            ast: player.ast ?? 0,
+            reb: player.reb ?? 0,
+            stl: player.stl ?? 0,
+            blk: player.blk ?? 0,
+            tov: player.turnover ?? 0,
+            fpts: player.fpts ?? 0,
+            min: parseInt(player.min, 10) || 0,
           },
         };
       }
