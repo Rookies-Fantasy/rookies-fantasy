@@ -170,15 +170,14 @@ export const createUserInDatabase = functions.auth
 
 export const updateDailyPlayerData = functions
   .runWith({ secrets: ["BALLDONTLIE_API_KEY"] })
-  .pubsub
-  .schedule("0 2 * * *") // runs every day at 2:00 AM PDT
+  .pubsub.schedule("0 2 * * *") // runs every day at 2:00 AM PDT
   .timeZone("America/Los_Angeles")
   .onRun(async () => {
     const apiKey = process.env.BALLDONTLIE_API_KEY;
 
     const now = new Date();
     const pacificNow = new Date(
-      now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+      now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }),
     );
 
     // ===================================
@@ -203,7 +202,11 @@ export const updateDailyPlayerData = functions
     });
 
     if (!seasonResponse.ok) {
-      console.error("Failed season averages fetch:", seasonResponse.status, seasonResponse.statusText);
+      console.error(
+        "Failed season averages fetch:",
+        seasonResponse.status,
+        seasonResponse.statusText,
+      );
       return;
     }
 
@@ -248,7 +251,7 @@ export const updateDailyPlayerData = functions
     // =======================================
     // Subtract 1 day to get "yesterday" in PDT
     pacificNow.setDate(pacificNow.getDate() - 1);
-  
+
     const yyyy = pacificNow.getFullYear();
     const mm = String(pacificNow.getMonth() + 1).padStart(2, "0");
     const dd = String(pacificNow.getDate()).padStart(2, "0");
@@ -262,7 +265,11 @@ export const updateDailyPlayerData = functions
     });
 
     if (!gamelogResponse.ok) {
-      console.error("Failed to fetch gamelog stats:", gamelogResponse.status, gamelogResponse.statusText);
+      console.error(
+        "Failed to fetch gamelog stats:",
+        gamelogResponse.status,
+        gamelogResponse.statusText,
+      );
       return;
     }
 
@@ -320,14 +327,17 @@ export const updateDailyPlayerData = functions
 
     // === UPDATE NBA PLAYERS COLLECTION ===
     for (const gamelog of playerGamelogs) {
-      const playerQuery = await admin.firestore()
+      const playerQuery = await admin
+        .firestore()
         .collection("nbaPlayers")
         .where("playerId", "==", gamelog.playerId)
         .limit(1)
         .get();
 
       if (playerQuery.empty) {
-        console.warn(`Player not found in Firestore for id: ${gamelog.playerId}`);
+        console.warn(
+          `Player not found in Firestore for id: ${gamelog.playerId}`,
+        );
         continue;
       }
 
@@ -382,8 +392,7 @@ export const updateDailyPlayerData = functions
                       latestGamelog,
                     ],
                   }
-                : {}
-              ),
+                : {}),
             },
           };
         });
@@ -395,7 +404,10 @@ export const updateDailyPlayerData = functions
 
     // === UPDATE MATCHUPS COLLECTION ===
     const today = formatDate(new Date());
-    const matchupSnapshot = await admin.firestore().collection("matchups").get();
+    const matchupSnapshot = await admin
+      .firestore()
+      .collection("matchups")
+      .get();
 
     for (const matchupDoc of matchupSnapshot.docs) {
       const matchupData = matchupDoc.data();
@@ -408,11 +420,7 @@ export const updateDailyPlayerData = functions
         homeTeam: updateTeamLineup(dayObj.homeTeam, seasonAvgMap, gamelogMap),
       };
 
-      batch.set(
-        matchupDoc.ref,
-        { [today]: updatedDayObj },
-        { merge: true }
-      );
+      batch.set(matchupDoc.ref, { [today]: updatedDayObj }, { merge: true });
 
       opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
     }
@@ -426,12 +434,12 @@ const formatDate = (d: Date) => {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
-}
+};
 
 const updateTeamLineup = (
   team: any,
   avgMap: Record<string, any>,
-  gamelogMap: Record<string, any>
+  gamelogMap: Record<string, any>,
 ) => {
   if (!team || !Array.isArray(team.lineup)) return team;
 
@@ -460,22 +468,25 @@ const updateTeamLineup = (
                   latestGamelog,
                 ],
               }
-            : {}
-          ),
+            : {}),
         },
       };
     }),
   };
-}
+};
 
-const commitIfNeeded = async (batch: FirebaseFirestore.WriteBatch, count: number, limit: number) => {
+const commitIfNeeded = async (
+  batch: FirebaseFirestore.WriteBatch,
+  count: number,
+  limit: number,
+) => {
   if (count >= limit) {
     await batch.commit();
     console.log("Committed batch of 400 writes");
     return 0;
   }
   return count + 1;
-}
+};
 
 const calculateFantasyPoints = (s: any) => {
   const pts = s.pts * 1;
@@ -491,19 +502,7 @@ const calculateFantasyPoints = (s: any) => {
   const fgMiss = (s.fga - s.fgm) * -1;
   const ftMiss = (s.fta - s.ftm) * -1;
 
-  return (
-    pts +
-    reb +
-    ast +
-    stl +
-    blk +
-    fgm +
-    ftm +
-    tpm +
-    tov +
-    fgMiss +
-    ftMiss
-  );
+  return pts + reb + ast + stl + blk + fgm + ftm + tpm + tov + fgMiss + ftMiss;
 };
 
 export const processQueue = functions
