@@ -14,7 +14,6 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
-import { store } from "../state/store";
 import AuthListener from "@/components/AuthListener";
 import { ThemeWrapper } from "@/components/ThemeWrapper";
 import { useAppSelector } from "@/state/hooks";
@@ -22,6 +21,7 @@ import {
   selectIsUserSignedIn,
   selectIsUserVerified,
 } from "@/state/slices/userSlice";
+import { store } from "@/state/store";
 import { themes, ThemeMode } from "@/theme/theme";
 import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
 

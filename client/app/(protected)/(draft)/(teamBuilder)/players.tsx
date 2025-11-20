@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
+import PlayerDrawer from "@/components/PlayerDrawer/PlayerDrawer";
 import SearchBar from "@/components/SearchBar";
 import SelectedAugment from "@/components/SelectedAugment";
 import Spinner from "@/components/Spinner";
@@ -30,7 +31,7 @@ import {
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
-import { Player, PlayerFilters } from "@/types/players";
+import { Player, PlayerFilters } from "@/types/player";
 import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
@@ -54,6 +55,8 @@ const Players = () => {
   const router = useRouter();
 
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [showPlayerDrawer, setShowPlayerDrawer] = useState(false);
 
   const activeFilters =
     (filters.selectedTeams.length > 0 ? 1 : 0) +
@@ -111,54 +114,55 @@ const Players = () => {
 
     const playerHasAvailablePosition = (player: Player) => {
       const positions = player.positions || [];
-      const hasAvailablePosition = team.lineup.some(
+      return team.lineup.some(
         (slot) =>
           slot.player === null &&
           (positions.includes(slot.position) ||
             UTIL_POSITIONS.includes(slot.position as FlexPosition)),
       );
-
-      return hasAvailablePosition;
     };
 
-    return players.map((player) => [
-      <IconButton
-        className={
-          isPlayerInLineup(team.lineup, player.id)
-            ? "bg-red-600"
-            : "bg-purple-600"
-        }
-        icon={
-          isPlayerInLineup(team.lineup, player.id) ? (
-            <Minus color="white" size={12} />
-          ) : (
-            <Plus color="white" size={12} />
-          )
-        }
-        key={player.id}
-        onPress={() => {
-          if (isPlayerInLineup(team.lineup, player.id)) {
-            dispatch(removePlayerFromLineup(player));
-          } else {
-            if (playerHasAvailablePosition(player)) {
-              dispatch(addPlayerToLineup(player));
-            } else {
-              Alert.alert("Cannot add player", "No eligible spot available");
-            }
+    return players.map((player) => ({
+      id: player.id,
+      cells: [
+        <IconButton
+          className={
+            isPlayerInLineup(team.lineup, player.id)
+              ? "bg-red-600"
+              : "bg-purple-600"
           }
-        }}
-      />,
-      <PlayerData key={player.id} player={player} />,
-      player.gamesPlayed,
-      player.averageStats.min.toFixed(1),
-      player.averageStats.pts.toFixed(1),
-      player.averageStats.reb.toFixed(1),
-      player.averageStats.ast.toFixed(1),
-      player.averageStats.stl.toFixed(1),
-      player.averageStats.blk.toFixed(1),
-      player.averageStats.tov.toFixed(1),
-      player.averageStats.fpts,
-    ]);
+          icon={
+            isPlayerInLineup(team.lineup, player.id) ? (
+              <Minus color="white" size={12} />
+            ) : (
+              <Plus color="white" size={12} />
+            )
+          }
+          key={player.id}
+          onPress={() => {
+            if (isPlayerInLineup(team.lineup, player.id)) {
+              dispatch(removePlayerFromLineup(player));
+            } else {
+              if (playerHasAvailablePosition(player)) {
+                dispatch(addPlayerToLineup(player));
+              } else {
+                Alert.alert("Cannot add player", "No eligible spot available");
+              }
+            }
+          }}
+        />,
+        <PlayerData key={player.id} player={player} />,
+        player.gamesPlayed,
+        player.averageStats.min.toFixed(1),
+        player.averageStats.pts.toFixed(1),
+        player.averageStats.reb.toFixed(1),
+        player.averageStats.ast.toFixed(1),
+        player.averageStats.stl.toFixed(1),
+        player.averageStats.blk.toFixed(1),
+        player.averageStats.tov.toFixed(1),
+        player.averageStats.fpts,
+      ],
+    }));
   }, [data?.pages, dispatch, team.lineup]);
 
   return (
@@ -250,6 +254,10 @@ const Players = () => {
               ]}
               isFetchingNextPage={isFetchingNextPage}
               onEndReached={() => fetchNextPage()}
+              onRowPress={(id) => {
+                setSelectedPlayerId(id);
+                setShowPlayerDrawer(true);
+              }}
               stickyColumns={2}
               widthClasses={[
                 "w-16",
@@ -276,6 +284,12 @@ const Players = () => {
         setShowFiltersDrawer={() => setShowFiltersDrawer(false)}
         showFiltersDrawer={showFiltersDrawer}
         teams={teams}
+      />
+      <PlayerDrawer
+        playerId={selectedPlayerId}
+        setSelectedPlayerId={setSelectedPlayerId}
+        setShowPlayerDrawer={setShowPlayerDrawer}
+        showPlayerDrawer={showPlayerDrawer}
       />
     </SafeAreaView>
   );

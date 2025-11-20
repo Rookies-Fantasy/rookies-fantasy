@@ -12,7 +12,7 @@ import {
   PlayerFilters,
   POSITION_FILTER_OPTIONS,
   PositionFilters,
-} from "@/types/players";
+} from "@/types/player";
 import { cn } from "@/utils/jsUtils";
 
 type FilterDrawerProps = {

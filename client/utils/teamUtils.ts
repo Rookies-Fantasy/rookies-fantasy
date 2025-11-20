@@ -1,6 +1,6 @@
 import { Alert } from "react-native";
 import { UserController } from "@/controllers/userController";
-import { Player } from "@/types/players";
+import { Player } from "@/types/player";
 import {
   BenchSlot,
   FlexPosition,
@@ -85,8 +85,7 @@ export const saveTeamLineup = async (
 
 export const resetTeamLineup = async (userId: string, teamId: string) => {
   try {
-    const savedData = await UserController.getSavedTeamLineup(userId, teamId);
-    return savedData;
+    return await UserController.getSavedTeamLineup(userId, teamId);
   } catch (error) {
     console.log(error);
     return { lineup: [], balance: 0 };

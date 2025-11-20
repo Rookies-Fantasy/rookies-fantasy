@@ -11,7 +11,7 @@ export class NbaTeamsController {
         .orderBy("fullName")
         .get();
 
-      const teams: NbaTeam[] = teamsSnapshot.docs.map((doc) => {
+      return teamsSnapshot.docs.map((doc) => {
         const data = doc.data();
 
         return {
@@ -26,8 +26,6 @@ export class NbaTeamsController {
           state: data.state,
         };
       });
-
-      return teams;
     } catch (error) {
       throw error;
     }

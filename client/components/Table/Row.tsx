@@ -1,22 +1,29 @@
-import React from "react";
-import { View } from "react-native";
+import { ReactNode } from "react";
+import { Pressable } from "react-native";
 import Cell from "./Cell";
 
+export type RowData = {
+  id: string;
+  cells: (string | number | ReactNode)[];
+};
+
 type RowProps = {
-  rowData: any[];
-  widthClasses?: string[];
-  variant?: "header" | "row";
   cellVariant?: "scrollable" | "sticky";
+  onPress?: () => void;
+  rowData: RowData;
+  variant?: "header" | "row";
+  widthClasses?: string[];
 };
 
 const Row = ({
-  rowData,
-  widthClasses = [],
-  variant = "row",
   cellVariant = "sticky",
+  onPress,
+  rowData,
+  variant = "row",
+  widthClasses = [],
 }: RowProps) => (
-  <View className="flex-row">
-    {rowData.map((item, index) => (
+  <Pressable className="flex-row" onPress={onPress}>
+    {rowData.cells.map((item, index) => (
       <Cell
         cellVariant={cellVariant}
         content={item}
@@ -25,7 +32,7 @@ const Row = ({
         widthClass={widthClasses[index]}
       />
     ))}
-  </View>
+  </Pressable>
 );
 
 export default Row;

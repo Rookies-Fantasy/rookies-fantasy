@@ -1,14 +1,14 @@
-import { PayloadAction, createSlice, createSelector } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Augment } from "@/types/augment";
-import { Player } from "@/types/players";
+import { Player } from "@/types/player";
 import {
+  BenchPosition,
+  BenchSlot,
   defaultTeam,
   LineupSlot,
   SlotPosition,
   Team,
-  BenchSlot,
-  BenchPosition,
   UTIL_POSITIONS,
 } from "@/types/team";
 import { validateAugment } from "@/utils/augmentValidation";
@@ -200,12 +200,11 @@ const teamSlice = createSlice({
 
       // Case 3: Bench to Bench
       if (isNotNil(currentBenchSlot) && isNotNil(incomingBenchSlot)) {
-        const newBench = swapPlayers(
+        state.bench = swapPlayers(
           state.bench,
           currentBenchSlot,
           incomingBenchSlot,
         );
-        state.bench = newBench;
         state.hasUserChanges = true;
         return;
       }
@@ -223,12 +222,11 @@ const teamSlice = createSlice({
           (isNil(currentPlayer) && isNotNil(incomingPlayer)) ||
           (isNil(incomingPlayer) && isNotNil(currentPlayer))
         ) {
-          const newLineup = swapPlayers(
+          state.lineup = swapPlayers(
             state.lineup,
             currentLineupSlot,
             incomingLineupSlot,
           );
-          state.lineup = newLineup;
         }
 
         if (isNotNil(currentPlayer) && isNotNil(incomingPlayer)) {
@@ -243,12 +241,11 @@ const teamSlice = createSlice({
 
           if (fromEligible && toEligible) {
             // Direct swap if both players can swap positions
-            const newLineup = swapPlayers(
+            state.lineup = swapPlayers(
               state.lineup,
               currentLineupSlot,
               incomingLineupSlot,
             );
-            state.lineup = newLineup;
           }
 
           if (fromEligible && !toEligible) {
