@@ -170,7 +170,7 @@ export const createUserInDatabase = functions.auth
 
 export const updateDailyPlayerData = functions
   .runWith({ secrets: ["BALLDONTLIE_API_KEY"] })
-  .pubsub.schedule("0 2 * * *") // runs every day at 2:00 AM PDT
+  .pubsub.schedule("0 1 * * *") // runs every day at 1:00 AM PDT
   .timeZone("America/Los_Angeles")
   .onRun(async () => {
     const apiKey = process.env.BALLDONTLIE_API_KEY;
@@ -195,29 +195,10 @@ export const updateDailyPlayerData = functions
     }
 
     const seasonUrl = `https://api.balldontlie.io/nba/v1/season_averages/general?season=${seasonYear}&season_type=regular&type=base`;
-    const seasonResponse = await fetch(seasonUrl, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    });
 
-    if (!seasonResponse.ok) {
-      console.error(
-        "Failed season averages fetch:",
-        seasonResponse.status,
-        seasonResponse.statusText,
-      );
-      return;
-    }
+    const seasonData = await fetchAllPagesFromUrl(seasonUrl, apiKey);
 
-    const seasonData: any = await seasonResponse.json();
-
-    if (!seasonData.data || !Array.isArray(seasonData.data)) {
-      console.error("Unexpected Season API format:", seasonData);
-      return;
-    }
-
-    const seasonAverages = seasonData.data.map((entry: any) => {
+    const seasonAverages = seasonData.map((entry: any) => {
       const s = entry.stats;
       const p = entry.player;
 
@@ -225,24 +206,24 @@ export const updateDailyPlayerData = functions
         assists: s.ast,
         blocks: s.blk,
         fantasyPoints: calculateFantasyPoints(s),
-        fieldGoalPercentage: s.fgm / s.fga || null,
+        fieldGoalPercentage: s.fg_pct,
         fieldGoalsAttempted: s.fga,
         fieldGoalsMade: s.fgm,
         firstName: p.first_name,
-        freeThrowPercentage: s.ftm / s.fta || null,
+        freeThrowPercentage: s.ft_pct,
         freeThrowsAttempted: s.fta,
         freeThrowsMade: s.ftm,
         gamesPlayed: s.gp,
         lastName: p.last_name,
         minutes: s.min,
-        playerId: p.id,
+        playerId: String(p.id),
         points: s.pts,
         rebounds: s.reb,
         steals: s.stl,
-        threePointerPercentage: s.fg3m / s.fg3a || null,
+        threePointerPercentage: s.fg3_pct,
         threePointersAttempted: s.fg3a,
         threePointersMade: s.fg3m,
-        turnovers: s.tov,
+        turnovers: s.tov ?? 0,
       };
     });
 
@@ -258,57 +239,39 @@ export const updateDailyPlayerData = functions
     const formattedDate = `${yyyy}-${mm}-${dd}`;
 
     const gamelogUrl = `https://api.balldontlie.io/v1/stats?dates[]=${formattedDate}`;
-    const gamelogResponse = await fetch(gamelogUrl, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
+
+    const gamelogData = await fetchAllPagesFromUrl(gamelogUrl, apiKey);
+
+    const playerGamelogs = gamelogData.map((gamelog: any) => {
+      const gamelogForFPTS = { ...gamelog, tov: gamelog.turnover ?? 0 };
+
+      return {
+        assists: gamelog.ast,
+        blocks: gamelog.blk,
+        date: gamelog.game.date,
+        fantasyPoints: calculateFantasyPoints(gamelogForFPTS),
+        fieldGoalPercentage: gamelog.fg_pct,
+        fieldGoalsAttempted: gamelog.fga,
+        fieldGoalsMade: gamelog.fgm,
+        freeThrowPerfectange: gamelog.ft_pct,
+        freeThrowsAttempted: gamelog.fta,
+        freeThrowsMade: gamelog.ftm,
+        gameId: gamelog.game.id,
+        homeTeamId: gamelog.game.home_team_id,
+        minutes: gamelog.min,
+        personalFouls: gamelog.pf,
+        playerId: String(gamelog.player.id),
+        points: gamelog.pts,
+        rebounds: gamelog.reb,
+        steals: gamelog.stl,
+        teamId: gamelog.team.id,
+        threePointerPercentage: gamelog.fg3_pct,
+        threePointersAttempted: gamelog.fg3a,
+        threePointersMade: gamelog.fg3m,
+        turnovers: gamelog.turnover ?? 0,
+        visitorTeamId: gamelog.game.visitor_team_id,
+      };
     });
-
-    if (!gamelogResponse.ok) {
-      console.error(
-        "Failed to fetch gamelog stats:",
-        gamelogResponse.status,
-        gamelogResponse.statusText,
-      );
-      return;
-    }
-
-    const gamelogData: any = await gamelogResponse.json();
-
-    if (!gamelogData.data || !Array.isArray(gamelogData.data)) {
-      console.error("Unexpected API gamelogResponse format:", gamelogData);
-      return;
-    }
-
-    const playerGamelogs = gamelogData.data.map((gamelog: any) => ({
-      assists: gamelog.ast,
-      blocks: gamelog.blk,
-      date: gamelog.game.date,
-      fantasyPoints: calculateFantasyPoints(gamelog),
-      fieldGoalPercentage: gamelog.fgm / gamelog.fga || null,
-      fieldGoalsAttempted: gamelog.fga,
-      fieldGoalsMade: gamelog.fgm,
-      firstName: gamelog.player.first_name,
-      freeThrowPerfectange: gamelog.ftm / gamelog.fta || null,
-      freeThrowsAttempted: gamelog.fta,
-      freeThrowsMade: gamelog.ftm,
-      gameId: gamelog.game.id,
-      homeTeamId: gamelog.game.home_team_id,
-      lastName: gamelog.player.last_name,
-      minutes: gamelog.min,
-      personalFouls: gamelog.pf,
-      playerId: gamelog.player.id,
-      points: gamelog.pts,
-      rebounds: gamelog.reb,
-      steals: gamelog.stl,
-      teamId: gamelog.team.id,
-      teamName: gamelog.team.full_name,
-      threePointerPercentage: gamelog.fg3m / gamelog.fg3a || null,
-      threePointersAttempted: gamelog.fg3a,
-      threePointersMade: gamelog.fg3m,
-      turnovers: gamelog.turnover,
-      visitorTeamId: gamelog.game.visitor_team_id,
-    }));
 
     // Initialize batching
     const batch = admin.firestore().batch();
@@ -324,6 +287,9 @@ export const updateDailyPlayerData = functions
     for (const gamelog of playerGamelogs) {
       gamelogMap[String(gamelog.playerId)] = gamelog;
     }
+
+    console.log("Season map size:", Object.keys(seasonAvgMap).length);
+    console.log("Gamelog map size:", Object.keys(gamelogMap).length);
 
     // === UPDATE NBA PLAYERS COLLECTION ===
     for (const gamelog of playerGamelogs) {
@@ -352,6 +318,11 @@ export const updateDailyPlayerData = functions
         updateObj.averageStats = latestAvg;
       }
 
+      console.log("Writing nbaPlayer update:", {
+        docId: playerDocRef.id,
+        playerId: gamelog.playerId,
+      });
+
       batch.update(playerDocRef, updateObj);
 
       opCount++;
@@ -362,6 +333,8 @@ export const updateDailyPlayerData = functions
     const userSnapshot = await admin.firestore().collection("users").get();
 
     for (const userDoc of userSnapshot.docs) {
+      console.log("Processing user:", userDoc.id);
+
       const teamsRef = userDoc.ref.collection("teams");
       const teamSnapshot = await teamsRef.get();
 
@@ -397,6 +370,8 @@ export const updateDailyPlayerData = functions
           };
         });
 
+        console.log("Writing user team update:", { docId: teamDoc.id });
+
         batch.set(teamDoc.ref, { lineup: updatedLineup }, { merge: true });
         opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
       }
@@ -420,14 +395,67 @@ export const updateDailyPlayerData = functions
         homeTeam: updateTeamLineup(dayObj.homeTeam, seasonAvgMap, gamelogMap),
       };
 
+      console.log("Writing matchup update:", { docId: matchupDoc.id });
+
       batch.set(matchupDoc.ref, { [today]: updatedDayObj }, { merge: true });
 
       opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
     }
 
-    // Final batch commit
-    if (opCount > 0) await batch.commit();
+    if (opCount > 0) {
+      console.log("Final commit with remaining operations:", opCount);
+      try {
+        await batch.commit();
+        console.log("Final batch commit SUCCESS");
+      } catch (err) {
+        console.error("Final batch commit FAILED:", err);
+      }
+    }
+
+    console.log("=== Finished updateDailyPlayerData job ===");
   });
+
+const fetchAllPagesFromUrl = async (url: string, apiKey?: string) => {
+  let cursor: number | null = null;
+  let results: any[] = [];
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const finalUrl = cursor ? `${url}&cursor=${cursor}` : url;
+
+    console.log("Fetching:", finalUrl);
+
+    const response = await fetch(finalUrl, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Failed to fetch:",
+        response.status,
+        response.statusText,
+        "URL:",
+        finalUrl,
+      );
+      break;
+    }
+
+    const json: any = await response.json();
+
+    if (!json.data || !Array.isArray(json.data)) {
+      console.error("Unexpected response format:", json);
+      break;
+    }
+
+    results = results.concat(json.data);
+
+    if (!json.meta?.next_cursor) break;
+
+    cursor = json.meta.next_cursor;
+  }
+
+  return results;
+};
 
 const formatDate = (d: Date) => {
   const y = d.getFullYear();
@@ -482,7 +510,7 @@ const commitIfNeeded = async (
 ) => {
   if (count >= limit) {
     await batch.commit();
-    console.log("Committed batch of 400 writes");
+    console.log("Committed batch");
     return 0;
   }
   return count + 1;
