@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { getAuth } from "@react-native-firebase/auth";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useRef, useState } from "react";
 import { Text, View, Image, Pressable } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import LinearGradient from "react-native-linear-gradient";
@@ -6,13 +8,20 @@ import AugmentCard, { iconMap } from "@/components/AugmentCard";
 import DateSelector from "@/components/DateSelector";
 import Dialog from "@/components/Dialog";
 import PlayerMatchupCard from "@/components/PlayerMatchupCard";
-import { useAppSelector } from "@/state/hooks";
-import { selectMatchup } from "@/state/slices/matchupSlice";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import {
+  selectMatchup,
+  updateMatchupWithLiveData,
+} from "@/state/slices/matchupSlice";
 import { teamLogoOptions } from "@/types/asset";
 import { SLOT_ORDER } from "@/types/team";
 
+const LIVE_DATA_URL =
+  "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData";
+
 const Arena = () => {
   const matchup = useAppSelector(selectMatchup);
+  const dispatch = useAppDispatch();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedAugment, setSelectedAugment] = useState<
@@ -32,11 +41,79 @@ const Arena = () => {
     (asset) => asset.url === matchup.home.homeTeamLogo,
   )?.source;
 
-  const awayLineup = dailyMatchup?.awayTeam.lineup ?? [];
-  const homeLineup = dailyMatchup?.homeTeam.lineup ?? [];
-
   const awayScore = dailyMatchup?.awayTeam.score ?? 0;
   const homeScore = dailyMatchup?.homeTeam.score ?? 0;
+
+  const matchupRef = useRef(matchup);
+  matchupRef.current = matchup;
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchLiveData = async () => {
+        const awayLineup =
+          matchupRef.current.dailyMatchups[currentDate]?.awayTeam.lineup ?? [];
+        const homeLineup =
+          matchupRef.current.dailyMatchups[currentDate]?.homeTeam.lineup ?? [];
+
+        const awayPlayerIds = awayLineup.map((o) => o.player?.id);
+        const homePlayerIds = homeLineup.map((o) => o.player?.id);
+
+        try {
+          const auth = getAuth();
+          const currentUser = auth.currentUser;
+          if (!currentUser) {
+            console.error("No authenticated user");
+            return;
+          }
+
+          const idToken = await currentUser.getIdToken();
+
+          const [awayRes, homeRes] = await Promise.all([
+            fetch(LIVE_DATA_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify({ playerIds: awayPlayerIds }),
+            }),
+            fetch(LIVE_DATA_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify({ playerIds: homePlayerIds }),
+            }),
+          ]);
+
+          const [updatedAway, updatedHome] = await Promise.all([
+            awayRes.json(),
+            homeRes.json(),
+          ]);
+
+          dispatch(
+            updateMatchupWithLiveData({
+              date: currentDate,
+              updatedHome,
+              updatedAway,
+            }),
+          );
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+      fetchLiveData();
+
+      const intervalId = setInterval(fetchLiveData, 10000);
+
+      return () => clearInterval(intervalId);
+    }, [currentDate, dispatch]),
+  );
+
+  const awayLineup = dailyMatchup?.awayTeam.lineup ?? [];
+  const homeLineup = dailyMatchup?.homeTeam.lineup ?? [];
 
   return (
     <View className="flex-1 flex-col items-center bg-gray-950">

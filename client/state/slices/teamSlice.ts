@@ -1,14 +1,14 @@
-import { PayloadAction, createSlice, createSelector } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Augment } from "@/types/augment";
-import { Player } from "@/types/players";
+import { Player } from "@/types/player";
 import {
+  BenchPosition,
+  BenchSlot,
   defaultTeam,
   LineupSlot,
   SlotPosition,
   Team,
-  BenchSlot,
-  BenchPosition,
   UTIL_POSITIONS,
 } from "@/types/team";
 import { validateAugment } from "@/utils/augmentValidation";
@@ -108,29 +108,6 @@ const swapBenchAndLineup = (
   return { newBench, newLineup };
 };
 
-// TODO: Remove func as not needed in prod
-const validateAndLogAugment = (state: Team): void => {
-  if (state.augment) {
-    const validation = validateAugment(state.augment, state.lineup);
-
-    if (validation.isValid) {
-      console.log(
-        `Augment "${state.augment.title}" is valid. Qualifying players:`,
-        validation.qualifyingPlayers.map((p) => p.firstName + " " + p.lastName),
-      );
-    } else {
-      console.log(
-        `Augment "${state.augment.title}" requirements not met:`,
-        validation.unmetPrerequisites,
-      );
-      console.log(
-        `Augment "${state.augment.title}" requirements are met:`,
-        validation.metPrerequisites,
-      );
-    }
-  }
-};
-
 const teamSlice = createSlice({
   name: "team",
   initialState: defaultTeam,
@@ -159,7 +136,6 @@ const teamSlice = createSlice({
           slot.player = player;
           state.balance -= slot.player.salary;
           state.hasUserChanges = true;
-          validateAndLogAugment(state);
           break;
         }
       }
@@ -173,7 +149,6 @@ const teamSlice = createSlice({
         state.balance += slot.player.salary;
         slot.player = null;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
       }
     },
     swapPlayersInLineup: (state, action: PayloadAction<SwapPayload>) => {
@@ -205,7 +180,6 @@ const teamSlice = createSlice({
         state.lineup = newLineup;
         state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
@@ -221,20 +195,17 @@ const teamSlice = createSlice({
         state.lineup = newLineup;
         state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
       // Case 3: Bench to Bench
       if (isNotNil(currentBenchSlot) && isNotNil(incomingBenchSlot)) {
-        const newBench = swapPlayers(
+        state.bench = swapPlayers(
           state.bench,
           currentBenchSlot,
           incomingBenchSlot,
         );
-        state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
@@ -251,12 +222,11 @@ const teamSlice = createSlice({
           (isNil(currentPlayer) && isNotNil(incomingPlayer)) ||
           (isNil(incomingPlayer) && isNotNil(currentPlayer))
         ) {
-          const newLineup = swapPlayers(
+          state.lineup = swapPlayers(
             state.lineup,
             currentLineupSlot,
             incomingLineupSlot,
           );
-          state.lineup = newLineup;
         }
 
         if (isNotNil(currentPlayer) && isNotNil(incomingPlayer)) {
@@ -271,12 +241,11 @@ const teamSlice = createSlice({
 
           if (fromEligible && toEligible) {
             // Direct swap if both players can swap positions
-            const newLineup = swapPlayers(
+            state.lineup = swapPlayers(
               state.lineup,
               currentLineupSlot,
               incomingLineupSlot,
             );
-            state.lineup = newLineup;
           }
 
           if (fromEligible && !toEligible) {
@@ -293,7 +262,6 @@ const teamSlice = createSlice({
         }
 
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
       }
     },
     resetToSavedTeam: (
@@ -304,14 +272,12 @@ const teamSlice = createSlice({
       state.bench = [];
       state.balance = action.payload.balance;
       state.hasUserChanges = false;
-      validateAndLogAugment(state);
     },
     saveTeam: (state) => {
       state.hasUserChanges = false;
     },
     setAugment: (state, action: PayloadAction<Augment | undefined>) => {
       state.augment = action.payload;
-      validateAndLogAugment(state);
     },
   },
 });

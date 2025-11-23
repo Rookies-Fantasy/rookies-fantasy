@@ -1,8 +1,147 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v1";
+import { BalldontlieAPI } from "@balldontlie/sdk";
 
 admin.initializeApp();
+
+type GameInfo = {
+  gameStatus: boolean;
+  opponent: string;
+  gameDate: string;
+  isHome: boolean;
+};
+
+type GameStats = {
+  pts: number;
+  ast: number;
+  reb: number;
+  stl: number;
+  blk: number;
+  tov: number;
+  fpts: number;
+  min: number;
+};
+
+type LiveData = Record<
+  number,
+  {
+    gameInfo: GameInfo;
+    gameStats: GameStats;
+  }
+>;
+
+const apiKey = process.env.BALLDONTLIE_API_KEY || "";
+const api = new BalldontlieAPI({ apiKey });
+const cachedData: LiveData = {};
+let lastFetchTime = 0;
+const CACHE_EXPIRY_MS = 60 * 1000;
+
+const getPlayersFromCache = (
+  playerIds: number[],
+): Record<number, LiveData | null> => {
+  const result: Record<number, LiveData | null> = {};
+
+  for (const id of playerIds) {
+    result[id] = cachedData[id] ?? null;
+  }
+
+  return result;
+};
+
+export const getLiveData = functions.https.onRequest(async (req, res) => {
+  // Verify Firebase ID token
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).send("Unauthorized: Missing or invalid token");
+    return;
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+  try {
+    await admin.auth().verifyIdToken(idToken);
+  } catch (error) {
+    console.error("Error verifying ID token:", error);
+    res.status(401).send("Unauthorized: Invalid token");
+    return;
+  }
+
+  const now = Date.now();
+
+  const { playerIds } = req.body;
+
+  if (!Array.isArray(playerIds)) {
+    res.status(400).send("Invalid request");
+    return;
+  }
+
+  try {
+    if (cachedData && now - lastFetchTime < CACHE_EXPIRY_MS) {
+      console.log("Serving from cache");
+      res.json(getPlayersFromCache(playerIds));
+      return;
+    }
+
+    console.log("Fetching fresh data from API...");
+    const { data } = await api.nba.getLiveBoxScores();
+
+    for (const game of data) {
+      const homeTeam = game.home_team as any;
+      const awayTeam = game.visitor_team as any;
+
+      for (const player of homeTeam.players) {
+        const gameInfo: GameInfo = {
+          gameStatus: game.status !== "Final" ? false : true,
+          opponent: awayTeam.full_name,
+          gameDate: game.date,
+          isHome: true,
+        };
+        cachedData[player.player.id] = {
+          gameInfo,
+          gameStats: {
+            pts: player.pts ?? 0,
+            ast: player.ast ?? 0,
+            reb: player.reb ?? 0,
+            stl: player.stl ?? 0,
+            blk: player.blk ?? 0,
+            tov: player.turnover ?? 0,
+            fpts: player.fpts ?? 0,
+            min: parseInt(player.min, 10) || 0,
+          },
+        };
+      }
+
+      for (const player of awayTeam.players) {
+        const gameInfo: GameInfo = {
+          gameStatus: game.status !== "Final" ? false : true,
+          opponent: homeTeam.full_name,
+          gameDate: game.date,
+          isHome: false,
+        };
+        cachedData[player.player.id] = {
+          gameInfo,
+          gameStats: {
+            pts: player.pts ?? 0,
+            ast: player.ast ?? 0,
+            reb: player.reb ?? 0,
+            stl: player.stl ?? 0,
+            blk: player.blk ?? 0,
+            tov: player.turnover ?? 0,
+            fpts: player.fpts ?? 0,
+            min: parseInt(player.min, 10) || 0,
+          },
+        };
+      }
+    }
+
+    res.json(getPlayersFromCache(playerIds));
+    lastFetchTime = now;
+    return;
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    res.status(500).json({ error: err });
+  }
+});
 
 export const createUserInDatabase = functions.auth
   .user()
@@ -28,6 +167,371 @@ export const createUserInDatabase = functions.auth
       console.error("Error creating user in Firestore:", error);
     }
   });
+
+export const updateDailyPlayerData = functions
+  .runWith({ secrets: ["BALLDONTLIE_API_KEY"] })
+  .pubsub.schedule("0 1 * * *") // runs every day at 1:00 AM PDT
+  .timeZone("America/Los_Angeles")
+  .onRun(async () => {
+    const apiKey = process.env.BALLDONTLIE_API_KEY;
+
+    const now = new Date();
+    const pacificNow = new Date(
+      now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }),
+    );
+
+    // ===================================
+    // ====== FETCH SEASON AVERAGES ======
+    // ===================================
+    const month = pacificNow.getMonth() + 1; // 1–12
+    let seasonYear: number;
+
+    // If month >= July (7), season starts that year.
+    // Otherwise it's still the previous year's season.
+    if (month >= 7) {
+      seasonYear = pacificNow.getFullYear();
+    } else {
+      seasonYear = pacificNow.getFullYear() - 1;
+    }
+
+    const seasonUrl = `https://api.balldontlie.io/nba/v1/season_averages/general?season=${seasonYear}&season_type=regular&type=base`;
+
+    const seasonData = await fetchAllPagesFromUrl(seasonUrl, apiKey);
+
+    const seasonAverages = seasonData.map((entry: any) => {
+      const s = entry.stats;
+      const p = entry.player;
+
+      return {
+        assists: s.ast,
+        blocks: s.blk,
+        fantasyPoints: calculateFantasyPoints(s),
+        fieldGoalPercentage: s.fg_pct,
+        fieldGoalsAttempted: s.fga,
+        fieldGoalsMade: s.fgm,
+        firstName: p.first_name,
+        freeThrowPercentage: s.ft_pct,
+        freeThrowsAttempted: s.fta,
+        freeThrowsMade: s.ftm,
+        gamesPlayed: s.gp,
+        lastName: p.last_name,
+        minutes: s.min,
+        playerId: String(p.id),
+        points: s.pts,
+        rebounds: s.reb,
+        steals: s.stl,
+        threePointerPercentage: s.fg3_pct,
+        threePointersAttempted: s.fg3a,
+        threePointersMade: s.fg3m,
+        turnovers: s.tov ?? 0,
+      };
+    });
+
+    // =======================================
+    // ====== FETCH DAILY GAMELOG STATS ======
+    // =======================================
+    // Subtract 1 day to get "yesterday" in PDT
+    pacificNow.setDate(pacificNow.getDate() - 1);
+
+    const yyyy = pacificNow.getFullYear();
+    const mm = String(pacificNow.getMonth() + 1).padStart(2, "0");
+    const dd = String(pacificNow.getDate()).padStart(2, "0");
+    const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+    const gamelogUrl = `https://api.balldontlie.io/v1/stats?dates[]=${formattedDate}`;
+
+    const gamelogData = await fetchAllPagesFromUrl(gamelogUrl, apiKey);
+
+    const playerGamelogs = gamelogData.map((gamelog: any) => {
+      const gamelogForFPTS = { ...gamelog, tov: gamelog.turnover ?? 0 };
+
+      return {
+        assists: gamelog.ast,
+        blocks: gamelog.blk,
+        date: gamelog.game.date,
+        fantasyPoints: calculateFantasyPoints(gamelogForFPTS),
+        fieldGoalPercentage: gamelog.fg_pct,
+        fieldGoalsAttempted: gamelog.fga,
+        fieldGoalsMade: gamelog.fgm,
+        freeThrowPerfectange: gamelog.ft_pct,
+        freeThrowsAttempted: gamelog.fta,
+        freeThrowsMade: gamelog.ftm,
+        gameId: gamelog.game.id,
+        homeTeamId: gamelog.game.home_team_id,
+        minutes: gamelog.min,
+        personalFouls: gamelog.pf,
+        playerId: String(gamelog.player.id),
+        points: gamelog.pts,
+        rebounds: gamelog.reb,
+        steals: gamelog.stl,
+        teamId: gamelog.team.id,
+        threePointerPercentage: gamelog.fg3_pct,
+        threePointersAttempted: gamelog.fg3a,
+        threePointersMade: gamelog.fg3m,
+        turnovers: gamelog.turnover ?? 0,
+        visitorTeamId: gamelog.game.visitor_team_id,
+      };
+    });
+
+    // Initialize batching
+    const batch = admin.firestore().batch();
+    let opCount = 0;
+    const BATCH_LIMIT = 400;
+
+    const seasonAvgMap: Record<string, any> = {};
+    for (const avg of seasonAverages) {
+      seasonAvgMap[String(avg.playerId)] = avg;
+    }
+
+    const gamelogMap: Record<string, any> = {};
+    for (const gamelog of playerGamelogs) {
+      gamelogMap[String(gamelog.playerId)] = gamelog;
+    }
+
+    console.log("Season map size:", Object.keys(seasonAvgMap).length);
+    console.log("Gamelog map size:", Object.keys(gamelogMap).length);
+
+    // === UPDATE NBA PLAYERS COLLECTION ===
+    for (const gamelog of playerGamelogs) {
+      const playerQuery = await admin
+        .firestore()
+        .collection("nbaPlayers")
+        .where("playerId", "==", gamelog.playerId)
+        .limit(1)
+        .get();
+
+      if (playerQuery.empty) {
+        console.warn(
+          `Player not found in Firestore for id: ${gamelog.playerId}`,
+        );
+        continue;
+      }
+
+      const playerDocRef = playerQuery.docs[0].ref;
+
+      const updateObj: any = {
+        gamelog: admin.firestore.FieldValue.arrayUnion(gamelog),
+      };
+
+      const latestAvg = seasonAvgMap[String(gamelog.playerId)];
+      if (latestAvg) {
+        updateObj.averageStats = latestAvg;
+      }
+
+      console.log("Writing nbaPlayer update:", {
+        docId: playerDocRef.id,
+        playerId: gamelog.playerId,
+      });
+
+      batch.update(playerDocRef, updateObj);
+
+      opCount++;
+      opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+    }
+
+    // === UPDATE USERS COLLECTION ===
+    const userSnapshot = await admin.firestore().collection("users").get();
+
+    for (const userDoc of userSnapshot.docs) {
+      console.log("Processing user:", userDoc.id);
+
+      const teamsRef = userDoc.ref.collection("teams");
+      const teamSnapshot = await teamsRef.get();
+
+      for (const teamDoc of teamSnapshot.docs) {
+        const teamData = teamDoc.data();
+        if (!Array.isArray(teamData.lineup)) continue;
+
+        const updatedLineup = teamData.lineup.map((slot: any) => {
+          if (!slot || !slot.player) return slot;
+
+          const playerId = String(slot.player.id);
+          const latestAvg = seasonAvgMap[playerId];
+          const latestGamelog = gamelogMap[playerId];
+
+          if (!latestAvg && !latestGamelog) return slot;
+
+          return {
+            ...slot,
+            player: {
+              ...slot.player,
+              ...(latestAvg ? { averageStats: latestAvg } : {}),
+              ...(latestGamelog
+                ? {
+                    gamelog: [
+                      ...(Array.isArray(slot.player.gamelog)
+                        ? slot.player.gamelog
+                        : []),
+                      latestGamelog,
+                    ],
+                  }
+                : {}),
+            },
+          };
+        });
+
+        console.log("Writing user team update:", { docId: teamDoc.id });
+
+        batch.set(teamDoc.ref, { lineup: updatedLineup }, { merge: true });
+        opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      }
+    }
+
+    // === UPDATE MATCHUPS COLLECTION ===
+    const today = formatDate(new Date());
+    const matchupSnapshot = await admin
+      .firestore()
+      .collection("matchups")
+      .get();
+
+    for (const matchupDoc of matchupSnapshot.docs) {
+      const matchupData = matchupDoc.data();
+      if (!matchupData[today]) continue;
+
+      const dayObj = matchupData[today];
+
+      const updatedDayObj = {
+        awayTeam: updateTeamLineup(dayObj.awayTeam, seasonAvgMap, gamelogMap),
+        homeTeam: updateTeamLineup(dayObj.homeTeam, seasonAvgMap, gamelogMap),
+      };
+
+      console.log("Writing matchup update:", { docId: matchupDoc.id });
+
+      batch.set(matchupDoc.ref, { [today]: updatedDayObj }, { merge: true });
+
+      opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+    }
+
+    if (opCount > 0) {
+      console.log("Final commit with remaining operations:", opCount);
+      try {
+        await batch.commit();
+        console.log("Final batch commit SUCCESS");
+      } catch (err) {
+        console.error("Final batch commit FAILED:", err);
+      }
+    }
+
+    console.log("=== Finished updateDailyPlayerData job ===");
+  });
+
+const fetchAllPagesFromUrl = async (url: string, apiKey?: string) => {
+  let cursor: number | null = null;
+  let results: any[] = [];
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const finalUrl = cursor ? `${url}&cursor=${cursor}` : url;
+
+    console.log("Fetching:", finalUrl);
+
+    const response = await fetch(finalUrl, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Failed to fetch:",
+        response.status,
+        response.statusText,
+        "URL:",
+        finalUrl,
+      );
+      break;
+    }
+
+    const json: any = await response.json();
+
+    if (!json.data || !Array.isArray(json.data)) {
+      console.error("Unexpected response format:", json);
+      break;
+    }
+
+    results = results.concat(json.data);
+
+    if (!json.meta?.next_cursor) break;
+
+    cursor = json.meta.next_cursor;
+  }
+
+  return results;
+};
+
+const formatDate = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const updateTeamLineup = (
+  team: any,
+  avgMap: Record<string, any>,
+  gamelogMap: Record<string, any>,
+) => {
+  if (!team || !Array.isArray(team.lineup)) return team;
+
+  return {
+    ...team,
+    lineup: team.lineup.map((slot: any) => {
+      if (!slot || !slot.player) return slot;
+
+      const playerId = String(slot.player.id);
+      const latestAvg = avgMap[playerId];
+      const latestGamelog = gamelogMap[playerId];
+
+      if (!latestAvg && !latestGamelog) return slot;
+
+      return {
+        ...slot,
+        player: {
+          ...slot.player,
+          ...(latestAvg ? { averageStats: latestAvg } : {}),
+          ...(latestGamelog
+            ? {
+                gamelog: [
+                  ...(Array.isArray(slot.player.gamelog)
+                    ? slot.player.gamelog
+                    : []),
+                  latestGamelog,
+                ],
+              }
+            : {}),
+        },
+      };
+    }),
+  };
+};
+
+const commitIfNeeded = async (
+  batch: FirebaseFirestore.WriteBatch,
+  count: number,
+  limit: number,
+) => {
+  if (count >= limit) {
+    await batch.commit();
+    console.log("Committed batch");
+    return 0;
+  }
+  return count + 1;
+};
+
+const calculateFantasyPoints = (s: any) => {
+  const pts = s.pts * 1;
+  const reb = s.reb * 1;
+  const ast = s.ast * 2;
+  const stl = s.stl * 4;
+  const blk = s.blk * 4;
+  const fgm = s.fgm * 2;
+  const ftm = s.ftm * 1;
+  const tpm = s.fg3m * 1;
+  const tov = s.tov * -2;
+
+  const fgMiss = (s.fga - s.fgm) * -1;
+  const ftMiss = (s.fta - s.ftm) * -1;
+
+  return pts + reb + ast + stl + blk + fgm + ftm + tpm + tov + fgMiss + ftMiss;
+};
 
 export const processQueue = functions
   .runWith({ secrets: ["BALLDONTLIE_URL", "BALLDONTLIE_API_KEY"] })
@@ -289,21 +793,22 @@ const fetchWeekGamesInfo = async (
         weekGamesMap.set(gameDate, new Map());
       }
 
-      const dailyGamesMap = weekGamesMap.get(gameDate)!;
+      const dailyGamesMap = weekGamesMap.get(gameDate);
+      if (dailyGamesMap) {
+        dailyGamesMap.set(game.home_team.id.toString(), {
+          gameStatus: game.status,
+          opponent: game.visitor_team.abbreviation,
+          gameDate: gameDate,
+          isHome: true,
+        });
 
-      dailyGamesMap.set(game.home_team.id.toString(), {
-        gameStatus: game.status,
-        opponent: game.visitor_team.abbreviation,
-        gameDate: gameDate,
-        isHome: true,
-      });
-
-      dailyGamesMap.set(game.visitor_team.id.toString(), {
-        gameStatus: game.status,
-        opponent: game.home_team.abbreviation,
-        gameDate: gameDate,
-        isHome: false,
-      });
+        dailyGamesMap.set(game.visitor_team.id.toString(), {
+          gameStatus: game.status,
+          opponent: game.home_team.abbreviation,
+          gameDate: gameDate,
+          isHome: false,
+        });
+      }
     });
 
     return weekGamesMap;
@@ -387,3 +892,106 @@ const checkIfMondayGamesStarted = async (): Promise<boolean> => {
     return true;
   }
 };
+
+// Scheduled function that runs every Monday at 2 AM PDT
+// Cron format: "minute hour day-of-month month day-of-week"
+// "0 2 * * 1" = Every Monday at 2:00 AM
+export const weeklyMatchupReset = functions.pubsub
+  .schedule("0 2 * * 1")
+  .timeZone("America/Los_Angeles")
+  .onRun(async () => {
+    console.log("Starting weekly matchup reset...");
+
+    try {
+      const db = admin.firestore();
+
+      const activeMatchupsSnapshot = await db
+        .collection("matchups")
+        .where("status", "==", "active")
+        .get();
+
+      console.log(`Found ${activeMatchupsSnapshot.size} active matchups`);
+
+      const matchupUpdates = activeMatchupsSnapshot.docs.map(
+        async (matchupDoc) => {
+          const matchupData = matchupDoc.data();
+          const matchupId = matchupDoc.id;
+
+          let homeTotal = 0;
+          let awayTotal = 0;
+
+          const dateKeys = Object.keys(matchupData).filter((key) =>
+            /^\d{4}-\d{2}-\d{2}$/.test(key),
+          );
+
+          dateKeys.forEach((date) => {
+            const dailyData = matchupData[date];
+
+            if (dailyData?.homeTeam?.lineup) {
+              dailyData.homeTeam.lineup.forEach((player: any) => {
+                if (player?.gameStats?.fpts) {
+                  homeTotal += player.gameStats.fpts;
+                }
+              });
+            }
+
+            if (dailyData?.awayTeam?.lineup) {
+              dailyData.awayTeam.lineup.forEach((player: any) => {
+                if (player?.gameStats?.fpts) {
+                  awayTotal += player.gameStats.fpts;
+                }
+              });
+            }
+          });
+
+          console.log(
+            `Matchup ${matchupId}: Home ${homeTotal} vs Away ${awayTotal}`,
+          );
+
+          let winnerId: string;
+          if (homeTotal > awayTotal) {
+            winnerId = matchupData.home.homeTeamId;
+          } else if (awayTotal > homeTotal) {
+            winnerId = matchupData.away.awayTeamId;
+          } else {
+            winnerId = "";
+            console.log(`Matchup ${matchupId} ended in a tie`);
+          }
+
+          await matchupDoc.ref.update({
+            status: "completed",
+            winner: winnerId,
+            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          console.log(`Matchup ${matchupId} completed. Winner: ${winnerId}`);
+        },
+      );
+
+      await Promise.all(matchupUpdates);
+
+      const matchedUsersSnapshot = await db
+        .collection("users")
+        .where("queueStatus", "==", "matched")
+        .get();
+
+      console.log(`Found ${matchedUsersSnapshot.size} matched users`);
+
+      const userUpdates = matchedUsersSnapshot.docs.map(async (userDoc) => {
+        await userDoc.ref.update({
+          queueStatus: "idle",
+          queuedAt: admin.firestore.FieldValue.delete(),
+          currentMatchupId: admin.firestore.FieldValue.delete(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        console.log(`Reset user ${userDoc.id} to idle`);
+      });
+
+      await Promise.all(userUpdates);
+
+      console.log("Weekly matchup reset completed successfully");
+    } catch (error) {
+      console.error("Error during weekly matchup reset:", error);
+      throw error;
+    }
+  });
