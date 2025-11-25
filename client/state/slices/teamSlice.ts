@@ -340,9 +340,6 @@ export const isPlayerInLineup = (
   playerId: string,
 ): boolean => lineup.some((slot) => slot.player?.id === playerId);
 
-export const getBenchPlayerCount = (state: RootState): number =>
-  state.team.bench.filter((slot) => slot.player !== null).length;
-
 export const selectAugmentValidation = createSelector(
   [selectTeam, selectLineup],
   (team, lineup) => validateAugment(team.augment, lineup),
