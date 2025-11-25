@@ -13,19 +13,19 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type SnapPoint = "0%" | "33%" | "50%" | "66%" | "100%";
-
 export const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT + 50;
 
+type SnapPoint = "0%" | "33%" | "50%" | "66%" | "80%" | "100%";
 const snapPointMap: Record<SnapPoint, number> = {
   "0%": 0,
   "33%": -SCREEN_HEIGHT / 3,
   "50%": -SCREEN_HEIGHT / 2,
   "66%": (-SCREEN_HEIGHT * 2) / 3,
+  "80%": 0.8 * MAX_TRANSLATE_Y,
   "100%": MAX_TRANSLATE_Y,
 };
-const defaultSnapPoints: SnapPoint[] = ["0%", "33%", "66%", "100%"];
+const defaultSnapPoints: SnapPoint[] = ["0%", "33%", "66%", "80%", "100%"];
 
 type BottomSheetProps = {
   children?: ReactNode;
@@ -147,7 +147,7 @@ const BottomSheet = ({
       </Pressable>
       <GestureDetector gesture={gesture}>
         <Animated.View
-          className="absolute top-full h-screen w-full border border-gray-900 bg-gray-920"
+          className="absolute top-full h-screen w-full border border-gray-800 bg-gray-920"
           style={[bottomSheetStyle]}
         >
           <SafeAreaView className="flex-1" edges={["bottom"]}>

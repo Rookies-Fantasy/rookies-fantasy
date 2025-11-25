@@ -215,6 +215,16 @@ const SignUp = () => {
           <View className="h-px flex-1 bg-gray-800" />
         </View>
         <SSOButtons />
+        {/* TODO: Replace with a PressableLink text variant, handle nav animation better*/}
+        <Text className="pbk-b1 my-2 text-center text-gray-600">
+          {`Already have an account? `}
+          <Text
+            className="text-purple-600"
+            onPress={() => router.replace("/(auth)/login")}
+          >
+            Login
+          </Text>
+        </Text>
       </KeyboardAvoidingView>
     </Screen>
   );
