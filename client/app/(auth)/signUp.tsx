@@ -195,15 +195,6 @@ const SignUp = () => {
           label="Sign Up"
           onPress={handleSubmit(signUpUser)}
         />
-        <Text className="pbk-b1 mt-5 text-center text-gray-600">
-          Already have an account?
-          <Text
-            className="text-purple-600"
-            onPress={() => router.push("/(auth)/login")}
-          >
-            {` Login`}
-          </Text>
-        </Text>
         <Text className="pbk-b2 my-5 flex-row flex-wrap text-gray-600">
           By signing up, you agree to our
           <Text className="text-purple-600">{` Terms of Service `}</Text> and

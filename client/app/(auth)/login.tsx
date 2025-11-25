@@ -138,7 +138,6 @@ const Login = () => {
             {errors.email.message}
           </Text>
         )}
-
         <Controller
           control={control}
           name="password"
@@ -188,26 +187,11 @@ const Login = () => {
             </Text>
           )}
         </View>
-
-        {errors.root && (
-          <Text className="pbk-b3 mb-4 text-red-600">
-            {errors.root.message}
-          </Text>
-        )}
         <Button
           isLoading={isLoading}
           label="Login"
           onPress={handleSubmit(handleLogin)}
         />
-        <Text className="pbk-b1 mt-5 text-center text-gray-600">
-          Don&apos;t have an account?
-          <Text
-            className="text-purple-600"
-            onPress={() => router.push("/(auth)/signUp")}
-          >
-            {` Sign up`}
-          </Text>
-        </Text>
         <Text
           className="pbk-b1 mx-auto my-5 text-center text-purple-600"
           onPress={() => router.push("/forgotPassword")}
