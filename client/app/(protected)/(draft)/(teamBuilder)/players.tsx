@@ -54,7 +54,7 @@ const Players = () => {
   const router = useRouter();
 
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>();
   const [showPlayerDrawer, setShowPlayerDrawer] = useState(false);
 
   const activeFilters =
