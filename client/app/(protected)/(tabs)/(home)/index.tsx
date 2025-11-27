@@ -39,13 +39,6 @@ const MyTeam = () => {
     null,
   );
 
-  const handleNavigation = () => {
-    const route = !augment?.id
-      ? "/(protected)/(draft)/applyAugment"
-      : "/(protected)/(draft)/(teamBuilder)/roster";
-    router.push(route);
-  };
-
   const handleQueueToggle = async () => {
     if (isInQueue) {
       try {
@@ -134,7 +127,15 @@ const MyTeam = () => {
               </View>
             </>
           ) : (
-            <Button label="Build Your Team" onPress={handleNavigation} />
+            <Button
+              label="Build Your Team"
+              onPress={() => {
+                const route = !augment?.id
+                  ? "/(protected)/(draft)/applyAugment"
+                  : "/(protected)/(draft)/(teamBuilder)/roster";
+                router.push(route);
+              }}
+            />
           )}
         </View>
       </ScrollView>
