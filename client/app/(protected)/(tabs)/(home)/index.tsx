@@ -38,7 +38,13 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-  const [isNavigating, setIsNavigating] = useState(false);
+
+  const handleNavigation = () => {
+    const route = !augment?.id
+      ? "/(protected)/(draft)/applyAugment"
+      : "/(protected)/(draft)/(teamBuilder)/roster";
+    router.push(route);
+  };
 
   const handleQueueToggle = async () => {
     if (isInQueue) {
@@ -128,18 +134,7 @@ const MyTeam = () => {
               </View>
             </>
           ) : (
-            <Button
-              label="Build Your Team"
-              onPress={() => {
-                if (!isNavigating) {
-                  const route = !augment?.id
-                    ? "/(protected)/(draft)/applyAugment"
-                    : "/(protected)/(draft)/(teamBuilder)/roster";
-                  setIsNavigating(true);
-                  router.push(route);
-                }
-              }}
-            />
+            <Button label="Build Your Team" onPress={handleNavigation} />
           )}
         </View>
       </ScrollView>
