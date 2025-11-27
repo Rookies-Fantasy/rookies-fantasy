@@ -9,7 +9,7 @@ import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { useAppSelector } from "@/state/hooks";
-import { selectAugmentId } from "@/state/slices/teamSlice";
+import { selectAugment } from "@/state/slices/teamSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
@@ -17,7 +17,7 @@ import { isNotNil } from "@/utils/jsUtils";
 const MyTeam = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
-  const augmentId = useAppSelector(selectAugmentId);
+  const augmentId = useAppSelector(selectAugment);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
