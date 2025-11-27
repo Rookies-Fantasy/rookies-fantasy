@@ -130,10 +130,17 @@ const MyTeam = () => {
             <Button
               label="Build Your Team"
               onPress={() => {
-                const route = !augment?.id
-                  ? "/(protected)/(draft)/applyAugment"
-                  : "/(protected)/(draft)/(teamBuilder)/roster";
-                router.push(route);
+                try {
+                  const route = !augment?.id
+                    ? "/(protected)/(draft)/applyAugment"
+                    : "/(protected)/(draft)/(teamBuilder)/roster";
+                  router.push(route);
+                } catch (error) {
+                  console.log(error);
+                  Alert.alert(
+                    "Not able to route to team builder. Please try again.",
+                  );
+                }
               }}
             />
           )}
