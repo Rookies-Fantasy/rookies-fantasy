@@ -274,7 +274,7 @@ export const updateDailyPlayerData = functions
     });
 
     // Initialize batching
-    const batch = admin.firestore().batch();
+    let batch = admin.firestore().batch();
     let opCount = 0;
     const BATCH_LIMIT = 400;
 
@@ -326,7 +326,9 @@ export const updateDailyPlayerData = functions
       batch.update(playerDocRef, updateObj);
 
       opCount++;
-      opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      batch = result.batch;
+      opCount = result.count;
     }
 
     // === UPDATE USERS COLLECTION ===
@@ -373,7 +375,9 @@ export const updateDailyPlayerData = functions
         console.log("Writing user team update:", { docId: teamDoc.id });
 
         batch.set(teamDoc.ref, { lineup: updatedLineup }, { merge: true });
-        opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+        const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+        batch = result.batch;
+        opCount = result.count;
       }
     }
 
@@ -399,7 +403,9 @@ export const updateDailyPlayerData = functions
 
       batch.set(matchupDoc.ref, { [today]: updatedDayObj }, { merge: true });
 
-      opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      batch = result.batch;
+      opCount = result.count;
     }
 
     if (opCount > 0) {
@@ -511,9 +517,13 @@ const commitIfNeeded = async (
   if (count >= limit) {
     await batch.commit();
     console.log("Committed batch");
-    return 0;
+    return {
+      batch: admin.firestore().batch(),
+      count: 0,
+    };
   }
-  return count + 1;
+
+  return { batch, count: count + 1 };
 };
 
 const calculateFantasyPoints = (s: any) => {
