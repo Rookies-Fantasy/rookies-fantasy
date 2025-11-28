@@ -495,7 +495,7 @@ const updateTeamLineup = (
           ...(latestAvg ? { averageStats: latestAvg } : {}),
           ...(latestGamelog
             ? {
-                gamelog: [
+                gameStats: [
                   ...(Array.isArray(slot.player.gamelog)
                     ? slot.player.gamelog
                     : []),
