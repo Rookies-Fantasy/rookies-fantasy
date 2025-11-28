@@ -11,6 +11,7 @@ import {
   BenchPosition,
   UTIL_POSITIONS,
 } from "@/types/team";
+import { validateAugment } from "@/utils/augmentValidation";
 import { isNil, isNotNil } from "@/utils/jsUtils";
 import {
   findSlotFromPosition,
@@ -262,7 +263,6 @@ const teamSlice = createSlice({
             state.lineup = newLineup;
           }
         }
-
         state.hasUserChanges = true;
       }
     },
@@ -302,6 +302,37 @@ export const selectRosterPlayerCount = (state: RootState): number => {
   const benchCount = state.team.bench.length;
   return lineupCount + benchCount;
 };
+
+export const selectAugmentValidation = createSelector(
+  [selectTeam, selectLineup],
+  (team, lineup) => validateAugment(team.augment, lineup),
+);
+
+export const selectQualifyingPlayers = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.qualifyingPlayers,
+);
+
+export const selectPlayerQualificationMap = createSelector(
+  [selectQualifyingPlayers],
+  (qualifyingPlayers) =>
+    Object.fromEntries(qualifyingPlayers.map((p) => [p.id, true])),
+);
+
+export const selectIsAugmentValid = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.isValid,
+);
+
+export const selectAugmentMetPrerequisites = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.metPrerequisites,
+);
+
+export const selectAugmentUnmetPrerequisites = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.unmetPrerequisites,
+);
 
 export const {
   setTeam,
