@@ -291,7 +291,6 @@ const teamSlice = createSlice({
             state.lineup = newLineup;
           }
         }
-
         state.hasUserChanges = true;
         validateAndLogAugment(state);
       }
