@@ -108,29 +108,6 @@ const swapBenchAndLineup = (
   return { newBench, newLineup };
 };
 
-// TODO: Remove func as not needed in prod
-const validateAndLogAugment = (state: Team): void => {
-  if (state.augment) {
-    const validation = validateAugment(state.augment, state.lineup);
-
-    if (validation.isValid) {
-      console.log(
-        `Augment "${state.augment.title}" is valid. Qualifying players:`,
-        validation.qualifyingPlayers.map((p) => p.firstName + " " + p.lastName),
-      );
-    } else {
-      console.log(
-        `Augment "${state.augment.title}" requirements not met:`,
-        validation.unmetPrerequisites,
-      );
-      console.log(
-        `Augment "${state.augment.title}" requirements are met:`,
-        validation.metPrerequisites,
-      );
-    }
-  }
-};
-
 const teamSlice = createSlice({
   name: "team",
   initialState: defaultTeam,
