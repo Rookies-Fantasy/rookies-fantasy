@@ -303,6 +303,11 @@ export const selectRosterPlayerCount = (state: RootState): number => {
   return lineupCount + benchCount;
 };
 
+export const isPlayerInLineup = (
+  lineup: LineupSlot[],
+  playerId: string,
+): boolean => lineup.some((slot) => slot.player?.id === playerId);
+
 export const selectAugmentValidation = createSelector(
   [selectTeam, selectLineup],
   (team, lineup) => validateAugment(team.augment, lineup),
@@ -311,6 +316,11 @@ export const selectAugmentValidation = createSelector(
 export const selectQualifyingPlayers = createSelector(
   [selectAugmentValidation],
   (validation) => validation.qualifyingPlayers,
+);
+
+export const selectQualifyingPlayersCount = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.qualifyingPlayers.length,
 );
 
 export const selectPlayerQualificationMap = createSelector(

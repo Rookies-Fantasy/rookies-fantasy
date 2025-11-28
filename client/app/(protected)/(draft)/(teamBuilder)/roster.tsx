@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AugmentCard from "@/components/AugmentCard";
 import IconButton from "@/components/IconButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
@@ -49,7 +50,11 @@ const Roster = () => {
                 </View>
               </View>
 
-              <TeamBudget />
+              <View className="gap-4">
+                <AugmentCard />
+
+                <TeamBudget />
+              </View>
             </View>
 
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">

@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Pressable, Text, View, Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AugmentStatusCard from "@/components/AugmentStatusCard";
 import Button from "@/components/Button";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
@@ -17,7 +18,7 @@ import { isNotNil } from "@/utils/jsUtils";
 const MyTeam = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
-  const augmentId = useAppSelector(selectAugment);
+  const augment = useAppSelector(selectAugment);
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
@@ -71,12 +72,13 @@ const MyTeam = () => {
             </View>
           </View>
         </View>
-        <View className="flex-1 flex-row items-end p-8">
+        <View className="mx-6 flex-1 gap-3">
+          <AugmentStatusCard />
           <Button
             label="Build Your Team"
             onPress={() => {
               if (!isNavigating) {
-                const route = !augmentId
+                const route = !augment?.id
                   ? "/(protected)/(draft)/applyAugment"
                   : "/(protected)/(draft)/(teamBuilder)/roster";
                 setIsNavigating(true);
