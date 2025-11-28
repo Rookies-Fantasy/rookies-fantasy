@@ -108,29 +108,6 @@ const swapBenchAndLineup = (
   return { newBench, newLineup };
 };
 
-// TODO: Remove func as not needed in prod
-const validateAndLogAugment = (state: Team): void => {
-  if (state.augment) {
-    const validation = validateAugment(state.augment, state.lineup);
-
-    if (validation.isValid) {
-      console.log(
-        `Augment "${state.augment.title}" is valid. Qualifying players:`,
-        validation.qualifyingPlayers.map((p) => p.firstName + " " + p.lastName),
-      );
-    } else {
-      console.log(
-        `Augment "${state.augment.title}" requirements not met:`,
-        validation.unmetPrerequisites,
-      );
-      console.log(
-        `Augment "${state.augment.title}" requirements are met:`,
-        validation.metPrerequisites,
-      );
-    }
-  }
-};
-
 const teamSlice = createSlice({
   name: "team",
   initialState: defaultTeam,
@@ -159,7 +136,6 @@ const teamSlice = createSlice({
           slot.player = player;
           state.balance -= slot.player.salary;
           state.hasUserChanges = true;
-          validateAndLogAugment(state);
           break;
         }
       }
@@ -173,7 +149,6 @@ const teamSlice = createSlice({
         state.balance += slot.player.salary;
         slot.player = null;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
       }
     },
     swapPlayersInLineup: (state, action: PayloadAction<SwapPayload>) => {
@@ -205,7 +180,6 @@ const teamSlice = createSlice({
         state.lineup = newLineup;
         state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
@@ -221,7 +195,6 @@ const teamSlice = createSlice({
         state.lineup = newLineup;
         state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
@@ -234,7 +207,6 @@ const teamSlice = createSlice({
         );
         state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
@@ -292,7 +264,6 @@ const teamSlice = createSlice({
           }
         }
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
       }
     },
     resetToSavedTeam: (
@@ -303,14 +274,12 @@ const teamSlice = createSlice({
       state.bench = [];
       state.balance = action.payload.balance;
       state.hasUserChanges = false;
-      validateAndLogAugment(state);
     },
     saveTeam: (state) => {
       state.hasUserChanges = false;
     },
     setAugment: (state, action: PayloadAction<Augment | undefined>) => {
       state.augment = action.payload;
-      validateAndLogAugment(state);
     },
   },
 });
