@@ -159,7 +159,6 @@ const teamSlice = createSlice({
           slot.player = player;
           state.balance -= slot.player.salary;
           state.hasUserChanges = true;
-          validateAndLogAugment(state);
           break;
         }
       }
@@ -173,7 +172,6 @@ const teamSlice = createSlice({
         state.balance += slot.player.salary;
         slot.player = null;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
       }
     },
     swapPlayersInLineup: (state, action: PayloadAction<SwapPayload>) => {
@@ -205,7 +203,6 @@ const teamSlice = createSlice({
         state.lineup = newLineup;
         state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
@@ -221,7 +218,6 @@ const teamSlice = createSlice({
         state.lineup = newLineup;
         state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
@@ -234,7 +230,6 @@ const teamSlice = createSlice({
         );
         state.bench = newBench;
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
         return;
       }
 
@@ -291,9 +286,7 @@ const teamSlice = createSlice({
             state.lineup = newLineup;
           }
         }
-
         state.hasUserChanges = true;
-        validateAndLogAugment(state);
       }
     },
     resetToSavedTeam: (
@@ -304,14 +297,12 @@ const teamSlice = createSlice({
       state.bench = [];
       state.balance = action.payload.balance;
       state.hasUserChanges = false;
-      validateAndLogAugment(state);
     },
     saveTeam: (state) => {
       state.hasUserChanges = false;
     },
     setAugment: (state, action: PayloadAction<Augment | undefined>) => {
       state.augment = action.payload;
-      validateAndLogAugment(state);
     },
   },
 });
