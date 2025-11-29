@@ -1,54 +1,83 @@
-import { View, Text, Image } from "react-native";
-import LinearGradient from "react-native-linear-gradient";
-import { iconMap } from "@/app/(protected)/(draft)/applyAugment";
-import { useAppSelector } from "@/state/hooks";
-import {
-  selectAugment,
-  selectQualifyingPlayersCount,
-} from "@/state/slices/teamSlice";
-import { cn } from "@/utils/jsUtils";
+import { CheckCircle } from "phosphor-react-native";
+import { Pressable, ImageBackground, View, Text, Image } from "react-native";
+import { Augment } from "@/types/augment";
+
+// TODO: Once migrated to S3 blob storage, remove this hardcoded mapping and use the actual URLs from the API.
+export const iconMap: Record<string, any> = {
+  "all-around-contributors.png": require("@/assets/images/augments/all-around-contributors.png"),
+  "all-star-pedigree.png": require("@/assets/images/augments/all-star-pedigree.png"),
+  "assist-leaders.png": require("@/assets/images/augments/assist-leaders.png"),
+  "balanced-attack.png": require("@/assets/images/augments/balanced-attack.png"),
+  "backcourt-bombers.png": require("@/assets/images/augments/backcourt-bombers.png"),
+  "block-party.png": require("@/assets/images/augments/block-party.png"),
+  "board-lords.png": require("@/assets/images/augments/board-lords.png"),
+  "clutch-scorers.png": require("@/assets/images/augments/clutch-scorers.png"),
+  "consistency-counts.png": require("@/assets/images/augments/consistency-counts.png"),
+  "deep-threat.png": require("@/assets/images/augments/deep-threat.png"),
+  "defensive-backbone.png": require("@/assets/images/augments/defensive-backbone.png"),
+  "defensive-identity.png": require("@/assets/images/augments/defensive-identity.png"),
+  "defensive-mindset.png": require("@/assets/images/augments/defensive-mindset.png"),
+  "defensive-specialists.png": require("@/assets/images/augments/defensive-specialists.png"),
+  "efficiency-experts.png": require("@/assets/images/augments/efficiency-experts.png"),
+  "fast-pace.png": require("@/assets/images/augments/fast-pace.png"),
+  "floor-general.png": require("@/assets/images/augments/floor-general.png"),
+  "free-throw-specialists.png": require("@/assets/images/augments/free-throw-specialists.png"),
+  "frontcourt-focus.png": require("@/assets/images/augments/frontcourt-focus.png"),
+  "hustle-squad.png": require("@/assets/images/augments/hustle-squad.png"),
+  "iron-man.png": require("@/assets/images/augments/iron-man.png"),
+  "low-turnover-crew.png": require("@/assets/images/augments/low-turnover-crew.png"),
+  "positionless-basketball.png": require("@/assets/images/augments/positionless-basketball.png"),
+  "pure-playmaking.png": require("@/assets/images/augments/pure-playmaking.png"),
+  "rebound-kings.png": require("@/assets/images/augments/rebound-kings.png"),
+  "rookie-showcase.png": require("@/assets/images/augments/rookie-showcase.png"),
+  "scoring-machine.png": require("@/assets/images/augments/scoring-machine.png"),
+  "shot-blockers.png": require("@/assets/images/augments/shot-blockers.png"),
+  "twin-towers.png": require("@/assets/images/augments/twin-towers.png"),
+  "two-way-threat.png": require("@/assets/images/augments/two-way-threat.png"),
+  "two-way-wings.png": require("@/assets/images/augments/two-way-wings.png"),
+  "underdog-heroes.png": require("@/assets/images/augments/underdog-heroes.png"),
+  "underrated-gems.png": require("@/assets/images/augments/underrated-gems.png"),
+  "volume-gunner.png": require("@/assets/images/augments/volume-gunner.png"),
+};
 
 type AugmentCardProps = {
-  className?: string;
+  cardData: Augment;
+  isSelected?: boolean;
+  onPress?: () => void;
 };
 
-const AugmentCard = ({ className }: AugmentCardProps) => {
-  const augment = useAppSelector(selectAugment);
-  const qualifyingPlayersCount = useAppSelector(selectQualifyingPlayersCount);
-
-  return (
-    <View className={cn("relative", className)}>
-      <LinearGradient
-        colors={["#CCE8FE", "#CDA0FF", "#8489F5", "#CDF1FF", "#B591E9"]}
-        end={{ x: 1, y: 1 }}
-        start={{ x: 0, y: 0 }}
-        style={{
-          position: "absolute",
-          top: -3,
-          right: -3,
-          bottom: -3,
-          left: -3,
-          borderRadius: 16,
-          borderWidth: 1,
-        }}
-      />
-      <View className="w-full rounded-2xl bg-gray-900 p-4">
-        {augment && (
-          <View className="flex-col items-center gap-1">
-            <View className="flex-row items-center">
-              <Image className="h-8 w-8" source={iconMap[augment.iconUrl]} />
-              <Text className="pbk-h7 text-base-white">
-                {augment.title.toUpperCase()}
-              </Text>
-            </View>
-            <Text className="pbk-b2 text-base-white">
-              {`${qualifyingPlayersCount} / ${augment.playerCount} players meet the condition for this augment`}
-            </Text>
-          </View>
-        )}
+const AugmentCard = ({ cardData, isSelected, onPress }: AugmentCardProps) => (
+  <Pressable className="flex-1 overflow-hidden rounded-xl" onPress={onPress}>
+    <ImageBackground
+      className="flex-1 overflow-hidden rounded-xl px-3 py-4"
+      resizeMode="cover"
+      source={require("@/assets/images/augments/background-image.png")}
+    >
+      <View className="flex-1 justify-between">
+        <View>
+          <Text className="pbk-b1 mb-2 text-center text-base-white">
+            {cardData.title}
+          </Text>
+          <Image
+            className="mb-4 h-24 w-24 self-center rounded-xl"
+            resizeMode="cover"
+            source={iconMap[cardData.iconUrl]}
+          />
+          <Text className="pbk-b3 text-center text-base-white">
+            {cardData.description}
+          </Text>
+          <Text className="pbk-b3 mt-2 text-center text-green-400">
+            {cardData.info}
+          </Text>
+        </View>
+        <View
+          className="flex-row justify-end"
+          style={{ opacity: isSelected ? 1 : 0 }}
+        >
+          <CheckCircle color="white" size={20} weight="bold" />
+        </View>
       </View>
-    </View>
-  );
-};
-
+    </ImageBackground>
+  </Pressable>
+);
 export default AugmentCard;
