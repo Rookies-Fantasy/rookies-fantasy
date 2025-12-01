@@ -190,7 +190,6 @@ const Players = () => {
             </View>
             <View className="gap-4">
               <SelectedAugment />
-
               <TeamBudget />
             </View>
             <View className="my-10 w-full flex-row items-center gap-4">
