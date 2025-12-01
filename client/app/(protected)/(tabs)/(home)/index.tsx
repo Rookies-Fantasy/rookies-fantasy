@@ -10,15 +10,11 @@ import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
-<<<<<<< HEAD
 import {
   selectAugment,
   selectRosterPlayerCount,
 } from "@/state/slices/teamSlice";
 import { selectUserId } from "@/state/slices/userSlice";
-=======
-import { selectAugment } from "@/state/slices/teamSlice";
->>>>>>> release/0.1
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
@@ -27,7 +23,6 @@ import { isTeamReadyForQueue } from "@/utils/teamUtils";
 const MyTeam = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
-<<<<<<< HEAD
   const user = useAppSelector((state) => state.user);
   const userId = useAppSelector(selectUserId);
   const augment = useAppSelector(selectAugment);
@@ -36,9 +31,6 @@ const MyTeam = () => {
   const queueStatus = user.queueStatus ?? "idle";
   const isInQueue = queueStatus === "queued";
   const isMatched = queueStatus === "matched";
-=======
-  const augment = useAppSelector(selectAugment);
->>>>>>> release/0.1
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
