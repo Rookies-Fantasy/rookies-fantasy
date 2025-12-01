@@ -375,9 +375,8 @@ const checkIfMondayGamesStarted = async (): Promise<boolean> => {
       return false;
     }
 
-    const gameTimes = games.map((game: any) => new Date(game.status));
     const earliestGame = new Date(
-      Math.min(...gameTimes.map((d: any) => d.getTime())),
+      Math.min(...games.map((g: any) => new Date(g.status).getTime())),
     );
 
     const now = new Date();
