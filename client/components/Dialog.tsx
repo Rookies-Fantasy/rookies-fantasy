@@ -2,10 +2,12 @@ import { X } from "phosphor-react-native";
 import React from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import Button from "./Button";
+import { cn } from "@/utils/jsUtils";
 
 type DialogProps = {
   children: React.ReactNode;
   closeLabel?: string;
+  dialogClassname?: string;
   onClose: () => void;
   title: string;
   visible: boolean;
@@ -14,6 +16,7 @@ type DialogProps = {
 const Dialog = ({
   children,
   closeLabel = "Got It",
+  dialogClassname,
   onClose,
   title,
   visible,
@@ -25,7 +28,7 @@ const Dialog = ({
     visible={visible}
   >
     <View className="flex-1 items-center justify-center bg-black/70 px-6">
-      <View className="w-full rounded-xl bg-gray-920 p-6">
+      <View className={cn("rounded-xl bg-gray-920 p-6", dialogClassname)}>
         <View className="mb-4 flex-row items-center justify-between">
           <Text className="pbk-b1 text-left text-gray-300">{title}</Text>
           <Pressable

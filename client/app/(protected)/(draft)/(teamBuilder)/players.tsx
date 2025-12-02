@@ -16,6 +16,7 @@ import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
 import SearchBar from "@/components/SearchBar";
+import SelectedAugment from "@/components/SelectedAugment";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import TeamActionButtons from "@/components/TeamActionButtons";
@@ -187,7 +188,10 @@ const Players = () => {
                 <Text className="pbk-h5 text-base-white">Team builder</Text>
               </View>
             </View>
-            <TeamBudget />
+            <View className="gap-4">
+              <SelectedAugment />
+              <TeamBudget />
+            </View>
             <View className="my-10 w-full flex-row items-center gap-4">
               <View className="flex-1">
                 <SearchBar onChangeText={setQuery} value={query} />

@@ -1,4 +1,4 @@
-﻿import firestore from "@react-native-firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import { Augment } from "@/types/augment";
 
 const AUGMENTS_COLLECTION = "augments";
@@ -14,6 +14,10 @@ export class AugmentController {
         iconUrl: augment.data().iconUrl,
         info: augment.data().info,
         title: augment.data().title,
+        isActive: augment.data().isActive,
+        prerequisites: augment.data().prerequisites,
+        effects: augment.data().effects,
+        playerCount: augment.data().playerCount,
       }));
     } catch (error) {
       throw error;

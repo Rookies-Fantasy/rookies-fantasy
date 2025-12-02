@@ -1,10 +1,29 @@
+import { Augment } from "./augment";
 import { Player } from "./players";
 
 export const TEAM_BALANCE = 150000000;
 
+export type GameInfo = {
+  gameStatus: boolean;
+  opponent: string;
+  gameDate: string;
+  isHome: boolean;
+};
+
+export type GameStats = {
+  pts: number;
+  ast: number;
+  reb: number;
+  stl: number;
+  blk: number;
+  tov: number;
+  fpts: number;
+  min: number;
+};
+
 export type Team = {
   abbreviation?: string;
-  augmentId?: string;
+  augment?: Augment;
   id: string;
   logoUrl?: string;
   name?: string;
@@ -22,6 +41,8 @@ export type SlotPosition = Position | FlexPosition | BenchPosition;
 export type LineupSlot = {
   position: SlotPosition;
   player: Player | null;
+  gameInfo?: GameInfo;
+  gameStats?: GameStats;
 };
 
 export type BenchSlot = {
