@@ -1,8 +1,9 @@
 import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
-import { Player, PlayerFilters } from "@/types/players";
+import { defaultPlayer, Player, PlayerFilters } from "@/types/player";
 import { LineupSlot, BenchSlot } from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
 
 const PLAYERS_COLLECTION = "nbaPlayers";
 
@@ -13,6 +14,47 @@ type PlayerFetchResult = {
 };
 
 export class NbaPlayersController {
+  static getPlayer = async (playerId: string): Promise<Player> => {
+    try {
+      const player = await firestore()
+        .collection(PLAYERS_COLLECTION)
+        .doc(playerId)
+        .get();
+
+      const data = player.data();
+      const avg = data?.averageStats ?? {};
+
+      return player.exists() && isNotNil(data)
+        ? {
+            averageStats: {
+              ast: avg.assists ?? 0,
+              blk: avg.blocks ?? 0,
+              fpts: avg.fantasyPoints ?? 0,
+              min: avg.minutes ?? 0,
+              pts: avg.points ?? 0,
+              reb: avg.rebounds ?? 0,
+              stl: avg.steals ?? 0,
+              tov: avg.turnovers ?? 0,
+            },
+            firstName: data.firstName,
+            gamesPlayed: data.gamesPlayed,
+            headshotUrl: data.headshotURL,
+            height: data.height,
+            id: data.playerId,
+            jerseyNumber: data.jerseyNumber,
+            positions: data.positions,
+            salary: data.salary,
+            lastName: data.lastName,
+            teamAbbreviation: data.teamAbbreviation,
+            teamId: data.teamId,
+            weight: data.weight,
+          }
+        : defaultPlayer;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   static getPlayers = async (
     PAGE_SIZE: number,
     pageParam?: FirebaseFirestoreTypes.DocumentSnapshot,
@@ -86,9 +128,10 @@ export class NbaPlayersController {
           gamesPlayed: data.gamesPlayed,
           headshotUrl: data.headshotURL,
           height: data.height,
-          id: data.playerId,
+          id: doc.id,
           jerseyNumber: data.jerseyNumber,
           positions: data.positions,
+          playerId: data.playerId,
           salary: data.salary,
           lastName: data.lastName,
           teamAbbreviation: data.teamAbbreviation,
@@ -179,8 +222,9 @@ export class NbaPlayersController {
           gamesPlayed: data.gamesPlayed,
           headshotUrl: data.headshotURL,
           height: data.height,
-          id: data.playerId,
+          id: doc.id,
           jerseyNumber: data.jerseyNumber,
+          playerId: data.playerId,
           positions: data.positions,
           salary: data.salary,
           lastName: data.lastName,

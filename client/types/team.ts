@@ -1,5 +1,5 @@
 import { Augment } from "./augment";
-import { Player } from "./players";
+import { Player } from "./player";
 
 export const TEAM_BALANCE = 150000000;
 
