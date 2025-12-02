@@ -263,7 +263,6 @@ const teamSlice = createSlice({
             state.lineup = newLineup;
           }
         }
-
         state.hasUserChanges = true;
       }
     },
@@ -308,9 +307,6 @@ export const isPlayerInLineup = (
   lineup: LineupSlot[],
   playerId: string,
 ): boolean => lineup.some((slot) => slot.player?.id === playerId);
-
-export const getBenchPlayerCount = (state: RootState): number =>
-  state.team.bench.filter((slot) => slot.player !== null).length;
 
 export const selectAugmentValidation = createSelector(
   [selectTeam, selectLineup],

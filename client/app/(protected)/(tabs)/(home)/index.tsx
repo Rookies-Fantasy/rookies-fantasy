@@ -44,17 +44,14 @@ const MyTeam = () => {
     if (isInQueue) {
       try {
         await UserController.leaveQueue(userId);
-        console.log("Successfully left queue");
       } catch (error) {
         Alert.alert("Error", "Failed to leave queue. Please try again.");
         console.error("Queue leave error:", error);
       }
     } else {
       if (isTeamReadyForQueue(team.lineup) && team.id) {
-        console.log("Attempting to join queue with team ID:", team.id);
         try {
           await UserController.joinQueue(userId, team.id);
-          console.log("Successfully joined queue");
         } catch (error) {
           Alert.alert("Error", "Failed to join queue. Please try again.");
           console.error("Queue join error:", error);
