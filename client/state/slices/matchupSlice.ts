@@ -1,6 +1,13 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Matchup, defaultMatchup } from "@/types/matchup";
+import { GameInfo, GameStats } from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
+
+type PlayerGameData = {
+  gameInfo: GameInfo;
+  gameStats: GameStats;
+};
 
 const matchupSlice = createSlice({
   name: "matchup",
@@ -8,6 +15,31 @@ const matchupSlice = createSlice({
   reducers: {
     setMatchup: (_, action: PayloadAction<Matchup>) => action.payload,
     clearMatchup: () => defaultMatchup,
+    updateMatchupWithLiveData: (
+      state,
+      action: PayloadAction<{
+        date: string;
+        updatedHome: Record<string, PlayerGameData | null>;
+        updatedAway: Record<string, PlayerGameData | null>;
+      }>,
+    ) => {
+      const newMatchup = state.dailyMatchups[action.payload.date];
+      newMatchup.homeTeam.lineup.forEach((o) => {
+        if (isNotNil(o.player?.id)) {
+          const newData = action.payload.updatedHome[o.player?.id];
+          o.gameInfo = newData?.gameInfo;
+          o.gameStats = newData?.gameStats;
+        }
+      });
+      newMatchup.awayTeam.lineup.forEach((o) => {
+        if (isNotNil(o.player?.id)) {
+          const newData = action.payload.updatedAway[o.player?.id];
+          o.gameInfo = newData?.gameInfo;
+          o.gameStats = newData?.gameStats;
+        }
+      });
+      state.dailyMatchups[action.payload.date] = newMatchup;
+    },
   },
 });
 
@@ -21,6 +53,7 @@ export const selectAwayUserId = (state: RootState) =>
 export const selectHomeUserId = (state: RootState) =>
   state.matchup.home.homeUserId;
 
-export const { setMatchup, clearMatchup } = matchupSlice.actions;
+export const { setMatchup, clearMatchup, updateMatchupWithLiveData } =
+  matchupSlice.actions;
 
 export default matchupSlice.reducer;
