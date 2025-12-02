@@ -1,5 +1,5 @@
 import { Augment, Prerequisite, Condition } from "@/types/augment";
-import { Player } from "@/types/players";
+import { Player } from "@/types/player";
 import { LineupSlot } from "@/types/team";
 
 export type ValidationResult = {

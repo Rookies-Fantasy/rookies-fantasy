@@ -52,7 +52,6 @@ const Roster = () => {
 
               <View className="gap-4">
                 <SelectedAugment />
-
                 <TeamBudget />
               </View>
             </View>
