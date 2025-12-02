@@ -47,18 +47,21 @@ const FreeAgents = () => {
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
 
-    return players.map((player) => [
-      <PlayerData key={player.id} player={player} />,
-      player.gamesPlayed,
-      player.averageStats.min.toFixed(1),
-      player.averageStats.pts.toFixed(1),
-      player.averageStats.reb.toFixed(1),
-      player.averageStats.ast.toFixed(1),
-      player.averageStats.stl.toFixed(1),
-      player.averageStats.blk.toFixed(1),
-      player.averageStats.tov.toFixed(1),
-      player.averageStats.fpts.toFixed(1),
-    ]);
+    return players.map((player) => ({
+      id: player.id,
+      cells: [
+        <PlayerData key={player.id} player={player} />,
+        player.gamesPlayed,
+        player.averageStats.min.toFixed(1),
+        player.averageStats.pts.toFixed(1),
+        player.averageStats.reb.toFixed(1),
+        player.averageStats.ast.toFixed(1),
+        player.averageStats.stl.toFixed(1),
+        player.averageStats.blk.toFixed(1),
+        player.averageStats.tov.toFixed(1),
+        player.averageStats.fpts.toFixed(1),
+      ],
+    }));
   }, [data?.pages]);
 
   return (
