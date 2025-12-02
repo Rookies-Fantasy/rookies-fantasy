@@ -1,3 +1,5 @@
+export type QueueStatus = "idle" | "queued" | "matched";
+
 export type User = {
   avatarUrl?: string;
   dateOfBirth?: string;
@@ -5,6 +7,13 @@ export type User = {
   emailVerified: boolean;
   id: string;
   username?: string;
+  queueStatus?: QueueStatus;
+  queuedAt?: string;
+  currentMatchupId?: string;
 };
 
-export const defaultUser: User = { id: "", emailVerified: false };
+export const defaultUser: User = {
+  id: "",
+  emailVerified: false,
+  queueStatus: "idle",
+};

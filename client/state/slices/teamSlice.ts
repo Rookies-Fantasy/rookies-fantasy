@@ -1,5 +1,6 @@
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
+import { Augment } from "@/types/augment";
 import { Player } from "@/types/player";
 import {
   BenchPosition,
@@ -10,6 +11,7 @@ import {
   Team,
   UTIL_POSITIONS,
 } from "@/types/team";
+import { validateAugment } from "@/utils/augmentValidation";
 import { isNil, isNotNil } from "@/utils/jsUtils";
 import {
   findSlotFromPosition,
@@ -258,7 +260,6 @@ const teamSlice = createSlice({
             state.lineup = newLineup;
           }
         }
-
         state.hasUserChanges = true;
       }
     },
@@ -274,8 +275,8 @@ const teamSlice = createSlice({
     saveTeam: (state) => {
       state.hasUserChanges = false;
     },
-    setAugmentId: (state, action: PayloadAction<string | undefined>) => {
-      state.augmentId = action.payload;
+    setAugment: (state, action: PayloadAction<Augment | undefined>) => {
+      state.augment = action.payload;
     },
   },
 });
@@ -283,7 +284,7 @@ const teamSlice = createSlice({
 export const selectTeam = (state: RootState) => state.team;
 export const selectTeamId = (state: RootState) => state.team.id;
 export const selectLineup = (state: RootState) => state.team.lineup;
-export const selectAugmentId = (state: RootState) => state.team.augmentId;
+export const selectAugment = (state: RootState) => state.team.augment;
 
 export const selectIsTeamRegistered = createSelector(
   [selectTeam],
@@ -299,6 +300,47 @@ export const selectRosterPlayerCount = (state: RootState): number => {
   return lineupCount + benchCount;
 };
 
+export const isPlayerInLineup = (
+  lineup: LineupSlot[],
+  playerId: string,
+): boolean => lineup.some((slot) => slot.player?.id === playerId);
+
+export const selectAugmentValidation = createSelector(
+  [selectTeam, selectLineup],
+  (team, lineup) => validateAugment(team.augment, lineup),
+);
+
+export const selectQualifyingPlayers = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.qualifyingPlayers,
+);
+
+export const selectQualifyingPlayersCount = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.qualifyingPlayers.length,
+);
+
+export const selectPlayerQualificationMap = createSelector(
+  [selectQualifyingPlayers],
+  (qualifyingPlayers) =>
+    Object.fromEntries(qualifyingPlayers.map((p) => [p.id, true])),
+);
+
+export const selectIsAugmentValid = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.isValid,
+);
+
+export const selectAugmentMetPrerequisites = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.metPrerequisites,
+);
+
+export const selectAugmentUnmetPrerequisites = createSelector(
+  [selectAugmentValidation],
+  (validation) => validation.unmetPrerequisites,
+);
+
 export const {
   setTeam,
   clearTeam,
@@ -307,7 +349,7 @@ export const {
   swapPlayersInLineup,
   resetToSavedTeam,
   saveTeam,
-  setAugmentId,
+  setAugment,
 } = teamSlice.actions;
 
 export default teamSlice.reducer;

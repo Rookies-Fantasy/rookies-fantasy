@@ -1,4 +1,5 @@
 import firestore from "@react-native-firebase/firestore";
+import { Augment } from "@/types/augment";
 import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
 
@@ -14,7 +15,7 @@ export type UserEditModel = Partial<{
 
 export type TeamEditModel = {
   abbreviation: string;
-  augmentId?: string;
+  augment?: Augment;
   logoUrl: string;
   name: string;
 };
@@ -40,6 +41,9 @@ export class UserController {
             emailVerified: user.data()?.emailVerified ?? false,
             id: user.id,
             username: user.data()?.username,
+            queueStatus: user.data()?.queueStatus ?? "idle",
+            queuedAt: user.data()?.queuedAt?.toDate()?.toISOString(),
+            currentMatchupId: user.data()?.currentMatchupId,
           }
         : defaultUser;
     } catch (error) {
@@ -97,7 +101,7 @@ export class UserController {
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
-            augmentId: team.data()?.augmentId,
+            augment: team.data()?.augment,
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
@@ -200,4 +204,64 @@ export class UserController {
       throw error;
     }
   };
+
+  static joinQueue = async (userId: string, teamId: string) => {
+    try {
+      await firestore().collection(USERS_COLLECTION).doc(userId).update({
+        queueStatus: "queued",
+        queuedAt: new Date(),
+        teamId: teamId,
+        updatedAt: new Date(),
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static leaveQueue = async (userId: string) => {
+    try {
+      await firestore().collection(USERS_COLLECTION).doc(userId).update({
+        queueStatus: "idle",
+        queuedAt: firestore.FieldValue.delete(),
+        teamId: firestore.FieldValue.delete(),
+        updatedAt: new Date(),
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static subscribeToUser = (
+    userId: string,
+    callback: (user: User | null) => void,
+  ) =>
+    firestore()
+      .collection(USERS_COLLECTION)
+      .doc(userId)
+      .onSnapshot(
+        (doc) => {
+          if (doc.exists()) {
+            const data = doc.data();
+            if (data) {
+              callback({
+                avatarUrl: data.avatarUrl,
+                dateOfBirth: data.dateOfBirth?.toDate()?.toISOString(),
+                email: data.email,
+                emailVerified: data.emailVerified ?? false,
+                id: doc.id,
+                username: data.username,
+                queueStatus: data.queueStatus ?? "idle",
+                queuedAt: data.queuedAt?.toDate()?.toISOString(),
+                currentMatchupId: data.currentMatchupId,
+              });
+            }
+          } else {
+            callback(null);
+          }
+        },
+        (error) => {
+          console.error("User subscription error:", error);
+          callback(null);
+        },
+      );
 }
