@@ -1,5 +1,5 @@
 import { Augment } from "./augment";
-import { Player } from "./players";
+import { Player } from "./player";
 import { LineupSlot } from "./team";
 
 export type MatchupTeam = {
