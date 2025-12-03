@@ -2,6 +2,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Matchup, defaultMatchup } from "@/types/matchup";
 import { GameInfo, GameStats } from "@/types/team";
+import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNotNil } from "@/utils/jsUtils";
 
 type PlayerGameData = {
@@ -24,20 +25,46 @@ const matchupSlice = createSlice({
       }>,
     ) => {
       const newMatchup = state.dailyMatchups[action.payload.date];
+
       newMatchup.homeTeam.lineup.forEach((o) => {
         if (isNotNil(o.player?.id)) {
           const newData = action.payload.updatedHome[o.player?.id];
           o.gameInfo = newData?.gameInfo;
-          o.gameStats = newData?.gameStats;
+          if (newData?.gameStats) {
+            const calculatedFpts = calculateFantasyPoints(newData.gameStats);
+            o.gameStats = { ...newData.gameStats, fpts: calculatedFpts };
+          } else {
+            o.gameStats = newData?.gameStats;
+          }
         }
       });
+
       newMatchup.awayTeam.lineup.forEach((o) => {
         if (isNotNil(o.player?.id)) {
           const newData = action.payload.updatedAway[o.player?.id];
           o.gameInfo = newData?.gameInfo;
-          o.gameStats = newData?.gameStats;
+          if (newData?.gameStats) {
+            const calculatedFpts = calculateFantasyPoints(newData.gameStats);
+            o.gameStats = { ...newData.gameStats, fpts: calculatedFpts };
+          } else {
+            o.gameStats = newData?.gameStats;
+          }
         }
       });
+
+      const homeScore = newMatchup.homeTeam.lineup.reduce(
+        (total, slot) => total + (slot.gameStats?.fpts ?? 0),
+        0,
+      );
+
+      const awayScore = newMatchup.awayTeam.lineup.reduce(
+        (total, slot) => total + (slot.gameStats?.fpts ?? 0),
+        0,
+      );
+
+      newMatchup.homeTeam.score = homeScore;
+      newMatchup.awayTeam.score = awayScore;
+
       state.dailyMatchups[action.payload.date] = newMatchup;
     },
   },
