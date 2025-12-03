@@ -901,3 +901,106 @@ const checkIfMondayGamesStarted = async (): Promise<boolean> => {
     return true;
   }
 };
+
+// Scheduled function that runs every Monday at 2 AM PDT
+// Cron format: "minute hour day-of-month month day-of-week"
+// "0 2 * * 1" = Every Monday at 2:00 AM
+export const weeklyMatchupReset = functions.pubsub
+  .schedule("0 2 * * 1")
+  .timeZone("America/Los_Angeles")
+  .onRun(async () => {
+    console.log("Starting weekly matchup reset...");
+
+    try {
+      const db = admin.firestore();
+
+      const activeMatchupsSnapshot = await db
+        .collection("matchups")
+        .where("status", "==", "active")
+        .get();
+
+      console.log(`Found ${activeMatchupsSnapshot.size} active matchups`);
+
+      const matchupUpdates = activeMatchupsSnapshot.docs.map(
+        async (matchupDoc) => {
+          const matchupData = matchupDoc.data();
+          const matchupId = matchupDoc.id;
+
+          let homeTotal = 0;
+          let awayTotal = 0;
+
+          const dateKeys = Object.keys(matchupData).filter((key) =>
+            /^\d{4}-\d{2}-\d{2}$/.test(key),
+          );
+
+          dateKeys.forEach((date) => {
+            const dailyData = matchupData[date];
+
+            if (dailyData?.homeTeam?.lineup) {
+              dailyData.homeTeam.lineup.forEach((player: any) => {
+                if (player?.gameStats?.fpts) {
+                  homeTotal += player.gameStats.fpts;
+                }
+              });
+            }
+
+            if (dailyData?.awayTeam?.lineup) {
+              dailyData.awayTeam.lineup.forEach((player: any) => {
+                if (player?.gameStats?.fpts) {
+                  awayTotal += player.gameStats.fpts;
+                }
+              });
+            }
+          });
+
+          console.log(
+            `Matchup ${matchupId}: Home ${homeTotal} vs Away ${awayTotal}`,
+          );
+
+          let winnerId: string;
+          if (homeTotal > awayTotal) {
+            winnerId = matchupData.home.homeTeamId;
+          } else if (awayTotal > homeTotal) {
+            winnerId = matchupData.away.awayTeamId;
+          } else {
+            winnerId = "";
+            console.log(`Matchup ${matchupId} ended in a tie`);
+          }
+
+          await matchupDoc.ref.update({
+            status: "completed",
+            winner: winnerId,
+            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          console.log(`Matchup ${matchupId} completed. Winner: ${winnerId}`);
+        },
+      );
+
+      await Promise.all(matchupUpdates);
+
+      const matchedUsersSnapshot = await db
+        .collection("users")
+        .where("queueStatus", "==", "matched")
+        .get();
+
+      console.log(`Found ${matchedUsersSnapshot.size} matched users`);
+
+      const userUpdates = matchedUsersSnapshot.docs.map(async (userDoc) => {
+        await userDoc.ref.update({
+          queueStatus: "idle",
+          queuedAt: admin.firestore.FieldValue.delete(),
+          currentMatchupId: admin.firestore.FieldValue.delete(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        console.log(`Reset user ${userDoc.id} to idle`);
+      });
+
+      await Promise.all(userUpdates);
+
+      console.log("Weekly matchup reset completed successfully");
+    } catch (error) {
+      console.error("Error during weekly matchup reset:", error);
+      throw error;
+    }
+  });
