@@ -1,5 +1,6 @@
-import React, { ReactNode, useState } from "react";
+import { ReactNode, useState } from "react";
 import { View, Pressable } from "react-native";
+import { cn } from "@/utils/jsUtils";
 
 type TabItem = {
   key: string;
@@ -20,9 +21,10 @@ const Tabs = ({ items, defaultKey }: TabsProps) => {
       <View className="mt-2 w-full flex-row border-b border-gray-800">
         {items.map((item) => (
           <Pressable
-            className={`flex-1 items-center py-2 ${
-              selected === item.key ? "border-b-2 border-purple-600" : ""
-            }`}
+            className={cn(
+              "flex-1 items-center py-2",
+              selected === item.key && "border-b-2 border-purple-600",
+            )}
             key={item.key}
             onPress={() => setSelected(item.key)}
           >
