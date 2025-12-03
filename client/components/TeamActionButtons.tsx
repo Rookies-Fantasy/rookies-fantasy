@@ -22,7 +22,7 @@ const TeamActionButtons = () => {
 
   const handleSave = () => {
     dispatch(saveTeam());
-    router.dismissTo("/(protected)/(tabs)/(home)");
+    router.dismissTo("/(protected)/(tabs)");
   };
 
   if (!showFAB) {
@@ -45,7 +45,7 @@ const TeamActionButtons = () => {
                 balance: savedData.balance,
               }),
             );
-            router.dismissTo("/(protected)/(tabs)/(home)");
+            router.dismissTo("/(protected)/(tabs)");
           } catch (error) {
             console.error("Failed to reset lineup:", error);
           } finally {

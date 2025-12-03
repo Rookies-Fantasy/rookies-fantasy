@@ -1,18 +1,47 @@
 import auth from "@react-native-firebase/auth";
 import { useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { SignOut } from "phosphor-react-native";
+import { useState } from "react";
+import { Pressable, Text, View, Image, Alert } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
+import AugmentStatusCard from "@/components/AugmentStatusCard";
 import Button from "@/components/Button";
+import PlayerRoster from "@/components/PlayerRoster";
+import RosterDrawer from "@/components/RosterDrawer";
+import TeamActionButtons from "@/components/TeamActionButtons";
+import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import { clearTeam } from "@/state/slices/teamSlice";
-import { clearUser } from "@/state/slices/userSlice";
-import { ThemeMode, ThemeName } from "@/theme/theme";
-import { useAppTheme } from "@/theme/ThemeProvider";
+import {
+  selectAugment,
+  selectRosterPlayerCount,
+  clearTeam,
+} from "@/state/slices/teamSlice";
+import { selectUserId, clearUser } from "@/state/slices/userSlice";
+import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { SlotPosition } from "@/types/team";
+import { cn, isNotNil } from "@/utils/jsUtils";
+import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
-const Home = () => {
-  const dispatch = useAppDispatch();
-  const user = useAppSelector((state) => state.user);
+const MyTeam = () => {
   const router = useRouter();
-  const { setTheme, setMode } = useAppTheme();
+  const team = useAppSelector((state) => state.team);
+  const user = useAppSelector((state) => state.user);
+  const userId = useAppSelector(selectUserId);
+  const augment = useAppSelector(selectAugment);
+  const playerCount = useAppSelector(selectRosterPlayerCount);
+  const dispatch = useAppDispatch();
+
+  const queueStatus = user.queueStatus ?? "idle";
+  const isInQueue = queueStatus === "queued";
+  const isMatched = queueStatus === "matched";
+  const matchedLogo = teamLogoOptions.find(
+    (option) => option.url === team.logoUrl,
+  );
+  const [showBottomDrawer, setShowBottomDrawer] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
+    null,
+  );
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -25,67 +54,108 @@ const Home = () => {
     }
   };
 
+  const handleQueueToggle = async () => {
+    if (isInQueue) {
+      try {
+        await UserController.leaveQueue(userId);
+        console.log("Successfully left queue");
+      } catch (error) {
+        Alert.alert("Error", "Failed to leave queue. Please try again.");
+        console.error("Queue leave error:", error);
+      }
+    } else {
+      if (isTeamReadyForQueue(team.lineup) && team.id) {
+        console.log("Attempting to join queue with team ID:", team.id);
+        try {
+          await UserController.joinQueue(userId, team.id);
+          console.log("Successfully joined queue");
+        } catch (error) {
+          Alert.alert("Error", "Failed to join queue. Please try again.");
+          console.error("Queue join error:", error);
+        }
+      } else {
+        Alert.alert(
+          "Team Not Ready",
+          "Your team must have all positions filled to enter the queue.",
+        );
+      }
+    }
+  };
+
   return (
-    <View className="flex-1 flex-col items-center justify-center bg-base-white px-6 py-4 dark:bg-black">
-      <Text className="pbk-h6 text-gray-950">Tab One</Text>
-      <View className="my-30 h-16" />
-      <Button label="Sign Out" onPress={handleLogout} />
-      <Text>{user.username}</Text>
-      <Text>{user.email}</Text>
-      <Text>{user.id}</Text>
-      <Text>{user.emailVerified?.toString()}</Text>
-      <View className="flex-row gap-4 pt-4">
-        <View className="gap-4">
-          <Pressable className="min-h-12 w-20 justify-center rounded-md bg-green-500">
-            <Text
-              className="text-center"
+    <View className="bg-base-white dark:bg-black">
+      <ScrollView
+        contentContainerClassName={cn(
+          "items-center gap-10 flex-col px-8",
+          team.hasUserChanges ? "pb-20 pt-10" : "py-10",
+        )}
+      >
+        <View className="w-full flex-row items-center justify-between">
+          <View className="flex-row items-center gap-5">
+            <Image
+              className="h-[75px] w-[75px] rounded-full border-2"
+              source={matchedLogo?.source ?? defaultTeamLogo.source}
+            />
+            <Text className="pbk-h5 text-black dark:text-white">
+              {team.name}
+            </Text>
+          </View>
+          <Pressable
+            className="flex-row items-center gap-2 rounded-lg bg-primary-500 p-2"
+            onPress={handleLogout}
+          >
+            <Text className="pbk-h8 text-white">Sign Out</Text>
+            <SignOut color="white" size={20} weight="bold" />
+          </Pressable>
+        </View>
+        <View className="w-full flex-1 gap-3">
+          {playerCount > 0 ? (
+            <>
+              {!isMatched && (
+                <Button
+                  className={isInQueue ? "bg-red-600" : "bg-primary-500"}
+                  label={isInQueue ? "Cancel Queue" : "Queue"}
+                  onPress={handleQueueToggle}
+                />
+              )}
+              <AugmentStatusCard />
+              <View className="my-2 flex-1 gap-4">
+                <PlayerRoster
+                  bench={team.bench}
+                  isCard
+                  lineup={team.lineup}
+                  onOpen={() => setShowBottomDrawer(true)}
+                  setSelectedPosition={setSelectedPosition}
+                />
+              </View>
+            </>
+          ) : (
+            <Button
+              label="Build Your Team"
               onPress={() => {
-                setTheme(ThemeName.Green);
+                if (!isNavigating) {
+                  const route = !augment?.id
+                    ? "/(protected)/(draft)/applyAugment"
+                    : "/(protected)/(draft)/(teamBuilder)/roster";
+                  setIsNavigating(true);
+                  router.push(route);
+                }
               }}
-            >
-              Green
-            </Text>
-          </Pressable>
-          <Pressable className="min-h-12 w-20 justify-center rounded-md bg-purple-500">
-            <Text
-              className="text-center"
-              onPress={() => setTheme(ThemeName.Purple)}
-            >
-              Purple
-            </Text>
-          </Pressable>
+            />
+          )}
         </View>
-        <View className="gap-4">
-          <Pressable
-            className="min-h-12 w-20 justify-center rounded-md bg-black"
-            onPress={() => setMode(ThemeMode.Dark)}
-          >
-            <Text className="text-center text-white">Dark</Text>
-          </Pressable>
-          <Pressable
-            className="min-h-12 w-20 justify-center rounded-md bg-white"
-            onPress={() => setMode(ThemeMode.Light)}
-          >
-            <Text className="text-center">Light</Text>
-          </Pressable>
-          <Pressable
-            className="min-h-12 w-20 justify-center rounded-md bg-gray-500"
-            onPress={() => setMode(ThemeMode.System)}
-          >
-            <Text className="text-center">System</Text>
-          </Pressable>
-        </View>
-      </View>
-      <View className="w-100 h-100 mt-4 justify-center rounded-md bg-primary-500 p-4">
-        <Pressable className="text-center">
-          <Text>Sample Button</Text>
-        </Pressable>
-      </View>
-      <View className="w-100 h-100 mt-4 justify-center rounded-md border-2 border-black bg-white p-4 dark:bg-black">
-        <Text className="text-black dark:text-white">Sample Text</Text>
-      </View>
+      </ScrollView>
+      <TeamActionButtons />
+      {isNotNil(selectedPosition) && (
+        <RosterDrawer
+          selectedPosition={selectedPosition}
+          setSelectedPosition={setSelectedPosition}
+          setShowBottomDrawer={setShowBottomDrawer}
+          showBottomDrawer={showBottomDrawer}
+        />
+      )}
     </View>
   );
 };
 
-export default Home;
+export default MyTeam;
