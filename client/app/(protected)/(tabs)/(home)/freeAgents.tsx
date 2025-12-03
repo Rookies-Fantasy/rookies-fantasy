@@ -11,6 +11,7 @@ import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
 import { useAppSelector } from "@/state/hooks";
+import { defaultPlayerFilters } from "@/types/player";
 
 const PAGE_SIZE = 25;
 
@@ -20,13 +21,29 @@ const FreeAgents = () => {
   const teamComposition =
     team.lineup.filter((slot) => slot.player).length + team.bench.length;
 
+  const excludedPlayerIds = useMemo(() => {
+    const ids: string[] = [];
+
+    team.lineup.forEach((slot) => {
+      if (slot.player) {
+        ids.push(slot.player.id);
+      }
+    });
+
+    team.bench.forEach((slot) => {
+      ids.push(slot.player.id);
+    });
+
+    return ids;
+  }, [team.lineup, team.bench]);
+
   const fetchFreeAgents = async ({ pageParam }: FetchPlayersParams = {}) =>
-    await NbaPlayersController.getFreeAgents(
-      PAGE_SIZE,
-      team.lineup,
-      team.bench,
+    await NbaPlayersController.getPlayers({
+      pageSize: PAGE_SIZE,
       pageParam,
-    );
+      filters: defaultPlayerFilters,
+      excludedPlayerIds,
+    });
 
   const {
     data,

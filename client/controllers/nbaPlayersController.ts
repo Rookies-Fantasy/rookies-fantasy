@@ -2,12 +2,18 @@ import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
 import { defaultPlayer, Player, PlayerFilters } from "@/types/player";
-import { LineupSlot, BenchSlot } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
 
 const PLAYERS_COLLECTION = "nbaPlayers";
 
-type PlayerFetchResult = {
+export type PlayerFetchParams = {
+  pageSize: number;
+  pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
+  filters?: PlayerFilters;
+  excludedPlayerIds?: string[];
+};
+
+export type PlayerFetchResult = {
   players: Player[];
   lastDoc?: FirebaseFirestoreTypes.DocumentSnapshot;
   hasMore: boolean;
@@ -55,11 +61,12 @@ export class NbaPlayersController {
     }
   };
 
-  static getPlayers = async (
-    PAGE_SIZE: number,
-    pageParam?: FirebaseFirestoreTypes.DocumentSnapshot,
-    filters?: PlayerFilters,
-  ): Promise<PlayerFetchResult> => {
+  static getPlayers = async ({
+    pageSize,
+    pageParam,
+    filters,
+    excludedPlayerIds,
+  }: PlayerFetchParams): Promise<PlayerFetchResult> => {
     try {
       let query = firestore()
         .collection(PLAYERS_COLLECTION)
@@ -100,7 +107,7 @@ export class NbaPlayersController {
         }
       }
 
-      query = query.limit(PAGE_SIZE);
+      query = query.limit(pageSize);
 
       if (pageParam) {
         query = query.startAfter(pageParam);
@@ -109,7 +116,7 @@ export class NbaPlayersController {
       const playerSnapshot = await query.get();
       const playerDocs = playerSnapshot.docs;
 
-      const players: Player[] = playerDocs.map((doc) => {
+      let players: Player[] = playerDocs.map((doc) => {
         const data = doc.data();
         const avg = data.averageStats ?? {};
 
@@ -139,86 +146,16 @@ export class NbaPlayersController {
         };
       });
 
-      return {
-        players,
-        lastDoc: playerDocs[playerDocs.length - 1],
-        hasMore: playerDocs.length === PAGE_SIZE,
-      };
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  static getFreeAgents = async (
-    PAGE_SIZE: number,
-    lineup: LineupSlot[],
-    bench: BenchSlot[],
-    pageParam?: FirebaseFirestoreTypes.DocumentSnapshot,
-  ): Promise<PlayerFetchResult> => {
-    try {
-      const unavailablePlayerIds: string[] = [];
-
-      lineup.forEach((slot) => {
-        if (slot.player) {
-          unavailablePlayerIds.push(slot.player.id);
-        }
-      });
-
-      bench.forEach((slot) => {
-        if (slot.player) {
-          unavailablePlayerIds.push(slot.player.id);
-        }
-      });
-
-      let query = firestore()
-        .collection(PLAYERS_COLLECTION)
-        .orderBy("salary", "desc")
-        .limit(PAGE_SIZE);
-
-      if (pageParam) {
-        query = query.startAfter(pageParam);
+      if (excludedPlayerIds && excludedPlayerIds.length > 0) {
+        players = players.filter(
+          (player) => !excludedPlayerIds.includes(player.id),
+        );
       }
 
-      const playerSnapshot = await query.get();
-      const playerDocs = playerSnapshot.docs;
-
-      const players: Player[] = playerDocs
-        .map((doc) => {
-          const data = doc.data();
-          const avg = data.averageStats ?? {};
-
-          return {
-            averageStats: {
-              ast: avg.assists ?? 0,
-              blk: avg.blocks ?? 0,
-              fpts: avg.fantasyPoints ?? 0,
-              min: avg.minutes ?? 0,
-              pts: avg.points ?? 0,
-              reb: avg.rebounds ?? 0,
-              stl: avg.steals ?? 0,
-              tov: avg.turnovers ?? 0,
-            },
-            firstName: data.firstName,
-            lastName: data.lastName,
-            gamesPlayed: data.gamesPlayed,
-            headshotUrl: data.headshotURL,
-            height: data.height,
-            id: data.playerId,
-            jerseyNumber: data.jerseyNumber,
-            positions: data.positions,
-            salary: data.salary,
-            secondName: data.lastName,
-            teamAbbreviation: data.teamAbbreviation,
-            teamId: data.teamId,
-            weight: data.weight,
-          };
-        })
-        .filter((player) => !unavailablePlayerIds.includes(player.id));
-
       return {
         players,
         lastDoc: playerDocs[playerDocs.length - 1],
-        hasMore: playerDocs.length === PAGE_SIZE,
+        hasMore: playerDocs.length === pageSize,
       };
     } catch (error) {
       throw error;

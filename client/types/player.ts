@@ -43,6 +43,12 @@ export const POSITION_FILTER_OPTIONS: PositionFilters[] = [
   "F",
 ];
 
+export const defaultPlayerFilters: PlayerFilters = {
+  selectedTeams: [],
+  selectedPositions: [],
+  salaryRange: { min: 1000000, max: 150000000 },
+};
+
 export const defaultPlayer: Player = {
   id: "",
   averageStats: {
