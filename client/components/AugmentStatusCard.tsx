@@ -22,13 +22,11 @@ const AugmentStatusCard = () => {
           title="Selected augment"
           visible={openDialog}
         >
-          <View className="my-4 items-center justify-center">
-            <View className="h-80 w-[75%]">
-              <AugmentCard
-                cardData={augment}
-                onPress={() => setOpenDialog(false)}
-              />
-            </View>
+          <View className="my-4 h-80 w-[75%] justify-center self-center">
+            <AugmentCard
+              cardData={augment}
+              onPress={() => setOpenDialog(false)}
+            />
           </View>
         </Dialog>
       )}

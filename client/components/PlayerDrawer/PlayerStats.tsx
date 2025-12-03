@@ -108,6 +108,7 @@ const PlayerStats = ({ player }: PlayerStatsProps) => {
                       "--",
                       "--",
                       "--",
+                      "--",
                     ],
                   },
                 ]
