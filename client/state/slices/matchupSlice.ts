@@ -2,6 +2,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Matchup, defaultMatchup } from "@/types/matchup";
 import { GameInfo, GameStats } from "@/types/team";
+import { applyAugmentEffects } from "@/utils/augmentEffects";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNotNil } from "@/utils/jsUtils";
 
@@ -38,8 +39,15 @@ const matchupSlice = createSlice({
           const newData = action.payload.updatedHome[o.player?.id];
           o.gameInfo = newData?.gameInfo;
           if (newData?.gameStats) {
-            const calculatedFpts = calculateFantasyPoints(newData.gameStats);
-            o.gameStats = { ...newData.gameStats, fpts: calculatedFpts };
+            const baseFpts = calculateFantasyPoints(newData.gameStats);
+            const augmentedFpts = applyAugmentEffects(
+              baseFpts,
+              newData.gameStats,
+              o.player.id,
+              newMatchup.homeTeam.qualifyingPlayers,
+              state.home.homeAugment,
+            );
+            o.gameStats = { ...newData.gameStats, fpts: augmentedFpts };
           } else {
             o.gameStats = newData?.gameStats;
           }
@@ -51,8 +59,15 @@ const matchupSlice = createSlice({
           const newData = action.payload.updatedAway[o.player?.id];
           o.gameInfo = newData?.gameInfo;
           if (newData?.gameStats) {
-            const calculatedFpts = calculateFantasyPoints(newData.gameStats);
-            o.gameStats = { ...newData.gameStats, fpts: calculatedFpts };
+            const baseFpts = calculateFantasyPoints(newData.gameStats);
+            const augmentedFpts = applyAugmentEffects(
+              baseFpts,
+              newData.gameStats,
+              o.player.id,
+              newMatchup.awayTeam.qualifyingPlayers,
+              state.away.awayAugment,
+            );
+            o.gameStats = { ...newData.gameStats, fpts: augmentedFpts };
           } else {
             o.gameStats = newData?.gameStats;
           }
