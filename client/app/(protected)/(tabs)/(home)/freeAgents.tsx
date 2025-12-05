@@ -1,8 +1,9 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Sliders } from "phosphor-react-native";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, KeyboardAvoidingView, Pressable } from "react-native";
 import { FetchPlayersParams } from "../../(draft)/(teamBuilder)/players";
+import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
 import Screen from "@/components/Screen";
@@ -10,8 +11,10 @@ import SearchBar from "@/components/SearchBar";
 import Spinner from "@/components/Spinner";
 import Table from "@/components/Table/Table";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
+import { NbaTeamsController } from "@/controllers/nbaTeamsController";
 import { useAppSelector } from "@/state/hooks";
-import { defaultPlayerFilters } from "@/types/player";
+import { NbaTeam } from "@/types/nbaTeams";
+import { defaultPlayerFilters, PlayerFilters } from "@/types/player";
 
 const PAGE_SIZE = 25;
 
@@ -20,6 +23,13 @@ const FreeAgents = () => {
   const team = useAppSelector((state) => state.team);
   const teamComposition =
     team.lineup.filter((slot) => slot.player).length + team.bench.length;
+  const [nbaTeams, setNBATeams] = useState<NbaTeam[]>([]);
+  const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
+  const [filters, setFilters] = useState<PlayerFilters>({
+    selectedTeams: [],
+    selectedPositions: [],
+    salaryRange: { min: 1000000, max: 150000000 },
+  });
 
   const excludedPlayerIds = useMemo(() => {
     const ids: string[] = [];
@@ -61,6 +71,20 @@ const FreeAgents = () => {
     initialPageParam: undefined,
   });
 
+  // TODO: Cache or store these assets so we can reduce fetches
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const teamsData = await NbaTeamsController.getAllTeams();
+        setNBATeams(teamsData);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const tableData = useMemo(() => {
     const players = data?.pages.flatMap((page) => page.players) || [];
 
@@ -95,7 +119,7 @@ const FreeAgents = () => {
             <IconButton
               className="size-12 items-center justify-center rounded-lg border border-gray-800 bg-gray-900"
               icon={<Sliders color="white" />}
-              onPress={() => {}}
+              onPress={() => setShowFiltersDrawer(true)}
             />
           </View>
         </View>
@@ -150,6 +174,13 @@ const FreeAgents = () => {
           />
         )}
       </KeyboardAvoidingView>
+      <FiltersDrawer
+        filters={filters}
+        setFilters={setFilters}
+        setShowFiltersDrawer={() => setShowFiltersDrawer(false)}
+        showFiltersDrawer={showFiltersDrawer}
+        teams={nbaTeams}
+      />
     </Screen>
   );
 };
