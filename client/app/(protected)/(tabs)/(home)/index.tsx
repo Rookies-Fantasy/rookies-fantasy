@@ -40,23 +40,19 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleQueueToggle = async () => {
     if (isInQueue) {
       try {
         await UserController.leaveQueue(userId);
-        console.log("Successfully left queue");
       } catch (error) {
         Alert.alert("Error", "Failed to leave queue. Please try again.");
         console.error("Queue leave error:", error);
       }
     } else {
       if (isTeamReadyForQueue(team.lineup) && team.id) {
-        console.log("Attempting to join queue with team ID:", team.id);
         try {
           await UserController.joinQueue(userId, team.id);
-          console.log("Successfully joined queue");
         } catch (error) {
           Alert.alert("Error", "Failed to join queue. Please try again.");
           console.error("Queue join error:", error);
@@ -141,14 +137,19 @@ const MyTeam = () => {
             <Button
               label="Build Your Team"
               onPress={() => {
-                if (!isNavigating) {
+                try {
                   const route = !augment?.id
                     ? "/(protected)/(draft)/applyAugment"
                     : "/(protected)/(draft)/(teamBuilder)/roster";
-                  setIsNavigating(true);
                   router.push(route);
+                } catch (error) {
+                  console.log(error);
+                  Alert.alert(
+                    "Not able to route to team builder. Please try again.",
+                  );
                 }
               }}
+              throttleMs={300}
             />
           )}
         </View>

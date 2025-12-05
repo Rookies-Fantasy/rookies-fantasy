@@ -47,11 +47,33 @@ export const getDynamicAppConfig = (
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => {
+  const environment =
+    (process.env.APP_ENV as "development" | "preview" | "production") ||
+    "development";
+
   const { name, bundleIdentifier, icon, adaptiveIcon, packageName, scheme } =
-    getDynamicAppConfig(
-      (process.env.APP_ENV as "development" | "preview" | "production") ||
-        "development",
-    );
+    getDynamicAppConfig(environment);
+
+  // Get Google Services file based on environment
+  const getGoogleServicesFile = () => {
+    if (process.env.GOOGLE_SERVICE_INFO_PLIST) {
+      return process.env.GOOGLE_SERVICE_INFO_PLIST;
+    }
+    if (environment === "preview") {
+      return "./GoogleService-Info-staging.plist";
+    }
+    return "./GoogleService-Info-development.plist";
+  };
+
+  const getAndroidGoogleServicesFile = () => {
+    if (process.env.GOOGLE_SERVICES_JSON) {
+      return process.env.GOOGLE_SERVICES_JSON;
+    }
+    if (environment === "preview") {
+      return "./google-services-staging.json";
+    }
+    return "./google-services-development.json";
+  };
 
   return {
     ...config,
@@ -70,20 +92,19 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       backgroundColor: "#3B2689",
     },
     ios: {
-      googleServicesFile:
-        process.env.GOOGLE_SERVICE_INFO_PLIST ??
-        "./GoogleService-Info-development.plist",
+      googleServicesFile: getGoogleServicesFile(),
       bundleIdentifier: bundleIdentifier,
       supportsTablet: true,
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       adaptiveIcon: {
         foregroundImage: adaptiveIcon,
         backgroundColor: "#ffffff",
       },
-      googleServicesFile:
-        process.env.GOOGLE_SERVICES_JSON ??
-        "./google-services-development.json",
+      googleServicesFile: getAndroidGoogleServicesFile(),
       package: packageName,
     },
     web: {

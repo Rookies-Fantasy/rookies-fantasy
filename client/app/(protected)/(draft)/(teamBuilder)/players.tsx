@@ -55,7 +55,7 @@ const Players = () => {
   const router = useRouter();
 
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>();
   const [showPlayerDrawer, setShowPlayerDrawer] = useState(false);
 
   const activeFilters =
@@ -160,7 +160,7 @@ const Players = () => {
         player.averageStats.stl.toFixed(1),
         player.averageStats.blk.toFixed(1),
         player.averageStats.tov.toFixed(1),
-        player.averageStats.fpts,
+        player.averageStats.fpts.toFixed(1),
       ],
     }));
   }, [data?.pages, dispatch, team.lineup]);
@@ -194,7 +194,6 @@ const Players = () => {
             </View>
             <View className="gap-4">
               <SelectedAugment />
-
               <TeamBudget />
             </View>
             <View className="my-10 w-full flex-row items-center gap-4">

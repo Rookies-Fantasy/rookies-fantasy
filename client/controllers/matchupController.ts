@@ -44,10 +44,6 @@ export class MatchupController {
       dailyMatchups: {},
     };
 
-    if (data.weekStartDate) {
-      matchup.weekStartDate = data.weekStartDate;
-    }
-
     Object.keys(data).forEach((key) => {
       if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
         const dailyData = data[key];

@@ -8,9 +8,6 @@
       "environment": "development",
       "developmentClient": true,
       "distribution": "internal",
-      "env": {
-        "APP_VARIANT": "development"
-      },
       "channel": "development",
       "android": {
         "image": "latest"
@@ -28,19 +25,33 @@
     },
     "preview": {
       "environment": "preview",
-      "distribution": "internal",
-      "env": {
-        "APP_VARIANT": "preview"
-      },
-      "channel": "preview"
+      "distribution": "store",
+      "autoIncrement": true,
+      "channel": "preview",
+      "ios": {
+        "buildConfiguration": "Release"
+      }
     },
     "production": {
       "environment": "production",
+      "distribution": "store",
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "ios": {
+        "buildConfiguration": "Release"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "preview": {
+      "ios": {
+        "ascAppId": "6755507347"
+      }
+    },
+    "production": {
+      "ios": {
+        "ascAppId": "${ASC_APP_ID_PRODUCTION}"
+      }
+    }
   }
 }
