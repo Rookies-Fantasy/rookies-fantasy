@@ -160,7 +160,7 @@ const Players = () => {
         player.averageStats.stl.toFixed(1),
         player.averageStats.blk.toFixed(1),
         player.averageStats.tov.toFixed(1),
-        player.averageStats.fpts,
+        player.averageStats.fpts.toFixed(1),
       ],
     }));
   }, [data?.pages, dispatch, team.lineup]);
