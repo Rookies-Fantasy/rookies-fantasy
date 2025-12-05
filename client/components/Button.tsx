@@ -8,6 +8,7 @@ type ButtonProps = {
   isLoading?: boolean;
   label: string;
   onPress?: () => void;
+  throttleMs?: number;
   variant?: "primary" | "secondary";
 };
 
@@ -17,6 +18,7 @@ const Button = ({
   isLoading,
   label,
   onPress,
+  throttleMs = 0,
   variant = "primary",
 }: ButtonProps) => {
   const baseClass = "min-h-12 w-full items-center justify-center rounded-md";
@@ -28,12 +30,15 @@ const Button = ({
   const handlePress = useCallback(() => {
     if (!onPress) return;
 
-    const now = Date.now();
-    if (now - lastPressRef.current < 300) return;
+    // Skip throttle check if throttleMs is 0 or not provided
+    if (throttleMs > 0) {
+      const now = Date.now();
+      if (now - lastPressRef.current < throttleMs) return;
+      lastPressRef.current = now;
+    }
 
-    lastPressRef.current = now;
     onPress();
-  }, [onPress]);
+  }, [onPress, throttleMs]);
 
   return (
     <Pressable

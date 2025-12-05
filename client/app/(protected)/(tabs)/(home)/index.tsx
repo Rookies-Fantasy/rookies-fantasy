@@ -139,6 +139,7 @@ const MyTeam = () => {
                   );
                 }
               }}
+              throttleMs={300}
             />
           )}
         </View>
