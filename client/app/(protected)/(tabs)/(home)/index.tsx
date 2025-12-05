@@ -38,7 +38,6 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleQueueToggle = async () => {
     if (isInQueue) {
@@ -128,14 +127,19 @@ const MyTeam = () => {
             <Button
               label="Build Your Team"
               onPress={() => {
-                if (!isNavigating) {
+                try {
                   const route = !augment?.id
                     ? "/(protected)/(draft)/applyAugment"
                     : "/(protected)/(draft)/(teamBuilder)/roster";
-                  setIsNavigating(true);
                   router.push(route);
+                } catch (error) {
+                  console.log(error);
+                  Alert.alert(
+                    "Not able to route to team builder. Please try again.",
+                  );
                 }
               }}
+              throttleMs={300}
             />
           )}
         </View>
