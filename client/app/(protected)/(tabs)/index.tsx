@@ -83,14 +83,15 @@ const MyTeam = () => {
   };
 
   return (
-    <View className="bg-base-white dark:bg-black">
+    <View className="flex-1 bg-base-white dark:bg-black">
       <ScrollView
         contentContainerClassName={cn(
-          "items-center gap-10 flex-col px-8",
-          team.hasUserChanges ? "pb-20 pt-10" : "py-10",
+          "flex-col",
+          team.hasUserChanges && "pb-20",
         )}
+        showsVerticalScrollIndicator={false}
       >
-        <View className="w-full flex-row items-center justify-between">
+        <View className="w-full flex-row items-center justify-between border-b-2 border-gray-900 px-8 pb-6 pt-10">
           <View className="flex-row items-center gap-5">
             <Image
               className="h-[75px] w-[75px] rounded-full border-2"
@@ -108,7 +109,7 @@ const MyTeam = () => {
             <SignOut color="white" size={20} weight="bold" />
           </Pressable>
         </View>
-        <View className="w-full flex-1 gap-3">
+        <View className="flex-1 gap-6 px-8 pt-6">
           {playerCount > 0 ? (
             <>
               {!isMatched && (
@@ -130,18 +131,33 @@ const MyTeam = () => {
               </View>
             </>
           ) : (
-            <Button
-              label="Build Your Team"
-              onPress={() => {
-                if (!isNavigating) {
-                  const route = !augment?.id
-                    ? "/(protected)/(draft)/applyAugment"
-                    : "/(protected)/(draft)/(teamBuilder)/roster";
-                  setIsNavigating(true);
-                  router.push(route);
-                }
-              }}
-            />
+            <View className="flex-1 pb-10">
+              <View className="w-full flex-row gap-3 rounded-lg bg-gray-900 p-4">
+                <Text className="pbk-bl">💸</Text>
+                <View className="flex-1">
+                  <Text className="pbk-b1 text-base-white">
+                    Build your team. Stay under $150M 💰
+                  </Text>
+                  <Text className="pbk-b2 text-gray-400">
+                    Choose 8 players for your weekly lineup. You&#39;ve got 4
+                    swaps to cover injuries or make strategic moves.
+                  </Text>
+                </View>
+              </View>
+              <Button
+                className="mt-auto"
+                label="Build Your Team"
+                onPress={() => {
+                  if (!isNavigating) {
+                    const route = !augment?.id
+                      ? "/(protected)/(draft)/applyAugment"
+                      : "/(protected)/(draft)/(teamBuilder)/roster";
+                    setIsNavigating(true);
+                    router.push(route);
+                  }
+                }}
+              />
+            </View>
           )}
         </View>
       </ScrollView>
