@@ -31,11 +31,11 @@ import {
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
-import { Player, PlayerFilters } from "@/types/player";
+import { defaultPlayerFilters, Player, PlayerFilters } from "@/types/player";
 import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
-type FetchPlayersParams = {
+export type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
 
@@ -69,9 +69,11 @@ const Players = () => {
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    activeFilters
-      ? await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, filters)
-      : await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
+    await NbaPlayersController.getPlayers({
+      pageSize: PAGE_SIZE,
+      pageParam,
+      filters: activeFilters ? filters : defaultPlayerFilters,
+    });
 
   const {
     data,
