@@ -21,7 +21,7 @@ export type Matchup = {
     awayTeamLogo?: string;
     awayTeamName: string;
     awayUserId: string;
-    awayWeeklyAcquisitionsUsed: number;
+    awayWeeklyAcquisitionsAvailable: number;
   };
   home: {
     homeAugment?: Augment;
@@ -29,7 +29,7 @@ export type Matchup = {
     homeTeamLogo?: string;
     homeTeamName: string;
     homeUserId: string;
-    homeWeeklyAcquisitionsUsed: number;
+    homeWeeklyAcquisitionsAvailable: number;
   };
   status: "active" | "completed";
   weekStartDate: string;
@@ -42,13 +42,13 @@ export const defaultMatchup: Matchup = {
     awayTeamId: "",
     awayTeamName: "",
     awayUserId: "",
-    awayWeeklyAcquisitionsUsed: 0,
+    awayWeeklyAcquisitionsAvailable: 4,
   },
   home: {
     homeTeamId: "",
     homeTeamName: "",
     homeUserId: "",
-    homeWeeklyAcquisitionsUsed: 0,
+    homeWeeklyAcquisitionsAvailable: 4,
   },
   status: "active",
   weekStartDate: "",

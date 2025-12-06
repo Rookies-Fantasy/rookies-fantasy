@@ -79,11 +79,11 @@ export const selectAwayUserId = (state: RootState) =>
   state.matchup.away.awayUserId;
 export const selectHomeUserId = (state: RootState) =>
   state.matchup.home.homeUserId;
-export const selectWeeklyAcquisitionsUsed = (state: RootState) => {
+export const selectWeeklyAcquisitionsAvailable = (state: RootState) => {
   if (state.user.id === state.matchup.home.homeUserId) {
-    return state.matchup.home.homeWeeklyAcquisitionsUsed;
+    return state.matchup.home.homeWeeklyAcquisitionsAvailable;
   }
-  return state.matchup.away.awayWeeklyAcquisitionsUsed;
+  return state.matchup.away.awayWeeklyAcquisitionsAvailable;
 };
 
 export const { setMatchup, clearMatchup, updateMatchupWithLiveData } =
