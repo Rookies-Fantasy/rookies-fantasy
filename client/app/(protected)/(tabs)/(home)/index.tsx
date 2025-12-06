@@ -106,7 +106,7 @@ const MyTeam = () => {
             </View>
           </View>
         </View>
-        <View className="mx-6 flex-1 gap-3">
+        <View className="mx-6 flex-1 gap-4 py-4">
           {playerCount > 0 ? (
             <>
               {!isMatched && (
@@ -125,15 +125,13 @@ const MyTeam = () => {
                   <Text className="pbk-h8 text-modeContrast">{`${weeklyAcquisitionsAvailable}/4 players`}</Text>
                 </View>
               )}
-              <View className="my-2 flex-1 gap-4">
-                <PlayerRoster
-                  bench={team.bench}
-                  isCard
-                  lineup={team.lineup}
-                  onOpen={() => setShowBottomDrawer(true)}
-                  setSelectedPosition={setSelectedPosition}
-                />
-              </View>
+              <PlayerRoster
+                bench={team.bench}
+                isCard
+                lineup={team.lineup}
+                onOpen={() => setShowBottomDrawer(true)}
+                setSelectedPosition={setSelectedPosition}
+              />
             </>
           ) : (
             <Button
