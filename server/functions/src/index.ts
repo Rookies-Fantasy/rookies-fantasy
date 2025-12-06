@@ -720,19 +720,11 @@ const createWeeklyMatchup = async (
       matchupData[dateStr] = {
         homeTeam: {
           score: 0,
-          lineup: fillLineupWithGameData(
-            team1Info.lineup || [],
-            dateStr,
-            dailyGamesMap,
-          ),
+          lineup: fillLineupWithGameData(team1Info.lineup || [], dailyGamesMap),
         },
         awayTeam: {
           score: 0,
-          lineup: fillLineupWithGameData(
-            team2Info.lineup || [],
-            dateStr,
-            dailyGamesMap,
-          ),
+          lineup: fillLineupWithGameData(team2Info.lineup || [], dailyGamesMap),
         },
       };
     }
@@ -830,7 +822,6 @@ const fetchWeekGamesInfo = async (
 
 const fillLineupWithGameData = (
   lineup: any[],
-  dateStr: string,
   dailyGamesMap: Map<string, any>,
 ): any[] => {
   return lineup.map((slot) => {
