@@ -974,6 +974,61 @@ export const weeklyMatchupReset = functions.pubsub
           });
 
           console.log(`Matchup ${matchupId} completed. Winner: ${winnerId}`);
+
+          const teams = [
+            {
+              userId: matchupData.home.homeUserId,
+              teamId: matchupData.home.homeTeamId,
+            },
+            {
+              userId: matchupData.away.awayUserId,
+              teamId: matchupData.away.awayTeamId,
+            },
+          ];
+
+          for (const team of teams) {
+            const teamRef = db
+              .collection("users")
+              .doc(team.userId)
+              .collection("teams")
+              .doc(team.teamId);
+
+            const teamDoc = await teamRef.get();
+            const isWin = winnerId === team.teamId;
+            const isDraw = winnerId === "";
+            const isLoss = !isWin && !isDraw;
+
+            if (teamDoc.exists) {
+              const teamData = teamDoc.data();
+              const current = teamData?.record || {
+                wins: 0,
+                losses: 0,
+                draws: 0,
+              };
+              await teamRef.update({
+                record: {
+                  wins: isWin ? current.wins + 1 : current.wins,
+                  losses: isLoss ? current.losses + 1 : current.losses,
+                  draws: isDraw ? current.draws + 1 : current.draws,
+                },
+              });
+            } else {
+              await teamRef.set(
+                {
+                  record: {
+                    wins: isWin ? 1 : 0,
+                    losses: isLoss ? 1 : 0,
+                    draws: isDraw ? 1 : 0,
+                  },
+                },
+                // This merge updates new data to an existing document
+                // without overwriting anything other fields
+                { merge: true },
+              );
+            }
+
+            console.log(`Updated record for team ${team.teamId}`);
+          }
         },
       );
 
