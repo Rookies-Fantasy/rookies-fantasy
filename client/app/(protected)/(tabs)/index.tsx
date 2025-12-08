@@ -131,7 +131,7 @@ const MyTeam = () => {
               </View>
             </>
           ) : (
-            <View className="flex-1 pb-10">
+            <View className="flex-1 flex-col bg-red-500 pb-10">
               <View className="w-full flex-row gap-3 rounded-lg bg-gray-900 p-4">
                 <Text className="pbk-bl">💸</Text>
                 <View className="flex-1">
@@ -145,7 +145,7 @@ const MyTeam = () => {
                 </View>
               </View>
               <Button
-                className="mt-auto"
+                className="justify-end"
                 label="Build Your Team"
                 onPress={() => {
                   if (!isNavigating) {
