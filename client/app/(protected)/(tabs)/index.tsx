@@ -22,6 +22,7 @@ import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
+import IconButton from "@/components/IconButton";
 
 const MyTeam = () => {
   const router = useRouter();
@@ -100,7 +101,7 @@ const MyTeam = () => {
 
   return (
     <View className="flex-1 bg-base-white dark:bg-black">
-      <View className="w-full flex-row items-center justify-between border-b-2 border-gray-900 px-8 pb-6 pt-10">
+      <View className="w-full flex-row items-center justify-between border-b-2 border-gray-900 p-8">
         <View className="flex-row items-center gap-5">
           <Image
             className="h-[75px] w-[75px] rounded-full border-2"
@@ -108,13 +109,10 @@ const MyTeam = () => {
           />
           <Text className="pbk-h5 text-black dark:text-white">{team.name}</Text>
         </View>
-        <Pressable
-          className="flex-row items-center gap-2 rounded-lg bg-primary-500 p-2"
+        <IconButton
+          icon={<SignOut color="#6042FF" size={24} weight="bold" />}
           onPress={handleLogout}
-        >
-          <Text className="pbk-h8 text-white">Sign Out</Text>
-          <SignOut color="white" size={20} weight="bold" />
-        </Pressable>
+        />
       </View>
       <View className="flex-1 gap-6 px-8">
         {playerCount > 0 ? (
