@@ -5,9 +5,10 @@ import { useState } from "react";
 import { Pressable, Text, View, Image, Alert } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
-import Button from "@/components/Button";
+import FloatingActionButton from "@/components/FloatingActionButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
+import Spinner from "@/components/Spinner";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
@@ -37,11 +38,26 @@ const MyTeam = () => {
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
+  const [isLoading, setIsLoading] = useState(false);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-  const [isNavigating, setIsNavigating] = useState(false);
+
+  const handleEnterTeamBuilder = () => {
+    try {
+      setIsLoading(true);
+      const route = !augment?.id
+        ? "/(protected)/(draft)/applyAugment"
+        : "/(protected)/(draft)/(teamBuilder)/roster";
+      router.push(route);
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Not able to route to team builder. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -84,41 +100,29 @@ const MyTeam = () => {
 
   return (
     <View className="flex-1 bg-base-white dark:bg-black">
-      <ScrollView
-        contentContainerClassName={cn(
-          "flex-col",
-          team.hasUserChanges && "pb-20",
-        )}
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="w-full flex-row items-center justify-between border-b-2 border-gray-900 px-8 pb-6 pt-10">
-          <View className="flex-row items-center gap-5">
-            <Image
-              className="h-[75px] w-[75px] rounded-full border-2"
-              source={matchedLogo?.source ?? defaultTeamLogo.source}
-            />
-            <Text className="pbk-h5 text-black dark:text-white">
-              {team.name}
-            </Text>
-          </View>
-          <Pressable
-            className="flex-row items-center gap-2 rounded-lg bg-primary-500 p-2"
-            onPress={handleLogout}
-          >
-            <Text className="pbk-h8 text-white">Sign Out</Text>
-            <SignOut color="white" size={20} weight="bold" />
-          </Pressable>
+      <View className="w-full flex-row items-center justify-between border-b-2 border-gray-900 px-8 pb-6 pt-10">
+        <View className="flex-row items-center gap-5">
+          <Image
+            className="h-[75px] w-[75px] rounded-full border-2"
+            source={matchedLogo?.source ?? defaultTeamLogo.source}
+          />
+          <Text className="pbk-h5 text-black dark:text-white">{team.name}</Text>
         </View>
-        <View className="flex-1 gap-6 px-8 pt-6">
-          {playerCount > 0 ? (
-            <>
-              {!isMatched && (
-                <Button
-                  className={isInQueue ? "bg-red-600" : "bg-primary-500"}
-                  label={isInQueue ? "Cancel Queue" : "Queue"}
-                  onPress={handleQueueToggle}
-                />
-              )}
+        <Pressable
+          className="flex-row items-center gap-2 rounded-lg bg-primary-500 p-2"
+          onPress={handleLogout}
+        >
+          <Text className="pbk-h8 text-white">Sign Out</Text>
+          <SignOut color="white" size={20} weight="bold" />
+        </Pressable>
+      </View>
+      <View className="flex-1 gap-6 px-8">
+        {playerCount > 0 ? (
+          <>
+            <ScrollView
+              contentContainerClassName={cn("flex-col p-1 gap-4 pb-24 mt-4")}
+              showsVerticalScrollIndicator={false}
+            >
               <AugmentStatusCard />
               <View className="my-2 flex-1 gap-4">
                 <PlayerRoster
@@ -129,39 +133,64 @@ const MyTeam = () => {
                   setSelectedPosition={setSelectedPosition}
                 />
               </View>
-            </>
-          ) : (
-            <View className="flex-1 flex-col bg-red-500 pb-10">
-              <View className="w-full flex-row gap-3 rounded-lg bg-gray-900 p-4">
-                <Text className="pbk-bl">💸</Text>
-                <View className="flex-1">
-                  <Text className="pbk-b1 text-base-white">
-                    Build your team. Stay under $150M 💰
+            </ScrollView>
+            {!isMatched && !team.hasUserChanges && (
+              <FloatingActionButton
+                buttonBackground={cn(
+                  "px-4",
+                  isInQueue ? "bg-red-600" : "bg-primary-500",
+                )}
+                className="absolute bottom-10 w-full self-center"
+                onPress={handleQueueToggle}
+              >
+                {isLoading ? (
+                  <View className="items-center justify-center">
+                    <Spinner />
+                  </View>
+                ) : (
+                  <Text className="pbk-h6 text-center text-base-white">
+                    {isInQueue ? "CANCEL QUEUE" : "QUEUE"}
                   </Text>
-                  <Text className="pbk-b2 text-gray-400">
-                    Choose 8 players for your weekly lineup. You&#39;ve got 4
-                    swaps to cover injuries or make strategic moves.
-                  </Text>
-                </View>
+                )}
+              </FloatingActionButton>
+            )}
+          </>
+        ) : (
+          <View className="mt-4 flex-1 flex-col pb-10">
+            <Pressable
+              className="w-full flex-row gap-3 rounded-lg bg-gray-900 p-4"
+              onPress={() => handleEnterTeamBuilder()}
+            >
+              <Text className="pbk-bl">💸</Text>
+              <View className="flex-1">
+                <Text className="pbk-b1 text-base-white">
+                  Build your team. Stay under $150M 💰
+                </Text>
+                <Text className="pbk-b2 text-gray-400">
+                  Choose 8 players for your weekly lineup. You&#39;ve got 4
+                  swaps to cover injuries or make strategic moves.
+                </Text>
               </View>
-              <Button
-                className="justify-end"
-                label="Build Your Team"
-                onPress={() => {
-                  if (!isNavigating) {
-                    const route = !augment?.id
-                      ? "/(protected)/(draft)/applyAugment"
-                      : "/(protected)/(draft)/(teamBuilder)/roster";
-                    setIsNavigating(true);
-                    router.push(route);
-                  }
-                }}
-              />
-            </View>
-          )}
-        </View>
-      </ScrollView>
-      <TeamActionButtons />
+            </Pressable>
+            <FloatingActionButton
+              buttonBackground="bg-primary-500 px-4"
+              className="absolute bottom-10 w-full self-center"
+              onPress={() => handleEnterTeamBuilder()}
+            >
+              {isLoading ? (
+                <View className="items-center justify-center">
+                  <Spinner />
+                </View>
+              ) : (
+                <Text className="pbk-h6 text-center text-base-white">
+                  BUILD YOUR TEAM
+                </Text>
+              )}
+            </FloatingActionButton>
+          </View>
+        )}
+        <TeamActionButtons />
+      </View>
       {isNotNil(selectedPosition) && (
         <RosterDrawer
           selectedPosition={selectedPosition}

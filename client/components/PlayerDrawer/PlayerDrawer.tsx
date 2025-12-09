@@ -8,6 +8,7 @@ import PlayerInfo from "./PlayerInfo";
 import PlayerStats from "./PlayerStats";
 import { NbaPlayersController } from "@/controllers/nbaPlayersController";
 import { Player } from "@/types/player";
+import { isNotNil } from "@/utils/jsUtils";
 
 enum PlayerTabKey {
   Info = "info",
@@ -15,7 +16,7 @@ enum PlayerTabKey {
 }
 
 type PlayerDrawerProps = {
-  playerId: string | null;
+  playerId?: string;
   setSelectedPlayerId: (selectedPlayerId: string) => void;
   setShowPlayerDrawer: (showPlayerDrawer: boolean) => void;
   showPlayerDrawer: boolean;
@@ -52,14 +53,10 @@ const PlayerDrawer = ({
       onClose={onClose}
       snapPoints={["80%"]}
     >
-      <ScrollView
-        className="flex-1 pt-6"
-        contentContainerClassName="items-center"
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView className="flex-1 pt-6" showsVerticalScrollIndicator={false}>
         {loading ? (
           <Spinner />
-        ) : player ? (
+        ) : isNotNil(player) ? (
           <View className="w-full flex-1 items-center">
             <Image
               className="mb-4 h-24 w-24 rounded-full border border-gray-800 bg-gray-950"
@@ -90,6 +87,7 @@ const PlayerDrawer = ({
             />
           </View>
         ) : (
+          // TODO: This is a bit strange, should we handle invalid players better?
           <View className="flex-1 items-center justify-center">
             <Text className="pbk-b2 text-center text-gray-300">
               This player does not exist.

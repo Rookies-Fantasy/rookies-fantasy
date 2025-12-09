@@ -30,7 +30,7 @@ const TeamActionButtons = () => {
   }
 
   return (
-    <View className="absolute bottom-6 left-6 right-6 flex-row gap-4">
+    <View className="absolute bottom-10 flex-row gap-4 self-center">
       <FloatingActionButton
         absolute={false}
         buttonBackground="bg-gray-900 border border-purple-500"
