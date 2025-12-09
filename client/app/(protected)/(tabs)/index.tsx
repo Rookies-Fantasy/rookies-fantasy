@@ -6,6 +6,7 @@ import { Pressable, Text, View, Image, Alert } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
 import FloatingActionButton from "@/components/FloatingActionButton";
+import IconButton from "@/components/IconButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import Spinner from "@/components/Spinner";
@@ -22,7 +23,6 @@ import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
-import IconButton from "@/components/IconButton";
 
 const MyTeam = () => {
   const router = useRouter();
