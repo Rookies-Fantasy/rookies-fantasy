@@ -106,7 +106,16 @@ const MyTeam = () => {
             className="h-[75px] w-[75px] rounded-full border-2"
             source={matchedLogo?.source ?? defaultTeamLogo.source}
           />
-          <Text className="pbk-h5 text-black dark:text-white">{team.name}</Text>
+          <View>
+            <Text className="pbk-h5 text-black dark:text-white">
+              {team.name}
+            </Text>
+            {team.record && (
+              <Text className="pbk-b2 text-gray-600 dark:text-gray-400">
+                {team.record.wins}-{team.record.losses}-{team.record.draws}
+              </Text>
+            )}
+          </View>
         </View>
         <Pressable
           className="flex-row items-center gap-2 rounded-lg bg-primary-500 p-2"
