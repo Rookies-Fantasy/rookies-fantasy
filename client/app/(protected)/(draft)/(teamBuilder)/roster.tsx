@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import IconButton from "@/components/IconButton";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
+import SelectedAugment from "@/components/SelectedAugment";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import TeamBudget from "@/components/TeamBudget";
 import { useAppSelector } from "@/state/hooks";
@@ -49,7 +50,10 @@ const Roster = () => {
                 </View>
               </View>
 
-              <TeamBudget />
+              <View className="gap-4">
+                <SelectedAugment />
+                <TeamBudget />
+              </View>
             </View>
 
             <View className="mx-6 mb-24 mt-4 flex-1 gap-4">

@@ -1,36 +1,50 @@
 import { useRef } from "react";
 import { View, FlatList } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import Row from "./Row";
+import Row, { RowData } from "./Row";
 
 type TableProps = {
-  isFetchingNextPage: boolean;
+  data: RowData[];
+  hasNextPage?: boolean;
   headers: string[];
-  hasNextPage: boolean;
-  data: any[][];
+  isFetchingNextPage?: boolean;
+  onEndReached?: () => void;
+  onRowPress?: (id: string) => void;
   stickyColumns: number;
   widthClasses: string[];
-  onEndReached?: () => void;
 };
 
 const Table = ({
-  isFetchingNextPage,
-  headers,
-  hasNextPage,
   data,
+  hasNextPage = false,
+  headers,
+  isFetchingNextPage = false,
+  onEndReached,
+  onRowPress,
   stickyColumns,
   widthClasses,
-  onEndReached,
 }: TableProps) => {
   const horizontalScrollRef = useRef<ScrollView>(null);
   const bodyScrollRef = useRef<ScrollView>(null);
   const isSyncingRef = useRef(false);
 
-  const stickyHeaders = headers.slice(0, stickyColumns);
-  const scrollableHeaders = headers.slice(stickyColumns);
+  const stickyHeaders = {
+    id: "header",
+    cells: headers.slice(0, stickyColumns),
+  };
+  const scrollableHeaders = {
+    id: "header",
+    cells: headers.slice(stickyColumns),
+  };
 
-  const stickyData = data.map((row) => row.slice(0, stickyColumns));
-  const scrollableData = data.map((row) => row.slice(stickyColumns));
+  const stickyData = data.map((row) => ({
+    id: row.id,
+    cells: row.cells.slice(0, stickyColumns),
+  }));
+  const scrollableData = data.map((row) => ({
+    id: row.id,
+    cells: row.cells.slice(stickyColumns),
+  }));
 
   const stickyWidths = widthClasses.slice(0, stickyColumns);
   const scrollableWidths = widthClasses.slice(stickyColumns);
@@ -94,7 +108,11 @@ const Table = ({
             <FlatList
               data={stickyData}
               renderItem={({ item }) => (
-                <Row rowData={item} widthClasses={stickyWidths} />
+                <Row
+                  onPress={() => onRowPress?.(item.id)}
+                  rowData={item}
+                  widthClasses={stickyWidths}
+                />
               )}
               scrollEnabled={false}
             />
@@ -116,6 +134,7 @@ const Table = ({
                 renderItem={({ item }) => (
                   <Row
                     cellVariant="scrollable"
+                    onPress={() => onRowPress?.(item.id)}
                     rowData={item}
                     widthClasses={scrollableWidths}
                   />

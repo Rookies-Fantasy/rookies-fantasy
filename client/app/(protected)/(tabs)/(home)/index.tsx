@@ -1,23 +1,36 @@
-import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import { Pressable, Text, View, Image } from "react-native";
+import { useState } from "react";
+import { Pressable, Text, View, Image, Alert } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AugmentStatusCard from "@/components/AugmentStatusCard";
 import Button from "@/components/Button";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import TeamActionButtons from "@/components/TeamActionButtons";
+import { UserController } from "@/controllers/userController";
 import { useAppSelector } from "@/state/hooks";
-import { selectAugmentId } from "@/state/slices/teamSlice";
+import {
+  selectAugment,
+  selectRosterPlayerCount,
+} from "@/state/slices/teamSlice";
+import { selectUserId } from "@/state/slices/userSlice";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
+import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
 const MyTeam = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
-  const augmentId = useAppSelector(selectAugmentId);
+  const user = useAppSelector((state) => state.user);
+  const userId = useAppSelector(selectUserId);
+  const augment = useAppSelector(selectAugment);
+  const playerCount = useAppSelector(selectRosterPlayerCount);
+
+  const queueStatus = user.queueStatus ?? "idle";
+  const isInQueue = queueStatus === "queued";
+  const isMatched = queueStatus === "matched";
   const matchedLogo = teamLogoOptions.find(
     (option) => option.url === team.logoUrl,
   );
@@ -25,17 +38,35 @@ const MyTeam = () => {
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
   );
-  const [isNavigating, setIsNavigating] = useState(false);
-  useFocusEffect(
-    useCallback(() => {
-      setIsNavigating(false);
-    }, []),
-  );
+
+  const handleQueueToggle = async () => {
+    if (isInQueue) {
+      try {
+        await UserController.leaveQueue(userId);
+      } catch (error) {
+        Alert.alert("Error", "Failed to leave queue. Please try again.");
+        console.error("Queue leave error:", error);
+      }
+    } else {
+      if (isTeamReadyForQueue(team.lineup) && team.id) {
+        try {
+          await UserController.joinQueue(userId, team.id);
+        } catch (error) {
+          Alert.alert("Error", "Failed to join queue. Please try again.");
+          console.error("Queue join error:", error);
+        }
+      } else {
+        Alert.alert(
+          "Team Not Ready",
+          "Your team must have all positions filled to enter the queue.",
+        );
+      }
+    }
+  };
 
   return (
     <SafeAreaView className="h-full w-full items-center justify-center bg-gray-950">
       <ScrollView
-        // TODO: Find a better way to prevent FAB from blocking content (maybe use SafeAreaView bottom inset)
         contentContainerClassName={team.hasUserChanges ? "pb-10" : ""}
       >
         <View className="h-72 w-full">
@@ -71,30 +102,49 @@ const MyTeam = () => {
             </View>
           </View>
         </View>
-        <View className="flex-1 flex-row items-end p-8">
-          <Button
-            label="Build Your Team"
-            onPress={() => {
-              if (!isNavigating) {
-                const route = !augmentId
-                  ? "/(protected)/(draft)/applyAugment"
-                  : "/(protected)/(draft)/(teamBuilder)/roster";
-                setIsNavigating(true);
-                router.push(route);
-              }
-            }}
-          />
-        </View>
-        <View className="mx-6 my-2 flex-1 gap-4">
-          <PlayerRoster
-            bench={team.bench}
-            isCard
-            lineup={team.lineup}
-            onOpen={() => setShowBottomDrawer(true)}
-            setSelectedPosition={setSelectedPosition}
-          />
+        <View className="mx-6 flex-1 gap-3">
+          {playerCount > 0 ? (
+            <>
+              {!isMatched && (
+                <Button
+                  className={isInQueue ? "bg-red-600" : "bg-purple-800"}
+                  label={isInQueue ? "Cancel Queue" : "Queue"}
+                  onPress={handleQueueToggle}
+                />
+              )}
+              <AugmentStatusCard />
+              <View className="my-2 flex-1 gap-4">
+                <PlayerRoster
+                  bench={team.bench}
+                  isCard
+                  lineup={team.lineup}
+                  onOpen={() => setShowBottomDrawer(true)}
+                  setSelectedPosition={setSelectedPosition}
+                />
+              </View>
+            </>
+          ) : (
+            <Button
+              label="Build Your Team"
+              onPress={() => {
+                try {
+                  const route = !augment?.id
+                    ? "/(protected)/(draft)/applyAugment"
+                    : "/(protected)/(draft)/(teamBuilder)/roster";
+                  router.push(route);
+                } catch (error) {
+                  console.log(error);
+                  Alert.alert(
+                    "Not able to route to team builder. Please try again.",
+                  );
+                }
+              }}
+              throttleMs={300}
+            />
+          )}
         </View>
       </ScrollView>
+
       <TeamActionButtons />
       {isNotNil(selectedPosition) && (
         <RosterDrawer

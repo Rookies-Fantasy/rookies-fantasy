@@ -1,6 +1,6 @@
 import { Alert } from "react-native";
 import { UserController } from "@/controllers/userController";
-import { Player } from "@/types/players";
+import { Player } from "@/types/player";
 import {
   BenchSlot,
   FlexPosition,
@@ -15,6 +15,13 @@ export type SaveLineupOptions = {
   onError?: (error: any) => void;
   onStart?: () => void;
   onFinally?: () => void;
+};
+
+export const isTeamReadyForQueue = (lineup: LineupSlot[]) => {
+  const ROSTER_SIZE = 8;
+  const filledSlots = lineup.filter((slot) => slot.player !== null).length;
+
+  return ROSTER_SIZE === lineup.length && filledSlots === ROSTER_SIZE;
 };
 
 export const findSlotFromPosition = <T extends LineupSlot | BenchSlot>(
@@ -78,8 +85,7 @@ export const saveTeamLineup = async (
 
 export const resetTeamLineup = async (userId: string, teamId: string) => {
   try {
-    const savedData = await UserController.getSavedTeamLineup(userId, teamId);
-    return savedData;
+    return await UserController.getSavedTeamLineup(userId, teamId);
   } catch (error) {
     console.log(error);
     return { lineup: [], balance: 0 };
