@@ -6,6 +6,11 @@ import { applyAugmentEffects } from "@/utils/augmentEffects";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNotNil } from "@/utils/jsUtils";
 
+type PlayerGameData = {
+  gameInfo: GameInfo;
+  gameStats: GameStats;
+};
+
 const matchupSlice = createSlice({
   name: "matchup",
   initialState: defaultMatchup,
@@ -16,20 +21,8 @@ const matchupSlice = createSlice({
       state,
       action: PayloadAction<{
         date: string;
-        updatedHome: Record<
-          string,
-          {
-            gameInfo: GameInfo;
-            gameStats: GameStats;
-          } | null
-        >;
-        updatedAway: Record<
-          string,
-          {
-            gameInfo: GameInfo;
-            gameStats: GameStats;
-          } | null
-        >;
+        updatedHome: Record<string, PlayerGameData | null>;
+        updatedAway: Record<string, PlayerGameData | null>;
       }>,
     ) => {
       const newMatchup = state.dailyMatchups[action.payload.date];

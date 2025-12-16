@@ -1,14 +1,15 @@
 import { ReactNode } from "react";
 import { Keyboard, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, Edge } from "react-native-safe-area-context";
 
 type ScreenProps = {
   children: ReactNode;
+  edges?: Edge[];
 };
 
-export default function Screen({ children }: ScreenProps) {
+export default function Screen({ children, edges }: ScreenProps) {
   return (
-    <SafeAreaView className="flex-1 bg-gray-950">
+    <SafeAreaView className="flex-1 bg-gray-950" edges={edges}>
       <Pressable
         android_ripple={{ color: "transparent" }}
         className="flex-1"

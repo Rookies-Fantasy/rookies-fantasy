@@ -274,7 +274,7 @@ export const updateDailyPlayerData = functions
     });
 
     // Initialize batching
-    const batch = admin.firestore().batch();
+    let batch = admin.firestore().batch();
     let opCount = 0;
     const BATCH_LIMIT = 400;
 
@@ -326,7 +326,9 @@ export const updateDailyPlayerData = functions
       batch.update(playerDocRef, updateObj);
 
       opCount++;
-      opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      batch = result.batch;
+      opCount = result.count;
     }
 
     // === UPDATE USERS COLLECTION ===
@@ -373,7 +375,9 @@ export const updateDailyPlayerData = functions
         console.log("Writing user team update:", { docId: teamDoc.id });
 
         batch.set(teamDoc.ref, { lineup: updatedLineup }, { merge: true });
-        opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+        const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+        batch = result.batch;
+        opCount = result.count;
       }
     }
 
@@ -399,7 +403,9 @@ export const updateDailyPlayerData = functions
 
       batch.set(matchupDoc.ref, { [today]: updatedDayObj }, { merge: true });
 
-      opCount = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
+      batch = result.batch;
+      opCount = result.count;
     }
 
     if (opCount > 0) {
@@ -489,7 +495,7 @@ const updateTeamLineup = (
           ...(latestAvg ? { averageStats: latestAvg } : {}),
           ...(latestGamelog
             ? {
-                gamelog: [
+                gameStats: [
                   ...(Array.isArray(slot.player.gamelog)
                     ? slot.player.gamelog
                     : []),
@@ -511,9 +517,13 @@ const commitIfNeeded = async (
   if (count >= limit) {
     await batch.commit();
     console.log("Committed batch");
-    return 0;
+    return {
+      batch: admin.firestore().batch(),
+      count: 0,
+    };
   }
-  return count + 1;
+
+  return { batch, count: count + 1 };
 };
 
 const calculateFantasyPoints = (s: any) => {
@@ -880,9 +890,8 @@ const checkIfMondayGamesStarted = async (): Promise<boolean> => {
       return false;
     }
 
-    const gameTimes = games.map((game: any) => new Date(game.status));
     const earliestGame = new Date(
-      Math.min(...gameTimes.map((d: any) => d.getTime())),
+      Math.min(...games.map((g: any) => new Date(g.status).getTime())),
     );
 
     const now = new Date();
@@ -965,6 +974,61 @@ export const weeklyMatchupReset = functions.pubsub
           });
 
           console.log(`Matchup ${matchupId} completed. Winner: ${winnerId}`);
+
+          const teams = [
+            {
+              userId: matchupData.home.homeUserId,
+              teamId: matchupData.home.homeTeamId,
+            },
+            {
+              userId: matchupData.away.awayUserId,
+              teamId: matchupData.away.awayTeamId,
+            },
+          ];
+
+          for (const team of teams) {
+            const teamRef = db
+              .collection("users")
+              .doc(team.userId)
+              .collection("teams")
+              .doc(team.teamId);
+
+            const teamDoc = await teamRef.get();
+            const isWin = winnerId === team.teamId;
+            const isDraw = winnerId === "";
+            const isLoss = !isWin && !isDraw;
+
+            if (teamDoc.exists) {
+              const teamData = teamDoc.data();
+              const current = teamData?.record || {
+                wins: 0,
+                losses: 0,
+                draws: 0,
+              };
+              await teamRef.update({
+                record: {
+                  wins: isWin ? current.wins + 1 : current.wins,
+                  losses: isLoss ? current.losses + 1 : current.losses,
+                  draws: isDraw ? current.draws + 1 : current.draws,
+                },
+              });
+            } else {
+              await teamRef.set(
+                {
+                  record: {
+                    wins: isWin ? 1 : 0,
+                    losses: isLoss ? 1 : 0,
+                    draws: isDraw ? 1 : 0,
+                  },
+                },
+                // This merge updates new data to an existing document
+                // without overwriting anything other fields
+                { merge: true },
+              );
+            }
+
+            console.log(`Updated record for team ${team.teamId}`);
+          }
         },
       );
 

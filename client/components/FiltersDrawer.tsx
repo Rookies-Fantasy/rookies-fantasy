@@ -153,7 +153,7 @@ const FiltersDrawer = ({
       }
       isOpen={showFiltersDrawer}
       onClose={setShowFiltersDrawer}
-      snapPoints={["80%"]}
+      snapPoints={["66%"]}
     >
       <Accordion selectedCount={localFilters.selectedTeams.length} title="Team">
         <ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 pb-36">

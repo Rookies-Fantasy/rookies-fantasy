@@ -18,7 +18,6 @@ export type Player = {
   height: string;
   id: string;
   jerseyNumber: string;
-  playerId: string;
   positions: string[];
   salary: number;
   lastName: string;
@@ -44,6 +43,12 @@ export const POSITION_FILTER_OPTIONS: PositionFilters[] = [
   "F",
 ];
 
+export const defaultPlayerFilters: PlayerFilters = {
+  selectedTeams: [],
+  selectedPositions: [],
+  salaryRange: { min: 1000000, max: 150000000 },
+};
+
 export const defaultPlayer: Player = {
   id: "",
   averageStats: {
@@ -61,7 +66,6 @@ export const defaultPlayer: Player = {
   headshotUrl: "",
   height: "",
   jerseyNumber: "",
-  playerId: "",
   positions: [],
   salary: 0,
   lastName: "",

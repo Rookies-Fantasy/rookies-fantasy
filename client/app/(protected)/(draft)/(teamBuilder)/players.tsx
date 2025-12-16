@@ -31,11 +31,11 @@ import {
   resetToSavedTeam,
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
-import { Player, PlayerFilters } from "@/types/player";
+import { defaultPlayerFilters, Player, PlayerFilters } from "@/types/player";
 import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
 import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
-type FetchPlayersParams = {
+export type FetchPlayersParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
 };
 
@@ -55,7 +55,7 @@ const Players = () => {
   const router = useRouter();
 
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>();
   const [showPlayerDrawer, setShowPlayerDrawer] = useState(false);
 
   const activeFilters =
@@ -69,9 +69,11 @@ const Players = () => {
   const fetchPlayersWithAverages = async ({
     pageParam,
   }: FetchPlayersParams = {}) =>
-    activeFilters
-      ? await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam, filters)
-      : await NbaPlayersController.getPlayers(PAGE_SIZE, pageParam);
+    await NbaPlayersController.getPlayers({
+      pageSize: PAGE_SIZE,
+      pageParam,
+      filters: activeFilters ? filters : defaultPlayerFilters,
+    });
 
   const {
     data,
@@ -194,7 +196,6 @@ const Players = () => {
             </View>
             <View className="gap-4">
               <SelectedAugment />
-
               <TeamBudget />
             </View>
             <View className="my-10 w-full flex-row items-center gap-4">
