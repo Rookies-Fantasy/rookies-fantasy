@@ -164,19 +164,19 @@ const getPlayerStatValue = (player: Player, stat: string): number | null => {
 
   switch (stat) {
     case "points":
-      return averageStats.pts;
+      return averageStats.points;
     case "rebounds":
-      return averageStats.reb;
+      return averageStats.rebounds;
     case "assists":
-      return averageStats.ast;
+      return averageStats.assists;
     case "steals":
-      return averageStats.stl;
+      return averageStats.steals;
     case "blocks":
-      return averageStats.blk;
+      return averageStats.blocks;
     case "turnovers":
-      return averageStats.tov;
+      return averageStats.turnovers;
     case "minutes":
-      return averageStats.min;
+      return averageStats.minutes;
     // TODO: ADD FG%, FGA, FGM, FT%, FTA, FTM, 3P%, 3PA, 3PM
     default:
       return null;

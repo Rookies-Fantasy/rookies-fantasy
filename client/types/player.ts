@@ -3,14 +3,14 @@ import { NbaTeam } from "@/types/nbaTeams";
 
 export type Player = {
   averageStats: {
-    ast: number;
-    blk: number;
-    fpts: number;
-    min: number;
-    pts: number;
-    reb: number;
-    stl: number;
-    tov: number;
+    assists: number;
+    blocks: number;
+    fantasyPoints: number;
+    minutes: number;
+    points: number;
+    rebounds: number;
+    steals: number;
+    turnovers: number;
   };
   firstName: string;
   gamesPlayed: number;
@@ -47,14 +47,14 @@ export const POSITION_FILTER_OPTIONS: PositionFilters[] = [
 export const defaultPlayer: Player = {
   id: "",
   averageStats: {
-    ast: 0,
-    blk: 0,
-    fpts: 0,
-    min: 0,
-    pts: 0,
-    reb: 0,
-    stl: 0,
-    tov: 0,
+    assists: 0,
+    blocks: 0,
+    fantasyPoints: 0,
+    minutes: 0,
+    points: 0,
+    rebounds: 0,
+    steals: 0,
+    turnovers: 0,
   },
   firstName: "",
   gamesPlayed: 0,
