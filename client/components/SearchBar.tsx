@@ -1,6 +1,6 @@
-import { MagnifyingGlass } from "phosphor-react-native";
+import { MagnifyingGlass, X } from "phosphor-react-native";
 import { useState, useEffect } from "react";
-import { View, TextInput } from "react-native";
+import { View, TextInput, Pressable } from "react-native";
 
 type SearchBarProps = {
   delay?: number;
@@ -40,6 +40,17 @@ const SearchBar = ({
         textAlignVertical="center"
         value={inputValue}
       />
+      {inputValue.length > 0 && (
+        <Pressable
+          hitSlop={8}
+          onPress={() => {
+            setInputValue("");
+            onChangeText("");
+          }}
+        >
+          <X color="#717680" size={18} />
+        </Pressable>
+      )}
     </View>
   );
 };
