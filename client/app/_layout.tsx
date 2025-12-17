@@ -33,7 +33,7 @@ const RootLayoutNav = () => {
   const isUserVerified = useAppSelector(selectIsUserVerified);
   const { theme, mode } = useAppTheme();
 
-  const testNavTheme = {
+  const navTheme = {
     ...(mode === ThemeMode.Light ? DefaultTheme : DarkTheme),
     colors: {
       ...(mode === ThemeMode.Light ? DefaultTheme.colors : DarkTheme.colors),
@@ -50,7 +50,7 @@ const RootLayoutNav = () => {
           <AuthListener>
             <StatusBar style={mode === ThemeMode.Dark ? "light" : "dark"} />
             <ThemeWrapper>
-              <ReactNavigationThemeProvider value={testNavTheme}>
+              <ReactNavigationThemeProvider value={navTheme}>
                 <Stack screenOptions={{ headerShown: false }}>
                   <Stack.Protected guard={!isUserSignedIn || !isUserVerified}>
                     <Stack.Screen name="(auth)" />
