@@ -11,7 +11,7 @@ export type PlayerFetchParams = {
   pageParam?: FirebaseFirestoreTypes.DocumentSnapshot;
   filters?: PlayerFilters;
   excludedPlayerIds?: string[];
-  searchQuery?: string;
+  searchTerm?: string;
 };
 
 export type PlayerFetchResult = {
@@ -67,56 +67,81 @@ export class NbaPlayersController {
     pageParam,
     filters,
     excludedPlayerIds,
-    searchQuery,
+    searchTerm,
   }: PlayerFetchParams): Promise<PlayerFetchResult> => {
+    console.log(searchTerm);
     try {
-      let query = firestore()
-        .collection(PLAYERS_COLLECTION)
-        .orderBy("salary", "desc");
+      const baseQuery = (() => {
+        let q = firestore()
+          .collection(PLAYERS_COLLECTION)
+          .orderBy("salary", "desc");
 
-      if (filters) {
-        query = query
-          .where("salary", ">=", filters.salaryRange.min)
-          .where("salary", "<=", filters.salaryRange.max);
+        if (filters) {
+          q = q
+            .where("salary", ">=", filters.salaryRange.min)
+            .where("salary", "<=", filters.salaryRange.max);
 
-        if (filters.selectedTeams.length > 0) {
-          const teamIds = filters.selectedTeams.map((team) => team.id);
-          query = query.where("teamId", "in", teamIds);
-        }
+          if (filters.selectedTeams.length > 0) {
+            const teamIds = filters.selectedTeams.map((team) => team.id);
+            q = q.where("teamId", "in", teamIds);
+          }
 
-        if (filters.selectedPositions.length > 0) {
-          let positionsToMatch: string[] = [];
+          if (filters.selectedPositions.length > 0) {
+            let positionsToMatch: string[] = [];
 
-          filters.selectedPositions.forEach((pos) => {
-            if (pos === "G") {
-              positionsToMatch.push("PG", "SG");
-            } else if (pos === "F") {
-              positionsToMatch.push("SF", "PF", "C");
-            } else if (["PG", "SG", "SF", "PF", "C"].includes(pos)) {
-              positionsToMatch.push(pos);
+            filters.selectedPositions.forEach((pos) => {
+              if (pos === "G") {
+                positionsToMatch.push("PG", "SG");
+              } else if (pos === "F") {
+                positionsToMatch.push("SF", "PF", "C");
+              } else if (["PG", "SG", "SF", "PF", "C"].includes(pos)) {
+                positionsToMatch.push(pos);
+              }
+            });
+
+            positionsToMatch = [...new Set(positionsToMatch)];
+
+            if (positionsToMatch.length > 0) {
+              q = q.where("positions", "array-contains-any", positionsToMatch);
             }
-          });
-
-          positionsToMatch = [...new Set(positionsToMatch)];
-
-          if (positionsToMatch.length > 0) {
-            query = query.where(
-              "positions",
-              "array-contains-any",
-              positionsToMatch,
-            );
           }
         }
+
+        q = q.limit(pageSize);
+
+        if (pageParam) {
+          q = q.startAfter(pageParam);
+        }
+
+        return q;
+      })();
+
+      let playerDocs;
+
+      if (searchTerm) {
+        const firstNameQuery = baseQuery
+          .where("firstName", ">=", searchTerm)
+          .where("firstName", "<=", searchTerm + "\uf8ff");
+
+        const lastNameQuery = baseQuery
+          .where("lastName", ">=", searchTerm)
+          .where("lastName", "<=", searchTerm + "\uf8ff");
+
+        const [firstSnap, lastSnap] = await Promise.all([
+          firstNameQuery.get(),
+          lastNameQuery.get(),
+        ]);
+
+        const map = new Map<string, FirebaseFirestoreTypes.DocumentSnapshot>();
+
+        firstSnap.docs.forEach((doc) => map.set(doc.id, doc));
+        lastSnap.docs.forEach((doc) => map.set(doc.id, doc));
+
+        playerDocs = Array.from(map.values());
+      } else {
+        const snapshot = await baseQuery.get();
+        playerDocs = snapshot.docs;
       }
-
-      query = query.limit(pageSize);
-
-      if (pageParam) {
-        query = query.startAfter(pageParam);
-      }
-
-      const playerSnapshot = await query.get();
-      const playerDocs = playerSnapshot.docs;
 
       let players: Player[] = playerDocs.map((doc) => {
         const data = doc.data();
@@ -160,6 +185,7 @@ export class NbaPlayersController {
         hasMore: playerDocs.length === pageSize,
       };
     } catch (error) {
+      console.log("error", error);
       throw error;
     }
   };

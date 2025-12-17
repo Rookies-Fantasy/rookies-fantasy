@@ -73,7 +73,7 @@ const Players = () => {
       pageSize: PAGE_SIZE,
       pageParam,
       filters: activeFilters ? filters : defaultPlayerFilters,
-      searchQuery: query,
+      searchTerm: query,
     });
 
   const {
