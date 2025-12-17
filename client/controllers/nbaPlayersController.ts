@@ -69,7 +69,6 @@ export class NbaPlayersController {
     excludedPlayerIds,
     searchTerm,
   }: PlayerFetchParams): Promise<PlayerFetchResult> => {
-    console.log(searchTerm);
     try {
       const baseQuery = (() => {
         let q = firestore()
@@ -185,7 +184,6 @@ export class NbaPlayersController {
         hasMore: playerDocs.length === pageSize,
       };
     } catch (error) {
-      console.log("error", error);
       throw error;
     }
   };
