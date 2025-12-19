@@ -41,6 +41,7 @@ const Arena = () => {
   const currentDate = selectedDate || availableDates[0] || "";
 
   const dailyMatchup = matchup.dailyMatchups[currentDate];
+  const matchupStartDate = new Date(matchup.weekStartDate);
 
   const awayTeamLogo = teamLogoOptions.find(
     (asset) => asset.url === matchup.away.awayTeamLogo,
@@ -172,7 +173,7 @@ const Arena = () => {
             Searching for an Opponent
           </Text>
           <Text className="pbk-b2 text-center text-modeContrast">
-            {`You're in the queue — finding you a fair matchup. Shouldn't take long.`}
+            {`You're in the queue — finding you a worthy opponent. Shouldn't take long!`}
           </Text>
         </View>
       )}
@@ -183,10 +184,26 @@ const Arena = () => {
             No Matchup Yet
           </Text>
           <Text className="pbk-b2 text-center text-modeContrast">
-            {`You're not matched with anyone yet. Join the queue to get paired up and compete.`}
+            {`You're not playing against anyone this week. Queue up to get matched up and compete!`}
           </Text>
         </View>
       )}
+      {!matchupEmpty &&
+        !isNaN(matchupStartDate.getTime()) &&
+        matchupStartDate.getTime() === new Date(currentDate).getTime() && (
+          <View className="flex-1 items-center gap-2 px-4 pt-10">
+            <Empty
+              color={`rgb(${themes[theme][mode].modeContrast})`}
+              size={32}
+            />
+            <Text className="pbk-h8 text-center text-modeContrast">
+              Check in Next Week!
+            </Text>
+            <Text className="pbk-b2 text-center text-modeContrast">
+              {`You're matched up against an opponent! However, your match is next week. Please come back next week!`}
+            </Text>
+          </View>
+        )}
       {!matchupEmpty && (
         <ScrollView
           className="mx-4 w-full flex-1"

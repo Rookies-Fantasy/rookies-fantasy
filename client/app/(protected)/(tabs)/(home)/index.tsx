@@ -152,6 +152,7 @@ const MyTeam = () => {
           showBottomDrawer={showBottomDrawer}
         />
       )}
+      <Button label="Arena" onPress={() => router.push("/arena")}></Button>
     </SafeAreaView>
   );
 };
