@@ -19,6 +19,7 @@ import { themes } from "@/theme/theme";
 import { useAppTheme } from "@/theme/ThemeProvider";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SLOT_ORDER } from "@/types/team";
+import { isNil, isNotNil } from "@/utils/jsUtils";
 
 const LIVE_DATA_URL =
   "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData";
@@ -64,26 +65,21 @@ const Arena = () => {
     "away" | "home" | null
   >(null);
 
-  const dailyMatchup = matchup.dailyMatchups[selectedDate];
   const currentWeekDates = getCurrentWeekDates();
-
-  const awayTeamLogo = teamLogoOptions.find(
-    (asset) => asset.url === matchup.away.awayTeamLogo,
-  )?.source;
+  const isQueuing = queueStatus === "queued";
 
   const matchupRef = useRef(matchup);
   matchupRef.current = matchup;
-
-  const isQueuing = queueStatus === "queued";
-  const matchupEmpty = Object.keys(matchup.dailyMatchups).length === 0;
 
   useFocusEffect(
     useCallback(() => {
       const fetchLiveData = async () => {
         const awayLineup =
-          matchupRef.current.dailyMatchups[selectedDate]?.awayTeam.lineup ?? [];
+          matchupRef.current?.dailyMatchups[selectedDate]?.awayTeam.lineup ??
+          [];
         const homeLineup =
-          matchupRef.current.dailyMatchups[selectedDate]?.homeTeam.lineup ?? [];
+          matchupRef.current?.dailyMatchups[selectedDate]?.homeTeam.lineup ??
+          [];
 
         const awayPlayerIds = awayLineup.map((o) => o.player?.id);
         const homePlayerIds = homeLineup.map((o) => o.player?.id);
@@ -142,8 +138,13 @@ const Arena = () => {
     }, [selectedDate, dispatch]),
   );
 
+  const dailyMatchup = matchup?.dailyMatchups[selectedDate];
   const awayLineup = dailyMatchup?.awayTeam.lineup ?? [];
   const homeLineup = dailyMatchup?.homeTeam.lineup ?? [];
+
+  const awayTeamLogo = teamLogoOptions.find(
+    (asset) => asset.url === matchup?.away.awayTeamLogo,
+  )?.source;
 
   return (
     <View className="flex-1 flex-col items-center bg-gray-950">
@@ -178,7 +179,7 @@ const Arena = () => {
           </View>
 
           <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            {matchup.away.awayTeamName?.toUpperCase() || "--"}
+            {matchup?.away.awayTeamName?.toUpperCase() ?? "--"}
           </Text>
         </View>
       </View>
@@ -201,7 +202,7 @@ const Arena = () => {
           </Text>
         </View>
       )}
-      {matchupEmpty && (
+      {isNil(matchup) && (
         <View className="flex-1 items-center gap-2 px-4 pt-10">
           <Empty color={`rgb(${themes[theme][mode].modeContrast})`} size={32} />
           <Text className="pbk-h8 text-center text-modeContrast">
@@ -212,7 +213,7 @@ const Arena = () => {
           </Text>
         </View>
       )}
-      {!matchupEmpty && matchup.weekStartDate !== currentWeekDates[0] && (
+      {isNotNil(matchup) && matchup.weekStartDate !== currentWeekDates[0] && (
         <View className="flex-1 items-center gap-2 px-4 pt-10">
           <Empty color={`rgb(${themes[theme][mode].modeContrast})`} size={32} />
           <Text className="pbk-h8 text-center text-modeContrast">
@@ -223,7 +224,7 @@ const Arena = () => {
           </Text>
         </View>
       )}
-      {!matchupEmpty && matchup.weekStartDate === currentWeekDates[0] && (
+      {isNotNil(matchup) && matchup.weekStartDate === currentWeekDates[0] && (
         <ScrollView
           className="mx-4 w-full flex-1"
           contentContainerStyle={{ paddingVertical: 20 }}
