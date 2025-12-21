@@ -23,6 +23,31 @@ import { SLOT_ORDER } from "@/types/team";
 const LIVE_DATA_URL =
   "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData";
 
+const getCurrentWeekDates = () => {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+  // Find Sunday of this week
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() - dayOfWeek);
+  startDate.setHours(0, 0, 0, 0);
+
+  // Saturday of this week
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6);
+
+  const dates = [];
+  const current = new Date(startDate);
+
+  while (current <= endDate) {
+    // Push as YYYY-MM-DD string
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+};
+
 const Arena = () => {
   const matchup = useAppSelector(selectMatchup);
   const team = useAppSelector(selectTeam);
@@ -32,16 +57,15 @@ const Arena = () => {
   const { theme, mode } = useAppTheme();
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0], // Only take the day, and take today as the default
+  );
   const [selectedAugment, setSelectedAugment] = useState<
     "away" | "home" | null
   >(null);
 
-  const availableDates = Object.keys(matchup.dailyMatchups).sort();
-  const currentDate = selectedDate || availableDates[0] || "";
-
-  const dailyMatchup = matchup.dailyMatchups[currentDate];
-  const matchupStartDate = new Date(matchup.weekStartDate);
+  const dailyMatchup = matchup.dailyMatchups[selectedDate];
+  const currentWeekDates = getCurrentWeekDates();
 
   const awayTeamLogo = teamLogoOptions.find(
     (asset) => asset.url === matchup.away.awayTeamLogo,
@@ -57,9 +81,9 @@ const Arena = () => {
     useCallback(() => {
       const fetchLiveData = async () => {
         const awayLineup =
-          matchupRef.current.dailyMatchups[currentDate]?.awayTeam.lineup ?? [];
+          matchupRef.current.dailyMatchups[selectedDate]?.awayTeam.lineup ?? [];
         const homeLineup =
-          matchupRef.current.dailyMatchups[currentDate]?.homeTeam.lineup ?? [];
+          matchupRef.current.dailyMatchups[selectedDate]?.homeTeam.lineup ?? [];
 
         const awayPlayerIds = awayLineup.map((o) => o.player?.id);
         const homePlayerIds = homeLineup.map((o) => o.player?.id);
@@ -100,7 +124,7 @@ const Arena = () => {
 
           dispatch(
             updateMatchupWithLiveData({
-              date: currentDate,
+              date: selectedDate,
               updatedHome,
               updatedAway,
             }),
@@ -115,7 +139,7 @@ const Arena = () => {
       const intervalId = setInterval(fetchLiveData, 10000);
 
       return () => clearInterval(intervalId);
-    }, [currentDate, dispatch]),
+    }, [selectedDate, dispatch]),
   );
 
   const awayLineup = dailyMatchup?.awayTeam.lineup ?? [];
@@ -159,8 +183,8 @@ const Arena = () => {
         </View>
       </View>
       <DateSelector
-        currentDate={currentDate}
-        dates={availableDates}
+        currentDate={selectedDate}
+        dates={currentWeekDates}
         onDateChange={setSelectedDate}
       />
       {isQueuing && (
@@ -188,23 +212,18 @@ const Arena = () => {
           </Text>
         </View>
       )}
-      {!matchupEmpty &&
-        !isNaN(matchupStartDate.getTime()) &&
-        matchupStartDate.getTime() === new Date(currentDate).getTime() && (
-          <View className="flex-1 items-center gap-2 px-4 pt-10">
-            <Empty
-              color={`rgb(${themes[theme][mode].modeContrast})`}
-              size={32}
-            />
-            <Text className="pbk-h8 text-center text-modeContrast">
-              Check in Next Week!
-            </Text>
-            <Text className="pbk-b2 text-center text-modeContrast">
-              {`You're matched up against an opponent! However, your match is next week. Please come back next week!`}
-            </Text>
-          </View>
-        )}
-      {!matchupEmpty && (
+      {!matchupEmpty && matchup.weekStartDate !== currentWeekDates[0] && (
+        <View className="flex-1 items-center gap-2 px-4 pt-10">
+          <Empty color={`rgb(${themes[theme][mode].modeContrast})`} size={32} />
+          <Text className="pbk-h8 text-center text-modeContrast">
+            Check in Next Week!
+          </Text>
+          <Text className="pbk-b2 text-center text-modeContrast">
+            {`You're matched up against an opponent! However, your match is next week. Please come back next week!`}
+          </Text>
+        </View>
+      )}
+      {!matchupEmpty && matchup.weekStartDate === currentWeekDates[0] && (
         <ScrollView
           className="mx-4 w-full flex-1"
           contentContainerStyle={{ paddingVertical: 20 }}

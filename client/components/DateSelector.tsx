@@ -8,6 +8,21 @@ type DateSelectorProps = {
   onDateChange: (date: string) => void;
 };
 
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 const DateSelector = ({
   dates,
   currentDate,
@@ -30,23 +45,15 @@ const DateSelector = ({
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
 
-    const date = new Date(dateString);
-    const today = new Date();
+    const today = new Date().toISOString().split("T")[0];
 
-    const isToday =
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate();
+    const isToday = dateString === today;
 
-    const month = date
-      .toLocaleString("en-US", { month: "short" })
-      .toUpperCase();
-    const day = date.getDate();
-    const year = date.getFullYear();
+    const [year, month, day] = dateString.split("-");
 
     return isToday
-      ? `TODAY (${month} ${day}, ${year})`
-      : `${month} ${day}, ${year}`;
+      ? `TODAY (${monthNames[parseInt(month) - 1]} ${day}, ${year})`
+      : `${monthNames[parseInt(month) - 1]} ${day}, ${year}`;
   };
 
   const isPreviousDisabled = currentIndex === 0;
