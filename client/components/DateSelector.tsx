@@ -45,7 +45,7 @@ const DateSelector = ({
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString("en-CA");
 
     const isToday = dateString === today;
 

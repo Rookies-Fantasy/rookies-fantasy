@@ -59,7 +59,7 @@ const Arena = () => {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0], // Only take the day, and take today as the default
+    new Date().toLocaleDateString("en-CA"), // Only take the day, and take today as the default
   );
   const [selectedAugment, setSelectedAugment] = useState<
     "away" | "home" | null
