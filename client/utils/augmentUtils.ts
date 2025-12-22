@@ -1,6 +1,6 @@
 import { Augment, Prerequisite, Condition } from "@/types/augment";
 import { Player } from "@/types/player";
-import { LineupSlot } from "@/types/team";
+import { LineupSlot, GameStats } from "@/types/team";
 
 export type ValidationResult = {
   isValid: boolean;
@@ -153,34 +153,10 @@ const meetStatCondition = (
   operator: string,
   value: number,
 ): boolean => {
-  const playerStatValue = getPlayerStatValue(player, stat);
+  const playerStatValue = getStatValue(player.averageStats, stat);
   if (playerStatValue === null) return false;
 
   return evaluateCondition(playerStatValue, operator, value);
-};
-
-const getPlayerStatValue = (player: Player, stat: string): number | null => {
-  const { averageStats } = player;
-
-  switch (stat) {
-    case "points":
-      return averageStats.points;
-    case "rebounds":
-      return averageStats.rebounds;
-    case "assists":
-      return averageStats.assists;
-    case "steals":
-      return averageStats.steals;
-    case "blocks":
-      return averageStats.blocks;
-    case "turnovers":
-      return averageStats.turnovers;
-    case "minutes":
-      return averageStats.minutes;
-    // TODO: ADD FG%, FGA, FGM, FT%, FTA, FTM, 3P%, 3PA, 3PM
-    default:
-      return null;
-  }
 };
 
 const evaluateCondition = (
@@ -201,5 +177,82 @@ const evaluateCondition = (
       return playerValue === threshold;
     default:
       return false;
+  }
+};
+
+export const applyAugmentEffects = (
+  baseFantasyPoints: number,
+  stats: GameStats,
+  playerId: string,
+  qualifyingPlayers: Player[] | undefined,
+  augment: Augment | undefined,
+): number => {
+  if (!augment || !augment.isActive || !qualifyingPlayers) {
+    return baseFantasyPoints;
+  }
+
+  const playerQualifies = qualifyingPlayers.some((p) => p.id === playerId);
+  if (!playerQualifies) {
+    return baseFantasyPoints;
+  }
+
+  if (!augment.effects || augment.effects.length === 0) {
+    return baseFantasyPoints;
+  }
+
+  let totalPoints = baseFantasyPoints;
+
+  augment.effects.forEach((effect) => {
+    effect.statBoosts.forEach((boost) => {
+      const statValue = getStatValue(stats, boost.stat);
+      const baseStatMultiplier = getBaseStatMultiplier(boost.stat);
+
+      const additionalBoost =
+        statValue * baseStatMultiplier * (boost.multiplier - 1);
+      totalPoints += additionalBoost;
+    });
+  });
+
+  return totalPoints;
+};
+
+const getStatValue = (stats: GameStats, stat: string): number => {
+  switch (stat) {
+    case "points":
+      return stats.points;
+    case "rebounds":
+      return stats.rebounds;
+    case "assists":
+      return stats.assists;
+    case "steals":
+      return stats.steals;
+    case "blocks":
+      return stats.blocks;
+    case "turnovers":
+      return stats.turnovers;
+    case "minutes":
+      return stats.minutes;
+    // TODO: Add support for FG%, FT%, 3P%, FGA, FGM, FTA, FTM, 3PA, 3PM
+    default:
+      return 0;
+  }
+};
+
+const getBaseStatMultiplier = (stat: string): number => {
+  switch (stat) {
+    case "points":
+      return 1;
+    case "rebounds":
+      return 1;
+    case "assists":
+      return 2;
+    case "steals":
+      return 3;
+    case "blocks":
+      return 3;
+    case "turnovers":
+      return -2;
+    default:
+      return 0;
   }
 };

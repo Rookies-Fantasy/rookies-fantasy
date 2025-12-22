@@ -2,7 +2,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Matchup, defaultMatchup } from "@/types/matchup";
 import { GameInfo, GameStats } from "@/types/team";
-import { applyAugmentEffects } from "@/utils/augmentEffects";
+import { applyAugmentEffects } from "@/utils/augmentUtils";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNotNil } from "@/utils/jsUtils";
 
@@ -40,7 +40,10 @@ const matchupSlice = createSlice({
               newMatchup.homeTeam.qualifyingPlayers,
               state.home.homeAugment,
             );
-            o.gameStats = { ...newData.gameStats, fpts: augmentedFpts };
+            o.gameStats = {
+              ...newData.gameStats,
+              fantasyPoints: augmentedFpts,
+            };
           } else {
             o.gameStats = newData?.gameStats;
           }
@@ -60,7 +63,10 @@ const matchupSlice = createSlice({
               newMatchup.awayTeam.qualifyingPlayers,
               state.away.awayAugment,
             );
-            o.gameStats = { ...newData.gameStats, fpts: augmentedFpts };
+            o.gameStats = {
+              ...newData.gameStats,
+              fantasyPoints: augmentedFpts,
+            };
           } else {
             o.gameStats = newData?.gameStats;
           }
@@ -68,12 +74,12 @@ const matchupSlice = createSlice({
       });
 
       const homeScore = newMatchup.homeTeam.lineup.reduce(
-        (total, slot) => total + (slot.gameStats?.fpts ?? 0),
+        (total, slot) => total + (slot.gameStats?.fantasyPoints ?? 0),
         0,
       );
 
       const awayScore = newMatchup.awayTeam.lineup.reduce(
-        (total, slot) => total + (slot.gameStats?.fpts ?? 0),
+        (total, slot) => total + (slot.gameStats?.fantasyPoints ?? 0),
         0,
       );
 

@@ -11,7 +11,7 @@ import {
   Team,
   UTIL_POSITIONS,
 } from "@/types/team";
-import { validateAugment } from "@/utils/augmentValidation";
+import { validateAugment } from "@/utils/augmentUtils";
 import { isNil, isNotNil } from "@/utils/jsUtils";
 import {
   findSlotFromPosition,
