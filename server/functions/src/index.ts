@@ -213,7 +213,7 @@ export const updateDailyPlayerData = functions
         freeThrowsAttempted: s.fta,
         freeThrowsMade: s.ftm,
         minutes: s.min,
-        playerId: String(p.playerId),
+        playerId: String(p.id),
         points: s.pts,
         rebounds: s.reb,
         steals: s.stl,
@@ -257,7 +257,7 @@ export const updateDailyPlayerData = functions
         homeTeamId: gamelog.game.home_team_id,
         minutes: gamelog.min,
         personalFouls: gamelog.pf,
-        playerId: String(gamelog.player.playerId),
+        playerId: String(gamelog.player.id),
         points: gamelog.pts,
         rebounds: gamelog.reb,
         steals: gamelog.stl,
@@ -346,7 +346,7 @@ export const updateDailyPlayerData = functions
         const updatedLineup = teamData.lineup.map((slot: any) => {
           if (!slot || !slot.player) return slot;
 
-          const playerId = String(slot.player.playerId);
+          const playerId = String(slot.player.id);
           const latestAvg = seasonAvgMap[playerId];
           const latestGamelog = gamelogMap[playerId];
 
@@ -368,17 +368,6 @@ export const updateDailyPlayerData = functions
                   }
                 : {}),
             },
-            ...(latestGamelog
-              ? {
-                  gameStats: [
-                    ...(Array.isArray(slot.gameStats) ? slot.gameStats : []),
-                    {
-                      ...latestGamelog,
-                      fantasyPoints: latestGamelog.fantasyPoints,
-                    },
-                  ],
-                }
-              : {}),
           };
         });
 
