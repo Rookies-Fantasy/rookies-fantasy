@@ -25,10 +25,6 @@ export const selectIsUserRegistered = (state: RootState): boolean =>
 export const selectIsUserVerified = (state: RootState): boolean =>
   !!state.user.emailVerified;
 
-export const selectUserQueueStatus = (
-  state: RootState,
-): QueueStatus | undefined => state.user.queueStatus;
-
 export const { setUser, clearUser } = userSlice.actions;
 
 export default userSlice.reducer;

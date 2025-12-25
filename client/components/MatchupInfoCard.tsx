@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useAppSelector } from "@/state/hooks";
-import { selectUserQueueStatus } from "@/state/slices/userSlice";
 import { QueueStatus } from "@/types/user";
 
 const EARLIEST_GAME_START_TIME_URL =
   "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getEarliestGameStartTime";
 
 const MatchupInfoCard = () => {
-  const queueStatus: QueueStatus = useAppSelector(selectUserQueueStatus);
+  const queueStatus: QueueStatus = useAppSelector(
+    (state) => state.user.queueStatus,
+  );
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
     month: "short",
