@@ -14,7 +14,7 @@ import {
   selectPlayerQualificationMap,
 } from "@/state/slices/teamSlice";
 import { Player } from "@/types/player";
-import { cn } from "@/utils/jsUtils";
+import { cn, isNotNil } from "@/utils/jsUtils";
 
 type PlayerSlotProps = {
   isCard?: boolean;
@@ -47,7 +47,7 @@ const PlayerSlot = ({
 
   const [earliestStartTime, setEarliestStartTime] = useState<string>();
   const isPastLockTime =
-    earliestStartTime && new Date() > new Date(earliestStartTime);
+    isNotNil(earliestStartTime) && new Date() > new Date(earliestStartTime);
 
   useEffect(() => {
     const getEarliestGame = async () => {
