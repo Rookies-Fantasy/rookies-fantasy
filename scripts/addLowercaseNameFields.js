@@ -3,7 +3,7 @@ import { db } from "./firebaseConfig.js";
 const PLAYERS_COLLECTION = "nbaPlayers";
 const BATCH_SIZE = 500;
 
-const updatePlayersFullName = async() => {
+const addLowercaseNameFields = async() => {
   let lastDoc = null;
   let updatedCount = 0;
 
@@ -27,9 +27,16 @@ const updatePlayersFullName = async() => {
       const data = doc.data();
       const firstName = data.firstName ?? "";
       const lastName = data.lastName ?? "";
-      const fullNameLower = `${firstName} ${lastName}`.toLowerCase();
+      const firstNameLower = firstName.toLowerCase();
+      const lastNameLower = lastName.toLowerCase();
+      const fullNameLower = `${firstNameLower} ${lastNameLower}`.trim();
 
-      batch.update(doc.ref, { fullNameLower });
+      batch.update(doc.ref, {
+        firstNameLower,
+        lastNameLower,
+        fullNameLower,
+      });
+
       updatedCount++;
     });
 
@@ -42,4 +49,4 @@ const updatePlayersFullName = async() => {
   console.log(`Done! Total documents updated: ${updatedCount}`);
 }
 
-updatePlayersFullName();
+addLowercaseNameFields();
