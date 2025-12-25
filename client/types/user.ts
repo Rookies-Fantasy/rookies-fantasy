@@ -1,5 +1,8 @@
-export type QueueStatus = "idle" | "queued" | "matched";
-
+export enum QueueStatus {
+  Idle = "idle",
+  Queued = "queued",
+  Matched = "matched",
+}
 export type User = {
   avatarUrl?: string;
   dateOfBirth?: string;
@@ -15,5 +18,5 @@ export type User = {
 export const defaultUser: User = {
   id: "",
   emailVerified: false,
-  queueStatus: "idle",
+  queueStatus: QueueStatus.Idle,
 };

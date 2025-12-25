@@ -1,6 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { defaultUser, User } from "@/types/user";
+import { defaultUser, QueueStatus, User } from "@/types/user";
 
 const userSlice = createSlice({
   name: "user",
@@ -24,6 +24,9 @@ export const selectIsUserRegistered = (state: RootState): boolean =>
 
 export const selectIsUserVerified = (state: RootState): boolean =>
   !!state.user.emailVerified;
+
+export const selectUserQueueStatus = (state: RootState): QueueStatus =>
+  state.user.queueStatus;
 
 export const { setUser, clearUser } = userSlice.actions;
 
