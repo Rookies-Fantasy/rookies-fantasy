@@ -2,6 +2,15 @@ import { Augment, Prerequisite, Condition } from "@/types/augment";
 import { Player } from "@/types/player";
 import { LineupSlot, GameStats } from "@/types/team";
 
+const STAT_MULTIPLIERS: Record<string, number> = {
+  points: 1,
+  rebounds: 1,
+  assists: 2,
+  steals: 3,
+  blocks: 3,
+  turnovers: -2,
+};
+
 export type ValidationResult = {
   isValid: boolean;
   qualifyingPlayers: Player[];
@@ -154,8 +163,6 @@ const meetStatCondition = (
   value: number,
 ): boolean => {
   const playerStatValue = getStatValue(player.averageStats, stat);
-  if (playerStatValue === null) return false;
-
   return evaluateCondition(playerStatValue, operator, value);
 };
 
@@ -191,6 +198,10 @@ export const applyAugmentEffects = (
     return baseFantasyPoints;
   }
 
+  if (qualifyingPlayers.length < augment.playerCount) {
+    return baseFantasyPoints;
+  }
+
   const playerQualifies = qualifyingPlayers.some((p) => p.id === playerId);
   if (!playerQualifies) {
     return baseFantasyPoints;
@@ -205,7 +216,7 @@ export const applyAugmentEffects = (
   augment.effects.forEach((effect) => {
     effect.statBoosts.forEach((boost) => {
       const statValue = getStatValue(stats, boost.stat);
-      const baseStatMultiplier = getBaseStatMultiplier(boost.stat);
+      const baseStatMultiplier = STAT_MULTIPLIERS[boost.stat] ?? 0;
 
       const additionalBoost =
         statValue * baseStatMultiplier * (boost.multiplier - 1);
@@ -233,25 +244,6 @@ const getStatValue = (stats: GameStats, stat: string): number => {
     case "minutes":
       return stats.minutes;
     // TODO: Add support for FG%, FT%, 3P%, FGA, FGM, FTA, FTM, 3PA, 3PM
-    default:
-      return 0;
-  }
-};
-
-const getBaseStatMultiplier = (stat: string): number => {
-  switch (stat) {
-    case "points":
-      return 1;
-    case "rebounds":
-      return 1;
-    case "assists":
-      return 2;
-    case "steals":
-      return 3;
-    case "blocks":
-      return 3;
-    case "turnovers":
-      return -2;
     default:
       return 0;
   }
