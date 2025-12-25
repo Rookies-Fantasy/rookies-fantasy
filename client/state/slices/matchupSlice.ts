@@ -52,7 +52,7 @@ const matchupSlice = createSlice({
               newData.gameStats,
               o.player.id,
               newMatchup.homeTeam.qualifyingPlayers,
-              state.home.homeAugment,
+              state.data?.home.homeAugment,
             );
             o.gameStats = {
               ...newData.gameStats,
@@ -75,7 +75,7 @@ const matchupSlice = createSlice({
               newData.gameStats,
               o.player.id,
               newMatchup.awayTeam.qualifyingPlayers,
-              state.away.awayAugment,
+              state.data?.away.awayAugment,
             );
             o.gameStats = {
               ...newData.gameStats,
