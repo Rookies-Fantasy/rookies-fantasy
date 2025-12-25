@@ -7,6 +7,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
+import MatchupInfoCard from "@/components/MatchupInfoCard";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import Spinner from "@/components/Spinner";
@@ -121,6 +122,7 @@ const MyTeam = () => {
               contentContainerClassName={cn("flex-col p-1 gap-4 pb-24 mt-4")}
               showsVerticalScrollIndicator={false}
             >
+              <MatchupInfoCard />
               <AugmentStatusCard />
               <View className="my-2 flex-1 gap-4">
                 <PlayerRoster
