@@ -22,6 +22,7 @@ import {
 } from "@/state/slices/teamSlice";
 import { selectUserId, clearUser } from "@/state/slices/userSlice";
 import { SlotPosition } from "@/types/team";
+import { QueueStatus } from "@/types/user";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
@@ -34,9 +35,9 @@ const MyTeam = () => {
   const playerCount = useAppSelector(selectRosterPlayerCount);
   const dispatch = useAppDispatch();
 
-  const queueStatus = user.queueStatus ?? "idle";
-  const isInQueue = queueStatus === "queued";
-  const isMatched = queueStatus === "matched";
+  const queueStatus = user.queueStatus ?? QueueStatus.Idle;
+  const isInQueue = queueStatus === QueueStatus.Queued;
+  const isMatched = queueStatus === QueueStatus.Matched;
   const teamLogo = useAppSelector(selectTeamLogo);
   const [isLoading, setIsLoading] = useState(false);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
