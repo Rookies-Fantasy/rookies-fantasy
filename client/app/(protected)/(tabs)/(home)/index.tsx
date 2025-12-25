@@ -13,9 +13,9 @@ import { useAppSelector } from "@/state/hooks";
 import {
   selectAugment,
   selectRosterPlayerCount,
+  selectTeamLogo,
 } from "@/state/slices/teamSlice";
 import { selectUserId } from "@/state/slices/userSlice";
-import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SlotPosition } from "@/types/team";
 import { isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
@@ -31,9 +31,7 @@ const MyTeam = () => {
   const queueStatus = user.queueStatus ?? "idle";
   const isInQueue = queueStatus === "queued";
   const isMatched = queueStatus === "matched";
-  const matchedLogo = teamLogoOptions.find(
-    (option) => option.url === team.logoUrl,
-  );
+  const teamLogo = useAppSelector(selectTeamLogo);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<SlotPosition | null>(
     null,
@@ -75,7 +73,7 @@ const MyTeam = () => {
             <View className="-my-[37.5px] w-full flex-row justify-between px-8">
               <Image
                 className="h-[75px] w-[75px] rounded-full border-2"
-                source={matchedLogo?.source ?? defaultTeamLogo.source}
+                source={teamLogo}
               />
               <View className="h-[75px] flex-row items-center gap-8 rounded-md border-gray-900 bg-gray-920 p-4">
                 <View className="flex-row items-center gap-4">
