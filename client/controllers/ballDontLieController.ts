@@ -36,7 +36,7 @@ export const fetchEarliestGameStartTime = async (date: string) => {
   }
 };
 
-export const fetchLivePlayerData = async (playerIds?: number[]) => {
+export const fetchLivePlayerData = async (playerIds?: string[]) => {
   try {
     const filteredIds = playerIds?.filter((id) => isNotNil(id));
 

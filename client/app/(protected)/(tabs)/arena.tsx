@@ -16,6 +16,7 @@ import {
 } from "@/state/slices/matchupSlice";
 import { teamLogoOptions } from "@/types/asset";
 import { SLOT_ORDER } from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
 
 const Arena = () => {
   const matchup = useAppSelector(selectMatchup);
@@ -53,8 +54,12 @@ const Arena = () => {
         const homeLineup =
           matchupRef.current.dailyMatchups[currentDate]?.homeTeam.lineup ?? [];
 
-        const awayPlayerIds = awayLineup.map((o) => o.player?.id);
-        const homePlayerIds = homeLineup.map((o) => o.player?.id);
+        const awayPlayerIds = awayLineup
+          .map((o) => o.player?.id)
+          .filter((id) => isNotNil(id));
+        const homePlayerIds = homeLineup
+          .map((o) => o.player?.id)
+          .filter((id) => isNotNil(id));
 
         try {
           const [updatedAway, updatedHome] = await Promise.all([
