@@ -41,7 +41,7 @@ const PlayerSlot = ({
   const boostedPlayer = playerData && playerQualificationMap[playerData.id];
 
   return (
-    <View className={cn("w-full justify-center")}>
+    <View className="justify-center">
       {boostedPlayer && (
         <LinearGradient
           colors={["#CCE8FE", "#CDA0FF", "#8489F5", "#CDF1FF", "#B591E9"]}

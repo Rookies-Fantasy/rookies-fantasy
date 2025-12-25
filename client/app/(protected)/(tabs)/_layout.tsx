@@ -1,11 +1,18 @@
 import { Tabs } from "expo-router";
-import { House, IdentificationBadge } from "phosphor-react-native";
+import {
+  Basketball,
+  ClockCounterClockwise,
+  ListBullets,
+  Ranking,
+  UsersThree,
+} from "phosphor-react-native";
 
-const MainLayout = () => (
+const HomeLayout = () => (
   <Tabs
     screenOptions={{
       headerShown: false,
       tabBarShowLabel: false,
+      tabBarPosition: "top",
       tabBarIconStyle: {
         flex: 1,
       },
@@ -14,18 +21,39 @@ const MainLayout = () => (
     <Tabs.Screen
       name="index"
       options={{
-        title: "Dev",
-        tabBarIcon: ({ color }) => <House color={color} />,
+        title: "My Team",
+        tabBarIcon: ({ color }) => <UsersThree color={color} />,
       }}
     />
     <Tabs.Screen
-      name="(home)"
+      name="arena"
       options={{
-        title: "Home",
-        tabBarIcon: ({ color }) => <IdentificationBadge color={color} />,
+        title: "Arena",
+        tabBarIcon: ({ color }) => <Basketball color={color} />,
+      }}
+    />
+    <Tabs.Screen
+      name="matchHistory"
+      options={{
+        title: "Match History",
+        tabBarIcon: ({ color }) => <ClockCounterClockwise color={color} />,
+      }}
+    />
+    <Tabs.Screen
+      name="freeAgents"
+      options={{
+        title: "Free Agents",
+        tabBarIcon: ({ color }) => <ListBullets color={color} />,
+      }}
+    />
+    <Tabs.Screen
+      name="leaderboard"
+      options={{
+        title: "Leaderboard",
+        tabBarIcon: ({ color }) => <Ranking color={color} />,
       }}
     />
   </Tabs>
 );
 
-export default MainLayout;
+export default HomeLayout;
