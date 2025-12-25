@@ -53,6 +53,7 @@ const FreeAgents = () => {
       pageParam,
       filters: defaultPlayerFilters,
       excludedPlayerIds,
+      searchTerm: query,
     });
 
   const {
@@ -64,7 +65,7 @@ const FreeAgents = () => {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["freeAgents", teamComposition],
+    queryKey: ["freeAgents", teamComposition, query],
     queryFn: fetchFreeAgents,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.lastDoc : undefined,

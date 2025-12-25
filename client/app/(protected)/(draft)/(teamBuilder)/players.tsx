@@ -73,6 +73,7 @@ const Players = () => {
       pageSize: PAGE_SIZE,
       pageParam,
       filters: activeFilters ? filters : defaultPlayerFilters,
+      searchTerm: query,
     });
 
   const {
@@ -90,6 +91,7 @@ const Players = () => {
       filters.selectedPositions.sort(),
       filters.salaryRange.min,
       filters.salaryRange.max,
+      query,
     ],
     queryFn: fetchPlayersWithAverages,
     getNextPageParam: (lastPage) =>
