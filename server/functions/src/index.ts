@@ -1121,7 +1121,7 @@ export const getEarliestGameStartTime = functions.https.onRequest(
 
       for (const game of data) {
         // Quick type fix by casting to any, as the balldontlie API docs has the attribute listed as "date",
-        // but "datetime" is whats actually returned.
+        // but "datetime" is what's actually returned.
         if (!(game as any).datetime) continue;
 
         const dt = new Date((game as any).datetime);
@@ -1135,7 +1135,7 @@ export const getEarliestGameStartTime = functions.https.onRequest(
         return;
       }
 
-      // 💾 Cache result
+      // Cache result
       earliestGameCache[date] = {
         earliestGameStart: earliest.toISOString(),
         fetchedAt: now,
