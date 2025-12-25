@@ -142,35 +142,38 @@ export class NbaPlayersController {
         playerDocs = snapshot.docs;
       }
 
-      let players: Player[] = playerDocs.map((doc) => {
-        const data = doc.data();
-        const avg = data.averageStats ?? {};
+      let players: Player[] = playerDocs
+        .map((doc) => {
+          const data = doc.data();
+          if (!data) return null;
+          const avg = data.averageStats ?? {};
 
-        return {
-          averageStats: {
-            ast: avg.assists ?? 0,
-            blk: avg.blocks ?? 0,
-            fpts: avg.fantasyPoints ?? 0,
-            min: avg.minutes ?? 0,
-            pts: avg.points ?? 0,
-            reb: avg.rebounds ?? 0,
-            stl: avg.steals ?? 0,
-            tov: avg.turnovers ?? 0,
-          },
-          firstName: data.firstName,
-          gamesPlayed: data.gamesPlayed,
-          headshotUrl: data.headshotURL,
-          height: data.height,
-          id: data.playerId,
-          jerseyNumber: data.jerseyNumber,
-          positions: data.positions,
-          salary: data.salary,
-          lastName: data.lastName,
-          teamAbbreviation: data.teamAbbreviation,
-          teamId: data.teamId,
-          weight: data.weight,
-        };
-      });
+          return {
+            averageStats: {
+              ast: avg.assists ?? 0,
+              blk: avg.blocks ?? 0,
+              fpts: avg.fantasyPoints ?? 0,
+              min: avg.minutes ?? 0,
+              pts: avg.points ?? 0,
+              reb: avg.rebounds ?? 0,
+              stl: avg.steals ?? 0,
+              tov: avg.turnovers ?? 0,
+            },
+            firstName: data.firstName,
+            gamesPlayed: data.gamesPlayed,
+            headshotUrl: data.headshotURL,
+            height: data.height,
+            id: data.playerId,
+            jerseyNumber: data.jerseyNumber,
+            positions: data.positions,
+            salary: data.salary,
+            lastName: data.lastName,
+            teamAbbreviation: data.teamAbbreviation,
+            teamId: data.teamId,
+            weight: data.weight,
+          };
+        })
+        .filter((player) => isNotNil(player));
 
       if (excludedPlayerIds && excludedPlayerIds.length > 0) {
         players = players.filter(
