@@ -43,7 +43,7 @@ const Roster = () => {
                     className="size-10 items-center justify-center rounded-md border border-gray-900 p-4"
                     icon={<ArrowLeft color="white" size={20} weight="bold" />}
                     onPress={async () => {
-                      router.dismissTo("/(protected)/(tabs)/(home)");
+                      router.dismissTo("/(protected)/(tabs)");
                     }}
                   />
                   <Text className="pbk-h5 text-base-white">Team builder</Text>
