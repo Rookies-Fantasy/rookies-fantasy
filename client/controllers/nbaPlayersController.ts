@@ -118,19 +118,18 @@ export class NbaPlayersController {
       let playerDocs;
 
       if (searchTerm) {
-        const trimmedSearchTerm = searchTerm.trim();
+        const normalizedSearchTerm = searchTerm.trim().toLowerCase();
         const firstNameQuery = baseQuery
-          .where("firstName", ">=", trimmedSearchTerm)
-          .where("firstName", "<=", trimmedSearchTerm + "\uf8ff");
+          .where("firstNameLower", ">=", normalizedSearchTerm)
+          .where("firstNameLower", "<=", normalizedSearchTerm + "\uf8ff");
 
         const lastNameQuery = baseQuery
-          .where("lastName", ">=", trimmedSearchTerm)
-          .where("lastName", "<=", trimmedSearchTerm + "\uf8ff");
+          .where("lastNameLower", ">=", normalizedSearchTerm)
+          .where("lastNameLower", "<=", normalizedSearchTerm + "\uf8ff");
 
-        const lowercaseSearchTerm = trimmedSearchTerm.toLowerCase();
         const fullNameQuery = baseQuery
-          .where("fullNameLower", ">=", lowercaseSearchTerm)
-          .where("fullNameLower", "<=", lowercaseSearchTerm + "\uf8ff");
+          .where("fullNameLower", ">=", normalizedSearchTerm)
+          .where("fullNameLower", "<=", normalizedSearchTerm + "\uf8ff");
 
         const [firstSnap, lastSnap, fullNameSnap] = await Promise.all([
           firstNameQuery.get(),
@@ -195,6 +194,7 @@ export class NbaPlayersController {
         hasMore: playerDocs.length === pageSize,
       };
     } catch (error) {
+      console.log("Error", error);
       throw error;
     }
   };
