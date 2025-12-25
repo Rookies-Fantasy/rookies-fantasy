@@ -16,7 +16,7 @@ const MatchupInfoCard = () => {
   const now = new Date();
 
   const apiDate =
-    now < new Date(matchupStartDate)
+    matchupStartDate && now < new Date(matchupStartDate)
       ? matchupStartDate
       : now.toISOString().split("T")[0];
 
