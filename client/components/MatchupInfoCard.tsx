@@ -1,13 +1,10 @@
-import { getAuth } from "@react-native-firebase/auth";
 import { CheckCircle, HourglassHigh, Sword } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import { View, Text } from "react-native";
+import { fetchEarliestGameStartTime } from "@/controllers/ballDontLieController";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useAppSelector } from "@/state/hooks";
 import { QueueStatus } from "@/types/user";
-
-const EARLIEST_GAME_START_TIME_URL =
-  "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getEarliestGameStartTime";
 
 const MatchupInfoCard = () => {
   const queueStatus: QueueStatus =
@@ -26,37 +23,12 @@ const MatchupInfoCard = () => {
   useEffect(() => {
     if (queueStatus === QueueStatus.Queued) return;
 
-    const fetchEarliestGameTime = async () => {
-      try {
-        const auth = getAuth();
-        const currentUser = auth.currentUser;
-        if (!currentUser) {
-          console.error("No authenticated user");
-          return;
-        }
-
-        const idToken = await currentUser.getIdToken();
-
-        const response = await fetch(
-          `${EARLIEST_GAME_START_TIME_URL}?date=2025-12-25`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${idToken}`,
-            },
-          },
-        );
-
-        const data = await response.json();
-        console.log("DATA", data);
-
-        setEarliestStartTime(data.earliestGameStart);
-      } catch (error) {
-        console.log("Failed to fetch earliest game start time:", error);
-      }
+    const getEarliestGame = async () => {
+      const startTime = await fetchEarliestGameStartTime(apiDate);
+      setEarliestStartTime(startTime);
     };
 
-    fetchEarliestGameTime();
+    getEarliestGame();
   }, [apiDate, queueStatus]);
 
   const countdown = useCountdown(

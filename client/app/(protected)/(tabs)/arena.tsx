@@ -8,6 +8,7 @@ import AugmentCard, { iconMap } from "@/components/AugmentCard";
 import DateSelector from "@/components/DateSelector";
 import Dialog from "@/components/Dialog";
 import PlayerMatchupCard from "@/components/PlayerMatchupCard";
+import { fetchLivePlayerData } from "@/controllers/ballDontLieController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   selectMatchup,
@@ -15,9 +16,6 @@ import {
 } from "@/state/slices/matchupSlice";
 import { teamLogoOptions } from "@/types/asset";
 import { SLOT_ORDER } from "@/types/team";
-
-const LIVE_DATA_URL =
-  "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData";
 
 const Arena = () => {
   const matchup = useAppSelector(selectMatchup);
@@ -49,7 +47,7 @@ const Arena = () => {
 
   useFocusEffect(
     useCallback(() => {
-      const fetchLiveData = async () => {
+      const fetchAndUpdateLiveData = async () => {
         const awayLineup =
           matchupRef.current.dailyMatchups[currentDate]?.awayTeam.lineup ?? [];
         const homeLineup =
@@ -59,37 +57,9 @@ const Arena = () => {
         const homePlayerIds = homeLineup.map((o) => o.player?.id);
 
         try {
-          const auth = getAuth();
-          const currentUser = auth.currentUser;
-          if (!currentUser) {
-            console.error("No authenticated user");
-            return;
-          }
-
-          const idToken = await currentUser.getIdToken();
-
-          const [awayRes, homeRes] = await Promise.all([
-            fetch(LIVE_DATA_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${idToken}`,
-              },
-              body: JSON.stringify({ playerIds: awayPlayerIds }),
-            }),
-            fetch(LIVE_DATA_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${idToken}`,
-              },
-              body: JSON.stringify({ playerIds: homePlayerIds }),
-            }),
-          ]);
-
           const [updatedAway, updatedHome] = await Promise.all([
-            awayRes.json(),
-            homeRes.json(),
+            fetchLivePlayerData(awayPlayerIds),
+            fetchLivePlayerData(homePlayerIds),
           ]);
 
           dispatch(
@@ -104,9 +74,9 @@ const Arena = () => {
         }
       };
 
-      fetchLiveData();
+      fetchAndUpdateLiveData();
 
-      const intervalId = setInterval(fetchLiveData, 10000);
+      const intervalId = setInterval(fetchAndUpdateLiveData, 10000);
 
       return () => clearInterval(intervalId);
     }, [currentDate, dispatch]),
