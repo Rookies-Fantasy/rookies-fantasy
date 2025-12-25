@@ -35,22 +35,3 @@ export type Matchup = {
   weekStartDate: string;
   dailyMatchups: Record<string, DailyMatchup>;
 };
-
-export const defaultMatchup: Matchup = {
-  id: "",
-  away: {
-    awayTeamId: "",
-    awayTeamName: "",
-    awayUserId: "",
-    awayWeeklyAcquisitionsUsed: 4,
-  },
-  home: {
-    homeTeamId: "",
-    homeTeamName: "",
-    homeUserId: "",
-    homeWeeklyAcquisitionsUsed: 4,
-  },
-  status: "active",
-  weekStartDate: "",
-  dailyMatchups: {},
-};

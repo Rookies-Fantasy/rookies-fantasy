@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import {
-  ChartBar,
+  Basketball,
   ClockCounterClockwise,
   ListBullets,
   Ranking,
@@ -29,7 +29,7 @@ const HomeLayout = () => (
       name="arena"
       options={{
         title: "Arena",
-        tabBarIcon: ({ color }) => <ChartBar color={color} />,
+        tabBarIcon: ({ color }) => <Basketball color={color} />,
       }}
     />
     <Tabs.Screen
