@@ -1,4 +1,3 @@
-import { getAuth } from "@react-native-firebase/auth";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useRef, useState } from "react";
 import { Text, View, Image, Pressable } from "react-native";
