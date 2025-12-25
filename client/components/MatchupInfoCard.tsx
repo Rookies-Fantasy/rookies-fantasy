@@ -10,9 +10,8 @@ const EARLIEST_GAME_START_TIME_URL =
   "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getEarliestGameStartTime";
 
 const MatchupInfoCard = () => {
-  const queueStatus: QueueStatus | undefined = useAppSelector(
-    (state) => state.user.queueStatus,
-  );
+  const queueStatus: QueueStatus =
+    useAppSelector((state) => state.user.queueStatus) ?? QueueStatus.Idle;
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
     month: "short",
