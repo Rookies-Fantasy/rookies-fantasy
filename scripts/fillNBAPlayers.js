@@ -18,6 +18,7 @@ const normalizePlayer = (player) => {
     playerId: player.id.toString(),
     teamId: player.team.id.toString(),
     firstName: player.first_name,
+    fullNameLower: `${player.first_name} ${player.last_name}`.toLowerCase(),
     lastName: player.last_name,
     positions: parsePositions(player.position),
     height: player.height,
