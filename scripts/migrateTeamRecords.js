@@ -1,9 +1,7 @@
 import { db } from "./firebaseConfig.js";
 
 async function addRecordToExistingTeams() {
-  console.log(
-    "🔄 Starting migration to add record field to existing teams...\n"
-  );
+  console.log("Starting migration to add record field to existing teams...\n");
 
   try {
     // Get all users
@@ -24,7 +22,7 @@ async function addRecordToExistingTeams() {
         .collection("teams")
         .get();
 
-      console.log(`  Found ${teamsSnapshot.size} team(s)`);
+      console.log(`Found ${teamsSnapshot.size} team(s)`);
 
       for (const teamDoc of teamsSnapshot.docs) {
         const teamId = teamDoc.id;
@@ -33,7 +31,7 @@ async function addRecordToExistingTeams() {
         // Check if record already exists
         if (teamData.record) {
           console.log(
-            `  ⏭️  Team ${teamId} already has a record (${teamData.record.wins}-${teamData.record.losses}-${teamData.record.draws}), skipping`
+            `Team ${teamId} already has a record (${teamData.record.wins}-${teamData.record.losses}-${teamData.record.draws}), skipping`
           );
           totalTeamsSkipped++;
           continue;
@@ -48,21 +46,21 @@ async function addRecordToExistingTeams() {
           },
         });
 
-        console.log(`  ✅ Updated team ${teamId} with record: 0-0-0`);
+        console.log(`Updated team ${teamId} with record: 0-0-0`);
         totalTeamsUpdated++;
       }
     }
 
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("✨ Migration completed successfully!");
-    console.log(`📊 Teams updated: ${totalTeamsUpdated}`);
-    console.log(`⏭️  Teams skipped (already had record): ${totalTeamsSkipped}`);
+    console.log("Migration completed successfully!");
+    console.log(`Teams updated: ${totalTeamsUpdated}`);
+    console.log(`Teams skipped (already had record): ${totalTeamsSkipped}`);
     console.log(
-      `📈 Total teams processed: ${totalTeamsUpdated + totalTeamsSkipped}`
+      `Total teams processed: ${totalTeamsUpdated + totalTeamsSkipped}`
     );
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
-    console.error("❌ Migration failed:", error);
+    console.error("Migration failed:", error);
     throw error;
   }
 }
