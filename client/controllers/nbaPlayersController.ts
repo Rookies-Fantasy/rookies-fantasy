@@ -118,23 +118,31 @@ export class NbaPlayersController {
       let playerDocs;
 
       if (searchTerm) {
+        const trimmedSearchTerm = searchTerm.trim();
         const firstNameQuery = baseQuery
-          .where("firstName", ">=", searchTerm)
-          .where("firstName", "<=", searchTerm + "\uf8ff");
+          .where("firstName", ">=", trimmedSearchTerm)
+          .where("firstName", "<=", trimmedSearchTerm + "\uf8ff");
 
         const lastNameQuery = baseQuery
-          .where("lastName", ">=", searchTerm)
-          .where("lastName", "<=", searchTerm + "\uf8ff");
+          .where("lastName", ">=", trimmedSearchTerm)
+          .where("lastName", "<=", trimmedSearchTerm + "\uf8ff");
 
-        const [firstSnap, lastSnap] = await Promise.all([
+        const lowercaseSearchTerm = trimmedSearchTerm.toLowerCase();
+        const fullNameQuery = baseQuery
+          .where("fullNameLower", ">=", lowercaseSearchTerm)
+          .where("fullNameLower", "<=", lowercaseSearchTerm + "\uf8ff");
+
+        const [firstSnap, lastSnap, fullNameSnap] = await Promise.all([
           firstNameQuery.get(),
           lastNameQuery.get(),
+          fullNameQuery.get(),
         ]);
 
         const map = new Map<string, FirebaseFirestoreTypes.DocumentSnapshot>();
 
         firstSnap.docs.forEach((doc) => map.set(doc.id, doc));
         lastSnap.docs.forEach((doc) => map.set(doc.id, doc));
+        fullNameSnap.docs.forEach((doc) => map.set(doc.id, doc));
 
         playerDocs = Array.from(map.values());
       } else {
