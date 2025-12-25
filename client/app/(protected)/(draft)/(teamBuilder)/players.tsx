@@ -188,7 +188,7 @@ const Players = () => {
                         balance: savedData.balance,
                       }),
                     );
-                    router.dismissTo("/(protected)/(tabs)/(home)");
+                    router.dismissTo("/(protected)/(tabs)");
                   }}
                 />
                 <Text className="pbk-h5 text-base-white">Team builder</Text>

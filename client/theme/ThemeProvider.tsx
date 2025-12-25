@@ -1,5 +1,11 @@
 import { useColorScheme } from "nativewind";
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { ThemeMode, ThemeName } from "./theme";
 
 type ThemeContextType = {
@@ -17,8 +23,12 @@ type ThemeProviderProps = {
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [theme, setTheme] = useState<ThemeName>(ThemeName.Purple);
-  const [mode, _setMode] = useState<ThemeMode>(ThemeMode.System);
+  const [mode, _setMode] = useState<ThemeMode>(ThemeMode.Dark);
   const { setColorScheme } = useColorScheme();
+
+  useEffect(() => {
+    setColorScheme(ThemeMode.Dark);
+  }, [setColorScheme]);
 
   const setMode = (mode: ThemeMode) => {
     _setMode(mode);

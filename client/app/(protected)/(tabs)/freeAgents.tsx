@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Sliders } from "phosphor-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { View, Text, KeyboardAvoidingView, Pressable } from "react-native";
-import { FetchPlayersParams } from "../../(draft)/(teamBuilder)/players";
+import { FetchPlayersParams } from "../(draft)/(teamBuilder)/players";
 import FiltersDrawer from "@/components/FiltersDrawer";
 import IconButton from "@/components/IconButton";
 import PlayerData from "@/components/PlayerData";
