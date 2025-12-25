@@ -1,20 +1,30 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { Matchup, defaultMatchup } from "@/types/matchup";
+import { Matchup } from "@/types/matchup";
 import { GameInfo, GameStats } from "@/types/team";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
-import { isNotNil } from "@/utils/jsUtils";
+import { isNil, isNotNil } from "@/utils/jsUtils";
 
 type PlayerGameData = {
   gameInfo: GameInfo;
   gameStats: GameStats;
 };
 
+export type MatchupState = {
+  data?: Matchup;
+};
+
+const defaultMatchup: MatchupState = {
+  data: undefined,
+};
+
 const matchupSlice = createSlice({
   name: "matchup",
   initialState: defaultMatchup,
   reducers: {
-    setMatchup: (_, action: PayloadAction<Matchup>) => action.payload,
+    setMatchup: (state, action: PayloadAction<Matchup>) => {
+      state.data = action.payload;
+    },
     clearMatchup: () => defaultMatchup,
     updateMatchupWithLiveData: (
       state,
@@ -24,7 +34,11 @@ const matchupSlice = createSlice({
         updatedAway: Record<string, PlayerGameData | null>;
       }>,
     ) => {
-      const newMatchup = state.dailyMatchups[action.payload.date];
+      if (isNil(state.data)) {
+        return;
+      }
+
+      const newMatchup = state.data.dailyMatchups[action.payload.date];
 
       newMatchup.homeTeam.lineup.forEach((o) => {
         if (isNotNil(o.player?.id)) {
@@ -65,20 +79,19 @@ const matchupSlice = createSlice({
       newMatchup.homeTeam.score = homeScore;
       newMatchup.awayTeam.score = awayScore;
 
-      state.dailyMatchups[action.payload.date] = newMatchup;
+      state.data.dailyMatchups[action.payload.date] = newMatchup;
     },
   },
 });
 
-export const selectMatchup = (state: RootState) => state.matchup;
-export const selectMatchupId = (state: RootState) => state.matchup.id;
-export const selectMatchupStatus = (state: RootState) => state.matchup.status;
+export const selectMatchup = (state: RootState) => state.matchup.data;
+export const selectMatchupId = (state: RootState) => state.matchup.data?.id;
 export const selectDailyMatchups = (state: RootState) =>
-  state.matchup.dailyMatchups;
+  state.matchup.data?.dailyMatchups;
 export const selectAwayUserId = (state: RootState) =>
-  state.matchup.away.awayUserId;
+  state.matchup.data?.away.awayUserId;
 export const selectHomeUserId = (state: RootState) =>
-  state.matchup.home.homeUserId;
+  state.matchup.data?.home.homeUserId;
 
 export const { setMatchup, clearMatchup, updateMatchupWithLiveData } =
   matchupSlice.actions;

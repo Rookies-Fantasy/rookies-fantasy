@@ -1,5 +1,6 @@
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
+import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { Augment } from "@/types/augment";
 import { Player } from "@/types/player";
 import {
@@ -338,6 +339,13 @@ export const selectAugmentMetPrerequisites = createSelector(
 export const selectAugmentUnmetPrerequisites = createSelector(
   [selectAugmentValidation],
   (validation) => validation.unmetPrerequisites,
+);
+
+export const selectTeamLogo = createSelector(
+  [(state: RootState) => state.team.logoUrl],
+  (logoUrl) =>
+    teamLogoOptions.find((option) => option.url === logoUrl)?.source ??
+    defaultTeamLogo.source,
 );
 
 export const {
