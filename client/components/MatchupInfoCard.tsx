@@ -1,5 +1,5 @@
 import { getAuth } from "@react-native-firebase/auth";
-import { CheckCircle, HourglassHigh } from "phosphor-react-native";
+import { CheckCircle, HourglassHigh, Sword } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { useCountdown } from "@/hooks/useCountdown";
@@ -11,7 +11,7 @@ const EARLIEST_GAME_START_TIME_URL =
   "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getEarliestGameStartTime";
 
 const MatchupInfoCard = () => {
-  const queueStatus = useAppSelector(selectUserQueueStatus);
+  const queueStatus: QueueStatus = useAppSelector(selectUserQueueStatus);
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
     month: "short",
@@ -60,42 +60,42 @@ const MatchupInfoCard = () => {
   }, [apiDate, queueStatus]);
 
   const countdown = useCountdown(
-    queueStatus !== QueueStatus.Queued ? earliestStartTime : null,
+    queueStatus === QueueStatus.Idle ? earliestStartTime : undefined,
   );
+
+  const statusConfig = {
+    [QueueStatus.Idle]: {
+      icon: <HourglassHigh color="white" size={20} weight="bold" />,
+      title: countdown
+        ? `Lineup locks in ${countdown.hours > 0 ? `${countdown.hours}h ` : ""}${countdown.minutes}m`
+        : "Calculating lock time…",
+      message: `Your lineup locks for Today (${formattedDate})'s games once they start. Set your team before then.`,
+    },
+    [QueueStatus.Queued]: {
+      icon: <CheckCircle color="white" size={20} weight="bold" />,
+      title: "You're in queue",
+      message:
+        "Matchmaking in progress. Leave queue if you want to edit your roster.",
+    },
+    [QueueStatus.Matched]: {
+      icon: <Sword color="white" size={20} weight="bold" />,
+      title: "You're in a matchup!",
+      message:
+        "Track your players’ performance and tweak your strategy as the week unfolds.",
+    },
+  };
+
+  const { icon, title, message } = statusConfig[queueStatus];
 
   return (
     <View className="w-full rounded-2xl bg-gray-900 p-4">
       <View className="flex-row items-center gap-3">
-        {queueStatus === QueueStatus.Queued ? (
-          <CheckCircle color="white" size={20} weight="bold" />
-        ) : (
-          <HourglassHigh color="white" size={20} weight="bold" />
-        )}
+        {icon}
 
-        {queueStatus === QueueStatus.Queued ? (
-          <View className="flex-1">
-            <Text className="pbk-b2 text-base-white">{`You're in queue`}</Text>
-
-            <Text className="pbk-b3 text-base-white">
-              Matchmaking in progress. Leave queue if you want to edit your
-              roster.
-            </Text>
-          </View>
-        ) : (
-          <View className="flex-1">
-            {countdown && (
-              <Text className="pbk-b2 text-base-white">
-                Lineup locks in{" "}
-                {countdown.hours > 0 ? `${countdown.hours}h ` : ""}
-                {countdown.minutes}m
-              </Text>
-            )}
-
-            <Text className="pbk-b3 text-base-white">
-              {`Your lineup locks for Today (${formattedDate})'s games once they start. Set your team before then.`}
-            </Text>
-          </View>
-        )}
+        <View className="flex-1">
+          <Text className="pbk-b2 text-base-white">{title}</Text>
+          <Text className="pbk-b3 text-base-white">{message}</Text>
+        </View>
       </View>
     </View>
   );
