@@ -1,8 +1,6 @@
 import { Sword } from "phosphor-react-native";
-import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
-import { fetchEarliestGameStartTime } from "@/controllers/ballDontLieController";
-import { useCountdown } from "@/hooks/useCountdown";
+import { useLineupLock } from "@/hooks/useLineupLock";
 import { useAppSelector } from "@/state/hooks";
 import { selectMatchup } from "@/state/slices/matchupSlice";
 import { QueueStatus } from "@/types/user";
@@ -12,34 +10,11 @@ const MatchupInfoCard = () => {
     useAppSelector((state) => state.user.queueStatus) ?? QueueStatus.Idle;
   const matchup = useAppSelector(selectMatchup);
 
-  const matchupStartDate = matchup?.weekStartDate; // YYYY-MM-DD
-  const now = new Date();
+  const { isLineupLocked, countdown } = useLineupLock({
+    matchupStartDate: matchup?.weekStartDate,
+  });
 
-  const apiDate =
-    matchupStartDate && now < new Date(matchupStartDate)
-      ? matchupStartDate
-      : now.toISOString().split("T")[0];
-
-  const [earliestStartTime, setEarliestStartTime] = useState<string>();
-  const isLocked =
-    !!earliestStartTime && new Date() >= new Date(earliestStartTime);
-
-  useEffect(() => {
-    const getEarliestGame = async () => {
-      try {
-        const startTime = await fetchEarliestGameStartTime(apiDate);
-        setEarliestStartTime(startTime);
-      } catch (err) {
-        console.log("Failed to fetch earliest game start time", err);
-      }
-    };
-
-    getEarliestGame();
-  }, [apiDate]);
-
-  const countdown = useCountdown(earliestStartTime);
-
-  const title = isLocked
+  const title = isLineupLocked
     ? "Your lineup is locked"
     : countdown
       ? `Lineup locks in ${
@@ -47,7 +22,7 @@ const MatchupInfoCard = () => {
         }${countdown.minutes}m`
       : "Calculating lock time…";
 
-  const message = isLocked
+  const message = isLineupLocked
     ? "Games have already started today. Your lineup is locked until tomorrow."
     : "Track your players’ performance and tweak your strategy as the matchup unfolds.";
 
