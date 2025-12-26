@@ -1,20 +1,20 @@
 import { useRouter } from "expo-router";
 import { UserPlus, XCircle } from "phosphor-react-native";
-import { useEffect, useState } from "react";
 import { View, Text, Pressable, Image } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { iconMap } from "./AugmentCard";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
-import { fetchEarliestGameStartTime } from "@/controllers/ballDontLieController";
+import { useLineupLock } from "@/hooks/useLineupLock";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { selectMatchup } from "@/state/slices/matchupSlice";
 import {
   removePlayerFromLineup,
   selectAugment,
   selectPlayerQualificationMap,
 } from "@/state/slices/teamSlice";
 import { Player } from "@/types/player";
-import { cn, isNotNil } from "@/utils/jsUtils";
+import { cn } from "@/utils/jsUtils";
 
 type PlayerSlotProps = {
   isCard?: boolean;
@@ -37,26 +37,15 @@ const PlayerSlot = ({
   const playerQualificationMap = useAppSelector(selectPlayerQualificationMap);
   const dispatch = useAppDispatch();
   const augmentId = useAppSelector(selectAugment);
+  const matchup = useAppSelector(selectMatchup);
 
   const router = useRouter();
 
   const boostedPlayer = playerData && playerQualificationMap[playerData.id];
 
-  const today = new Date();
-  const apiDate = today.toISOString().split("T")[0]; // YYYY-MM-DD
-
-  const [earliestStartTime, setEarliestStartTime] = useState<string>();
-  const isPastLockTime =
-    isNotNil(earliestStartTime) && new Date() > new Date(earliestStartTime);
-
-  useEffect(() => {
-    const getEarliestGame = async () => {
-      const startTime = await fetchEarliestGameStartTime(apiDate);
-      setEarliestStartTime(startTime);
-    };
-
-    getEarliestGame();
-  }, [apiDate]);
+  const { isLineupLocked } = useLineupLock({
+    matchupStartDate: matchup?.weekStartDate,
+  });
 
   return (
     <View className="justify-center">
@@ -99,7 +88,7 @@ const PlayerSlot = ({
               "h-8 min-w-16 items-center justify-center rounded-3xl",
               isSelected ? "bg-purple-400" : "border border-purple-400",
             )}
-            disabled={isPastLockTime}
+            disabled={isLineupLocked}
             onPress={openDrawer}
           >
             <Text
@@ -120,7 +109,7 @@ const PlayerSlot = ({
           </View>
 
           {isCard &&
-            !isPastLockTime &&
+            !isLineupLocked &&
             (playerData ? (
               <>
                 {augmentIconURL && boostedPlayer && (
