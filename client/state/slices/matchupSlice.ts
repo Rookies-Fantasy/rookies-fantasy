@@ -2,7 +2,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Matchup } from "@/types/matchup";
 import { GameInfo, GameStats } from "@/types/team";
-import { applyAugmentEffects } from "@/utils/augmentUtils";
+import { applyAugmentEffects, validateAugment } from "@/utils/augmentUtils";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNil, isNotNil } from "@/utils/jsUtils";
 
@@ -24,7 +24,35 @@ const matchupSlice = createSlice({
   initialState: defaultMatchup,
   reducers: {
     setMatchup: (state, action: PayloadAction<Matchup>) => {
-      state.data = action.payload;
+      const matchup = action.payload;
+
+      // Validate and compute qualifying players for each daily matchup
+      Object.keys(matchup.dailyMatchups).forEach((date) => {
+        const dailyMatchup = matchup.dailyMatchups[date];
+
+        const homeValidation = validateAugment(
+          matchup.home.homeAugment,
+          dailyMatchup.homeTeam.lineup,
+        );
+        dailyMatchup.homeTeam.qualifyingPlayers =
+          homeValidation.qualifyingPlayers;
+
+        const awayValidation = validateAugment(
+          matchup.away.awayAugment,
+          dailyMatchup.awayTeam.lineup,
+        );
+        dailyMatchup.awayTeam.qualifyingPlayers =
+          awayValidation.qualifyingPlayers;
+
+        if (matchup.home.homeAugment) {
+          matchup.home.homeAugment.isActive = homeValidation.isValid;
+        }
+        if (matchup.away.awayAugment) {
+          matchup.away.awayAugment.isActive = awayValidation.isValid;
+        }
+      });
+
+      state.data = matchup;
     },
     clearMatchup: () => defaultMatchup,
     updateMatchupWithLiveData: (

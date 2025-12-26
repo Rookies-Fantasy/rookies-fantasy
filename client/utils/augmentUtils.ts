@@ -187,6 +187,46 @@ const evaluateCondition = (
   }
 };
 
+const canApplyAugment = (
+  augment: Augment | undefined,
+  qualifyingPlayers: Player[] | undefined,
+): boolean => {
+  if (!augment || !augment.isActive || !qualifyingPlayers) {
+    return false;
+  }
+
+  if (qualifyingPlayers.length < augment.playerCount) {
+    return false;
+  }
+
+  if (!augment.effects || augment.effects.length === 0) {
+    return false;
+  }
+
+  return true;
+};
+
+const isPlayerQualified = (
+  playerId: string,
+  qualifyingPlayers: Player[],
+): boolean => qualifyingPlayers.some((p) => p.id === playerId);
+
+const calculateStatBonus = (
+  stats: GameStats,
+  stat: string,
+  multiplier: number,
+): number => {
+  const statValue = getStatValue(stats, stat);
+  const baseStatMultiplier = STAT_MULTIPLIERS[stat] ?? 0;
+
+  const baseFantasyPoints = statValue * baseStatMultiplier;
+
+  // Calculate bonus: actual stat value × fantasy multiplier × boost percentage
+  // e.g., 10 assists × 2 (base multiplier) × 0.5 (50% boost from 1.5x) = 10 bonus points
+  const boostPercentage = multiplier - 1;
+  return baseFantasyPoints * boostPercentage;
+};
+
 export const applyAugmentEffects = (
   baseFantasyPoints: number,
   stats: GameStats,
@@ -194,37 +234,23 @@ export const applyAugmentEffects = (
   qualifyingPlayers: Player[] | undefined,
   augment: Augment | undefined,
 ): number => {
-  if (!augment || !augment.isActive || !qualifyingPlayers) {
+  if (!canApplyAugment(augment, qualifyingPlayers)) {
     return baseFantasyPoints;
   }
 
-  if (qualifyingPlayers.length < augment.playerCount) {
+  if (qualifyingPlayers && !isPlayerQualified(playerId, qualifyingPlayers)) {
     return baseFantasyPoints;
   }
 
-  const playerQualifies = qualifyingPlayers.some((p) => p.id === playerId);
-  if (!playerQualifies) {
-    return baseFantasyPoints;
-  }
+  const totalBonus = augment!.effects
+    .flatMap((effect) => effect.statBoosts)
+    .reduce(
+      (bonus, boost) =>
+        bonus + calculateStatBonus(stats, boost.stat, boost.multiplier),
+      0,
+    );
 
-  if (!augment.effects || augment.effects.length === 0) {
-    return baseFantasyPoints;
-  }
-
-  let totalPoints = baseFantasyPoints;
-
-  augment.effects.forEach((effect) => {
-    effect.statBoosts.forEach((boost) => {
-      const statValue = getStatValue(stats, boost.stat);
-      const baseStatMultiplier = STAT_MULTIPLIERS[boost.stat] ?? 0;
-
-      const additionalBoost =
-        statValue * baseStatMultiplier * (boost.multiplier - 1);
-      totalPoints += additionalBoost;
-    });
-  });
-
-  return totalPoints;
+  return baseFantasyPoints + totalBonus;
 };
 
 const getStatValue = (stats: GameStats, stat: string): number => {
