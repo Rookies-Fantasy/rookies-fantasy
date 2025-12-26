@@ -59,7 +59,7 @@ const PlayerSlot = ({
   }, [apiDate]);
 
   return (
-    <View className={cn("justify-center")}>
+    <View className="justify-center">
       {boostedPlayer && (
         <LinearGradient
           colors={["#CCE8FE", "#CDA0FF", "#8489F5", "#CDF1FF", "#B591E9"]}
