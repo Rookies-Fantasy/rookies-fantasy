@@ -5,7 +5,9 @@ import LinearGradient from "react-native-linear-gradient";
 import { iconMap } from "./AugmentCard";
 import IconButton from "./IconButton";
 import PlayerData from "./PlayerData";
+import { useLineupLock } from "@/hooks/useLineupLock";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { selectMatchup } from "@/state/slices/matchupSlice";
 import {
   removePlayerFromLineup,
   selectAugment,
@@ -35,10 +37,15 @@ const PlayerSlot = ({
   const playerQualificationMap = useAppSelector(selectPlayerQualificationMap);
   const dispatch = useAppDispatch();
   const augmentId = useAppSelector(selectAugment);
+  const matchup = useAppSelector(selectMatchup);
 
   const router = useRouter();
 
   const boostedPlayer = playerData && playerQualificationMap[playerData.id];
+
+  const { isLineupLocked } = useLineupLock({
+    matchupStartDate: matchup?.weekStartDate,
+  });
 
   return (
     <View className="justify-center">
@@ -81,6 +88,7 @@ const PlayerSlot = ({
               "h-8 min-w-16 items-center justify-center rounded-3xl",
               isSelected ? "bg-purple-400" : "border border-purple-400",
             )}
+            disabled={isLineupLocked}
             onPress={openDrawer}
           >
             <Text
@@ -101,6 +109,7 @@ const PlayerSlot = ({
           </View>
 
           {isCard &&
+            !isLineupLocked &&
             (playerData ? (
               <>
                 {augmentIconURL && boostedPlayer && (
