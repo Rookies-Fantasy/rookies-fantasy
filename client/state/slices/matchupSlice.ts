@@ -75,16 +75,29 @@ const matchupSlice = createSlice({
           o.gameInfo = newData?.gameInfo;
           if (newData?.gameStats) {
             const baseFpts = calculateFantasyPoints(newData.gameStats);
-            const augmentedFpts = applyAugmentEffects(
-              baseFpts,
-              newData.gameStats,
-              o.player.id,
-              newMatchup.homeTeam.qualifyingPlayers,
-              state.data?.home.homeAugment,
-            );
+            const homeAugment = state.data?.home.homeAugment;
+            const qualifyingPlayers = newMatchup.homeTeam.qualifyingPlayers;
+
+            // Only apply augment if it's active and has qualifying players
+            const shouldApplyAugment =
+              homeAugment &&
+              homeAugment.isActive &&
+              qualifyingPlayers &&
+              qualifyingPlayers.length >= homeAugment.playerCount;
+
+            const finalFpts = shouldApplyAugment
+              ? applyAugmentEffects(
+                  baseFpts,
+                  newData.gameStats,
+                  o.player.id,
+                  qualifyingPlayers,
+                  homeAugment,
+                )
+              : baseFpts;
+
             o.gameStats = {
               ...newData.gameStats,
-              fantasyPoints: augmentedFpts,
+              fantasyPoints: finalFpts,
             };
           } else {
             o.gameStats = newData?.gameStats;
@@ -98,16 +111,29 @@ const matchupSlice = createSlice({
           o.gameInfo = newData?.gameInfo;
           if (newData?.gameStats) {
             const baseFpts = calculateFantasyPoints(newData.gameStats);
-            const augmentedFpts = applyAugmentEffects(
-              baseFpts,
-              newData.gameStats,
-              o.player.id,
-              newMatchup.awayTeam.qualifyingPlayers,
-              state.data?.away.awayAugment,
-            );
+            const awayAugment = state.data?.away.awayAugment;
+            const qualifyingPlayers = newMatchup.awayTeam.qualifyingPlayers;
+
+            // Only apply augment if it's active and has qualifying players
+            const shouldApplyAugment =
+              awayAugment &&
+              awayAugment.isActive &&
+              qualifyingPlayers &&
+              qualifyingPlayers.length >= awayAugment.playerCount;
+
+            const finalFpts = shouldApplyAugment
+              ? applyAugmentEffects(
+                  baseFpts,
+                  newData.gameStats,
+                  o.player.id,
+                  qualifyingPlayers,
+                  awayAugment,
+                )
+              : baseFpts;
+
             o.gameStats = {
               ...newData.gameStats,
-              fantasyPoints: augmentedFpts,
+              fantasyPoints: finalFpts,
             };
           } else {
             o.gameStats = newData?.gameStats;
