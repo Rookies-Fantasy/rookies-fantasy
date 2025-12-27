@@ -45,7 +45,7 @@ const removeBenchSlot = (
   }));
 };
 
-const getSlotfromPosition = (
+const getSlotFromPosition = (
   bench: BenchSlot[],
   lineup: LineupSlot[],
   position: SlotPosition,
@@ -158,12 +158,12 @@ const teamSlice = createSlice({
 
       if (fromPosition === toPosition) return;
 
-      const fromSlot = getSlotfromPosition(
+      const fromSlot = getSlotFromPosition(
         state.bench,
         state.lineup,
         fromPosition,
       );
-      const toSlot = getSlotfromPosition(state.bench, state.lineup, toPosition);
+      const toSlot = getSlotFromPosition(state.bench, state.lineup, toPosition);
       const { benchSlot: currentBenchSlot, lineupSlot: currentLineupSlot } =
         fromSlot;
       const { benchSlot: incomingBenchSlot, lineupSlot: incomingLineupSlot } =
@@ -283,7 +283,6 @@ const teamSlice = createSlice({
 });
 
 export const selectTeam = (state: RootState) => state.team;
-export const selectTeamId = (state: RootState) => state.team.id;
 export const selectLineup = (state: RootState) => state.team.lineup;
 export const selectAugment = (state: RootState) => state.team.augment;
 

@@ -7,6 +7,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
+import MatchupInfoCard from "@/components/MatchupInfoCard";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
 import Spinner from "@/components/Spinner";
@@ -21,6 +22,7 @@ import {
 } from "@/state/slices/teamSlice";
 import { selectUserId, clearUser } from "@/state/slices/userSlice";
 import { SlotPosition } from "@/types/team";
+import { QueueStatus } from "@/types/user";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
@@ -33,9 +35,9 @@ const MyTeam = () => {
   const playerCount = useAppSelector(selectRosterPlayerCount);
   const dispatch = useAppDispatch();
 
-  const queueStatus = user.queueStatus ?? "idle";
-  const isInQueue = queueStatus === "queued";
-  const isMatched = queueStatus === "matched";
+  const queueStatus = user.queueStatus;
+  const isInQueue = queueStatus === QueueStatus.Queued;
+  const isMatched = queueStatus === QueueStatus.Matched;
   const teamLogo = useAppSelector(selectTeamLogo);
   const [isLoading, setIsLoading] = useState(false);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
@@ -119,6 +121,7 @@ const MyTeam = () => {
               contentContainerClassName={cn("flex-col p-1 gap-4 pb-24 mt-4")}
               showsVerticalScrollIndicator={false}
             >
+              <MatchupInfoCard />
               <AugmentStatusCard />
               <View className="my-2 flex-1 gap-4">
                 <PlayerRoster

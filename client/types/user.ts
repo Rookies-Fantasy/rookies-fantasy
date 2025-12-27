@@ -1,4 +1,8 @@
-export type QueueStatus = "idle" | "queued" | "matched";
+export enum QueueStatus {
+  Idle = "idle",
+  Queued = "queued",
+  Matched = "matched",
+}
 
 export type User = {
   avatarUrl?: string;
@@ -7,7 +11,7 @@ export type User = {
   emailVerified: boolean;
   id: string;
   username?: string;
-  queueStatus?: QueueStatus;
+  queueStatus: QueueStatus;
   queuedAt?: string;
   currentMatchupId?: string;
 };
@@ -15,5 +19,5 @@ export type User = {
 export const defaultUser: User = {
   id: "",
   emailVerified: false,
-  queueStatus: "idle",
+  queueStatus: QueueStatus.Idle,
 };

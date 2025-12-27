@@ -15,6 +15,7 @@ import Screen from "@/components/Screen";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
+import { QueueStatus } from "@/types/user";
 import { cn } from "@/utils/jsUtils";
 
 const EmailVerification = () => {
@@ -54,6 +55,7 @@ const EmailVerification = () => {
             id: auth.currentUser.uid,
             email: auth.currentUser.email,
             emailVerified: auth.currentUser.emailVerified,
+            queueStatus: QueueStatus.Idle,
           }),
         );
         setIsLoading(false);

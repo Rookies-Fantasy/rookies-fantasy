@@ -1,4 +1,3 @@
-import { getAuth } from "@react-native-firebase/auth";
 import { useFocusEffect } from "@react-navigation/native";
 import { Empty, MagnifyingGlass } from "phosphor-react-native";
 import { useCallback, useRef, useState } from "react";
@@ -9,6 +8,7 @@ import AugmentCard, { iconMap } from "@/components/AugmentCard";
 import DateSelector from "@/components/DateSelector";
 import Dialog from "@/components/Dialog";
 import PlayerMatchupCard from "@/components/PlayerMatchupCard";
+import { fetchLivePlayerData } from "@/controllers/ballDontLieController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   selectMatchup,
@@ -20,9 +20,6 @@ import { useAppTheme } from "@/theme/ThemeProvider";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { SLOT_ORDER } from "@/types/team";
 import { isNil, isNotNil } from "@/utils/jsUtils";
-
-const LIVE_DATA_URL =
-  "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData";
 
 const getCurrentWeekDates = () => {
   const today = new Date();
@@ -73,7 +70,7 @@ const Arena = () => {
 
   useFocusEffect(
     useCallback(() => {
-      const fetchLiveData = async () => {
+      const fetchAndUpdateLiveData = async () => {
         const awayLineup =
           matchupRef.current?.dailyMatchups[selectedDate]?.awayTeam.lineup ??
           [];
@@ -81,41 +78,17 @@ const Arena = () => {
           matchupRef.current?.dailyMatchups[selectedDate]?.homeTeam.lineup ??
           [];
 
-        const awayPlayerIds = awayLineup.map((o) => o.player?.id);
-        const homePlayerIds = homeLineup.map((o) => o.player?.id);
+        const awayPlayerIds = awayLineup
+          .map((o) => o.player?.id)
+          .filter((id) => isNotNil(id));
+        const homePlayerIds = homeLineup
+          .map((o) => o.player?.id)
+          .filter((id) => isNotNil(id));
 
         try {
-          const auth = getAuth();
-          const currentUser = auth.currentUser;
-          if (!currentUser) {
-            console.error("No authenticated user");
-            return;
-          }
-
-          const idToken = await currentUser.getIdToken();
-
-          const [awayRes, homeRes] = await Promise.all([
-            fetch(LIVE_DATA_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${idToken}`,
-              },
-              body: JSON.stringify({ playerIds: awayPlayerIds }),
-            }),
-            fetch(LIVE_DATA_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${idToken}`,
-              },
-              body: JSON.stringify({ playerIds: homePlayerIds }),
-            }),
-          ]);
-
           const [updatedAway, updatedHome] = await Promise.all([
-            awayRes.json(),
-            homeRes.json(),
+            fetchLivePlayerData(awayPlayerIds),
+            fetchLivePlayerData(homePlayerIds),
           ]);
 
           dispatch(
@@ -130,9 +103,9 @@ const Arena = () => {
         }
       };
 
-      fetchLiveData();
+      fetchAndUpdateLiveData();
 
-      const intervalId = setInterval(fetchLiveData, 10000);
+      const intervalId = setInterval(fetchAndUpdateLiveData, 10000);
 
       return () => clearInterval(intervalId);
     }, [selectedDate, dispatch]),
