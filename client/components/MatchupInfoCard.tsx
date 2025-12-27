@@ -6,8 +6,7 @@ import { selectMatchup } from "@/state/slices/matchupSlice";
 import { QueueStatus } from "@/types/user";
 
 const MatchupInfoCard = () => {
-  const queueStatus =
-    useAppSelector((state) => state.user.queueStatus) ?? QueueStatus.Idle;
+  const queueStatus = useAppSelector((state) => state.user.queueStatus);
   const matchup = useAppSelector(selectMatchup);
 
   const { isLineupLocked, countdown } = useLineupLock({

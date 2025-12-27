@@ -3,6 +3,7 @@ export enum QueueStatus {
   Queued = "queued",
   Matched = "matched",
 }
+
 export type User = {
   avatarUrl?: string;
   dateOfBirth?: string;
@@ -10,7 +11,7 @@ export type User = {
   emailVerified: boolean;
   id: string;
   username?: string;
-  queueStatus?: QueueStatus;
+  queueStatus: QueueStatus;
   queuedAt?: string;
   currentMatchupId?: string;
 };

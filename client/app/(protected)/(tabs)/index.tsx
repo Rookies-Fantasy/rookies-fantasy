@@ -35,7 +35,7 @@ const MyTeam = () => {
   const playerCount = useAppSelector(selectRosterPlayerCount);
   const dispatch = useAppDispatch();
 
-  const queueStatus = user.queueStatus ?? QueueStatus.Idle;
+  const queueStatus = user.queueStatus;
   const isInQueue = queueStatus === QueueStatus.Queued;
   const isMatched = queueStatus === QueueStatus.Matched;
   const teamLogo = useAppSelector(selectTeamLogo);
