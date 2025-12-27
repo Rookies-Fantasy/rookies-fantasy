@@ -21,6 +21,12 @@ export type GameStats = {
   min: number;
 };
 
+export type TeamRecord = {
+  wins: number;
+  losses: number;
+  draws: number;
+};
+
 export type Team = {
   abbreviation?: string;
   augment?: Augment;
@@ -31,6 +37,7 @@ export type Team = {
   lineup: LineupSlot[];
   bench: BenchSlot[];
   hasUserChanges?: boolean;
+  record?: TeamRecord;
 };
 
 export type Position = "PG" | "SG" | "SF" | "PF" | "C";
@@ -67,4 +74,9 @@ export const defaultTeam: Team = {
   lineup: SLOT_ORDER.map((position) => ({ position, player: null })),
   bench: [],
   hasUserChanges: false,
+  record: {
+    wins: 0,
+    losses: 0,
+    draws: 0,
+  },
 };

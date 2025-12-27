@@ -107,7 +107,16 @@ const MyTeam = () => {
             className="h-[75px] w-[75px] rounded-full border-2"
             source={teamLogo}
           />
-          <Text className="pbk-h5 text-black dark:text-white">{team.name}</Text>
+          <View>
+            <Text className="pbk-h5 text-black dark:text-white">
+              {team.name}
+            </Text>
+            {team.record && (
+              <Text className="pbk-b2 text-gray-600 dark:text-gray-400">
+                {team.record.wins}-{team.record.losses}-{team.record.draws}
+              </Text>
+            )}
+          </View>
         </View>
         <IconButton
           icon={<SignOut color="#6042FF" size={24} weight="bold" />}

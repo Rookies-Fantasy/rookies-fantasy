@@ -77,6 +77,11 @@ export class UserController {
         .add({
           ...params,
           balance: TEAM_BALANCE,
+          record: {
+            wins: 0,
+            losses: 0,
+            draws: 0,
+          },
           createdAt: new Date(),
         });
 
@@ -108,6 +113,7 @@ export class UserController {
             lineup: team.data()?.lineup ?? defaultTeam.lineup,
             bench: team.data()?.bench ?? defaultTeam.bench,
             balance: team.data()?.balance ?? 0,
+            record: team.data()?.record ?? defaultTeam.record,
           }
         : defaultTeam;
     } catch (error) {
@@ -131,6 +137,7 @@ export class UserController {
         lineup: team.data()?.lineup,
         bench: team.data()?.bench,
         balance: team.data()?.balance,
+        record: team.data()?.record,
       }));
     } catch (error) {
       throw error;
