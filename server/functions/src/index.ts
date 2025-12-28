@@ -209,12 +209,9 @@ export const updateDailyPlayerData = functions
         fieldGoalPercentage: s.fg_pct,
         fieldGoalsAttempted: s.fga,
         fieldGoalsMade: s.fgm,
-        firstName: p.first_name,
         freeThrowPercentage: s.ft_pct,
         freeThrowsAttempted: s.fta,
         freeThrowsMade: s.ftm,
-        gamesPlayed: s.gp,
-        lastName: p.last_name,
         minutes: s.min,
         playerId: String(p.id),
         points: s.pts,
@@ -280,12 +277,14 @@ export const updateDailyPlayerData = functions
 
     const seasonAvgMap: Record<string, any> = {};
     for (const avg of seasonAverages) {
-      seasonAvgMap[String(avg.playerId)] = avg;
+      const { playerId, ...statsWithoutId } = avg;
+      seasonAvgMap[playerId] = statsWithoutId;
     }
 
     const gamelogMap: Record<string, any> = {};
     for (const gamelog of playerGamelogs) {
-      gamelogMap[String(gamelog.playerId)] = gamelog;
+      const { playerId, ...gamelogWithoutId } = gamelog;
+      gamelogMap[playerId] = gamelogWithoutId;
     }
 
     console.log("Season map size:", Object.keys(seasonAvgMap).length);
@@ -394,9 +393,29 @@ export const updateDailyPlayerData = functions
 
       const dayObj = matchupData[today];
 
+      // Get augments from matchup metadata
+      const awayAugment = matchupData.away?.awayAugment;
+      const homeAugment = matchupData.home?.homeAugment;
+
+      console.log("Processing matchup with augments:", {
+        docId: matchupDoc.id,
+        awayAugment: awayAugment?.title,
+        homeAugment: homeAugment?.title,
+      });
+
       const updatedDayObj = {
-        awayTeam: updateTeamLineup(dayObj.awayTeam, seasonAvgMap, gamelogMap),
-        homeTeam: updateTeamLineup(dayObj.homeTeam, seasonAvgMap, gamelogMap),
+        awayTeam: updateTeamLineup(
+          dayObj.awayTeam,
+          seasonAvgMap,
+          gamelogMap,
+          awayAugment,
+        ),
+        homeTeam: updateTeamLineup(
+          dayObj.homeTeam,
+          seasonAvgMap,
+          gamelogMap,
+          homeAugment,
+        ),
       };
 
       console.log("Writing matchup update:", { docId: matchupDoc.id });
@@ -474,11 +493,19 @@ const updateTeamLineup = (
   team: any,
   avgMap: Record<string, any>,
   gamelogMap: Record<string, any>,
+  augment?: any,
 ) => {
   if (!team || !Array.isArray(team.lineup)) return team;
 
+  const { isValid, qualifyingPlayers } = validateAugment(augment, team.lineup);
+
+  console.log(
+    `Augment validation for team: isValid=${isValid}, qualifyingCount=${qualifyingPlayers.length}`,
+  );
+
   return {
     ...team,
+    qualifyingPlayers: isValid ? qualifyingPlayers : [],
     lineup: team.lineup.map((slot: any) => {
       if (!slot || !slot.player) return slot;
 
@@ -488,6 +515,23 @@ const updateTeamLineup = (
 
       if (!latestAvg && !latestGamelog) return slot;
 
+      // Calculate fantasy points with augment effects
+      let fantasyPoints = latestGamelog?.fantasyPoints;
+      if (latestGamelog && isValid) {
+        const baseFantasyPoints = latestGamelog.fantasyPoints;
+        fantasyPoints = applyAugmentEffects(
+          baseFantasyPoints,
+          latestGamelog,
+          playerId,
+          qualifyingPlayers,
+          augment,
+        );
+
+        console.log(
+          `Player ${playerId}: base=${baseFantasyPoints}, augmented=${fantasyPoints}`,
+        );
+      }
+
       return {
         ...slot,
         player: {
@@ -495,7 +539,7 @@ const updateTeamLineup = (
           ...(latestAvg ? { averageStats: latestAvg } : {}),
           ...(latestGamelog
             ? {
-                gameStats: [
+                gamelog: [
                   ...(Array.isArray(slot.player.gamelog)
                     ? slot.player.gamelog
                     : []),
@@ -504,6 +548,14 @@ const updateTeamLineup = (
               }
             : {}),
         },
+        ...(latestGamelog
+          ? {
+              gameStats: [
+                ...(Array.isArray(slot.gameStats) ? slot.gameStats : []),
+                { ...latestGamelog, fantasyPoints },
+              ],
+            }
+          : {}),
       };
     }),
   };
@@ -541,6 +593,235 @@ const calculateFantasyPoints = (s: any) => {
   const ftMiss = (s.fta - s.ftm) * -1;
 
   return pts + reb + ast + stl + blk + fgm + ftm + tpm + tov + fgMiss + ftMiss;
+};
+
+// Augment validation and effects functions
+const validateAugment = (augment: any, lineup: any[]) => {
+  if (!augment || !augment.prerequisites) {
+    return { isValid: false, qualifyingPlayers: [] };
+  }
+
+  const activePlayers = lineup
+    .filter((slot) => slot.player !== null)
+    .map((slot) => slot.player);
+
+  let qualifyingPlayers: any[] = [];
+  let allPrerequisitesMet = true;
+
+  for (const prerequisite of augment.prerequisites) {
+    const result = evaluatePrerequisite(prerequisite, activePlayers);
+
+    if (!result.isValid) {
+      allPrerequisitesMet = false;
+      break;
+    }
+
+    if (qualifyingPlayers.length === 0) {
+      qualifyingPlayers = result.qualifyingPlayers;
+    } else {
+      // Intersection: only keep players who qualify for all prerequisites
+      qualifyingPlayers = qualifyingPlayers.filter((player: any) =>
+        result.qualifyingPlayers.some((qp: any) => qp.id === player.id),
+      );
+    }
+  }
+
+  const hasEnoughPlayers =
+    qualifyingPlayers.length >= (augment.playerCount || 0);
+
+  return {
+    isValid: allPrerequisitesMet && hasEnoughPlayers,
+    qualifyingPlayers,
+  };
+};
+
+const evaluatePrerequisite = (prerequisite: any, players: any[]) => {
+  const { condition, type } = prerequisite;
+
+  switch (type) {
+    case "statThreshold":
+      return evaluateStatThreshold(condition, players);
+    case "positionRequirement":
+      return evaluatePositionRequirement(condition, players);
+    case "budgetThreshold":
+      return evaluateBudgetThreshold(condition, players);
+    default:
+      return { isValid: false, qualifyingPlayers: [] };
+  }
+};
+
+const evaluateStatThreshold = (condition: any, players: any[]) => {
+  const { stat, operator, value, count } = condition;
+
+  if (!stat || !operator || value === undefined) {
+    return { isValid: false, qualifyingPlayers: [] };
+  }
+
+  const qualifyingPlayers = players.filter((player: any) => {
+    const playerStatValue = getPlayerStatValue(player, stat);
+    if (playerStatValue === null) return false;
+    return evaluateCondition(playerStatValue, operator, value);
+  });
+
+  return {
+    isValid: qualifyingPlayers.length >= count,
+    qualifyingPlayers,
+  };
+};
+
+const evaluatePositionRequirement = (condition: any, players: any[]) => {
+  const { position, count } = condition;
+
+  if (!position || position.length === 0) {
+    return { isValid: false, qualifyingPlayers: [] };
+  }
+
+  const qualifyingPlayers = players.filter((player: any) =>
+    player.positions?.some((pos: string) => position.includes(pos)),
+  );
+
+  return {
+    isValid: qualifyingPlayers.length >= count,
+    qualifyingPlayers,
+  };
+};
+
+const evaluateBudgetThreshold = (condition: any, players: any[]) => {
+  const { operator, value } = condition;
+
+  if (!operator || value === undefined) {
+    return { isValid: false, qualifyingPlayers: [] };
+  }
+
+  const totalSalary = players.reduce(
+    (sum: number, player: any) => sum + (player.salary || 0),
+    0,
+  );
+  const isValid = evaluateCondition(totalSalary, operator, value);
+
+  return {
+    isValid,
+    qualifyingPlayers: isValid ? players : [],
+  };
+};
+
+const getPlayerStatValue = (player: any, stat: string): number | null => {
+  const { averageStats } = player;
+  if (!averageStats) return null;
+
+  switch (stat) {
+    case "points":
+      return averageStats.points;
+    case "rebounds":
+      return averageStats.rebounds;
+    case "assists":
+      return averageStats.assists;
+    case "steals":
+      return averageStats.steals;
+    case "blocks":
+      return averageStats.blocks;
+    case "turnovers":
+      return averageStats.turnovers;
+    case "minutes":
+      return averageStats.minutes;
+    default:
+      return null;
+  }
+};
+
+const evaluateCondition = (
+  playerValue: number,
+  operator: string,
+  threshold: number,
+): boolean => {
+  switch (operator) {
+    case ">=":
+      return playerValue >= threshold;
+    case ">":
+      return playerValue > threshold;
+    case "<=":
+      return playerValue <= threshold;
+    case "<":
+      return playerValue < threshold;
+    case "=":
+      return playerValue === threshold;
+    default:
+      return false;
+  }
+};
+
+const applyAugmentEffects = (
+  baseFantasyPoints: number,
+  gameStats: any,
+  playerId: string,
+  qualifyingPlayers: any[],
+  augment: any,
+): number => {
+  if (!augment || !augment.isActive || !qualifyingPlayers || !augment.effects) {
+    return baseFantasyPoints;
+  }
+
+  const playerQualifies = qualifyingPlayers.some((p: any) => p.id === playerId);
+  if (!playerQualifies) {
+    return baseFantasyPoints;
+  }
+
+  if (!augment.effects || augment.effects.length === 0) {
+    return baseFantasyPoints;
+  }
+
+  let totalPoints = baseFantasyPoints;
+
+  augment.effects.forEach((effect: any) => {
+    effect.statBoosts.forEach((boost: any) => {
+      const statValue = getGameStatValue(gameStats, boost.stat);
+      const baseStatMultiplier = getBaseStatMultiplier(boost.stat);
+
+      const additionalBoost =
+        statValue * baseStatMultiplier * (boost.multiplier - 1);
+      totalPoints += additionalBoost;
+    });
+  });
+
+  return totalPoints;
+};
+
+const getGameStatValue = (stats: any, stat: string): number => {
+  switch (stat) {
+    case "points":
+      return stats.points || 0;
+    case "rebounds":
+      return stats.rebounds || 0;
+    case "assists":
+      return stats.assists || 0;
+    case "steals":
+      return stats.steals || 0;
+    case "blocks":
+      return stats.blocks || 0;
+    case "turnovers":
+      return stats.turnovers || 0;
+    default:
+      return 0;
+  }
+};
+
+const getBaseStatMultiplier = (stat: string): number => {
+  switch (stat) {
+    case "points":
+      return 1;
+    case "rebounds":
+      return 1;
+    case "assists":
+      return 2;
+    case "steals":
+      return 3;
+    case "blocks":
+      return 3;
+    case "turnovers":
+      return -2;
+    default:
+      return 0;
+  }
 };
 
 export const processQueue = functions

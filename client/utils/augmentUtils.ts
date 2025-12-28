@@ -1,6 +1,15 @@
 import { Augment, Prerequisite, Condition } from "@/types/augment";
 import { Player } from "@/types/player";
-import { LineupSlot } from "@/types/team";
+import { LineupSlot, GameStats } from "@/types/team";
+
+const STAT_MULTIPLIERS: Record<string, number> = {
+  points: 1,
+  rebounds: 1,
+  assists: 2,
+  steals: 3,
+  blocks: 3,
+  turnovers: -2,
+};
 
 export type ValidationResult = {
   isValid: boolean;
@@ -153,34 +162,8 @@ const meetStatCondition = (
   operator: string,
   value: number,
 ): boolean => {
-  const playerStatValue = getPlayerStatValue(player, stat);
-  if (playerStatValue === null) return false;
-
+  const playerStatValue = getStatValue(player.averageStats, stat);
   return evaluateCondition(playerStatValue, operator, value);
-};
-
-const getPlayerStatValue = (player: Player, stat: string): number | null => {
-  const { averageStats } = player;
-
-  switch (stat) {
-    case "points":
-      return averageStats.pts;
-    case "rebounds":
-      return averageStats.reb;
-    case "assists":
-      return averageStats.ast;
-    case "steals":
-      return averageStats.stl;
-    case "blocks":
-      return averageStats.blk;
-    case "turnovers":
-      return averageStats.tov;
-    case "minutes":
-      return averageStats.min;
-    // TODO: ADD FG%, FGA, FGM, FT%, FTA, FTM, 3P%, 3PA, 3PM
-    default:
-      return null;
-  }
 };
 
 const evaluateCondition = (
@@ -201,5 +184,67 @@ const evaluateCondition = (
       return playerValue === threshold;
     default:
       return false;
+  }
+};
+
+const isPlayerQualified = (
+  playerId: string,
+  qualifyingPlayers: Player[],
+): boolean => qualifyingPlayers.some((player) => player.id === playerId);
+
+const calculateStatBonus = (
+  stats: GameStats,
+  stat: string,
+  multiplier: number,
+): number => {
+  const statValue = getStatValue(stats, stat);
+  const baseStatMultiplier = STAT_MULTIPLIERS[stat] ?? 0;
+
+  const boostPercentage = multiplier - 1;
+
+  return statValue * baseStatMultiplier * boostPercentage;
+};
+
+export const applyAugmentEffects = (
+  baseFantasyPoints: number,
+  stats: GameStats,
+  playerId: string,
+  qualifyingPlayers: Player[],
+  augment: Augment,
+): number => {
+  if (!isPlayerQualified(playerId, qualifyingPlayers)) {
+    return baseFantasyPoints;
+  }
+
+  const totalBonus = augment.effects
+    .flatMap((effect) => effect.statBoosts)
+    .reduce(
+      (bonus, boost) =>
+        bonus + calculateStatBonus(stats, boost.stat, boost.multiplier),
+      0,
+    );
+
+  return baseFantasyPoints + totalBonus;
+};
+
+const getStatValue = (stats: GameStats, stat: string): number => {
+  switch (stat) {
+    case "points":
+      return stats.points;
+    case "rebounds":
+      return stats.rebounds;
+    case "assists":
+      return stats.assists;
+    case "steals":
+      return stats.steals;
+    case "blocks":
+      return stats.blocks;
+    case "turnovers":
+      return stats.turnovers;
+    case "minutes":
+      return stats.minutes;
+    // TODO: Add support for FG%, FT%, 3P%, FGA, FGM, FTA, FTM, 3PA, 3PM
+    default:
+      return 0;
   }
 };

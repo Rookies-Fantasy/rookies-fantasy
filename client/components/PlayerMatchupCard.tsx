@@ -44,25 +44,25 @@ const PlayerMatchupCard = ({
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">MIN</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {homeStats ? homeStats.min : "-"}
+                  {homeStats ? homeStats.minutes : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">PTS</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {homeStats ? homeStats.pts : "-"}
+                  {homeStats ? homeStats.points : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">REB</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {homeStats ? homeStats.reb : "-"}
+                  {homeStats ? homeStats.rebounds : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">AST</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {homeStats ? homeStats.ast : "-"}
+                  {homeStats ? homeStats.assists : "-"}
                 </Text>
               </View>
             </View>
@@ -71,25 +71,25 @@ const PlayerMatchupCard = ({
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">STL</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {homeStats ? homeStats.stl : "-"}
+                  {homeStats ? homeStats.steals : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">BLK</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {homeStats ? homeStats.blk : "-"}
+                  {homeStats ? homeStats.blocks : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">TO</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {homeStats ? homeStats.tov : "-"}
+                  {homeStats ? homeStats.turnovers : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">FPTS</Text>
                 <Text className="pbk-b2 text-green-400">
-                  {homeStats ? homeStats.fpts : "-"}
+                  {homeStats ? homeStats.fantasyPoints : "-"}
                 </Text>
               </View>
             </View>
@@ -130,25 +130,25 @@ const PlayerMatchupCard = ({
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">MIN</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {awayStats ? awayStats.min : "-"}
+                  {awayStats ? awayStats.minutes : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">PTS</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {awayStats ? awayStats.pts : "-"}
+                  {awayStats ? awayStats.points : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">REB</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {awayStats ? awayStats.reb : "-"}
+                  {awayStats ? awayStats.rebounds : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">AST</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {awayStats ? awayStats.ast : "-"}
+                  {awayStats ? awayStats.assists : "-"}
                 </Text>
               </View>
             </View>
@@ -157,25 +157,25 @@ const PlayerMatchupCard = ({
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">STL</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {awayStats ? awayStats.stl : "-"}
+                  {awayStats ? awayStats.steals : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">BLK</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {awayStats ? awayStats.blk : "-"}
+                  {awayStats ? awayStats.blocks : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">TO</Text>
                 <Text className="pbk-b2 text-base-white">
-                  {awayStats ? awayStats.tov : "-"}
+                  {awayStats ? awayStats.turnovers : "-"}
                 </Text>
               </View>
               <View className="items-start">
                 <Text className="pbk-b3 text-gray-400">FPTS</Text>
                 <Text className="pbk-b2 text-green-400">
-                  {awayStats ? awayStats.fpts : "-"}
+                  {awayStats ? awayStats.fantasyPoints : "-"}
                 </Text>
               </View>
             </View>

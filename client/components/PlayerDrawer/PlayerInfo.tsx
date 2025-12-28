@@ -17,7 +17,7 @@ const PlayerInfo = ({ player }: PlayerInfoProps) => (
     <View className="mb-4 w-[48%] items-center rounded-lg border border-gray-800 bg-gray-920 p-4">
       <Text className="pbk-b3 text-gray-500">FANTASY POINTS</Text>
       <Text className="pbk-h7 mt-1 text-base-white">
-        {player.averageStats.fpts ?? "--"} PPG
+        {player.averageStats.fantasyPoints ?? "--"} PPG
       </Text>
     </View>
     <View className="mb-4 w-[48%] items-center rounded-lg border border-gray-800 bg-gray-920 p-4">

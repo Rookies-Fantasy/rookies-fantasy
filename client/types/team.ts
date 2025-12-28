@@ -11,14 +11,14 @@ export type GameInfo = {
 };
 
 export type GameStats = {
-  pts: number;
-  ast: number;
-  reb: number;
-  stl: number;
-  blk: number;
-  tov: number;
-  fpts: number;
-  min: number;
+  points: number;
+  assists: number;
+  rebounds: number;
+  steals: number;
+  blocks: number;
+  turnovers: number;
+  fantasyPoints: number;
+  minutes: number;
 };
 
 export type TeamRecord = {

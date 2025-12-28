@@ -2,6 +2,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Matchup } from "@/types/matchup";
 import { GameInfo, GameStats } from "@/types/team";
+import { applyAugmentEffects, validateAugment } from "@/utils/augmentUtils";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNil, isNotNil } from "@/utils/jsUtils";
 
@@ -23,7 +24,35 @@ const matchupSlice = createSlice({
   initialState: defaultMatchup,
   reducers: {
     setMatchup: (state, action: PayloadAction<Matchup>) => {
-      state.data = action.payload;
+      const matchup = action.payload;
+
+      // Validate and compute qualifying players for each daily matchup
+      Object.keys(matchup.dailyMatchups).forEach((date) => {
+        const dailyMatchup = matchup.dailyMatchups[date];
+
+        const homeValidation = validateAugment(
+          matchup.home.homeAugment,
+          dailyMatchup.homeTeam.lineup,
+        );
+        dailyMatchup.homeTeam.qualifyingPlayers =
+          homeValidation.qualifyingPlayers;
+
+        const awayValidation = validateAugment(
+          matchup.away.awayAugment,
+          dailyMatchup.awayTeam.lineup,
+        );
+        dailyMatchup.awayTeam.qualifyingPlayers =
+          awayValidation.qualifyingPlayers;
+
+        if (matchup.home.homeAugment) {
+          matchup.home.homeAugment.isActive = homeValidation.isValid;
+        }
+        if (matchup.away.awayAugment) {
+          matchup.away.awayAugment.isActive = awayValidation.isValid;
+        }
+      });
+
+      state.data = matchup;
     },
     clearMatchup: () => defaultMatchup,
     updateMatchupWithLiveData: (
@@ -45,8 +74,31 @@ const matchupSlice = createSlice({
           const newData = action.payload.updatedHome[o.player?.id];
           o.gameInfo = newData?.gameInfo;
           if (newData?.gameStats) {
-            const calculatedFpts = calculateFantasyPoints(newData.gameStats);
-            o.gameStats = { ...newData.gameStats, fpts: calculatedFpts };
+            const baseFpts = calculateFantasyPoints(newData.gameStats);
+            const homeAugment = state.data?.home.homeAugment;
+            const qualifyingPlayers = newMatchup.homeTeam.qualifyingPlayers;
+
+            // Only apply augment if it's active and has qualifying players
+            const shouldApplyAugment =
+              homeAugment &&
+              homeAugment.isActive &&
+              qualifyingPlayers &&
+              qualifyingPlayers.length >= homeAugment.playerCount;
+
+            const finalFpts = shouldApplyAugment
+              ? applyAugmentEffects(
+                  baseFpts,
+                  newData.gameStats,
+                  o.player.id,
+                  qualifyingPlayers,
+                  homeAugment,
+                )
+              : baseFpts;
+
+            o.gameStats = {
+              ...newData.gameStats,
+              fantasyPoints: finalFpts,
+            };
           } else {
             o.gameStats = newData?.gameStats;
           }
@@ -58,8 +110,31 @@ const matchupSlice = createSlice({
           const newData = action.payload.updatedAway[o.player?.id];
           o.gameInfo = newData?.gameInfo;
           if (newData?.gameStats) {
-            const calculatedFpts = calculateFantasyPoints(newData.gameStats);
-            o.gameStats = { ...newData.gameStats, fpts: calculatedFpts };
+            const baseFpts = calculateFantasyPoints(newData.gameStats);
+            const awayAugment = state.data?.away.awayAugment;
+            const qualifyingPlayers = newMatchup.awayTeam.qualifyingPlayers;
+
+            // Only apply augment if it's active and has qualifying players
+            const shouldApplyAugment =
+              awayAugment &&
+              awayAugment.isActive &&
+              qualifyingPlayers &&
+              qualifyingPlayers.length >= awayAugment.playerCount;
+
+            const finalFpts = shouldApplyAugment
+              ? applyAugmentEffects(
+                  baseFpts,
+                  newData.gameStats,
+                  o.player.id,
+                  qualifyingPlayers,
+                  awayAugment,
+                )
+              : baseFpts;
+
+            o.gameStats = {
+              ...newData.gameStats,
+              fantasyPoints: finalFpts,
+            };
           } else {
             o.gameStats = newData?.gameStats;
           }
@@ -67,12 +142,12 @@ const matchupSlice = createSlice({
       });
 
       const homeScore = newMatchup.homeTeam.lineup.reduce(
-        (total, slot) => total + (slot.gameStats?.fpts ?? 0),
+        (total, slot) => total + (slot.gameStats?.fantasyPoints ?? 0),
         0,
       );
 
       const awayScore = newMatchup.awayTeam.lineup.reduce(
-        (total, slot) => total + (slot.gameStats?.fpts ?? 0),
+        (total, slot) => total + (slot.gameStats?.fantasyPoints ?? 0),
         0,
       );
 
