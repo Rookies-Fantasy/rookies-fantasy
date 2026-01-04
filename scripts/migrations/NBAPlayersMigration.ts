@@ -44,7 +44,7 @@ const calculateFantasyPoints = (stats: {
   freeThrowsAttempted: number;
   threePointersMade: number;
 }): number => {
-  return (
+  const total =
     stats.points +
     stats.rebounds +
     stats.assists * 2 +
@@ -55,8 +55,9 @@ const calculateFantasyPoints = (stats: {
     stats.threePointersMade -
     stats.turnovers * 2 -
     stats.fieldGoalsAttempted -
-    stats.freeThrowsAttempted
-  );
+    stats.freeThrowsAttempted;
+
+  return Math.round(total * 10) / 10;
 };
 
 /**
