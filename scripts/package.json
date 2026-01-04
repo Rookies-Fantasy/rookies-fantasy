@@ -8,7 +8,10 @@
     "teams": "node --experimental-json-modules fillNBATeams.js",
     "players": "node --experimental-json-modules fillNBAPlayers.js",
     "playerAverages": "node --experimental-json-modules fillNBAPlayerAverages.js",
-    "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js"
+    "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js",
+    "migrate": "tsx migrations/runMigrations.ts",
+    "migrate:emulator": "cross-env USE_EMULATOR=true tsx migrations/runMigrations.ts",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -20,5 +23,10 @@
     "dotenv": "^16.5.0",
     "firebase-admin": "^13.4.0",
     "fs": "^0.0.1-security"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

@@ -1,4 +1,6 @@
-export const augmentsData = [
+import type { Augment } from "../types/augments.js";
+
+export const augmentsData: Augment[] = [
   {
     title: "Board Lords",
     description: "Build your team with 3 players averaging 8+ REB per game.",
@@ -28,6 +30,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Assist Leaders",
@@ -37,7 +41,7 @@ export const augmentsData = [
     info: "Only those 2 players gain +20% to AST.",
     prerequisites: [
       {
-        type: "playerCount",
+        type: "playerCount", // Note: "top 20" is hard to represent exactly, might need custom logic
         condition: {
           count: 2,
         },
@@ -56,6 +60,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Iron Man",
@@ -67,7 +73,7 @@ export const augmentsData = [
         type: "statThreshold",
         condition: {
           count: 3,
-          stat: "minutes",
+          stat: "minutes", // Note: minutes not in your stat enum, might need to add
           operator: ">=",
           value: 28,
         },
@@ -79,13 +85,15 @@ export const augmentsData = [
         target: "qualifying",
         statBoosts: [
           {
-            stat: "fantasyPoints",
+            stat: "fantasyPoints", // Note: FPTS not in your stat enum, might need to add
             multiplier: 1.2,
           },
         ],
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Fast Pace",
@@ -131,6 +139,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Defensive Mindset",
@@ -162,6 +172,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Frontcourt Focus",
@@ -174,7 +186,7 @@ export const augmentsData = [
         type: "positionRequirement",
         condition: {
           count: 3,
-          position: ["SF", "PF", "C"],
+          position: ["SF", "PF", "C"], // Note: Need to handle "Forwards or Centers" - might need array or custom logic
         },
         description: "3 Forwards each averaging 8+ REB per game",
       },
@@ -201,11 +213,14 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Volume Gunner",
     description:
       "Build your team with 2 players attempting 6+ threes per game.",
+
     iconUrl: "volume-gunner.png",
     info: "Only those 2 players gain +15% to STL and BLK.",
     prerequisites: [
@@ -213,7 +228,7 @@ export const augmentsData = [
         type: "statThreshold",
         condition: {
           count: 2,
-          stat: "threePointersAttempted",
+          stat: "threePointersAttempted", // Assuming this represents attempts
           operator: ">=",
           value: 6,
         },
@@ -236,6 +251,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Hustle Squad",
@@ -281,6 +298,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Deep Threat",
@@ -292,7 +311,7 @@ export const augmentsData = [
         type: "statThreshold",
         condition: {
           count: 3,
-          stat: "threePointerPercentage",
+          stat: "threePointerPercentage", // Note: Not in your enum, might need to add
           operator: ">=",
           value: 0.4,
         },
@@ -311,6 +330,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Block Party",
@@ -341,6 +362,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Underrated Gems",
@@ -352,7 +375,7 @@ export const augmentsData = [
         type: "budgetThreshold",
         condition: {
           count: 3,
-          stat: "salary",
+          stat: "salary", // Note: Not in your enum, might need to add
           operator: "<",
           value: 12000000,
         },
@@ -371,6 +394,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Balanced Attack",
@@ -382,7 +407,7 @@ export const augmentsData = [
       {
         type: "statThreshold",
         condition: {
-          count: 8,
+          count: 8, // Assuming full roster
           stat: "points",
           operator: "<=",
           value: 20,
@@ -402,6 +427,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Rookie Showcase",
@@ -432,6 +459,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Scoring Machine",
@@ -441,7 +470,7 @@ export const augmentsData = [
     info: "Only those 2 players gain +25% to PTS.",
     prerequisites: [
       {
-        type: "playerCount",
+        type: "playerCount", // Note: NBA season experience requires custom logic
         condition: {
           count: 2,
         },
@@ -460,6 +489,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Underdog Heroes",
@@ -490,6 +521,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Defensive Identity",
@@ -520,6 +553,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Rebound Kings",
@@ -550,6 +585,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Twin Towers",
@@ -566,10 +603,10 @@ export const augmentsData = [
         description: "2 centers",
       },
       {
-        type: "budgetThreshold",
+        type: "budgetThreshold", // Note: Combined salary logic needs custom handling
         condition: {
           count: 2,
-          stat: "salary",
+          stat: "salary", // Custom stat type needed
           operator: ">=",
           value: 50000000,
         },
@@ -592,6 +629,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Free Throw Specialists",
@@ -623,6 +662,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Clutch Scorers",
@@ -653,6 +694,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Low Turnover Crew",
@@ -684,6 +727,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "All-Star Pedigree",
@@ -693,7 +738,7 @@ export const augmentsData = [
     info: "Only those 3 players gain +15% to FPTS.",
     prerequisites: [
       {
-        type: "playerCount",
+        type: "playerCount", // Note: All-Star status requires custom logic
         condition: {
           count: 3,
         },
@@ -712,6 +757,8 @@ export const augmentsData = [
       },
     ],
     isActive: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Efficiency Experts",
@@ -742,6 +789,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Backcourt Bombers",
@@ -753,7 +802,7 @@ export const augmentsData = [
         type: "positionRequirement",
         condition: {
           count: 3,
-          position: ["PG", "SG"],
+          position: ["PG", "SG"], // Note: Need to handle "Guards" - might need array for PG/SG
         },
         description: "3 Point Guards averaging 18+ PTS per game",
       },
@@ -780,6 +829,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Two-Way Wings",
@@ -833,6 +884,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Two-Way Threat",
@@ -878,6 +931,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Position-less Basketball",
@@ -887,7 +942,7 @@ export const augmentsData = [
     info: "Only those 2 players gain +10% to FPTS.",
     prerequisites: [
       {
-        type: "playerCount",
+        type: "playerCount", // Note: Multi-position eligibility requires custom logic
         condition: {
           count: 2,
           position: ["PG", "SG", "SF", "PF", "C"],
@@ -907,6 +962,8 @@ export const augmentsData = [
       },
     ],
     isActive: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Shot Blockers",
@@ -937,6 +994,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Floor General",
@@ -967,6 +1026,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "All-Around Contributors",
@@ -1012,6 +1073,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Defensive Backbone",
@@ -1057,6 +1120,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Consistency Counts",
@@ -1087,6 +1152,8 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     title: "Defensive Specialists",
@@ -1117,5 +1184,7 @@ export const augmentsData = [
       },
     ],
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
 ];
