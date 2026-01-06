@@ -1,4 +1,4 @@
-type LeagueConfig = {
+export type LeagueConfig = {
   minTeams: number;
   maxTeams: number;
   budget: number;
