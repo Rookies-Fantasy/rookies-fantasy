@@ -4,7 +4,7 @@ import { League, LeagueConfig } from "@/types/league";
 const LEAGUE_COLLECTION = "leagues";
 const LEAGUE_MEMBERS_COLLECTION = "members";
 
-type CreateLeagueParams = {
+export type CreateLeagueParams = {
   name: string;
   description?: string;
   seasonStartDate: string;
