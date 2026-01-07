@@ -56,8 +56,6 @@ export class LeagueController {
         status: data?.status,
         config: data?.config,
         memberCount: data?.memberCount,
-        createdAt: data?.createdAt,
-        updatedAt: data?.updated,
       };
     } catch (error) {
       console.error("Error creating league:", error);
