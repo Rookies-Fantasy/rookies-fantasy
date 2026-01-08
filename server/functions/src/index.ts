@@ -267,6 +267,9 @@ export const updateDailyPlayerData = functions
         threePointersMade: gamelog.fg3m,
         turnovers: gamelog.turnover ?? 0,
         visitorTeamId: gamelog.game.visitor_team_id,
+        player: gamelog.player,
+        team: gamelog.team,
+        game: gamelog.game,
       };
     });
 
@@ -330,72 +333,39 @@ export const updateDailyPlayerData = functions
       opCount = result.count;
     }
 
-    // === UPDATE USERS COLLECTION ===
-    const userSnapshot = await admin.firestore().collection("users").get();
-
-    for (const userDoc of userSnapshot.docs) {
-      console.log("Processing user:", userDoc.id);
-
-      const teamsRef = userDoc.ref.collection("teams");
-      const teamSnapshot = await teamsRef.get();
-
-      for (const teamDoc of teamSnapshot.docs) {
-        const teamData = teamDoc.data();
-        if (!Array.isArray(teamData.lineup)) continue;
-
-        const updatedLineup = teamData.lineup.map((slot: any) => {
-          if (!slot || !slot.player) return slot;
-
-          const playerId = String(slot.player.id);
-          const latestAvg = seasonAvgMap[playerId];
-          const latestGamelog = gamelogMap[playerId];
-
-          if (!latestAvg && !latestGamelog) return slot;
-
-          return {
-            ...slot,
-            player: {
-              ...slot.player,
-              ...(latestAvg ? { averageStats: latestAvg } : {}),
-              ...(latestGamelog
-                ? {
-                    gamelog: [
-                      ...(Array.isArray(slot.player.gamelog)
-                        ? slot.player.gamelog
-                        : []),
-                      latestGamelog,
-                    ],
-                  }
-                : {}),
-            },
-          };
-        });
-
-        console.log("Writing user team update:", { docId: teamDoc.id });
-
-        batch.set(teamDoc.ref, { lineup: updatedLineup }, { merge: true });
-        const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
-        batch = result.batch;
-        opCount = result.count;
-      }
-    }
-
     // === UPDATE MATCHUPS COLLECTION ===
+    const weekStartDate = getThisMondayString();
     const today = formatDate(new Date());
     const matchupSnapshot = await admin
       .firestore()
       .collection("matchups")
+      .where("weekStart", "==", weekStartDate)
       .get();
 
     for (const matchupDoc of matchupSnapshot.docs) {
       const matchupData = matchupDoc.data();
-      if (!matchupData[today]) continue;
 
-      const dayObj = matchupData[today];
+      // Save the current state of the lineups and players to the history. These are immutable snapshots
+      const awayAugment = matchupData.away?.augment;
+      const homeAugment = matchupData.home?.augment;
 
-      // Get augments from matchup metadata
-      const awayAugment = matchupData.away?.awayAugment;
-      const homeAugment = matchupData.home?.homeAugment;
+      const [homeTeamDoc, awayTeamDoc] = await Promise.all([
+        admin
+          .firestore()
+          .doc(
+            `users/${matchupData.homeUserId}/teams/${matchupData.homeTeamId}`,
+          )
+          .get(),
+        admin
+          .firestore()
+          .doc(
+            `users/${matchupData.awayUserId}/teams/${matchupData.awayTeamId}`,
+          )
+          .get(),
+      ]);
+
+      const homeLineup = homeTeamDoc.exists ? homeTeamDoc.data()?.lineup : {};
+      const awayLineup = awayTeamDoc.exists ? awayTeamDoc.data()?.lineup : {};
 
       console.log("Processing matchup with augments:", {
         docId: matchupDoc.id,
@@ -403,24 +373,19 @@ export const updateDailyPlayerData = functions
         homeAugment: homeAugment?.title,
       });
 
-      const updatedDayObj = {
-        awayTeam: updateTeamLineup(
-          dayObj.awayTeam,
-          seasonAvgMap,
-          gamelogMap,
-          awayAugment,
-        ),
-        homeTeam: updateTeamLineup(
-          dayObj.homeTeam,
-          seasonAvgMap,
-          gamelogMap,
-          homeAugment,
-        ),
+      const lineupSnapshots = {
+        awaySnapshot: getLineupSnapshot(homeLineup, gamelogMap, awayAugment),
+        homeSnapshot: getLineupSnapshot(awayLineup, gamelogMap, homeAugment),
       };
 
       console.log("Writing matchup update:", { docId: matchupDoc.id });
 
-      batch.set(matchupDoc.ref, { [today]: updatedDayObj }, { merge: true });
+      const lineupSnapshotField = `lineupSnapshots.${today}`;
+      batch.set(
+        matchupDoc.ref,
+        { [lineupSnapshotField]: lineupSnapshots },
+        { merge: true },
+      );
 
       const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
       batch = result.batch;
@@ -489,76 +454,51 @@ const formatDate = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
-const updateTeamLineup = (
-  team: any,
-  avgMap: Record<string, any>,
+const getLineupSnapshot = (
+  lineup: any,
   gamelogMap: Record<string, any>,
   augment?: any,
 ) => {
-  if (!team || !Array.isArray(team.lineup)) return team;
+  if (!lineup || !Array.isArray(lineup)) return lineup;
 
-  const { isValid, qualifyingPlayers } = validateAugment(augment, team.lineup);
+  const { isValid, qualifyingPlayers } = validateAugment(augment, lineup);
 
   console.log(
     `Augment validation for team: isValid=${isValid}, qualifyingCount=${qualifyingPlayers.length}`,
   );
 
-  return {
-    ...team,
-    qualifyingPlayers: isValid ? qualifyingPlayers : [],
-    lineup: team.lineup.map((slot: any) => {
-      if (!slot || !slot.player) return slot;
+  return lineup.map((playerId: string) => {
+    const latestGamelog = gamelogMap[playerId];
 
-      const playerId = String(slot.player.id);
-      const latestAvg = avgMap[playerId];
-      const latestGamelog = gamelogMap[playerId];
+    // TODO: What do we do here?
+    if (!latestGamelog) return;
 
-      if (!latestAvg && !latestGamelog) return slot;
+    // TODO: Do we need to store the fantasy points? Or can we calculate it at runtime?
+    // Calculate fantasy points with augment effects
+    let fantasyPoints = latestGamelog?.fantasyPoints;
+    if (latestGamelog && isValid) {
+      const baseFantasyPoints = latestGamelog.fantasyPoints;
+      fantasyPoints = applyAugmentEffects(
+        baseFantasyPoints,
+        latestGamelog,
+        playerId,
+        qualifyingPlayers,
+        augment,
+      );
 
-      // Calculate fantasy points with augment effects
-      let fantasyPoints = latestGamelog?.fantasyPoints;
-      if (latestGamelog && isValid) {
-        const baseFantasyPoints = latestGamelog.fantasyPoints;
-        fantasyPoints = applyAugmentEffects(
-          baseFantasyPoints,
-          latestGamelog,
-          playerId,
-          qualifyingPlayers,
-          augment,
-        );
+      console.log(
+        `Player ${playerId}: base=${baseFantasyPoints}, augmented=${fantasyPoints}`,
+      );
+    }
 
-        console.log(
-          `Player ${playerId}: base=${baseFantasyPoints}, augmented=${fantasyPoints}`,
-        );
-      }
-
-      return {
-        ...slot,
-        player: {
-          ...slot.player,
-          ...(latestAvg ? { averageStats: latestAvg } : {}),
-          ...(latestGamelog
-            ? {
-                gamelog: [
-                  ...(Array.isArray(slot.player.gamelog)
-                    ? slot.player.gamelog
-                    : []),
-                  latestGamelog,
-                ],
-              }
-            : {}),
-        },
-        ...(latestGamelog
-          ? {
-              gameStats: [
-                ...(Array.isArray(slot.gameStats) ? slot.gameStats : []),
-                { ...latestGamelog, fantasyPoints },
-              ],
-            }
-          : {}),
-      };
-    }),
-  };
+    const { playerId: temp, team, player, game, ...rest } = latestGamelog;
+    return {
+      team,
+      player,
+      game,
+      gameStats: rest,
+    };
+  });
 };
 
 const commitIfNeeded = async (
@@ -1024,6 +964,20 @@ const createWeeklyMatchup = async (
     console.error("Error creating weekly matchup:", error);
     return undefined;
   }
+};
+
+const getThisMondayString = () => {
+  const today = new Date();
+  const day = today.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Difference to Monday
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diff);
+
+  const year = monday.getFullYear();
+  const month = String(monday.getMonth() + 1).padStart(2, "0");
+  const date = String(monday.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${date}`;
 };
 
 const getNextMondayDate = async (): Promise<string> => {
