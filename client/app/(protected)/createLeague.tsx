@@ -1,8 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { ArrowLeft, WarningCircle } from "phosphor-react-native";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   View,
@@ -10,7 +9,7 @@ import {
   Text,
   TextInput,
   Pressable,
-  Modal,
+  Alert,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import * as yup from "yup";
@@ -22,70 +21,37 @@ import {
 } from "@/controllers/leagueController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { addLeague } from "@/state/slices/leagueSlice";
-import { getMinimumSeasonStartDate } from "@/utils/dateUtils";
 
 const schema = yup.object({
   name: yup
     .string()
     .required("League name is required")
     .max(50, "League name must be at most 50 characters"),
-  description: yup
-    .string()
-    .max(200, "Description must be at most 200 characters")
-    .default(""),
-  seasonStartDate: yup
-    .date()
-    .required("Season start date is required")
-    .test("is-monday", "Season must start on a Monday", (value) => {
-      if (!value) return false;
-      return value.getDay() === 1;
-    })
-    .min(
-      getMinimumSeasonStartDate(),
-      "Season must start on the next upcoming Monday or later",
-    ),
-  minTeams: yup
+  numberOfTeams: yup
     .number()
-    .required("Minimum teams is required")
+    .required("Number of teams is required")
     .min(4, "Minimum teams must be at least 4")
-    .typeError("Must be a number"),
-  maxTeams: yup
-    .number()
-    .required("Maximum teams is required")
-    .min(4, "Maximum teams must be at least 4")
-    .test(
-      "max-greater-than-min",
-      "Maximum teams must be greater than or equal to minimum teams",
-      function (value) {
-        const { minTeams } = this.parent;
-        return value >= minTeams;
-      },
-    )
+    .max(20, "Maximum teams is 20")
     .typeError("Must be a number"),
   budget: yup
     .number()
     .required("Budget is required")
-    .positive("Budget must be positive")
+    .min(150000000, "Budget must be at least $150,000,000")
+    .max(250000000, "Budget must be no more than $250,000,000")
     .typeError("Must be a number"),
 });
 
 type FormData = {
   name: string;
-  description: string;
-  seasonStartDate: Date;
-  minTeams: number;
-  maxTeams: number;
+  numberOfTeams: number;
   budget: number;
 };
 
 const CreateLeague = () => {
   const userId = useAppSelector((state) => state.user.id);
   const dispatch = useAppDispatch();
-  const minStartDate = useMemo(() => getMinimumSeasonStartDate(), []);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(minStartDate);
 
   const {
     control,
@@ -95,39 +61,54 @@ const CreateLeague = () => {
     resolver: yupResolver(schema),
     defaultValues: {
       name: "",
-      description: "",
-      seasonStartDate: minStartDate,
-      minTeams: 4,
-      maxTeams: 10,
+      numberOfTeams: 4,
       budget: 150000000,
     },
     mode: "onSubmit",
   });
 
   const handleCreateLeague = async (formData: FormData) => {
-    setIsLoading(true);
-    try {
-      const params: CreateLeagueParams = {
-        name: formData.name,
-        description: formData.description,
-        seasonStartDate: formData.seasonStartDate.toISOString().split("T")[0],
-        config: {
-          minTeams: formData.minTeams,
-          maxTeams: formData.maxTeams,
-          budget: formData.budget,
+    Alert.alert(
+      "Confirm League Creation",
+      `League Name: ${formData.name}\nNumber of Teams: ${formData.numberOfTeams}\nBudget: $${(formData.budget / 1000000).toFixed(0)}M\n\nAre you sure you want to create this league?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
         },
-      };
+        {
+          text: "Create",
+          style: "default",
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              const params: CreateLeagueParams = {
+                name: formData.name,
+                numberOfTeams: formData.numberOfTeams,
+                budget: formData.budget,
+              };
 
-      const league = await LeagueController.createLeague(userId, params);
+              const league = await LeagueController.createLeague(
+                userId,
+                params,
+              );
 
-      dispatch(addLeague(league));
+              dispatch(addLeague(league));
 
-      router.back();
-    } catch (error) {
-      console.error("Failed to create league: ", error);
-    } finally {
-      setIsLoading(false);
-    }
+              router.back();
+            } catch (error) {
+              console.error("Failed to create league: ", error);
+              Alert.alert(
+                "Error",
+                "Failed to create league. Please try again.",
+              );
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -186,143 +167,119 @@ const CreateLeague = () => {
                 </Text>
               )}
             </View>
-
             <Controller
               control={control}
-              name="description"
+              name="numberOfTeams"
               render={({ field: { onChange, value } }) => (
                 <>
                   <Text className="pbk-b2 mb-1.5 text-base-white">
-                    Description (Optional)
+                    Number of Teams
                   </Text>
                   <View
-                    className={`mb-2 min-h-24 w-full flex-row items-start rounded-xl border ${errors.description ? "border-red-600" : "border-gray-920"} px-2 py-2`}
+                    className={`mb-2 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.numberOfTeams ? "border-red-600" : "border-gray-920"} px-4 py-2`}
                   >
-                    <TextInput
-                      autoCapitalize="sentences"
-                      className="flex-1 text-base-white placeholder:pbk-b1"
-                      maxLength={50}
-                      onChangeText={onChange}
-                      placeholder="Enter league description"
-                      placeholderTextColor="gray"
-                      value={value}
-                    />
-                    {errors.name && (
-                      <WarningCircle color="#dc2626" size={20} weight="bold" />
-                    )}
+                    <Pressable
+                      className={`h-10 w-10 items-center justify-center rounded-lg ${value <= 4 ? "bg-gray-800" : "bg-red-600"}`}
+                      disabled={value <= 4}
+                      onPress={() => {
+                        const newValue = Math.max(4, value - 2);
+                        onChange(newValue);
+                      }}
+                    >
+                      <Text
+                        className={`text-xl ${value <= 4 ? "text-gray-600" : "text-base-white"}`}
+                      >
+                        −
+                      </Text>
+                    </Pressable>
+
+                    <Text className="pbk-h6 text-base-white">{value}</Text>
+
+                    <Pressable
+                      className={`h-10 w-10 items-center justify-center rounded-lg ${value >= 20 ? "bg-gray-800" : "bg-green-600"}`}
+                      disabled={value >= 20}
+                      onPress={() => {
+                        const newValue = Math.min(20, value + 2);
+                        onChange(newValue);
+                      }}
+                    >
+                      <Text
+                        className={`text-xl ${value >= 20 ? "text-gray-600" : "text-base-white"}`}
+                      >
+                        +
+                      </Text>
+                    </Pressable>
                   </View>
                 </>
               )}
             />
             <View className="mb-4">
-              {errors.description && (
+              {errors.numberOfTeams ? (
                 <Text className="pbk-b3 text-red-600">
-                  {errors.description.message}
+                  {errors.numberOfTeams.message}
+                </Text>
+              ) : (
+                <Text className="pbk-b3 text-gray-600">
+                  Minimum teams required to start the league
                 </Text>
               )}
             </View>
-
             <Controller
               control={control}
-              name="seasonStartDate"
+              name="budget"
               render={({ field: { onChange, value } }) => (
                 <>
                   <Text className="pbk-b2 mb-1.5 text-base-white">
-                    Season Start Date
+                    Team Budget
                   </Text>
-                  <Pressable
-                    onPress={() => {
-                      setSelectedDate(value ?? getMinimumSeasonStartDate());
-                      setShowDatePicker(true);
-                    }}
-                  >
-                    <View
-                      className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${
-                        errors.seasonStartDate
-                          ? "border-red-600"
-                          : "border-gray-920"
-                      } px-2 py-2`}
-                    >
-                      <TextInput
-                        className="flex-1 text-base-white placeholder:pbk-b1"
-                        editable={false}
-                        placeholder="Select season start date"
-                        placeholderTextColor="gray"
-                        pointerEvents="none"
-                        value={
-                          value
-                            ? new Date(value).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })
-                            : ""
-                        }
-                      />
-                      {errors.seasonStartDate && (
-                        <WarningCircle
-                          color="#dc2626"
-                          size={20}
-                          weight="bold"
-                        />
-                      )}
-                    </View>
-                  </Pressable>
-                  <Modal
-                    animationType="slide"
-                    onRequestClose={() => setShowDatePicker(false)}
-                    transparent
-                    visible={showDatePicker}
+                  <View
+                    className={`mb-2 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.budget ? "border-red-600" : "border-gray-920"} px-4 py-2`}
                   >
                     <Pressable
-                      className="flex-1"
-                      onPress={() => setShowDatePicker(false)}
+                      className={`h-10 w-10 items-center justify-center rounded-lg ${value <= 150000000 ? "bg-gray-800" : "bg-red-600"}`}
+                      disabled={value <= 150000000}
+                      onPress={() => {
+                        const newValue = Math.max(150000000, value - 25000000);
+                        onChange(newValue);
+                      }}
                     >
-                      <View className="flex-1 items-center justify-end">
-                        <View className="w-full rounded-t-2xl bg-gray-920 p-8">
-                          <DateTimePicker
-                            display="spinner"
-                            minimumDate={minStartDate}
-                            mode="date"
-                            onChange={(_, selectedDate) => {
-                              if (selectedDate) {
-                                setSelectedDate(selectedDate);
-                                onChange(selectedDate);
-                              }
-                            }}
-                            themeVariant="dark"
-                            value={
-                              value &&
-                              value instanceof Date &&
-                              !isNaN(value.getTime())
-                                ? value
-                                : getMinimumSeasonStartDate()
-                            }
-                          />
-                          <Button
-                            label="Done"
-                            onPress={() => {
-                              if (selectedDate) {
-                                onChange(selectedDate);
-                              }
-                              setShowDatePicker(false);
-                            }}
-                          />
-                        </View>
-                      </View>
+                      <Text
+                        className={`text-xl ${value <= 150000000 ? "text-gray-600" : "text-base-white"}`}
+                      >
+                        −
+                      </Text>
                     </Pressable>
-                  </Modal>
+
+                    <Text className="pbk-h6 text-base-white">
+                      ${(value / 1000000).toFixed(0)}M
+                    </Text>
+
+                    <Pressable
+                      className={`h-10 w-10 items-center justify-center rounded-lg ${value >= 250000000 ? "bg-gray-800" : "bg-green-600"}`}
+                      disabled={value >= 250000000}
+                      onPress={() => {
+                        const newValue = Math.min(250000000, value + 25000000);
+                        onChange(newValue);
+                      }}
+                    >
+                      <Text
+                        className={`text-xl ${value >= 250000000 ? "text-gray-600" : "text-base-white"}`}
+                      >
+                        +
+                      </Text>
+                    </Pressable>
+                  </View>
                 </>
               )}
             />
             <View className="mb-6">
-              {errors.seasonStartDate ? (
+              {errors.budget ? (
                 <Text className="pbk-b3 text-red-600">
-                  {errors.seasonStartDate.message}
+                  {errors.budget.message}
                 </Text>
               ) : (
                 <Text className="pbk-b3 text-gray-600">
-                  Season must start on a Monday (minimum: next Monday)
+                  Budget range: $150M - $250M
                 </Text>
               )}
             </View>
