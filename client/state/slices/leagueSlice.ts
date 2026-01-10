@@ -3,31 +3,29 @@ import { RootState } from "../store";
 import { League } from "@/types/league";
 
 type LeagueState = {
-  userLeagues: League[];
+  currentLeague: League | null;
 };
 
 const initialState: LeagueState = {
-  userLeagues: [],
+  currentLeague: null,
 };
 
 const leagueSlice = createSlice({
   name: "league",
   initialState,
   reducers: {
-    setUserLeagues: (state, action: PayloadAction<League[]>) => {
-      state.userLeagues = action.payload;
-    },
-    addLeague: (state, action: PayloadAction<League>) => {
-      state.userLeagues.push(action.payload);
+    setCurrentLeague: (state, action: PayloadAction<League | null>) => {
+      state.currentLeague = action.payload;
     },
     clearLeagues: (state) => {
-      state.userLeagues = [];
+      state.currentLeague = null;
     },
   },
 });
 
-export const selectUserLeagues = (state: RootState) => state.league.userLeagues;
+export const selectCurrentLeague = (state: RootState) =>
+  state.league.currentLeague;
 
-export const { addLeague, clearLeagues, setUserLeagues } = leagueSlice.actions;
+export const { setCurrentLeague, clearLeagues } = leagueSlice.actions;
 
 export default leagueSlice.reducer;
