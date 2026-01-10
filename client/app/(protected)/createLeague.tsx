@@ -20,7 +20,7 @@ import {
   LeagueController,
 } from "@/controllers/leagueController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import { addLeague } from "@/state/slices/leagueSlice";
+import { setCurrentLeague } from "@/state/slices/leagueSlice";
 
 const schema = yup.object({
   name: yup
@@ -93,7 +93,7 @@ const CreateLeague = () => {
                 params,
               );
 
-              dispatch(addLeague(league));
+              dispatch(setCurrentLeague(league));
 
               router.back();
             } catch (error) {
