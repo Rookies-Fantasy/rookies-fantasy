@@ -18,6 +18,7 @@ export type TeamEditModel = {
   augment?: Augment;
   logoUrl: string;
   name: string;
+  isLeagueTeam?: boolean;
 };
 
 export type LineupUpdateModel = Partial<{
@@ -77,6 +78,7 @@ export class UserController {
         .add({
           ...params,
           balance: TEAM_BALANCE,
+          isLeagueTeam: params.isLeagueTeam ?? false,
           record: {
             wins: 0,
             losses: 0,
@@ -114,6 +116,7 @@ export class UserController {
             bench: team.data()?.bench ?? defaultTeam.bench,
             balance: team.data()?.balance ?? 0,
             record: team.data()?.record ?? defaultTeam.record,
+            isLeagueTeam: team.data()?.isLeagueTeam ?? false,
           }
         : defaultTeam;
     } catch (error) {
@@ -138,6 +141,7 @@ export class UserController {
         bench: team.data()?.bench,
         balance: team.data()?.balance,
         record: team.data()?.record,
+        isLeagueTeam: team.data()?.isLeagueTeam ?? false,
       }));
     } catch (error) {
       throw error;

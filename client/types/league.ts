@@ -10,6 +10,7 @@ export type League = {
   numberOfTeams: number;
   budget: number;
   memberCount: number;
+  teamIds: string[];
   createdAt?: string;
   updatedAt?: string;
 };
