@@ -35,6 +35,10 @@ export default defineConfig([
         "error",
         { props: "never", children: "never", propElementValues: "always" },
       ],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
     settings: {
       react: {

@@ -491,7 +491,7 @@ const getLineupSnapshot = (
       );
     }
 
-    const { playerId: temp, team, player, game, ...rest } = latestGamelog;
+    const { playerId: _, team, player, game, ...rest } = latestGamelog;
     return {
       team,
       player,
@@ -834,6 +834,9 @@ export const processQueue = functions
             teamId2,
           );
 
+          const teamRef1 = user1.ref.collection("team").doc(teamId1);
+          const teamRef2 = user2.ref.collection("team").doc(teamId2);
+
           if (!matchupId) {
             console.error("Failed to create matchup, matchupId is undefined");
             await Promise.all([
@@ -846,13 +849,17 @@ export const processQueue = functions
           await Promise.all([
             user1.ref.update({
               queueStatus: "matched",
-              currentMatchupId: matchupId,
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             }),
             user2.ref.update({
               queueStatus: "matched",
-              currentMatchupId: matchupId,
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }),
+            teamRef1.update({
+              matchupId,
+            }),
+            teamRef2.update({
+              matchupId,
             }),
           ]);
 

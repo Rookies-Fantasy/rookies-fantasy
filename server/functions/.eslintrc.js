@@ -30,6 +30,10 @@ module.exports = {
     quotes: ["error", "double"],
     "import/no-unresolved": 0,
     "@typescript-eslint/no-explicit-any": 0,
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+    ],
   },
   settings: {
     "import/resolver": {
