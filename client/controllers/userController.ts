@@ -19,6 +19,7 @@ export type TeamEditModel = {
   logoUrl: string;
   name: string;
   isLeagueTeam?: boolean;
+  balance?: number;
 };
 
 export type LineupUpdateModel = Partial<{
@@ -77,7 +78,7 @@ export class UserController {
         .collection(TEAMS_COLLECTION)
         .add({
           ...params,
-          balance: TEAM_BALANCE,
+          balance: params.balance ?? TEAM_BALANCE,
           isLeagueTeam: params.isLeagueTeam ?? false,
           record: {
             wins: 0,

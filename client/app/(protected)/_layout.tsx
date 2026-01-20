@@ -17,6 +17,7 @@ const ProtectedLayout = () => {
       </Stack.Protected>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(draft)" />
+      <Stack.Screen name="createLeague" />
     </Stack>
   );
 };
