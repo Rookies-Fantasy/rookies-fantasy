@@ -214,6 +214,7 @@ const CreateLeague = () => {
       });
 
       dispatch(setCurrentLeague(league));
+      router.dismissAll();
       router.replace("/(protected)/(tabs)");
     } catch (error) {
       console.error("Failed to create league:", error);
