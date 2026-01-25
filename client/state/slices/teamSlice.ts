@@ -293,10 +293,10 @@ export const selectIsTeamRegistered = createSelector(
 );
 
 export const selectRosterPlayerCount = (state: RootState): number => {
-  const lineupCount = state.team.lineup.filter(
+  const lineupCount = state.team.lineup?.filter(
     (slot) => slot.player !== null,
-  ).length;
-  const benchCount = state.team.bench.length;
+  ).length ?? 0;
+  const benchCount = state.team.bench?.length ?? 0;
   return lineupCount + benchCount;
 };
 
