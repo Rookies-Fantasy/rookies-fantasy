@@ -14,6 +14,7 @@ import Spinner from "@/components/Spinner";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { selectCurrentLeague } from "@/state/slices/leagueSlice";
 import {
   selectAugment,
   selectRosterPlayerCount,
@@ -33,7 +34,11 @@ const MyTeam = () => {
   const userId = useAppSelector(selectUserId);
   const augment = useAppSelector(selectAugment);
   const playerCount = useAppSelector(selectRosterPlayerCount);
+  const currentLeague = useAppSelector(selectCurrentLeague);
   const dispatch = useAppDispatch();
+
+  const budget = currentLeague?.budget ?? 150000000;
+  const budgetInMillions = budget / 1000000;
 
   const queueStatus = user.queueStatus;
   const isInQueue = queueStatus === QueueStatus.Queued;
@@ -173,7 +178,7 @@ const MyTeam = () => {
               <Text className="pbk-bl">💸</Text>
               <View className="flex-1">
                 <Text className="pbk-b1 text-base-white">
-                  Build your team. Stay under $150M 💰
+                  Build your team. Stay under ${budgetInMillions}M 💰
                 </Text>
                 <Text className="pbk-b2 text-gray-400">
                   Choose 8 players for your weekly lineup. You&#39;ve got 4
