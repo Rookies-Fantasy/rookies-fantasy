@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { CaretDown, CaretUp, Check, Trophy } from "phosphor-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Image, Modal, Pressable, Text, View } from "react-native";
 import BottomSheet from "@/components/BottomSheet";
 import Button from "@/components/Button";
@@ -31,7 +31,6 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
   const currentLeague = useAppSelector(selectCurrentLeague);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [leagueTeams, setLeagueTeams] = useState<LeagueTeamInfo[]>([]);
   const [rankedTeam, setRankedTeam] = useState<Team | null>(null);
@@ -80,20 +79,6 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
     return logo?.source ?? defaultTeamLogo.source;
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      setModalVisible(true);
-    }
-  }, [isOpen]);
-
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-    // Delay unmounting the modal to allow BottomSheet animation to complete
-    setTimeout(() => {
-      setModalVisible(false);
-    }, 400);
-  }, []);
-
   const handleSelectRanked = async () => {
     if (rankedTeam && userId) {
       try {
@@ -107,14 +92,14 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
         console.error("Error fetching ranked team:", error);
       }
     }
-    handleClose();
+    setIsOpen(false);
   };
 
   const handleSelectLeague = async (leagueTeamInfo: LeagueTeamInfo) => {
     console.log(leagueTeamInfo);
     dispatch(setCurrentLeague(leagueTeamInfo.league));
     dispatch(setTeam(leagueTeamInfo.team));
-    handleClose();
+    setIsOpen(false);
   };
 
   const isRankedSelected = currentLeague === null;
@@ -123,19 +108,18 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
   return (
     <>
       <Pressable
-        className={`flex-row items-center justify-center gap-2 rounded-lg ${className}`}
+        className={`flex-row items-center justify-center gap-3 rounded-lg p-2 ${className}`}
         onPress={() => {
           if (!isLoading) {
             fetchLeagueTeams();
           }
           setIsOpen(true);
-          setModalVisible(true);
         }}
       >
         {isRankedSelected ? (
-          <Trophy color="#6042FF" size={20} weight="fill" />
+          <Trophy color="#6042FF" size={28} weight="fill" />
         ) : (
-          <View className="h-5 w-5 items-center justify-center overflow-hidden rounded-full">
+          <View className="h-8 w-8 items-center justify-center overflow-hidden rounded-full">
             {leagueTeams.find((lt) => lt.league.id === currentLeague?.id)?.team
               .logoUrl && (
               <Image
@@ -148,26 +132,26 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
             )}
           </View>
         )}
-        <Text className="pbk-b1 text-base-white">{displayName}</Text>
+        <Text className="pbk-h6 text-base-white">{displayName}</Text>
         {isOpen ? (
-          <CaretDown color="white" size={16} weight="bold" />
+          <CaretDown color="white" size={20} weight="bold" />
         ) : (
-          <CaretUp color="white" size={16} weight="bold" />
+          <CaretUp color="white" size={20} weight="bold" />
         )}
       </Pressable>
 
       <Modal
         animationType="none"
-        onRequestClose={handleClose}
+        onRequestClose={() => setIsOpen(false)}
         transparent
-        visible={modalVisible}
+        visible={isOpen}
       >
         <BottomSheet
           header={
             <Text className="pbk-h5 px-4 text-base-white">Select Mode</Text>
           }
           isOpen={isOpen}
-          onClose={handleClose}
+          onClose={() => setIsOpen(false)}
           snapPoints={["50%"]}
         >
           <View className="flex-1 px-4">
@@ -240,7 +224,7 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
                 <Button
                   label="Create New League"
                   onPress={() => {
-                    handleClose();
+                    setIsOpen(false);
                     router.push("/(protected)/createLeague");
                   }}
                   variant="primary"
