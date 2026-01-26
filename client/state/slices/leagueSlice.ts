@@ -17,7 +17,7 @@ const leagueSlice = createSlice({
     setCurrentLeague: (state, action: PayloadAction<League | null>) => {
       state.currentLeague = action.payload;
     },
-    clearLeagues: (state) => {
+    clearCurrentLeague: (state) => {
       state.currentLeague = null;
     },
   },
@@ -26,6 +26,6 @@ const leagueSlice = createSlice({
 export const selectCurrentLeague = (state: RootState) =>
   state.league.currentLeague;
 
-export const { setCurrentLeague, clearLeagues } = leagueSlice.actions;
+export const { setCurrentLeague, clearCurrentLeague } = leagueSlice.actions;
 
 export default leagueSlice.reducer;

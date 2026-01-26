@@ -14,7 +14,11 @@ import Spinner from "@/components/Spinner";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import { selectCurrentLeague } from "@/state/slices/leagueSlice";
+import {
+  clearCurrentLeague,
+  selectCurrentLeague,
+} from "@/state/slices/leagueSlice";
+import { clearMatchup } from "@/state/slices/matchupSlice";
 import {
   selectAugment,
   selectRosterPlayerCount,
@@ -70,6 +74,8 @@ const MyTeam = () => {
       await auth().signOut();
       dispatch(clearUser());
       dispatch(clearTeam());
+      dispatch(clearMatchup());
+      dispatch(clearCurrentLeague());
       router.replace("/(auth)");
     } catch (error) {
       console.log(error);
