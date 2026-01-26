@@ -33,6 +33,14 @@ import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 
+// League configuration constants
+const MIN_BUDGET = 150_000_000;
+const MAX_BUDGET = 250_000_000;
+const BUDGET_STEP = 25_000_000;
+const MIN_TEAMS = 4;
+const MAX_TEAMS = 20;
+const TEAMS_STEP = 2;
+
 // Combined schema for league + team
 const createLeagueSchema = yup.object({
   // League fields
@@ -43,14 +51,14 @@ const createLeagueSchema = yup.object({
   numberOfTeams: yup
     .number()
     .required("Number of teams is required")
-    .min(4, "Minimum teams must be at least 4")
-    .max(20, "Maximum teams is 20")
+    .min(MIN_TEAMS, `Minimum teams must be at least ${MIN_TEAMS}`)
+    .max(MAX_TEAMS, `Maximum teams is ${MAX_TEAMS}`)
     .typeError("Must be a number"),
   budget: yup
     .number()
     .required("Budget is required")
-    .min(150000000, "Budget must be at least $150,000,000")
-    .max(250000000, "Budget must be no more than $250,000,000")
+    .min(MIN_BUDGET, `Budget must be at least $${MIN_BUDGET / 1_000_000}M`)
+    .max(MAX_BUDGET, `Budget must be no more than $${MAX_BUDGET / 1_000_000}M`)
     .typeError("Must be a number"),
   // Team fields
   teamName: yup.string().required("Team Name is required"),
@@ -83,8 +91,7 @@ const CreateLeague = () => {
     useState<Asset>(defaultTeamLogo);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
 
-  // Animation values for sliding
-  const translateX = useSharedValue(0);
+  // Animation value for sliding
   const gestureTranslateX = useSharedValue(0);
 
   const {
@@ -96,8 +103,8 @@ const CreateLeague = () => {
     resolver: yupResolver(createLeagueSchema),
     defaultValues: {
       leagueName: "",
-      numberOfTeams: 4,
-      budget: 150000000,
+      numberOfTeams: MIN_TEAMS,
+      budget: MIN_BUDGET,
       teamName: "",
       abbreviation: "",
       logoUrl: "",
@@ -135,7 +142,6 @@ const CreateLeague = () => {
           duration: 200,
           easing: Easing.out(Easing.cubic),
         });
-        translateX.value = -screenWidth;
         runOnJS(goToStep2)();
       }
       // Swipe right (go to step 1) - only from step 2
@@ -144,7 +150,6 @@ const CreateLeague = () => {
           duration: 200,
           easing: Easing.out(Easing.cubic),
         });
-        translateX.value = 0;
         runOnJS(goToStep1)();
       }
       // Snap back to current step
@@ -172,7 +177,6 @@ const CreateLeague = () => {
         duration: 300,
         easing: Easing.out(Easing.cubic),
       });
-      translateX.value = -screenWidth;
       setCurrentStep(2);
     }
   };
@@ -210,7 +214,7 @@ const CreateLeague = () => {
         name: data.leagueName,
         numberOfTeams: data.numberOfTeams,
         budget: data.budget,
-        initalTeamId: teamId,
+        initialTeamId: teamId,
       });
 
       dispatch(setCurrentLeague(league));
@@ -318,15 +322,18 @@ const CreateLeague = () => {
                           className={`mb-2 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.numberOfTeams ? "border-red-600" : "border-gray-920"} px-4 py-2`}
                         >
                           <Pressable
-                            className={`h-10 w-10 items-center justify-center rounded-lg ${value <= 4 ? "bg-gray-800" : "bg-red-600"}`}
-                            disabled={value <= 4}
+                            className={`h-10 w-10 items-center justify-center rounded-lg ${value <= MIN_TEAMS ? "bg-gray-800" : "bg-red-600"}`}
+                            disabled={value <= MIN_TEAMS}
                             onPress={() => {
-                              const newValue = Math.max(4, value - 2);
+                              const newValue = Math.max(
+                                MIN_TEAMS,
+                                value - TEAMS_STEP,
+                              );
                               onChange(newValue);
                             }}
                           >
                             <Text
-                              className={`text-xl ${value <= 4 ? "text-gray-600" : "text-base-white"}`}
+                              className={`text-xl ${value <= MIN_TEAMS ? "text-gray-600" : "text-base-white"}`}
                             >
                               −
                             </Text>
@@ -337,15 +344,18 @@ const CreateLeague = () => {
                           </Text>
 
                           <Pressable
-                            className={`h-10 w-10 items-center justify-center rounded-lg ${value >= 20 ? "bg-gray-800" : "bg-green-600"}`}
-                            disabled={value >= 20}
+                            className={`h-10 w-10 items-center justify-center rounded-lg ${value >= MAX_TEAMS ? "bg-gray-800" : "bg-green-600"}`}
+                            disabled={value >= MAX_TEAMS}
                             onPress={() => {
-                              const newValue = Math.min(20, value + 2);
+                              const newValue = Math.min(
+                                MAX_TEAMS,
+                                value + TEAMS_STEP,
+                              );
                               onChange(newValue);
                             }}
                           >
                             <Text
-                              className={`text-xl ${value >= 20 ? "text-gray-600" : "text-base-white"}`}
+                              className={`text-xl ${value >= MAX_TEAMS ? "text-gray-600" : "text-base-white"}`}
                             >
                               +
                             </Text>
@@ -378,40 +388,40 @@ const CreateLeague = () => {
                           className={`mb-2 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.budget ? "border-red-600" : "border-gray-920"} px-4 py-2`}
                         >
                           <Pressable
-                            className={`h-10 w-10 items-center justify-center rounded-lg ${value <= 150000000 ? "bg-gray-800" : "bg-red-600"}`}
-                            disabled={value <= 150000000}
+                            className={`h-10 w-10 items-center justify-center rounded-lg ${value <= MIN_BUDGET ? "bg-gray-800" : "bg-red-600"}`}
+                            disabled={value <= MIN_BUDGET}
                             onPress={() => {
                               const newValue = Math.max(
-                                150000000,
-                                value - 25000000,
+                                MIN_BUDGET,
+                                value - BUDGET_STEP,
                               );
                               onChange(newValue);
                             }}
                           >
                             <Text
-                              className={`text-xl ${value <= 150000000 ? "text-gray-600" : "text-base-white"}`}
+                              className={`text-xl ${value <= MIN_BUDGET ? "text-gray-600" : "text-base-white"}`}
                             >
                               −
                             </Text>
                           </Pressable>
 
                           <Text className="pbk-h6 text-base-white">
-                            ${(value / 1000000).toFixed(0)}M
+                            ${(value / 1_000_000).toFixed(0)}M
                           </Text>
 
                           <Pressable
-                            className={`h-10 w-10 items-center justify-center rounded-lg ${value >= 250000000 ? "bg-gray-800" : "bg-green-600"}`}
-                            disabled={value >= 250000000}
+                            className={`h-10 w-10 items-center justify-center rounded-lg ${value >= MAX_BUDGET ? "bg-gray-800" : "bg-green-600"}`}
+                            disabled={value >= MAX_BUDGET}
                             onPress={() => {
                               const newValue = Math.min(
-                                250000000,
-                                value + 25000000,
+                                MAX_BUDGET,
+                                value + BUDGET_STEP,
                               );
                               onChange(newValue);
                             }}
                           >
                             <Text
-                              className={`text-xl ${value >= 250000000 ? "text-gray-600" : "text-base-white"}`}
+                              className={`text-xl ${value >= MAX_BUDGET ? "text-gray-600" : "text-base-white"}`}
                             >
                               +
                             </Text>
@@ -427,7 +437,8 @@ const CreateLeague = () => {
                       </Text>
                     ) : (
                       <Text className="pbk-b3 text-gray-600">
-                        Budget range: $150M - $250M
+                        Budget range: ${MIN_BUDGET / 1_000_000}M - $
+                        {MAX_BUDGET / 1_000_000}M
                       </Text>
                     )}
                   </View>

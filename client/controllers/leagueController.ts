@@ -7,7 +7,7 @@ export type LeagueEditModel = {
   name: string;
   numberOfTeams: number;
   budget: number;
-  initalTeamId?: string;
+  initialTeamId?: string;
 };
 
 export class LeagueController {
@@ -26,7 +26,7 @@ export class LeagueController {
           numberOfTeams: params.numberOfTeams,
           budget: params.budget,
           memberCount: 1,
-          teamIds: [params.initalTeamId],
+          teamIds: [params.initialTeamId],
           createdAt: new Date(),
           updatedAt: new Date(),
         });
