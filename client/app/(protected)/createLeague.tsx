@@ -26,6 +26,7 @@ import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
+import StepperInput from "@/components/StepperInput";
 import { LeagueController } from "@/controllers/leagueController";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
@@ -122,11 +123,9 @@ const CreateLeague = () => {
 
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
-      // Only allow dragging within bounds
       const baseX = currentStep === 1 ? 0 : -screenWidth;
       let newX = baseX + event.translationX;
 
-      // Clamp the value so you can't swipe past step 1 or step 2
       if (newX > 0) newX = 0;
       if (newX < -screenWidth) newX = -screenWidth;
 
@@ -136,24 +135,19 @@ const CreateLeague = () => {
       const baseX = currentStep === 1 ? 0 : -screenWidth;
       const dragDistance = event.translationX;
 
-      // Swipe left (go to step 2) - only from step 1
       if (currentStep === 1 && dragDistance < -SWIPE_THRESHOLD) {
         gestureTranslateX.value = withTiming(-screenWidth, {
           duration: 200,
           easing: Easing.out(Easing.cubic),
         });
         runOnJS(goToStep2)();
-      }
-      // Swipe right (go to step 1) - only from step 2
-      else if (currentStep === 2 && dragDistance > SWIPE_THRESHOLD) {
+      } else if (currentStep === 2 && dragDistance > SWIPE_THRESHOLD) {
         gestureTranslateX.value = withTiming(0, {
           duration: 200,
           easing: Easing.out(Easing.cubic),
         });
         runOnJS(goToStep1)();
-      }
-      // Snap back to current step
-      else {
+      } else {
         gestureTranslateX.value = withTiming(baseX, {
           duration: 200,
           easing: Easing.out(Easing.cubic),
@@ -170,7 +164,6 @@ const CreateLeague = () => {
   }));
 
   const handleNext = async () => {
-    // Validate only step 1 fields
     const isValid = await trigger(["leagueName", "numberOfTeams", "budget"]);
     if (isValid) {
       gestureTranslateX.value = withTiming(-screenWidth, {
@@ -184,7 +177,6 @@ const CreateLeague = () => {
   const handleCreateLeague = async (data: CreateLeagueFormData) => {
     setIsLoading(true);
     try {
-      // Create team first
       const teamId = await UserController.addUserTeam(userId, {
         name: data.teamName,
         abbreviation: data.abbreviation,
@@ -209,7 +201,6 @@ const CreateLeague = () => {
         );
       }
 
-      // Create the league with the team
       const league = await LeagueController.createLeague(userId, {
         name: data.leagueName,
         numberOfTeams: data.numberOfTeams,
@@ -235,7 +226,6 @@ const CreateLeague = () => {
           behavior="padding"
           className="mt-8 flex-1 flex-col px-6"
         >
-          {/* Header */}
           <View className="mb-8 flex-row items-center gap-4">
             <Pressable
               className="size-8 items-center justify-center rounded-md border border-gray-900"
@@ -248,7 +238,6 @@ const CreateLeague = () => {
             </Text>
           </View>
 
-          {/* Step indicators */}
           <View className="mb-6 flex-row justify-center gap-2">
             <View
               className={`h-2 w-8 rounded-full ${currentStep >= 1 ? "bg-purple-600" : "bg-gray-800"}`}
@@ -258,10 +247,8 @@ const CreateLeague = () => {
             />
           </View>
 
-          {/* Form container with swipe gesture */}
           <GestureDetector gesture={panGesture}>
             <View className="relative flex-1">
-              {/* Step 1: League Details */}
               <Animated.View
                 className="absolute left-0 right-0 top-0 flex-1"
                 style={step1AnimatedStyle}
@@ -318,49 +305,13 @@ const CreateLeague = () => {
                         <Text className="pbk-b2 mb-1.5 text-base-white">
                           Number of Teams
                         </Text>
-                        <View
-                          className={`mb-2 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.numberOfTeams ? "border-red-600" : "border-gray-920"} px-4 py-2`}
-                        >
-                          <Pressable
-                            className={`h-10 w-10 items-center justify-center rounded-lg ${value <= MIN_TEAMS ? "bg-gray-800" : "bg-red-600"}`}
-                            disabled={value <= MIN_TEAMS}
-                            onPress={() => {
-                              const newValue = Math.max(
-                                MIN_TEAMS,
-                                value - TEAMS_STEP,
-                              );
-                              onChange(newValue);
-                            }}
-                          >
-                            <Text
-                              className={`text-xl ${value <= MIN_TEAMS ? "text-gray-600" : "text-base-white"}`}
-                            >
-                              −
-                            </Text>
-                          </Pressable>
-
-                          <Text className="pbk-h6 text-base-white">
-                            {value}
-                          </Text>
-
-                          <Pressable
-                            className={`h-10 w-10 items-center justify-center rounded-lg ${value >= MAX_TEAMS ? "bg-gray-800" : "bg-green-600"}`}
-                            disabled={value >= MAX_TEAMS}
-                            onPress={() => {
-                              const newValue = Math.min(
-                                MAX_TEAMS,
-                                value + TEAMS_STEP,
-                              );
-                              onChange(newValue);
-                            }}
-                          >
-                            <Text
-                              className={`text-xl ${value >= MAX_TEAMS ? "text-gray-600" : "text-base-white"}`}
-                            >
-                              +
-                            </Text>
-                          </Pressable>
-                        </View>
+                        <StepperInput
+                          max={MAX_TEAMS}
+                          min={MIN_TEAMS}
+                          onChange={onChange}
+                          step={TEAMS_STEP}
+                          value={value}
+                        />
                       </>
                     )}
                   />
@@ -384,49 +335,16 @@ const CreateLeague = () => {
                         <Text className="pbk-b2 mb-1.5 text-base-white">
                           Team Budget
                         </Text>
-                        <View
-                          className={`mb-2 min-h-14 w-full flex-row items-center justify-between rounded-xl border ${errors.budget ? "border-red-600" : "border-gray-920"} px-4 py-2`}
-                        >
-                          <Pressable
-                            className={`h-10 w-10 items-center justify-center rounded-lg ${value <= MIN_BUDGET ? "bg-gray-800" : "bg-red-600"}`}
-                            disabled={value <= MIN_BUDGET}
-                            onPress={() => {
-                              const newValue = Math.max(
-                                MIN_BUDGET,
-                                value - BUDGET_STEP,
-                              );
-                              onChange(newValue);
-                            }}
-                          >
-                            <Text
-                              className={`text-xl ${value <= MIN_BUDGET ? "text-gray-600" : "text-base-white"}`}
-                            >
-                              −
-                            </Text>
-                          </Pressable>
-
-                          <Text className="pbk-h6 text-base-white">
-                            ${(value / 1_000_000).toFixed(0)}M
-                          </Text>
-
-                          <Pressable
-                            className={`h-10 w-10 items-center justify-center rounded-lg ${value >= MAX_BUDGET ? "bg-gray-800" : "bg-green-600"}`}
-                            disabled={value >= MAX_BUDGET}
-                            onPress={() => {
-                              const newValue = Math.min(
-                                MAX_BUDGET,
-                                value + BUDGET_STEP,
-                              );
-                              onChange(newValue);
-                            }}
-                          >
-                            <Text
-                              className={`text-xl ${value >= MAX_BUDGET ? "text-gray-600" : "text-base-white"}`}
-                            >
-                              +
-                            </Text>
-                          </Pressable>
-                        </View>
+                        <StepperInput
+                          formatValue={(value) =>
+                            `$${(value / 1_000_000).toFixed(0)}M`
+                          }
+                          max={MAX_BUDGET}
+                          min={MIN_BUDGET}
+                          onChange={onChange}
+                          step={BUDGET_STEP}
+                          value={value}
+                        />
                       </>
                     )}
                   />
@@ -445,7 +363,6 @@ const CreateLeague = () => {
                 </View>
               </Animated.View>
 
-              {/* Step 2: Team Details */}
               <Animated.View
                 className="absolute left-0 right-0 top-0 flex-1"
                 style={step2AnimatedStyle}
@@ -569,7 +486,6 @@ const CreateLeague = () => {
           </GestureDetector>
         </KeyboardAvoidingView>
 
-        {/* Bottom button */}
         <View className="justify-end bg-gray-950 px-6">
           {currentStep === 1 ? (
             <Button label="Next" onPress={handleNext} />
@@ -583,7 +499,6 @@ const CreateLeague = () => {
         </View>
       </View>
 
-      {/* Logo picker bottom sheet */}
       <BottomSheet
         footer={
           <Pressable
