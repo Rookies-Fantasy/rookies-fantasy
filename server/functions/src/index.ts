@@ -857,9 +857,11 @@ export const processQueue = functions
             }),
             teamRef1.update({
               matchupId,
+              weeklyAcquisitionsUsed: 0,
             }),
             teamRef2.update({
               matchupId,
+              weeklyAcquisitionsUsed: 0,
             }),
           ]);
 
@@ -913,57 +915,27 @@ const createWeeklyMatchup = async (
     const startDate = await getNextMondayDate();
     const matchupRef = admin.firestore().collection("matchups").doc();
 
+    // TODO: Add augments
     const matchupData: any = {
       id: matchupRef.id,
       createdAt: new Date(),
-      status: "active",
       weekStartDate: startDate,
-      away: {
-        awayAugment: team2Info.augment,
-        awayTeamId: teamId2,
-        awayTeamLogo: team2Info.logoUrl,
-        awayTeamName: team2Info.name,
-        awayUserId: userId2,
-        awayWeeklyAcquisitionsUsed: 4,
+      homeTeamId: teamId1,
+      awayTeamId: teamId2,
+      homeUserId: userId1,
+      awayUserId: userId2,
+      awayTeam: {
+        logo: team2Info.logoUrl,
+        name: team2Info.name,
+        record: team2Info.record,
       },
-      home: {
-        homeAugment: team1Info.augment,
-        homeTeamId: teamId1,
-        homeTeamLogo: team1Info.logoUrl,
-        homeTeamName: team1Info.name,
-        homeUserId: userId1,
-        homeWeeklyAcquisitionsUsed: 4,
+      homeTeam: {
+        logo: team1Info.logoUrl,
+        name: team1Info.name,
+        record: team1Info.record,
       },
+      lineupSnapshots: {},
     };
-
-    const weekGamesMap = await fetchWeekGamesInfo(startDate);
-
-    const [year, month, day] = startDate.split("-").map(Number);
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(year, month - 1, day + i);
-      const dateStr = date.toISOString().split("T")[0];
-
-      const dailyGamesMap = weekGamesMap.get(dateStr) || new Map();
-
-      matchupData[dateStr] = {
-        homeTeam: {
-          score: 0,
-          lineup: fillLineupWithGameData(
-            team1Info.lineup || [],
-            dateStr,
-            dailyGamesMap,
-          ),
-        },
-        awayTeam: {
-          score: 0,
-          lineup: fillLineupWithGameData(
-            team2Info.lineup || [],
-            dateStr,
-            dailyGamesMap,
-          ),
-        },
-      };
-    }
 
     await matchupRef.set(matchupData);
     return matchupRef.id;
@@ -1009,101 +981,6 @@ const getNextMondayDate = async (): Promise<string> => {
   const nextMonday = new Date(today);
   nextMonday.setDate(today.getDate() + daysUntilMonday);
   return nextMonday.toISOString().split("T")[0];
-};
-
-const fetchWeekGamesInfo = async (
-  startDate: string,
-): Promise<Map<string, Map<string, any>>> => {
-  try {
-    const weekGamesMap = new Map<string, Map<string, any>>();
-
-    const [year, month, day] = startDate.split("-").map(Number);
-    const endDateObj = new Date(year, month - 1, day + 6);
-    const endDate = endDateObj.toISOString().split("T")[0];
-
-    const response = await fetch(
-      `${process.env.BALLDONTLIE_URL}/games?start_date=${startDate}&end_date=${endDate}`,
-      {
-        headers: {
-          Authorization: `${process.env.BALLDONTLIE_API_KEY}`,
-        },
-      },
-    );
-
-    if (!response.ok) {
-      console.log(`Failed to fetch games for week ${startDate} to ${endDate}`);
-      return weekGamesMap;
-    }
-
-    const data: any = await response.json();
-    const games = data.data || [];
-
-    games.forEach((game: any) => {
-      const gameDate = game.date.split("T")[0];
-
-      if (!weekGamesMap.has(gameDate)) {
-        weekGamesMap.set(gameDate, new Map());
-      }
-
-      const dailyGamesMap = weekGamesMap.get(gameDate);
-      if (dailyGamesMap) {
-        dailyGamesMap.set(game.home_team.id.toString(), {
-          gameStatus: game.status,
-          opponent: game.visitor_team.abbreviation,
-          gameDate: gameDate,
-          isHome: true,
-        });
-
-        dailyGamesMap.set(game.visitor_team.id.toString(), {
-          gameStatus: game.status,
-          opponent: game.home_team.abbreviation,
-          gameDate: gameDate,
-          isHome: false,
-        });
-      }
-    });
-
-    return weekGamesMap;
-  } catch (error) {
-    console.log("Error fetching week games info:", error);
-    return new Map();
-  }
-};
-
-const fillLineupWithGameData = (
-  lineup: any[],
-  dateStr: string,
-  dailyGamesMap: Map<string, any>,
-): any[] => {
-  return lineup.map((slot) => {
-    if (!slot.player) {
-      return {
-        position: slot.position,
-        player: null,
-        gameInfo: null,
-        gameStats: null,
-      };
-    }
-
-    const teamId = slot.player.teamId;
-    const gameInfo = dailyGamesMap.get(teamId.toString()) || null;
-
-    return {
-      position: slot.position,
-      player: slot.player,
-      gameInfo: gameInfo,
-      gameStats: {
-        pts: 0,
-        ast: 0,
-        reb: 0,
-        stl: 0,
-        blk: 0,
-        tov: 0,
-        fpts: 0,
-        min: 0,
-      },
-    };
-  });
 };
 
 const checkIfMondayGamesStarted = async (): Promise<boolean> => {
