@@ -104,6 +104,9 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
 
   const isRankedSelected = currentLeague === null;
   const displayName = currentLeague?.name ?? "Ranked";
+  const currentLeagueTeam = leagueTeams.find(
+    (lt) => lt.league.id === currentLeague?.id,
+  );
 
   return (
     <>
@@ -120,16 +123,10 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
           <Trophy color="#6042FF" size={28} weight="fill" />
         ) : (
           <View className="h-8 w-8 items-center justify-center overflow-hidden rounded-full">
-            {leagueTeams.find((lt) => lt.league.id === currentLeague?.id)?.team
-              .logoUrl && (
-              <Image
-                className="h-full w-full"
-                source={getTeamLogoSource(
-                  leagueTeams.find((lt) => lt.league.id === currentLeague?.id)
-                    ?.team.logoUrl,
-                )}
-              />
-            )}
+            <Image
+              className="h-full w-full"
+              source={getTeamLogoSource(currentLeagueTeam?.team.logoUrl)}
+            />
           </View>
         )}
         <Text className="pbk-h6 text-base-white">{displayName}</Text>

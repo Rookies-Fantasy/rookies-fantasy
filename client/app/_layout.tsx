@@ -42,8 +42,6 @@ const RootLayoutNav = () => {
       text: `rgb(${themes[theme][mode].modeContrast})`,
     },
   };
-  // TODO: Remove this log
-  console.log(mode);
 
   return (
     <SafeAreaProvider>
