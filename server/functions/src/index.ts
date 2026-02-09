@@ -31,6 +31,58 @@ type LiveData = Record<
   }
 >;
 
+type TeamRecord = {
+  wins: number;
+  losses: number;
+  draws: number;
+};
+
+type TeamInfo = {
+  id: string;
+  name: string;
+  logoUrl: string;
+  record: TeamRecord;
+};
+
+type Player = {
+  firstName: string;
+  lastName: string;
+  gameStats: GameStats;
+  gameInfo: GameInfo;
+  playerId: string;
+};
+
+type Position = "PG" | "SG" | "SF" | "PF" | "C" | "UTIL1" | "UTIL2" | "UTIL3";
+
+type LineupSnapshot = {
+  [P in Position]: Player;
+};
+
+type TeamLineup = {
+  [P in Position]?: string;
+};
+
+type Matchup = {
+  weekStartDate: string;
+  homeTeam: TeamInfo;
+  awayTeam: TeamInfo;
+  lineupSnapshots: Record<string, LineupSnapshot>;
+};
+
+enum QueueStatus {
+  Idle = "idle",
+  Queued = "queued",
+  Matched = "matched",
+}
+
+type Team = {
+  lineup: TeamLineup;
+  augmentId: string;
+  matchupId: string;
+  queueStatus: QueueStatus;
+  record: TeamRecord;
+};
+
 const apiKey = process.env.BALLDONTLIE_API_KEY || "";
 const api = new BalldontlieAPI({ apiKey });
 const cachedData: LiveData = {};
@@ -916,6 +968,18 @@ const createWeeklyMatchup = async (
     const matchupRef = admin.firestore().collection("matchups").doc();
 
     // TODO: Add augments
+    const team1Augment = await admin
+      .firestore()
+      .collection("augments")
+      .doc(team1Info.augmentId)
+      .get();
+
+    const team2Augment = await admin
+      .firestore()
+      .collection("augments")
+      .doc(team2Info.augmentId)
+      .get();
+
     const matchupData: any = {
       id: matchupRef.id,
       createdAt: new Date(),
@@ -928,11 +992,13 @@ const createWeeklyMatchup = async (
         logo: team2Info.logoUrl,
         name: team2Info.name,
         record: team2Info.record,
+        augment: team2Augment.data(),
       },
       homeTeam: {
         logo: team1Info.logoUrl,
         name: team1Info.name,
         record: team1Info.record,
+        augment: team1Augment.data(),
       },
       lineupSnapshots: {},
     };
