@@ -2,7 +2,7 @@ import auth from "@react-native-firebase/auth";
 import { useRouter } from "expo-router";
 import { SignOut } from "phosphor-react-native";
 import { useState } from "react";
-import { Pressable, Text, View, Image, Alert } from "react-native";
+import { Pressable, Text, View, Image, Alert, Share } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
 import FloatingActionButton from "@/components/FloatingActionButton";
@@ -134,6 +134,25 @@ const MyTeam = () => {
           onPress={handleLogout}
         />
       </View>
+
+      {currentLeague &&
+        currentLeague.memberCount < currentLeague.numberOfTeams && (
+          <Pressable
+            className="mx-8 mt-4 rounded-lg bg-primary-500 p-4"
+            onPress={async () => {
+              const inviteUrl = `https://dev.rookiesfantasy.com/createLeague?leagueId=${currentLeague.id}`;
+
+              await Share.share({
+                message: `Join my league on Rookies Fantasy!\n\n${inviteUrl}`,
+                url: inviteUrl,
+              });
+            }}
+          >
+            <Text className="pbk-h6 text-center text-base-white">
+              INVITE FRIENDS
+            </Text>
+          </Pressable>
+        )}
 
       <View className="flex-1 gap-6 px-8">
         {playerCount > 0 ? (
