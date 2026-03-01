@@ -140,7 +140,7 @@ const MyTeam = () => {
           <Pressable
             className="mx-8 mt-4 rounded-lg bg-primary-500 p-4"
             onPress={async () => {
-              const inviteUrl = `https://dev.rookiesfantasy.com/createLeague?leagueId=${currentLeague.id}`;
+              const inviteUrl = `https://dev.rookiesfantasy.com/joinLeague?leagueId=${currentLeague.id}`;
 
               await Share.share({
                 message: `Join my league on Rookies Fantasy!\n\n${inviteUrl}`,
