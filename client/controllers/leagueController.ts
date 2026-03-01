@@ -39,6 +39,7 @@ export class LeagueController {
           budget: data?.budget,
           memberCount: data?.memberCount,
           teamIds: data?.teamIds ?? [],
+          userIds: data.userIds ?? [],
         };
 
         (data?.teamIds ?? []).forEach((teamId: string) => {
@@ -72,6 +73,7 @@ export class LeagueController {
         budget: data?.budget,
         memberCount: data?.memberCount,
         teamIds: data?.teamIds ?? [],
+        userIds: data?.userIds ?? [],
       };
     } catch (error) {
       console.error("Error fetching league:", error);
@@ -95,6 +97,7 @@ export class LeagueController {
           budget: params.budget,
           memberCount: 1,
           teamIds: [params.initialTeamId],
+          userIds: [userId],
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -109,10 +112,54 @@ export class LeagueController {
         numberOfTeams: data?.numberOfTeams,
         memberCount: data?.memberCount,
         teamIds: data?.teamIds ?? [],
+        userIds: data?.userIds ?? [],
       };
     } catch (error) {
       console.error("Error creating league:", error);
       throw error;
+    }
+  };
+
+  static joinLeague = async (
+    leagueId: string,
+    teamId: string,
+    userId: string,
+  ) => {
+    try {
+      await firestore().runTransaction(async (transaction) => {
+        const leagueRef = firestore()
+          .collection(LEAGUE_COLLECTION)
+          .doc(leagueId);
+
+        const leagueDoc = await transaction.get(leagueRef);
+
+        if (!leagueDoc.exists) {
+          throw new Error("League not found");
+        }
+
+        const league = leagueDoc.data();
+
+        if (league?.teamIds?.includes(teamId)) {
+          throw new Error("Team already joined");
+        }
+
+        if (league?.userIds?.includes(userId)) {
+          throw new Error("User already joined");
+        }
+
+        if (league?.memberCount >= league?.numberOfTeams) {
+          throw new Error("League is full");
+        }
+
+        transaction.update(leagueRef, {
+          memberCount: firestore.FieldValue.increment(1),
+          teamIds: firestore.FieldValue.arrayUnion(teamId),
+          userIds: firestore.FieldValue.arrayUnion(userId),
+        });
+      });
+    } catch (error: any) {
+      console.error("Join league error:", error);
+      throw new Error(error.message);
     }
   };
 }
