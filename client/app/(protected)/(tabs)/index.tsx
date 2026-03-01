@@ -143,7 +143,7 @@ const MyTeam = () => {
               const inviteUrl = `https://dev.rookiesfantasy.com/createLeague?leagueId=${currentLeague.id}`;
 
               await Share.share({
-                message: `Join my league on Rookies Fantasy!\n\n${inviteUrl}`,
+                message: `Join my league on Rookies Fantasy!\n`,
                 url: inviteUrl,
               });
             }}
