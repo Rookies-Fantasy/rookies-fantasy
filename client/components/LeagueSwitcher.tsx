@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { Image, Modal, Pressable, Text, View } from "react-native";
 import BottomSheet from "@/components/BottomSheet";
 import Button from "@/components/Button";
-import { PressableLink } from "@/components/PressableLink";
 import {
   LeagueController,
   LeagueTeamInfo,
