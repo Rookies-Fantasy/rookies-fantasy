@@ -14,6 +14,8 @@ import Spinner from "@/components/Spinner";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { clearCurrentLeague } from "@/state/slices/leagueSlice";
+import { clearMatchup } from "@/state/slices/matchupSlice";
 import {
   selectAugment,
   selectRosterPlayerCount,
@@ -65,6 +67,8 @@ const MyTeam = () => {
       await auth().signOut();
       dispatch(clearUser());
       dispatch(clearTeam());
+      dispatch(clearMatchup());
+      dispatch(clearCurrentLeague());
       router.replace("/(auth)");
     } catch (error) {
       console.log(error);
@@ -123,6 +127,16 @@ const MyTeam = () => {
           onPress={handleLogout}
         />
       </View>
+
+      <Pressable
+        className="mx-8 mt-4 rounded-lg bg-green-600 p-4"
+        onPress={() => router.push("/(protected)/createLeague")}
+      >
+        <Text className="pbk-b1 text-center text-base-white">
+          Create League (TEMP)
+        </Text>
+      </Pressable>
+
       <View className="flex-1 gap-6 px-8">
         {playerCount > 0 ? (
           <>
