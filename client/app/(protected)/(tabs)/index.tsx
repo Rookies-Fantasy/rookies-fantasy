@@ -1,4 +1,5 @@
 import auth from "@react-native-firebase/auth";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { SignOut } from "phosphor-react-native";
 import { useState } from "react";
@@ -140,10 +141,11 @@ const MyTeam = () => {
           <Pressable
             className="mx-8 mt-4 rounded-lg bg-primary-500 p-4"
             onPress={async () => {
-              const inviteUrl = `https://dev.rookiesfantasy.com/joinLeague?leagueId=${currentLeague.id}`;
+              const baseUrl = Constants.expoConfig?.extra?.baseUrl;
+              const inviteUrl = `${baseUrl}/joinLeague?leagueId=${currentLeague.id}`;
 
               await Share.share({
-                message: `Join my league on Rookies Fantasy!\n\n${inviteUrl}`,
+                message: `Join my league on Rookies Fantasy!\n`,
                 url: inviteUrl,
               });
             }}
