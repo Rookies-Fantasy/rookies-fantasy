@@ -138,10 +138,10 @@ export class UserController {
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
-        lineup: team.data()?.lineup,
-        bench: team.data()?.bench,
-        balance: team.data()?.balance,
-        record: team.data()?.record,
+        lineup: team.data()?.lineup ?? defaultTeam.lineup,
+        bench: team.data()?.bench ?? defaultTeam.bench,
+        balance: team.data()?.balance ?? TEAM_BALANCE,
+        record: team.data()?.record ?? defaultTeam.record,
         isLeagueTeam: team.data()?.isLeagueTeam ?? false,
       }));
     } catch (error) {
