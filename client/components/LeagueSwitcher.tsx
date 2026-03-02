@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { Image, Modal, Pressable, Text, View } from "react-native";
 import BottomSheet from "@/components/BottomSheet";
 import Button from "@/components/Button";
-import { PressableLink } from "@/components/PressableLink";
 import {
   LeagueController,
   LeagueTeamInfo,
@@ -227,11 +226,11 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
                   variant="primary"
                 />
 
-                <PressableLink
-                  className="min-h-12 w-full items-center justify-center rounded-md border border-gray-800 bg-gray-920"
-                  href="/" // TODO: Update with join league route
-                  label="Join League"
-                />
+                {/*<PressableLink*/}
+                {/*  className="min-h-12 w-full items-center justify-center rounded-md border border-gray-800 bg-gray-920"*/}
+                {/*  href="/" // TODO: Update with join league route*/}
+                {/*  label="Join League"*/}
+                {/*/>*/}
               </View>
             )}
           </View>

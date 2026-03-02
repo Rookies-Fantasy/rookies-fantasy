@@ -142,7 +142,7 @@ const MyTeam = () => {
             className="mx-8 mt-4 rounded-lg bg-primary-500 p-4"
             onPress={async () => {
               const baseUrl = Constants.expoConfig?.extra?.baseUrl;
-              const inviteUrl = `${baseUrl}/createLeague?leagueId=${currentLeague.id}`;
+              const inviteUrl = `${baseUrl}/joinLeague?leagueId=${currentLeague.id}`;
 
               await Share.share({
                 message: `Join my league on Rookies Fantasy!\n`,
