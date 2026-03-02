@@ -156,7 +156,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     updates: {
       url: "https://u.expo.dev/ee1dd2e5-d9ed-45d5-9c39-85529018afab",
     },
-    runtimeVersion: "1.0.0",
+    runtimeVersion: {
+      policy: "appVersion",
+    },
     owner: OWNER,
   };
 };
