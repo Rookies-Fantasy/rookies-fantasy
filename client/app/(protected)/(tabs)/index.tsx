@@ -14,7 +14,10 @@ import Spinner from "@/components/Spinner";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import { clearCurrentLeague } from "@/state/slices/leagueSlice";
+import {
+  clearCurrentLeague,
+  selectCurrentLeague,
+} from "@/state/slices/leagueSlice";
 import { clearMatchup } from "@/state/slices/matchupSlice";
 import {
   selectAugment,
@@ -35,7 +38,11 @@ const MyTeam = () => {
   const userId = useAppSelector(selectUserId);
   const augment = useAppSelector(selectAugment);
   const playerCount = useAppSelector(selectRosterPlayerCount);
+  const currentLeague = useAppSelector(selectCurrentLeague);
   const dispatch = useAppDispatch();
+
+  const budget = currentLeague?.budget ?? 150000000;
+  const budgetInMillions = budget / 1000000;
 
   const queueStatus = user.queueStatus;
   const isInQueue = queueStatus === QueueStatus.Queued;
@@ -128,15 +135,6 @@ const MyTeam = () => {
         />
       </View>
 
-      <Pressable
-        className="mx-8 mt-4 rounded-lg bg-green-600 p-4"
-        onPress={() => router.push("/(protected)/createLeague")}
-      >
-        <Text className="pbk-b1 text-center text-base-white">
-          Create League (TEMP)
-        </Text>
-      </Pressable>
-
       <View className="flex-1 gap-6 px-8">
         {playerCount > 0 ? (
           <>
@@ -186,7 +184,7 @@ const MyTeam = () => {
               <Text className="pbk-bl">💸</Text>
               <View className="flex-1">
                 <Text className="pbk-b1 text-base-white">
-                  Build your team. Stay under $150M 💰
+                  Build your team. Stay under ${budgetInMillions}M 💰
                 </Text>
                 <Text className="pbk-b2 text-gray-400">
                   Choose 8 players for your weekly lineup. You&#39;ve got 4
