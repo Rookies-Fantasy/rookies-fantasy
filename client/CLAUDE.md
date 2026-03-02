@@ -23,12 +23,44 @@ app/
 - `controllers/` — business logic (league, matchup, user, nbaPlayers, nbaTeams, augment, ballDontLie)
 - `state/slices/` — Redux slices: user, team, league, matchup
 - `hooks/` — useCountdown, useLineupLock
+- `theme/` — `theme.ts` defines `ThemeName` (Purple, Green) and `ThemeMode`, and `applyCssTheme()` which resolves the `primary-*`, `mode`, and `modeContrast` CSS vars at runtime. `ThemeProvider.tsx` wraps the app
+- `types/` — shared TypeScript types for all domain entities (league, team, player, matchup, augment, user, etc.). Always import types from here rather than defining inline
+- `utils/` — reusable helper functions (see Utilities section below)
 
 ## Commands (run from `client/`)
 - Dev: `npm run dev`
 - Test: `npm run test-ci`
 - Typecheck: `npm run tsc`
 - Lint: `npm run lint`
+
+## Styling (NativeWind + Design System)
+
+All styling is done via NativeWind `className` props — never use `StyleSheet.create()` unless you really have to (please explain why you decided to use it if you do).
+
+**Colors** — always use tokens from `tailwind.config.js`, never hardcode hex values:
+- Grays: `gray-{25–950}` (note: `gray-920` and `gray-950` are custom additions)
+- Brand: `purple-{25–950}`, `green-{25–950}`, `red-{25–950}`, `yellow-{25–950}`
+- White: `base-white`
+- Theme-aware: `primary-{25–950}`, `mode`, `modeContrast` (CSS vars, respect dark mode)
+
+**Typography** — always use `pbk-*` composite classes on `<Text>`, never set font/size manually:
+- Headings (ClashDisplay): `pbk-h1` → `pbk-h8`
+- Subheadings (ClashDisplay): `pbk-sh1` → `pbk-sh3`
+- Body (Manrope): `pbk-bl`, `pbk-b1` → `pbk-b3`
+- Example: `<Text className="pbk-h5 text-base-white">`
+
+**Conditional classes** — use `cn` from `@/utils/jsUtils` (wraps `clsx` + `tailwind-merge`):
+- Example: `className={cn("rounded-xl p-4", isSelected ? "bg-purple-900" : "bg-gray-900")}`
+
+## Utilities (`utils/`)
+
+Before writing new logic, check `utils/` for existing helpers — and add new reusable logic there rather than inlining it:
+- `jsUtils.ts` — `cn()` for class merging, `isNil`/`isNotNil` guards
+- `authUtils.ts` — auth helpers
+- `dateUtils.ts` — date formatting/manipulation
+- `fantasyPoints.ts` — fantasy scoring logic
+- `teamUtils.ts` — team-related helpers
+- `augmentUtils.ts` — augment-related helpers
 
 ## Key Considerations
 
