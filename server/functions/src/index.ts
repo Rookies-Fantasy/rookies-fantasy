@@ -37,11 +37,11 @@ type TeamRecord = {
   draws: number;
 };
 
-type TeamInfo = {
-  id: string;
+type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
+  augment: any;
 };
 
 type Player = {
@@ -62,23 +62,30 @@ type TeamLineup = {
   [P in Position]?: string;
 };
 
-type Matchup = {
-  weekStartDate: string;
-  homeTeam: TeamInfo;
-  awayTeam: TeamInfo;
-  lineupSnapshots: Record<string, LineupSnapshot>;
-};
-
 enum QueueStatus {
   Idle = "idle",
   Queued = "queued",
   Matched = "matched",
 }
 
+type Matchup = {
+  id: string;
+  weekStart: string;
+  homeTeamSnapshot: TeamSnapshot;
+  awayTeamSnapshot: TeamSnapshot;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeUserId: string;
+  awayUserId: string;
+  status: "active" | "complete";
+  awayLineupSnapshots: Record<string, LineupSnapshot>;
+  homeLineupSnapshots: Record<string, LineupSnapshot>;
+};
+
 type Team = {
+  id: string;
   lineup: TeamLineup;
   augmentId: string;
-  matchupId: string;
   queueStatus: QueueStatus;
   record: TeamRecord;
 };
@@ -425,17 +432,23 @@ export const updateDailyPlayerData = functions
         homeAugment: homeAugment?.title,
       });
 
-      const lineupSnapshots = {
-        awaySnapshot: getLineupSnapshot(homeLineup, gamelogMap, awayAugment),
-        homeSnapshot: getLineupSnapshot(awayLineup, gamelogMap, homeAugment),
-      };
+      const awayLineupSnapshotsField = `awayLineupSnapshots.${today}`;
+      const homeLineupSnapshotsField = `homeLineupSnapshots.${today}`;
 
-      console.log("Writing matchup update:", { docId: matchupDoc.id });
-
-      const lineupSnapshotField = `lineupSnapshots.${today}`;
       batch.set(
         matchupDoc.ref,
-        { [lineupSnapshotField]: lineupSnapshots },
+        {
+          [awayLineupSnapshotsField]: getLineupSnapshot(
+            awayLineup,
+            gamelogMap,
+            awayAugment,
+          ),
+          [homeLineupSnapshotsField]: getLineupSnapshot(
+            homeLineup,
+            gamelogMap,
+            homeAugment,
+          ),
+        },
         { merge: true },
       );
 
@@ -886,9 +899,6 @@ export const processQueue = functions
             teamId2,
           );
 
-          const teamRef1 = user1.ref.collection("team").doc(teamId1);
-          const teamRef2 = user2.ref.collection("team").doc(teamId2);
-
           if (!matchupId) {
             console.error("Failed to create matchup, matchupId is undefined");
             await Promise.all([
@@ -906,14 +916,6 @@ export const processQueue = functions
             user2.ref.update({
               queueStatus: "matched",
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            }),
-            teamRef1.update({
-              matchupId,
-              weeklyAcquisitionsUsed: 0,
-            }),
-            teamRef2.update({
-              matchupId,
-              weeklyAcquisitionsUsed: 0,
             }),
           ]);
 
@@ -967,7 +969,6 @@ const createWeeklyMatchup = async (
     const startDate = await getNextMondayDate();
     const matchupRef = admin.firestore().collection("matchups").doc();
 
-    // TODO: Add augments
     const team1Augment = await admin
       .firestore()
       .collection("augments")
@@ -983,7 +984,7 @@ const createWeeklyMatchup = async (
     const matchupData: any = {
       id: matchupRef.id,
       createdAt: new Date(),
-      weekStartDate: startDate,
+      weekStart: startDate,
       homeTeamId: teamId1,
       awayTeamId: teamId2,
       homeUserId: userId1,
@@ -1000,7 +1001,9 @@ const createWeeklyMatchup = async (
         record: team1Info.record,
         augment: team1Augment.data(),
       },
-      lineupSnapshots: {},
+      awayLineupSnapshots: {},
+      homeLineupSnapshots: {},
+      status: "active",
     };
 
     await matchupRef.set(matchupData);
@@ -1114,29 +1117,17 @@ export const weeklyMatchupReset = functions.pubsub
           let homeTotal = 0;
           let awayTotal = 0;
 
-          const dateKeys = Object.keys(matchupData).filter((key) =>
-            /^\d{4}-\d{2}-\d{2}$/.test(key),
-          );
-
-          dateKeys.forEach((date) => {
-            const dailyData = matchupData[date];
-
-            if (dailyData?.homeTeam?.lineup) {
-              dailyData.homeTeam.lineup.forEach((player: any) => {
-                if (player?.gameStats?.fpts) {
-                  homeTotal += player.gameStats.fpts;
-                }
-              });
+          for (const day of Object.values(matchupData.homeLineupSnapshots)) {
+            for (const player of Object.values(day as any)) {
+              homeTotal += (player as any).gameStats.fpts;
             }
+          }
 
-            if (dailyData?.awayTeam?.lineup) {
-              dailyData.awayTeam.lineup.forEach((player: any) => {
-                if (player?.gameStats?.fpts) {
-                  awayTotal += player.gameStats.fpts;
-                }
-              });
+          for (const day of Object.values(matchupData.awayLineupSnapshots)) {
+            for (const player of Object.values(day as any)) {
+              awayTotal += (player as any).gameStats.fpts;
             }
-          });
+          }
 
           console.log(
             `Matchup ${matchupId}: Home ${homeTotal} vs Away ${awayTotal}`,
@@ -1144,9 +1135,9 @@ export const weeklyMatchupReset = functions.pubsub
 
           let winnerId: string;
           if (homeTotal > awayTotal) {
-            winnerId = matchupData.home.homeTeamId;
+            winnerId = matchupData.homeTeamId;
           } else if (awayTotal > homeTotal) {
-            winnerId = matchupData.away.awayTeamId;
+            winnerId = matchupData.awayTeamId;
           } else {
             winnerId = "";
             console.log(`Matchup ${matchupId} ended in a tie`);
@@ -1162,12 +1153,12 @@ export const weeklyMatchupReset = functions.pubsub
 
           const teams = [
             {
-              userId: matchupData.home.homeUserId,
-              teamId: matchupData.home.homeTeamId,
+              userId: matchupData.homeUserId,
+              teamId: matchupData.homeTeamId,
             },
             {
-              userId: matchupData.away.awayUserId,
-              teamId: matchupData.away.awayTeamId,
+              userId: matchupData.awayUserId,
+              teamId: matchupData.awayTeamId,
             },
           ];
 
