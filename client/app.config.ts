@@ -11,6 +11,18 @@ const ICON = "./assets/images/ios-light-icon.png";
 const ADAPTIVE_ICON = "./assets/images/adaptive-icon.png";
 const SCHEME = "myapp";
 
+const getBaseUrl = (environment: "development" | "preview" | "production") => {
+  if (environment === "production") {
+    return "https://rookiesfantasy.com";
+  }
+
+  if (environment === "preview") {
+    return "https://staging.rookiesfantasy.com";
+  }
+
+  return "https://dev.rookiesfantasy.com";
+};
+
 export const getDynamicAppConfig = (
   environment: "development" | "preview" | "production",
 ) => {
@@ -75,6 +87,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     return "./google-services-development.json";
   };
 
+  const baseUrl = getBaseUrl(environment);
+
   return {
     ...config,
     name: name,
@@ -137,6 +151,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       eas: {
         projectId: EAS_PROJECT_ID,
       },
+      baseUrl,
     },
     updates: {
       url: "https://u.expo.dev/ee1dd2e5-d9ed-45d5-9c39-85529018afab",
