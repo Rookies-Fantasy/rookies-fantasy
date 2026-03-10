@@ -44,7 +44,7 @@ type TeamSnapshot = {
   augment: any;
 };
 
-type Player = {
+type PlayerSnapshot = {
   firstName: string;
   lastName: string;
   gameStats: GameStats;
@@ -55,7 +55,7 @@ type Player = {
 type Position = "PG" | "SG" | "SF" | "PF" | "C" | "UTIL1" | "UTIL2" | "UTIL3";
 
 type LineupSnapshot = {
-  [P in Position]: Player;
+  [P in Position]: PlayerSnapshot;
 };
 
 type TeamLineup = {
@@ -69,6 +69,7 @@ enum QueueStatus {
 }
 
 type Matchup = {
+  createdAt: Date;
   id: string;
   weekStart: string;
   homeTeamSnapshot: TeamSnapshot;
@@ -80,6 +81,7 @@ type Matchup = {
   status: "active" | "complete";
   awayLineupSnapshots: Record<string, LineupSnapshot>;
   homeLineupSnapshots: Record<string, LineupSnapshot>;
+  winnerId?: string;
 };
 
 type Team = {
@@ -981,7 +983,7 @@ const createWeeklyMatchup = async (
       .doc(team2Info.augmentId)
       .get();
 
-    const matchupData: any = {
+    const matchupData: Matchup = {
       id: matchupRef.id,
       createdAt: new Date(),
       weekStart: startDate,
@@ -989,14 +991,14 @@ const createWeeklyMatchup = async (
       awayTeamId: teamId2,
       homeUserId: userId1,
       awayUserId: userId2,
-      awayTeam: {
-        logo: team2Info.logoUrl,
+      awayTeamSnapshot: {
+        logoUrl: team2Info.logoUrl,
         name: team2Info.name,
         record: team2Info.record,
         augment: team2Augment.data(),
       },
-      homeTeam: {
-        logo: team1Info.logoUrl,
+      homeTeamSnapshot: {
+        logoUrl: team1Info.logoUrl,
         name: team1Info.name,
         record: team1Info.record,
         augment: team1Augment.data(),
@@ -1145,8 +1147,7 @@ export const weeklyMatchupReset = functions.pubsub
 
           await matchupDoc.ref.update({
             status: "completed",
-            winner: winnerId,
-            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+            winnerId: winnerId,
           });
 
           console.log(`Matchup ${matchupId} completed. Winner: ${winnerId}`);
