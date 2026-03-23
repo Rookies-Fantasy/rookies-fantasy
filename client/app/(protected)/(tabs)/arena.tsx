@@ -54,10 +54,11 @@ const Arena = () => {
   const dispatch = useAppDispatch();
   const { theme, mode } = useAppTheme();
 
+  // Only take the day, and take today as the default
+  const today = new Date().toLocaleDateString("en-CA");
+
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toLocaleDateString("en-CA"), // Only take the day, and take today as the default
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(today);
   const [selectedAugment, setSelectedAugment] = useState<
     "away" | "home" | null
   >(null);
@@ -111,12 +112,12 @@ const Arena = () => {
     }, [selectedDate, dispatch]),
   );
 
-  const dailyMatchup = matchup?.dailyMatchups[selectedDate];
-  const awayLineup = dailyMatchup?.awayTeam.lineup ?? [];
-  const homeLineup = dailyMatchup?.homeTeam.lineup ?? [];
+  const pastMatchups = matchup?.lineupSnapshots[selectedDate];
+
+  const homeTeamScore = selectedDate === today ? team.lineup : pastMatchups;
 
   const awayTeamLogo = teamLogoOptions.find(
-    (asset) => asset.url === matchup?.away.awayTeamLogo,
+    (asset) => asset.url === matchup?.awayTeam.logoUrl,
   )?.source;
 
   return (
@@ -152,7 +153,7 @@ const Arena = () => {
           </View>
 
           <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            {matchup?.away.awayTeamName?.toUpperCase() ?? "--"}
+            {matchup?.awayTeam.name.toUpperCase() ?? "--"}
           </Text>
         </View>
       </View>
@@ -209,7 +210,7 @@ const Arena = () => {
                 setOpenDialog(true);
               }}
             >
-              {matchup.home.homeAugment && selectedAugment === "home" && (
+              {matchup.homeTeam.augment && selectedAugment === "home" && (
                 <Dialog
                   closeLabel="Close"
                   dialogClassname="w-[75%]"
@@ -222,7 +223,7 @@ const Arena = () => {
                 >
                   <View className="h-80">
                     <AugmentCard
-                      cardData={matchup.home.homeAugment}
+                      cardData={matchup.homeTeam.augment}
                       onPress={() => {
                         setOpenDialog(false);
                         setSelectedAugment(null);
@@ -246,15 +247,15 @@ const Arena = () => {
                 }}
               />
               <View className="w-full rounded-2xl bg-gray-900 p-4">
-                {matchup.home.homeAugment && (
+                {matchup.homeTeam.augment && (
                   <View className="flex-col items-center gap-1">
                     <View className="flex-row items-center">
                       <Image
                         className="h-8 w-8"
-                        source={iconMap[matchup.home.homeAugment.iconUrl]}
+                        source={iconMap[matchup.homeTeam.augment.iconUrl]}
                       />
                       <Text className="pbk-h7 text-base-white">
-                        {matchup.home.homeAugment.title.toUpperCase()}
+                        {matchup.homeTeam.augment.title.toUpperCase()}
                       </Text>
                     </View>
                   </View>
@@ -268,7 +269,7 @@ const Arena = () => {
                 setOpenDialog(true);
               }}
             >
-              {matchup.away.awayAugment && selectedAugment === "away" && (
+              {matchup.awayTeam.augment && selectedAugment === "away" && (
                 <Dialog
                   closeLabel="Close"
                   dialogClassname="w-[75%]"
@@ -281,7 +282,7 @@ const Arena = () => {
                 >
                   <View className="h-80">
                     <AugmentCard
-                      cardData={matchup.away.awayAugment}
+                      cardData={matchup.awayTeam.augment}
                       onPress={() => {
                         setOpenDialog(false);
                         setSelectedAugment(null);
@@ -305,15 +306,15 @@ const Arena = () => {
                 }}
               />
               <View className="w-full rounded-2xl bg-gray-900 p-4">
-                {matchup.away.awayAugment && (
+                {matchup.awayTeam.augment && (
                   <View className="flex-col items-center gap-1">
                     <View className="flex-row items-center">
                       <Image
                         className="h-8 w-8"
-                        source={iconMap[matchup.away.awayAugment.iconUrl]}
+                        source={iconMap[matchup.awayTeam.augment.iconUrl]}
                       />
                       <Text className="pbk-h7 text-base-white">
-                        {matchup.away.awayAugment.title.toUpperCase()}
+                        {matchup.awayTeam.augment.title.toUpperCase()}
                       </Text>
                     </View>
                   </View>
