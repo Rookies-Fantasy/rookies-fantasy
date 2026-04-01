@@ -1,10 +1,10 @@
 import PlayerSlot from "./PlayerSlot";
-import { BenchSlot, LineupSlot, SlotPosition } from "@/types/team";
+import { BenchSlot, TeamLineupSlot, SlotPosition } from "@/types/team";
 
 type PlayerRosterProps = {
   bench: BenchSlot[];
   isCard?: boolean;
-  lineup: LineupSlot[];
+  lineup: TeamLineupSlot[];
   setSelectedPosition: (position: SlotPosition | null) => void;
   onOpen: () => void;
 };

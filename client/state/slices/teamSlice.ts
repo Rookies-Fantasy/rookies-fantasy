@@ -2,14 +2,14 @@ import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { Augment } from "@/types/augment";
-import { Player } from "@/types/player";
 import {
   BenchPosition,
   BenchSlot,
   defaultTeam,
-  LineupSlot,
+  PlayerTeamDisplay,
   SlotPosition,
   Team,
+  TeamLineupSlot,
   UTIL_POSITIONS,
 } from "@/types/team";
 import { validateAugment } from "@/utils/augmentUtils";
@@ -29,7 +29,7 @@ type SwapPayload = {
 const getNextBenchPosition = (bench: BenchSlot[]): BenchPosition =>
   `BEN${bench.length + 1}` as BenchPosition;
 
-const addBenchSlot = (bench: BenchSlot[], player: Player) => {
+const addBenchSlot = (bench: BenchSlot[], player: PlayerTeamDisplay) => {
   const position = getNextBenchPosition(bench);
   return [...bench, { position, player }];
 };
@@ -47,9 +47,9 @@ const removeBenchSlot = (
 
 const getSlotFromPosition = (
   bench: BenchSlot[],
-  lineup: LineupSlot[],
+  lineup: TeamLineupSlot[],
   position: SlotPosition,
-): { lineupSlot: LineupSlot | null; benchSlot: BenchSlot | null } => {
+): { lineupSlot: TeamLineupSlot | null; benchSlot: BenchSlot | null } => {
   if (isBenchPosition(position)) {
     const benchSlot = findSlotFromPosition(bench, position);
     return {
@@ -65,7 +65,7 @@ const getSlotFromPosition = (
   };
 };
 
-const swapPlayers = <T extends LineupSlot | BenchSlot>(
+const swapPlayers = <T extends TeamLineupSlot | BenchSlot>(
   arrayToSwap: T[],
   fromSlot?: T,
   toSlot?: T,
@@ -81,9 +81,9 @@ const swapPlayers = <T extends LineupSlot | BenchSlot>(
   });
 
 const swapBenchAndLineup = (
-  lineupSlot: LineupSlot,
+  lineupSlot: TeamLineupSlot,
   benchSlot: BenchSlot,
-  currentLineup: LineupSlot[],
+  currentLineup: TeamLineupSlot[],
   currentBench: BenchSlot[],
 ) => {
   const { position: lineupPosition, player: lineupPlayer } = lineupSlot;
@@ -120,7 +120,7 @@ const teamSlice = createSlice({
       hasUserChanges: false,
     }),
     clearTeam: () => defaultTeam,
-    addPlayerToLineup: (state, action: PayloadAction<Player>) => {
+    addPlayerToLineup: (state, action: PayloadAction<PlayerTeamDisplay>) => {
       const player = action.payload;
       const positions = player.positions;
 
@@ -141,7 +141,10 @@ const teamSlice = createSlice({
         }
       }
     },
-    removePlayerFromLineup: (state, action: PayloadAction<Player>) => {
+    removePlayerFromLineup: (
+      state,
+      action: PayloadAction<PlayerTeamDisplay>,
+    ) => {
       const player = action.payload;
       const slot = state.lineup.find(
         (slot) => slot.player && slot.player.id === player.id,
@@ -266,7 +269,7 @@ const teamSlice = createSlice({
     },
     resetToSavedTeam: (
       state,
-      action: PayloadAction<{ lineup: LineupSlot[]; balance: number }>,
+      action: PayloadAction<{ lineup: TeamLineupSlot[]; balance: number }>,
     ) => {
       state.lineup = action.payload.lineup;
       state.bench = [];
@@ -301,7 +304,7 @@ export const selectRosterPlayerCount = (state: RootState): number => {
 };
 
 export const isPlayerInLineup = (
-  lineup: LineupSlot[],
+  lineup: TeamLineupSlot[],
   playerId: string,
 ): boolean => lineup.some((slot) => slot.player?.id === playerId);
 

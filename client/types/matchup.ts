@@ -1,6 +1,24 @@
 import { Augment } from "./augment";
 import { Player } from "./player";
-import { GameInfo, GameStats, LineupSlot, TeamRecord } from "./team";
+import { LineupSlot, TeamRecord } from "./team";
+
+export type GameInfo = {
+  gameStatus: boolean;
+  opponent: string;
+  gameDate: string;
+  isHome: boolean;
+};
+
+export type GameStats = {
+  points: number;
+  assists: number;
+  rebounds: number;
+  steals: number;
+  blocks: number;
+  turnovers: number;
+  fantasyPoints: number;
+  minutes: number;
+};
 
 // export type MatchupTeam = {
 //   lineup: LineupSlot[];

@@ -13,13 +13,13 @@ import {
   selectAugment,
   selectPlayerQualificationMap,
 } from "@/state/slices/teamSlice";
-import { Player } from "@/types/player";
+import { PlayerTeamDisplay } from "@/types/team";
 import { cn } from "@/utils/jsUtils";
 
 type PlayerSlotProps = {
   isCard?: boolean;
   position: string;
-  playerData: Player | null;
+  playerData: PlayerTeamDisplay | null;
   openDrawer?: () => void;
   isSelected?: boolean;
   onPlayerRemove?: () => void;
@@ -33,6 +33,7 @@ const PlayerSlot = ({
   openDrawer,
   onPlayerRemove,
 }: PlayerSlotProps) => {
+  // TODO: Fetch for augment
   const augmentIconURL = useAppSelector((state) => state.team.augment?.iconUrl);
   const playerQualificationMap = useAppSelector(selectPlayerQualificationMap);
   const dispatch = useAppDispatch();

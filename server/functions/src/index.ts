@@ -5,7 +5,6 @@ import { BalldontlieAPI } from "@balldontlie/sdk";
 
 admin.initializeApp();
 
-// Common
 type GameInfo = {
   gameStatus: boolean;
   opponent: string;
@@ -38,18 +37,38 @@ type TeamRecord = {
   draws: number;
 };
 
-// </ Common
+type Position = "PG" | "SG" | "SF" | "PF" | "C";
+type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
+type TeamPosition = Position | FlexPosition;
 
-// This is for the matchup team snapshots - immutable
-type TeamSnapshot = {
-  name: string;
-  logoUrl: string;
-  record: TeamRecord;
-  augment: any;
+type PlayerTeamDisplay = {
+  firstName: string;
+  lastName: string;
+  headshotUrl: string;
+  positions: Position[];
+  salary: number;
+  id: string;
+  teamAbbreviation: string;
 };
 
-// This is for the matchup team lineups - immutable. We only need their name, stats, positions, and game info to show on the matchup screen. If users
-// want to see a detailed view of that player's current stats, they can click into the individual player and we'll fetch for the stats
+type TeamLineupSlot = {
+  position: TeamPosition;
+  player: PlayerTeamDisplay;
+};
+
+// Store the augment id for now, maybe reconsider this later. Some things to consider are what we actually need to display the team (probably just name and icon)
+// as well as augment versioning for future patches
+type Team = {
+  abbreviation?: string;
+  augmentId: string;
+  id: string;
+  logoUrl?: string;
+  name?: string;
+  balance: number;
+  lineup: TeamLineupSlot[];
+  record?: TeamRecord;
+};
+
 type PlayerSnapshot = {
   firstName: string;
   lastName: string;
@@ -61,30 +80,15 @@ type PlayerSnapshot = {
   gameInfo: GameInfo;
 };
 
-type Position = "PG" | "SG" | "SF" | "PF" | "C";
-type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
+type TeamSnapshot = {
+  name: string;
+  logoUrl: string;
+  record: TeamRecord;
+  augment: any;
+};
 
-// Matchup or completed team position
-type MatchupPosition = Position | FlexPosition;
-
-// For matchup
 type LineupSnapshot = {
-  [P in MatchupPosition]: PlayerSnapshot;
-};
-
-// For team. We only need to store the name, positions, salary, and headshot to display a player for users too look at on their team. If users
-// want to see a detailed view of that player's current stats, they can click into the individual player and we'll fetch for the stats
-type PlayerTeamDisplay = {
-  firstName: string;
-  lastName: string;
-  headshotUrl: string;
-  positions: Position[];
-  salary: number;
-  id: string;
-};
-
-type TeamLineup = {
-  [P in MatchupPosition]?: PlayerTeamDisplay;
+  [P in TeamPosition]: PlayerSnapshot;
 };
 
 type Matchup = {
@@ -101,19 +105,6 @@ type Matchup = {
   awayLineupSnapshots: Record<string, LineupSnapshot>;
   homeLineupSnapshots: Record<string, LineupSnapshot>;
   winnerId?: string;
-};
-
-// Store the augment id for now, maybe reconsider this later. Some things to consider are what we actually need to display the team (probably just name and icon)
-// as well as augment versioning for future patches
-type Team = {
-  abbreviation?: string;
-  augmentId: string;
-  id: string;
-  logoUrl?: string;
-  name?: string;
-  balance: number;
-  lineup: TeamLineup;
-  record?: TeamRecord;
 };
 
 const apiKey = process.env.BALLDONTLIE_API_KEY || "";
