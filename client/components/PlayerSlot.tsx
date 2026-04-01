@@ -33,7 +33,6 @@ const PlayerSlot = ({
   openDrawer,
   onPlayerRemove,
 }: PlayerSlotProps) => {
-  // TODO: Fetch for augment
   const augmentIconURL = useAppSelector((state) => state.team.augment?.iconUrl);
   const playerQualificationMap = useAppSelector(selectPlayerQualificationMap);
   const dispatch = useAppDispatch();

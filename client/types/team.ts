@@ -1,3 +1,5 @@
+import { Augment } from "./augment";
+
 export const TEAM_BALANCE = 150000000;
 
 export type TeamRecord = {
@@ -28,7 +30,7 @@ export type BenchSlot = {
 
 export type Team = {
   abbreviation?: string;
-  augmentId?: string;
+  augment?: Augment;
   id: string;
   logoUrl?: string;
   name?: string;
