@@ -18,7 +18,7 @@ export type Player = {
   height: string;
   id: string;
   jerseyNumber: string;
-  positions: string[];
+  positions: Position[];
   salary: number;
   lastName: string;
   teamAbbreviation: string;
