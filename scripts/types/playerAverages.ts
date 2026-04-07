@@ -10,7 +10,7 @@ type PlayerAverages = {
     fieldGoalPercentage: number;
     freeThrowsAttempted: number;
     freeThrowsMade: number;
-    freeThrowPerfectange: number;
+    freeThrowPercentange: number;
     threePointersAttempted: number;
     threePointersMade: number;
     threePointerPercentage: number;

@@ -302,7 +302,7 @@ export const updateDailyPlayerData = functions
         fieldGoalPercentage: gamelog.fg_pct,
         fieldGoalsAttempted: gamelog.fga,
         fieldGoalsMade: gamelog.fgm,
-        freeThrowPerfectange: gamelog.ft_pct,
+        freeThrowPercentange: gamelog.ft_pct,
         freeThrowsAttempted: gamelog.fta,
         freeThrowsMade: gamelog.ftm,
         gameId: gamelog.game.id,

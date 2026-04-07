@@ -312,7 +312,7 @@ const sampleGamelogs = [
     fieldGoalPercentage: 0.54,
     fieldGoalsAttempted: 22,
     fieldGoalsMade: 12,
-    freeThrowPerfectange: 0.8,
+    freeThrowPercentange: 0.8,
     freeThrowsAttempted: 5,
     freeThrowsMade: 4,
     minutes: 38,
@@ -338,7 +338,7 @@ const sampleGamelogs = [
     fieldGoalPercentage: 0.64,
     fieldGoalsAttempted: 25,
     fieldGoalsMade: 16,
-    freeThrowPerfectange: 0.7,
+    freeThrowPercentange: 0.7,
     freeThrowsAttempted: 10,
     freeThrowsMade: 7,
     minutes: 36,
@@ -364,7 +364,7 @@ const sampleGamelogs = [
     fieldGoalPercentage: 0.48,
     fieldGoalsAttempted: 23,
     fieldGoalsMade: 11,
-    freeThrowPerfectange: 0.85,
+    freeThrowPercentange: 0.85,
     freeThrowsAttempted: 7,
     freeThrowsMade: 6,
     minutes: 39,
@@ -390,7 +390,7 @@ const sampleGamelogs = [
     fieldGoalPercentage: 0.47,
     fieldGoalsAttempted: 19,
     fieldGoalsMade: 9,
-    freeThrowPerfectange: 0.88,
+    freeThrowPercentange: 0.88,
     freeThrowsAttempted: 8,
     freeThrowsMade: 7,
     minutes: 37,
@@ -416,7 +416,7 @@ const sampleGamelogs = [
     fieldGoalPercentage: 0.6,
     fieldGoalsAttempted: 15,
     fieldGoalsMade: 9,
-    freeThrowPerfectange: 0.67,
+    freeThrowPercentange: 0.67,
     freeThrowsAttempted: 6,
     freeThrowsMade: 4,
     minutes: 34,
@@ -581,7 +581,7 @@ const injectMatchup = async (user1Id, user2Id, team1Id, team2Id) => {
   // Calculate "yesterday" in Pacific Time (same as cloud function)
   const now = new Date();
   const pacificNow = new Date(
-    now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+    now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }),
   );
   pacificNow.setDate(pacificNow.getDate() - 1);
 
@@ -686,7 +686,7 @@ const injectAllData = async () => {
     console.log(`\n💡 Next steps:`);
     console.log(`   1. Ensure emulator is running: firebase emulators:start`);
     console.log(
-      `   2. Run the cloud function: npm run shell (in server/functions)`
+      `   2. Run the cloud function: npm run shell (in server/functions)`,
     );
     console.log(`   3. Execute: updateDailyPlayerData()`);
     console.log(`   4. Check results in Emulator UI: http://localhost:4000\n`);
