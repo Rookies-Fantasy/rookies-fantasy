@@ -1,4 +1,5 @@
 // https://docs.expo.dev/guides/using-eslint/
+import tsPlugin from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import { defineConfig } from "eslint/config";
 import expoConfig from "eslint-config-expo/flat.js";
@@ -14,6 +15,9 @@ export default defineConfig([
     ignores: ["dist/*"],
   },
   {
+    plugins: {
+      "@typescript-eslint": tsPlugin,
+    },
     languageOptions: {
       parser: tsParser,
     },
