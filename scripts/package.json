@@ -8,14 +8,28 @@
     "teams": "node --experimental-json-modules fillNBATeams.js",
     "players": "node --experimental-json-modules fillNBAPlayers.js",
     "playerAverages": "node --experimental-json-modules fillNBAPlayerAverages.js",
-    "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js"
+    "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js",
+    "seed": "tsx emulator/index.ts",
+    "seed:list": "tsx emulator/index.ts --list",
+    "seed:clear": "tsx emulator/index.ts clear",
+    "seed:user": "tsx emulator/index.ts user",
+    "seed:team": "tsx emulator/index.ts team",
+    "seed:matchup": "tsx emulator/index.ts matchup",
+    "seed:nba-players": "tsx emulator/index.ts nba-players",
+    "seed:nba-teams": "tsx emulator/index.ts nba-teams"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.2",
+    "@types/node": "^22.13.10"
+  },
   "dependencies": {
     "@balldontlie/sdk": "^1.2.2",
+    "@faker-js/faker": "^9.8.0",
     "cross-env": "^10.1.0",
     "dotenv": "^16.5.0",
     "firebase-admin": "^13.4.0",

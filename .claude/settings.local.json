@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /h/Github/NasihNazeem/rookies-fantasy -name *test* -o -name *spec* -type f)"
+    ]
+  }
+}
