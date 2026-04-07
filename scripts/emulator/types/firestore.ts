@@ -1,9 +1,3 @@
-// Firestore document types for the emulator seeder.
-// These mirror the production Firestore schema — do NOT import from client/types/.
-// Field names match what the server actually writes (e.g. headshotURL, jerseyNumber: string).
-
-// ─── Shared primitives ────────────────────────────────────────────────────────
-
 export type Position = "PG" | "SG" | "SF" | "PF" | "C";
 export type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
 export type BenchPosition = "BEN1" | "BEN2" | "BEN3";
@@ -43,8 +37,6 @@ export type GameStats = {
   fantasyPoints: number;
   minutes: number;
 };
-
-// ─── Augments ────────────────────────────────────────────────────────────────
 
 export type Stat =
   | "points"
@@ -99,8 +91,6 @@ export type AugmentDoc = {
   updatedAt: Date;
 };
 
-// ─── NBA Teams ────────────────────────────────────────────────────────────────
-
 export type NbaTeamDoc = {
   id: string;
   abbreviation: string;
@@ -112,8 +102,6 @@ export type NbaTeamDoc = {
   state: string;
   logoUrl: string;
 };
-
-// ─── NBA Players ─────────────────────────────────────────────────────────────
 
 export type AverageStats = {
   assists: number;
@@ -136,8 +124,6 @@ export type AverageStats = {
   turnovers: number;
 };
 
-// GamelogEntry: stored inside NbaPlayerDoc.gamelog[].
-// Note: freeThrowPerfectange is a typo preserved from the production schema.
 export type GamelogEntry = {
   date: string;
   gameId: number;
@@ -150,7 +136,7 @@ export type GamelogEntry = {
   fieldGoalPercentage: number;
   fieldGoalsAttempted: number;
   fieldGoalsMade: number;
-  freeThrowPerfectange: number;
+  freeThrowPercentage: number;
   freeThrowsAttempted: number;
   freeThrowsMade: number;
   minutes: number;
@@ -184,10 +170,6 @@ export type NbaPlayerDoc = {
   gamelog: GamelogEntry[];
 };
 
-// ─── Teams ────────────────────────────────────────────────────────────────────
-
-// Embedded player shape within a lineup slot (differs from NbaPlayerDoc).
-// Uses camelCase `headshotUrl` to match client/types/player.ts Player type.
 export type LineupPlayer = {
   id: string;
   firstName: string;
@@ -233,7 +215,12 @@ export type TeamDoc = {
   updatedAt: Date;
 };
 
-// ─── Users ────────────────────────────────────────────────────────────────────
+export type TeamSnapshot = {
+  name: string;
+  logoUrl: string;
+  record: TeamRecord;
+  augment: AugmentDoc | null;
+};
 
 export type QueueStatus = "idle" | "queued" | "matched";
 
@@ -252,57 +239,25 @@ export type UserDoc = {
   updatedAt: Date;
 };
 
-// ─── Matchups ─────────────────────────────────────────────────────────────────
-
-// Both home and away use prefixed field names since they're stored as one flat
-// object each (matches what weeklyMatchupReset reads).
-// `augment` is aliased alongside homeAugment/awayAugment since updateDailyPlayerData
-// reads matchupData.home?.augment and matchupData.away?.augment.
-export type MatchupHome = {
-  homeTeamId: string;
-  homeUserId: string;
-  homeTeamName: string;
-  homeTeamLogo: string;
-  homeAugment: AugmentDoc | null;
-  augment: AugmentDoc | null;
-  homeWeeklyAcquisitionsUsed: number;
-  record: TeamRecord;
-};
-
-export type MatchupAway = {
-  awayTeamId: string;
-  awayUserId: string;
-  awayTeamName: string;
-  awayTeamLogo: string;
-  awayAugment: AugmentDoc | null;
-  augment: AugmentDoc | null;
-  awayWeeklyAcquisitionsUsed: number;
-  record: TeamRecord;
-};
-
 export type MatchupDoc = {
   id: string;
   createdAt: Date;
-  // weekStartDate: written by processQueue
-  // weekStart: queried by updateDailyPlayerData — both are set to the same value
+  // TODO: weekStart has been removed in favour of weekStartDate.
+  // Audit and update all functions that read weekStart to use weekStartDate instead.
   weekStartDate: string;
-  weekStart: string;
   homeTeamId: string;
   awayTeamId: string;
   homeUserId: string;
   awayUserId: string;
   status: "active" | "completed";
-  home: MatchupHome;
-  away: MatchupAway;
-  lineupSnapshots: Record<string, LineupSnapshot>;
-  winner?: string;
-  completedAt?: Date;
-};
+  winnerId?: string;
 
-// lineupSnapshots keyed by date string "YYYY-MM-DD"
-export type LineupSnapshot = {
-  homeSnapshot: LineupSnapshotEntry[];
-  awaySnapshot: LineupSnapshotEntry[];
+  homeTeamSnapshot: TeamSnapshot;
+  awayTeamSnapshot: TeamSnapshot;
+  homeLineupSnapshot: Record<string, LineupSnapshotEntry>;
+  awayLineupSnapshot: Record<string, LineupSnapshotEntry>;
+
+  completedAt?: Date;
 };
 
 export type LineupSnapshotEntry = {
