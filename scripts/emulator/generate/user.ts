@@ -26,6 +26,6 @@ export async function createAuthUser(
   email: string,
   password: string
 ): Promise<string> {
-  const userRecord = await auth.createUser({ email, password, emailVerified: false });
+  const userRecord = await auth.createUser({ email, password, emailVerified: true });
   return userRecord.uid;
 }

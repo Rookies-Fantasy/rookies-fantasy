@@ -1,5 +1,6 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
 
@@ -215,8 +216,8 @@ export const createUserInDatabase = functions.auth
         email: email,
         emailVerified: emailVerified,
         queueStatus: "idle",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
     } catch (error) {
       console.error("Error creating user in Firestore:", error);
@@ -367,7 +368,7 @@ export const updateDailyPlayerData = functions
       const playerDocRef = playerQuery.docs[0].ref;
 
       const updateObj: any = {
-        gamelog: admin.firestore.FieldValue.arrayUnion(gamelog),
+        gamelog: FieldValue.arrayUnion(gamelog),
       };
 
       const latestAvg = seasonAvgMap[String(gamelog.playerId)];
@@ -874,12 +875,12 @@ export const processQueue = functions
 
               transaction.update(user1.ref, {
                 queueStatus: "matching",
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
               });
 
               transaction.update(user2.ref, {
                 queueStatus: "matching",
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
               });
             }
           }
@@ -921,11 +922,11 @@ export const processQueue = functions
           await Promise.all([
             user1.ref.update({
               queueStatus: "matched",
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             }),
             user2.ref.update({
               queueStatus: "matched",
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             }),
             teamRef1.update({
               matchupId,
@@ -1176,7 +1177,7 @@ export const weeklyMatchupReset = functions.pubsub
           await matchupDoc.ref.update({
             status: "completed",
             winner: winnerId,
-            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+            completedAt: FieldValue.serverTimestamp(),
           });
 
           console.log(`Matchup ${matchupId} completed. Winner: ${winnerId}`);
@@ -1250,9 +1251,9 @@ export const weeklyMatchupReset = functions.pubsub
       const userUpdates = matchedUsersSnapshot.docs.map(async (userDoc) => {
         await userDoc.ref.update({
           queueStatus: "idle",
-          queuedAt: admin.firestore.FieldValue.delete(),
-          currentMatchupId: admin.firestore.FieldValue.delete(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          queuedAt: FieldValue.delete(),
+          currentMatchupId: FieldValue.delete(),
+          updatedAt: FieldValue.serverTimestamp(),
         });
         console.log(`Reset user ${userDoc.id} to idle`);
       });

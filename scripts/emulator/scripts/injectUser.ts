@@ -5,7 +5,7 @@ import { createAuthUser, createUserDoc } from "../generate/user.js";
 const DEFAULT_PASSWORD = "Test1234!";
 
 export async function run(db: Firestore, auth: Auth): Promise<void> {
-  const email = process.env.USER_EMAIL ?? `user-${Date.now()}@rookies.test`;
+  const email = process.env.USER_EMAIL ?? `user-${Date.now().toString(36)}@rookies.test`;
   const password = process.env.USER_PASSWORD ?? DEFAULT_PASSWORD;
 
   console.log(`Creating Auth user: ${email}`);
@@ -14,7 +14,7 @@ export async function run(db: Firestore, auth: Auth): Promise<void> {
   // Verify the Auth user was actually created before writing to Firestore.
   await auth.getUser(uid);
 
-  const userDoc = createUserDoc(email, { id: uid, emailVerified: false });
+  const userDoc = createUserDoc(email, { id: uid, emailVerified: true });
   await db.collection("users").doc(uid).set(userDoc);
 
   console.log(`Created user`);
