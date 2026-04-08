@@ -25,7 +25,7 @@ const normalizeAverages = (raw) => ({
     fieldGoalPercentage: raw.stats.fg_pct,
     freeThrowsAttempted: raw.stats.fta,
     freeThrowsMade: raw.stats.ftm,
-    freeThrowPerfectange: raw.stats.ft_pct,
+    freeThrowPercentange: raw.stats.ft_pct,
     threePointersAttempted: raw.stats.fg3a,
     threePointersMade: raw.stats.fg3m,
     threePointerPercentage: raw.stats.fg3_pct,
