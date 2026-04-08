@@ -4,7 +4,7 @@ import { createAuthUser, createUserDoc } from "../generate/user.js";
 
 const DEFAULT_PASSWORD = "Test1234!";
 
-export async function run(db: Firestore, auth: Auth): Promise<void> {
+export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   const email = process.env.USER_EMAIL ?? `user-${Date.now().toString(36)}@rookies.test`;
   const password = process.env.USER_PASSWORD ?? DEFAULT_PASSWORD;
 

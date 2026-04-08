@@ -7,6 +7,7 @@ import type {
 import { SLOT_ORDER } from "../types/firestore.js";
 import { NBA_TEAMS } from "../data/nbaTeams.js";
 import { NBA_PLAYERS } from "../data/nbaPlayers.js";
+import { ALL_AUGMENTS } from "../data/augments.js";
 
 export const TEAM_BALANCE = 150_000_000;
 
@@ -29,7 +30,7 @@ const AUGMENT_IDS = ["block-party", "frontcourt-focus"];
  * Converts a top-level NbaPlayerDoc into the embedded LineupPlayer shape
  * stored inside lineup slots (different field names from the collection doc).
  */
-export function playerToLineupPlayer(player: NbaPlayerDoc): LineupPlayer {
+export const playerToLineupPlayer = (player: NbaPlayerDoc): LineupPlayer => {
   const teamAbbreviation = NBA_TEAMS.find((t) => t.id === player.teamId)?.abbreviation ?? player.teamId;
   return {
     id: player.playerId,
@@ -54,17 +55,18 @@ export function playerToLineupPlayer(player: NbaPlayerDoc): LineupPlayer {
  * PG, SG, SF, PF, C, UTIL1, UTIL2, UTIL3.
  * Extra players beyond 8 are ignored; missing slots are filled with null.
  */
-export function createLineupSlots(players: (NbaPlayerDoc | null)[]): LineupSlot[] {
+export const createLineupSlots = (players: (NbaPlayerDoc | null)[]): LineupSlot[] => {
   return SLOT_ORDER.map((position, index) => ({
     position,
     player: players[index] ? playerToLineupPlayer(players[index]!) : null,
   }));
 }
 
-export function createTeamDoc(overrides?: Partial<TeamDoc>): TeamDoc {
+export const createTeamDoc = (overrides?: Partial<TeamDoc>): TeamDoc => {
   const now = new Date();
   const fantasyTeam = FANTASY_TEAM_NAMES[Math.floor(Math.random() * FANTASY_TEAM_NAMES.length)];
   const augmentId = AUGMENT_IDS[Math.floor(Math.random() * AUGMENT_IDS.length)];
+  const augment = ALL_AUGMENTS.find((a) => a.id === augmentId) ?? ALL_AUGMENTS[0];
 
   // Populate lineup slots by primary position
   const pg = NBA_PLAYERS.find((p) => p.positions[0] === "PG") ?? null;
@@ -86,6 +88,7 @@ export function createTeamDoc(overrides?: Partial<TeamDoc>): TeamDoc {
     lineup: createLineupSlots([pg, sg, sf, pf, c, null, null, null]),
     record: { wins, losses, draws },
     augmentId,
+    augment,
     weeklyAcquisitionsUsed: 0,
     createdAt: now,
     updatedAt: now,

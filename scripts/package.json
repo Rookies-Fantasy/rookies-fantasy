@@ -17,7 +17,8 @@
     "seed:matchup": "tsx emulator/index.ts matchup",
     "seed:scenario": "tsx emulator/index.ts scenario",
     "seed:nba-players": "tsx emulator/index.ts nba-players",
-    "seed:nba-teams": "tsx emulator/index.ts nba-teams"
+    "seed:nba-teams": "tsx emulator/index.ts nba-teams",
+    "dev": "tsx emulator/dev.ts"
   },
   "keywords": [],
   "author": "",

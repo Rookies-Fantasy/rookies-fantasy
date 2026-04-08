@@ -14,7 +14,7 @@ export type EmulatorClient = {
   auth: Auth;
 };
 
-export function initEmulatorClient(): EmulatorClient {
+export const initEmulatorClient = (): EmulatorClient => {
   process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
   process.env.FIREBASE_AUTH_EMULATOR_HOST = "localhost:9099";
 

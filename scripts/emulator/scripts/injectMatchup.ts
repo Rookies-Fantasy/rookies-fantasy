@@ -3,7 +3,7 @@ import type { Auth } from "firebase-admin/auth";
 import { createMatchupDoc } from "../generate/matchup.js";
 import type { TeamDoc } from "../types/firestore.js";
 
-export async function run(db: Firestore, _auth: Auth): Promise<void> {
+export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   const homeUserId = process.env.HOME_USER_ID;
   const homeTeamId = process.env.HOME_TEAM_ID;
   const awayUserId = process.env.AWAY_USER_ID;

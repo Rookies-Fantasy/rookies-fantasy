@@ -3,13 +3,18 @@ import type { Auth } from "firebase-admin/auth";
 import { createAuthUser, createUserDoc } from "../generate/user.js";
 import { createTeamDoc } from "../generate/team.js";
 import { createMatchupDoc } from "../generate/matchup.js";
+import { run as injectNbaTeams } from "./injectNbaTeams.js";
+import { run as injectNbaPlayers } from "./injectNbaPlayers.js";
 
-export async function run(db: Firestore, auth: Auth): Promise<void> {
+export const run = async (db: Firestore, auth: Auth): Promise<void> => {
+  await injectNbaTeams(db, auth);
+  await injectNbaPlayers(db, auth);
+
   const password = process.env.USER_PASSWORD ?? "Test1234!";
 
   // Create two users
-  const emailHome = `user-${Date.now().toString(36)}@rookies.test`;
-  const emailAway = `user-${(Date.now() + 1).toString(36)}@rookies.test`;
+  const emailHome = `home@r.test`;
+  const emailAway = `away@r.test`;
 
   const homeUid = await createAuthUser(auth, emailHome, password);
   const awayUid = await createAuthUser(auth, emailAway, password);

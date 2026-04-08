@@ -1,6 +1,6 @@
 import type { MatchupDoc, TeamDoc } from "../types/firestore.js";
 
-function getThisMondayString(): string {
+const getThisMondayString = (): string => {
   const today = new Date();
   const day = today.getDay();
   const diff = day === 0 ? -6 : 1 - day;
@@ -17,7 +17,7 @@ function getThisMondayString(): string {
  * homeUserId/homeTeamId/awayUserId/awayTeamId are required positional args
  * since a matchup cannot exist without them.
  */
-export function createMatchupDoc(
+export const createMatchupDoc = (
   homeUserId: string,
   homeTeamId: string,
   homeTeam: TeamDoc,
@@ -25,7 +25,7 @@ export function createMatchupDoc(
   awayTeamId: string,
   awayTeam: TeamDoc,
   overrides?: Partial<MatchupDoc>
-): MatchupDoc {
+): MatchupDoc => {
   const weekStart = getThisMondayString();
   const now = new Date();
 

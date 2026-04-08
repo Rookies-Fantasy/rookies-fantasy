@@ -67,7 +67,7 @@ const SCRIPTS: ScriptEntry[] = [
   },
 ];
 
-function printList(): void {
+const printList = (): void => {
   console.log("\nAvailable seed scripts:\n");
   const nameWidth = Math.max(...SCRIPTS.map((s) => s.name.length)) + 2;
   for (const script of SCRIPTS) {
@@ -79,7 +79,7 @@ function printList(): void {
   );
 }
 
-async function main(): Promise<void> {
+const main = async (): Promise<void> => {
   const args = process.argv.slice(2);
 
   if (args.includes("--list") || args.includes("list")) {

@@ -2,7 +2,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import type { Auth } from "firebase-admin/auth";
 import { NBA_TEAMS } from "../data/nbaTeams.js";
 
-export async function run(db: Firestore, _auth: Auth): Promise<void> {
+export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   const batch = db.batch();
 
   for (const team of NBA_TEAMS) {

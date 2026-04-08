@@ -2,7 +2,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import type { Auth } from "firebase-admin/auth";
 import { createTeamDoc } from "../generate/team.js";
 
-export async function run(db: Firestore, _auth: Auth): Promise<void> {
+export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   const userId = process.env.USER_ID;
   if (!userId) {
     throw new Error("USER_ID env var is required. Run seed:user first to get a UID.");
