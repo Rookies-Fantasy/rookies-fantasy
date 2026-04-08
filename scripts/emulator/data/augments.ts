@@ -26,8 +26,8 @@ export const BLOCK_PARTY: AugmentDoc = {
       statBoosts: [{ stat: "blocks", multiplier: 1.25 }],
     },
   ],
-  createdAt: new Date("2024-01-01"),
-  updatedAt: new Date("2024-01-01"),
+  createdAt: "2024-01-01T00:00:00.000Z",
+  updatedAt: "2024-01-01T00:00:00.000Z",
 };
 
 export const FRONTCOURT_FOCUS: AugmentDoc = {
@@ -64,8 +64,8 @@ export const FRONTCOURT_FOCUS: AugmentDoc = {
       statBoosts: [{ stat: "rebounds", multiplier: 1.2 }],
     },
   ],
-  createdAt: new Date("2024-01-01"),
-  updatedAt: new Date("2024-01-01"),
+  createdAt: "2024-01-01T00:00:00.000Z",
+  updatedAt: "2024-01-01T00:00:00.000Z",
 };
 
 export const ALL_AUGMENTS: AugmentDoc[] = [BLOCK_PARTY, FRONTCOURT_FOCUS];

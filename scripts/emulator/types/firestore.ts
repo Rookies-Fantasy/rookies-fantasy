@@ -87,8 +87,8 @@ export type AugmentDoc = {
   playerCount: number;
   prerequisites: Prerequisite[];
   effects: Effect[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type NbaTeamDoc = {
