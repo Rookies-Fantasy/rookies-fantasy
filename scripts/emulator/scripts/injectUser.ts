@@ -14,7 +14,7 @@ export async function run(db: Firestore, auth: Auth): Promise<void> {
   // Verify the Auth user was actually created before writing to Firestore.
   await auth.getUser(uid);
 
-  const userDoc = createUserDoc({ id: uid, email, emailVerified: false });
+  const userDoc = createUserDoc(email, { id: uid, emailVerified: false });
   await db.collection("users").doc(uid).set(userDoc);
 
   console.log(`Created user`);

@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import type {
   TeamDoc,
   NbaPlayerDoc,
@@ -6,6 +5,7 @@ import type {
   LineupPlayer,
 } from "../types/firestore.js";
 import { SLOT_ORDER } from "../types/firestore.js";
+import { NBA_TEAMS } from "../data/nbaTeams.js";
 
 export const TEAM_BALANCE = 150_000_000;
 
@@ -46,11 +46,11 @@ export function createLineupSlots(players: (NbaPlayerDoc | null)[]): LineupSlot[
 
 export function createTeamDoc(overrides?: Partial<TeamDoc>): TeamDoc {
   const now = new Date();
-  const city = faker.location.city();
+  const nbaTeam = NBA_TEAMS[Math.floor(Math.random() * NBA_TEAMS.length)];
   return {
-    id: faker.string.uuid(),
-    name: `${city} ${faker.word.adjective()}s`,
-    abbreviation: city.slice(0, 3).toUpperCase(),
+    id: crypto.randomUUID(),
+    name: `${nbaTeam.city} ${nbaTeam.name}`,
+    abbreviation: nbaTeam.abbreviation,
     logoUrl: "https://via.placeholder.com/150",
     balance: TEAM_BALANCE,
     lineup: createLineupSlots([]),

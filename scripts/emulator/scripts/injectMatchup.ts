@@ -47,17 +47,19 @@ export async function run(db: Firestore, _auth: Auth): Promise<void> {
   const homeTeam = homeTeamSnap.data() as TeamDoc;
   const awayTeam = awayTeamSnap.data() as TeamDoc;
 
+  const matchupRef = db.collection("matchups").doc();
   const matchupDoc = createMatchupDoc(
     homeUserId,
     homeTeamId,
     homeTeam,
     awayUserId,
     awayTeamId,
-    awayTeam
+    awayTeam,
+    { id: matchupRef.id }
   );
 
   // Write matchup document.
-  await db.collection("matchups").doc(matchupDoc.id).set(matchupDoc);
+  await matchupRef.set(matchupDoc);
 
   // Update both users with matched status and currentMatchupId.
   await Promise.all([
@@ -91,7 +93,7 @@ export async function run(db: Firestore, _auth: Auth): Promise<void> {
 
   console.log(`Created matchup`);
   console.log(`  Matchup ID:    ${matchupDoc.id}`);
-  console.log(`  Week Start:    ${matchupDoc.weekStart}`);
+  console.log(`  Week Start:    ${matchupDoc.weekStartDate}`);
   console.log(`  Home user/team: ${homeUserId} / ${homeTeamId}`);
   console.log(`  Away user/team: ${awayUserId} / ${awayTeamId}`);
 }

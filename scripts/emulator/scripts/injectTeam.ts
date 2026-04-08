@@ -16,8 +16,9 @@ export async function run(db: Firestore, _auth: Auth): Promise<void> {
     );
   }
 
-  const teamDoc = createTeamDoc();
-  await db.collection("users").doc(userId).collection("teams").doc(teamDoc.id).set(teamDoc);
+  const teamRef = db.collection("users").doc(userId).collection("teams").doc();
+  const teamDoc = createTeamDoc({ id: teamRef.id });
+  await teamRef.set(teamDoc);
 
   console.log(`Created team`);
   console.log(`  Team ID: ${teamDoc.id}`);

@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import type { MatchupDoc, TeamDoc } from "../types/firestore.js";
 
 function getThisMondayString(): string {
@@ -17,12 +16,6 @@ function getThisMondayString(): string {
  * Creates a matchup document.
  * homeUserId/homeTeamId/awayUserId/awayTeamId are required positional args
  * since a matchup cannot exist without them.
- * Both weekStartDate and weekStart are set to the same value for compatibility:
- *   - processQueue writes weekStartDate
- *   - updateDailyPlayerData queries on weekStart
- * Both home.augment and home.homeAugment are set since:
- *   - updateDailyPlayerData reads home?.augment
- *   - client code reads home.homeAugment
  */
 export function createMatchupDoc(
   homeUserId: string,
@@ -35,40 +28,30 @@ export function createMatchupDoc(
 ): MatchupDoc {
   const weekStart = getThisMondayString();
   const now = new Date();
-  const homeAugment = homeTeam.augment ?? null;
-  const awayAugment = awayTeam.augment ?? null;
 
   return {
-    id: faker.string.uuid(),
+    id: crypto.randomUUID(),
     createdAt: now,
     weekStartDate: weekStart,
-    weekStart,
     homeTeamId,
     awayTeamId,
     homeUserId,
     awayUserId,
     status: "active",
-    home: {
-      homeTeamId,
-      homeUserId,
-      homeTeamName: homeTeam.name,
-      homeTeamLogo: homeTeam.logoUrl,
-      homeAugment,
-      augment: homeAugment,
-      homeWeeklyAcquisitionsUsed: 0,
+    homeTeamSnapshot: {
+      name: homeTeam.name,
+      logoUrl: homeTeam.logoUrl,
       record: homeTeam.record,
+      augment: homeTeam.augment ?? null,
     },
-    away: {
-      awayTeamId,
-      awayUserId,
-      awayTeamName: awayTeam.name,
-      awayTeamLogo: awayTeam.logoUrl,
-      awayAugment,
-      augment: awayAugment,
-      awayWeeklyAcquisitionsUsed: 0,
+    awayTeamSnapshot: {
+      name: awayTeam.name,
+      logoUrl: awayTeam.logoUrl,
       record: awayTeam.record,
+      augment: awayTeam.augment ?? null,
     },
-    lineupSnapshots: {},
+    homeLineupSnapshot: {},
+    awayLineupSnapshot: {},
     ...overrides,
   };
 }

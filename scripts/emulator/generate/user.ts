@@ -1,15 +1,15 @@
-import { faker } from "@faker-js/faker";
 import type { Auth } from "firebase-admin/auth";
 import type { UserDoc } from "../types/firestore.js";
 
-export function createUserDoc(overrides?: Partial<UserDoc>): UserDoc {
+export function createUserDoc(email: string, overrides?: Partial<UserDoc>): UserDoc {
   const now = new Date();
+  const username = email.split("@")[0];
   return {
-    id: faker.string.uuid(),
-    email: faker.internet.email(),
+    id: crypto.randomUUID(),
+    email,
     emailVerified: false,
     queueStatus: "idle",
-    username: faker.internet.username(),
+    username,
     createdAt: now,
     updatedAt: now,
     ...overrides,
