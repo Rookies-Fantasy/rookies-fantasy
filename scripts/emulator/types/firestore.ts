@@ -206,8 +206,9 @@ export type TeamDoc = {
   logoUrl: string;
   balance: number;
   lineup: LineupSlot[];
-  bench: BenchSlot[];
+  bench?: BenchSlot[];
   augment?: AugmentDoc;
+  augmentId?: string;
   record: TeamRecord;
   weeklyAcquisitionsUsed: number;
   matchupId?: string;

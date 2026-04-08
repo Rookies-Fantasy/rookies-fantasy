@@ -3,9 +3,79 @@
 // To add more players, look up their ID at https://api.balldontlie.io/v1/players
 // and add an entry matching the NbaPlayerDoc shape.
 
-import type { NbaPlayerDoc } from "../types/firestore.js";
+import type { NbaPlayerDoc, AverageStats, GamelogEntry } from "../types/firestore.js";
 
-export const NBA_PLAYERS: NbaPlayerDoc[] = [
+// Opponent team IDs to rotate through for mock game entries
+const MOCK_OPPONENT_IDS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+
+function generateMockGamelog(averageStats: AverageStats, teamId: string): GamelogEntry[] {
+  const teamIdNum = parseInt(teamId, 10) || 1;
+  const baseDate = new Date("2026-04-01");
+  const entries: GamelogEntry[] = [];
+
+  const randInt = (base: number, variance: number) =>
+    Math.max(0, Math.round(base + (Math.random() * 2 - 1) * variance));
+  const randPct = (base: number, variance = 0.1) =>
+    +Math.min(1, Math.max(0, base + (Math.random() * 2 - 1) * variance)).toFixed(3);
+
+  for (let i = 0; i < 10; i++) {
+    const date = new Date(baseDate);
+    date.setDate(date.getDate() - i * 3);
+
+    const opponentId = MOCK_OPPONENT_IDS[i % MOCK_OPPONENT_IDS.length];
+    const isHome = i % 2 === 0;
+
+    const points = randInt(averageStats.points, 8);
+    const rebounds = randInt(averageStats.rebounds, 4);
+    const assists = randInt(averageStats.assists, 3);
+    const steals = randInt(averageStats.steals, 1);
+    const blocks = randInt(averageStats.blocks, 1);
+    const turnovers = randInt(averageStats.turnovers, 2);
+    const threePointersMade = randInt(averageStats.threePointersMade, 2);
+    const minutes = +Math.max(0, averageStats.minutes + (Math.random() * 2 - 1) * 5).toFixed(1);
+    const fantasyPoints = +(
+      points +
+      rebounds * 1.2 +
+      assists * 1.5 +
+      steals * 3 +
+      blocks * 3 -
+      turnovers +
+      threePointersMade * 0.5
+    ).toFixed(2);
+
+    entries.push({
+      date: date.toISOString().split("T")[0],
+      gameId: 200000 + i,
+      homeTeamId: isHome ? teamIdNum : opponentId,
+      visitorTeamId: isHome ? opponentId : teamIdNum,
+      teamId: teamIdNum,
+      assists,
+      blocks,
+      fantasyPoints,
+      fieldGoalPercentage: randPct(averageStats.fieldGoalPercentage),
+      fieldGoalsAttempted: randInt(averageStats.fieldGoalsAttempted, 5),
+      fieldGoalsMade: randInt(averageStats.fieldGoalsMade, 4),
+      freeThrowPercentage: randPct(averageStats.freeThrowPercentage),
+      freeThrowsAttempted: randInt(averageStats.freeThrowsAttempted, 3),
+      freeThrowsMade: randInt(averageStats.freeThrowsMade, 3),
+      minutes,
+      personalFouls: randInt(averageStats.personalFouls, 2),
+      points,
+      rebounds,
+      steals,
+      threePointerPercentage: randPct(averageStats.threePointerPercentage),
+      threePointersAttempted: randInt(averageStats.threePointersAttempted, 3),
+      threePointersMade,
+      turnovers,
+    });
+  }
+
+  return entries;
+}
+
+type NbaPlayerBase = Omit<NbaPlayerDoc, "gamelog">;
+
+const NBA_PLAYERS_BASE: NbaPlayerBase[] = [
   {
     playerId: "237",
     firstName: "LeBron",
@@ -41,7 +111,6 @@ export const NBA_PLAYERS: NbaPlayerDoc[] = [
       threePointersMade: 2.2,
       turnovers: 3.5,
     },
-    gamelog: [],
   },
   {
     playerId: "203507",
@@ -78,7 +147,6 @@ export const NBA_PLAYERS: NbaPlayerDoc[] = [
       threePointersMade: 1.0,
       turnovers: 3.8,
     },
-    gamelog: [],
   },
   {
     playerId: "1629029",
@@ -115,7 +183,6 @@ export const NBA_PLAYERS: NbaPlayerDoc[] = [
       threePointersMade: 3.5,
       turnovers: 4.0,
     },
-    gamelog: [],
   },
   {
     playerId: "1630162",
@@ -152,7 +219,6 @@ export const NBA_PLAYERS: NbaPlayerDoc[] = [
       threePointersMade: 3.7,
       turnovers: 3.2,
     },
-    gamelog: [],
   },
   {
     playerId: "1628389",
@@ -189,9 +255,13 @@ export const NBA_PLAYERS: NbaPlayerDoc[] = [
       threePointersMade: 0.1,
       turnovers: 2.5,
     },
-    gamelog: [],
   },
 ];
+
+export const NBA_PLAYERS: NbaPlayerDoc[] = NBA_PLAYERS_BASE.map((p) => ({
+  ...p,
+  gamelog: generateMockGamelog(p.averageStats, p.teamId),
+}));
 
 export function getPlayersByPosition(position: NbaPlayerDoc["positions"][number]): NbaPlayerDoc[] {
   return NBA_PLAYERS.filter((p) => p.positions.includes(position));

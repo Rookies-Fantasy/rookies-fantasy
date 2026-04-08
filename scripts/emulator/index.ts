@@ -8,6 +8,7 @@ type ScriptName =
   | "user"
   | "team"
   | "matchup"
+  | "scenario"
   | "nba-players"
   | "nba-teams";
 
@@ -47,6 +48,12 @@ const SCRIPTS: ScriptEntry[] = [
     description:
       "Inject a mock matchup between two existing users/teams. Env: HOME_USER_ID, HOME_TEAM_ID, AWAY_USER_ID, AWAY_TEAM_ID (all required)",
     load: () => import("./scripts/injectMatchup.js"),
+  },
+  {
+    name: "scenario",
+    description:
+      "Create 2 users, 2 teams, and a matchup in one step. Env: USER_PASSWORD (optional)",
+    load: () => import("./scripts/injectScenario.js"),
   },
   {
     name: "nba-players",

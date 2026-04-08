@@ -16,6 +16,11 @@ export async function run(db: Firestore, _auth: Auth): Promise<void> {
     );
   }
 
+  const existingTeams = await db.collection("users").doc(userId).collection("teams").limit(1).get();
+  if (!existingTeams.empty) {
+    console.warn(`⚠️  User "${userId}" already has a team. A new team will be created anyway.`);
+  }
+
   const teamRef = db.collection("users").doc(userId).collection("teams").doc();
   const teamDoc = createTeamDoc({ id: teamRef.id });
   await teamRef.set(teamDoc);
