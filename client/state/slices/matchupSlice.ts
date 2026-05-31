@@ -1,7 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { Matchup } from "@/types/matchup";
-import { GameInfo, GameStats } from "@/types/team";
+import { GameInfo, GameStats, Matchup } from "@/types/matchup";
 import { applyAugmentEffects, validateAugment } from "@/utils/augmentUtils";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNil, isNotNil } from "@/utils/jsUtils";

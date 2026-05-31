@@ -1,6 +1,5 @@
-import { Augment } from "./augment";
 import { Player } from "./player";
-import { LineupSlot, TeamRecord } from "./team";
+import { FlexPosition, Position, TeamRecord } from "./team";
 
 export type GameInfo = {
   gameStatus: boolean;
@@ -31,59 +30,44 @@ export type GameStats = {
 //   homeTeam: MatchupTeam;
 // };
 
-type TeamInfo = {
+type PlayerSnapshot = {
+  firstName: string;
+  lastName: string;
+  headshotUrl: string;
+  positions: Position[];
+  salary: number;
   id: string;
+  gameStats: GameStats;
+  gameInfo: GameInfo;
+};
+
+type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
-  augment: Augment;
+  augment: any;
+  score?: number;
 };
 
-type MatchupPlayer = {
-  firstName: string;
-  lastName: string;
-  gameStats: GameStats;
-  gameInfo: GameInfo;
-  playerId: string;
-};
+type TeamPosition = Position | FlexPosition;
 
-type Position = "PG" | "SG" | "SF" | "PF" | "C" | "UTIL1" | "UTIL2" | "UTIL3";
-
-type LineupSnapshot = {
-  [P in Position]: MatchupPlayer;
-};
-
-type TeamLineup = {
-  [P in Position]?: string;
+type LineupSnapshotItem = {
+  position: TeamPosition;
+  playerSnapshot: PlayerSnapshot;
 };
 
 export type Matchup = {
+  createdAt: Date;
   id: string;
-  weekStartDate: string;
-  homeTeam: TeamInfo;
-  awayTeam: TeamInfo;
-  lineupSnapshots: Record<string, LineupSnapshot>;
+  weekStart: string;
+  homeTeamSnapshot: TeamSnapshot;
+  awayTeamSnapshot: TeamSnapshot;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeUserId: string;
+  awayUserId: string;
+  status: "active" | "complete";
+  awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
+  homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
+  winnerId?: string;
 };
-
-// export type Matchup2 = {
-//   id: string;
-//   away: {
-//     awayAugment?: Augment;
-//     awayTeamId: string;
-//     awayTeamLogo?: string;
-//     awayTeamName: string;
-//     awayUserId: string;
-//     awayWeeklyAcquisitionsUsed: number;
-//   };
-//   home: {
-//     homeAugment?: Augment;
-//     homeTeamId: string;
-//     homeTeamLogo?: string;
-//     homeTeamName: string;
-//     homeUserId: string;
-//     homeWeeklyAcquisitionsUsed: number;
-//   };
-//   status: "active" | "completed";
-//   weekStartDate: string;
-//   dailyMatchups: Record<string, DailyMatchup>;
-// };

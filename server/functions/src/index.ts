@@ -5,6 +5,15 @@ import { BalldontlieAPI } from "@balldontlie/sdk";
 
 admin.initializeApp();
 
+// TODO:
+// Update front end matchup stuff
+// Review matchup stuff for backend
+// Compile on real device and test on emulator
+
+// After:
+// Group typings
+//
+
 type GameInfo = {
   gameStatus: boolean;
   opponent: string;
@@ -85,10 +94,12 @@ type TeamSnapshot = {
   logoUrl: string;
   record: TeamRecord;
   augment: any;
+  score?: number;
 };
 
-type LineupSnapshot = {
-  [P in TeamPosition]: PlayerSnapshot;
+type LineupSnapshotItem = {
+  position: TeamPosition;
+  playerSnapshot: PlayerSnapshot;
 };
 
 type Matchup = {
@@ -102,8 +113,8 @@ type Matchup = {
   homeUserId: string;
   awayUserId: string;
   status: "active" | "complete";
-  awayLineupSnapshots: Record<string, LineupSnapshot>;
-  homeLineupSnapshots: Record<string, LineupSnapshot>;
+  awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
+  homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   winnerId?: string;
 };
 
