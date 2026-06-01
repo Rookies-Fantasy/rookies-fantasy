@@ -14,7 +14,7 @@ import {
   selectMatchup,
   updateMatchupWithLiveData,
 } from "@/state/slices/matchupSlice";
-import { selectTeam, selectTeamLogo } from "@/state/slices/teamSlice";
+import { selectTeam } from "@/state/slices/teamSlice";
 import { themes } from "@/theme/theme";
 import { useAppTheme } from "@/theme/ThemeProvider";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
@@ -25,12 +25,13 @@ const getCurrentWeekDates = () => {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
-  // Find Sunday of this week
+  // Find Monday of this week
   const startDate = new Date(today);
-  startDate.setDate(today.getDate() - dayOfWeek);
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  startDate.setDate(today.getDate() + diff);
   startDate.setHours(0, 0, 0, 0);
 
-  // Saturday of this week
+  // Sunday of this week
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + 6);
 
@@ -49,7 +50,7 @@ const getCurrentWeekDates = () => {
 const Arena = () => {
   const matchup = useAppSelector(selectMatchup);
   const team = useAppSelector(selectTeam);
-  const teamLogo = useAppSelector(selectTeamLogo);
+  const userId = useAppSelector((state) => state.user.id);
   const queueStatus = useAppSelector((state) => state.user.queueStatus);
   const dispatch = useAppDispatch();
   const { theme, mode } = useAppTheme();
@@ -62,9 +63,56 @@ const Arena = () => {
   const [selectedAugment, setSelectedAugment] = useState<
     "away" | "home" | null
   >(null);
+  const [liveAwayData, setLiveAwayData] = useState<Record<string, any>>({});
+  const [liveHomeData, setLiveHomeData] = useState<Record<string, any>>({});
 
   const currentWeekDates = getCurrentWeekDates();
   const isQueuing = queueStatus === "queued";
+  const isHomeUser = matchup?.homeUserId === userId;
+  const homeSnapshotLineup = matchup?.homeLineupSnapshots[selectedDate] ?? [];
+  const awaySnapshotLineup = matchup?.awayLineupSnapshots[selectedDate] ?? [];
+  const homeLineup =
+    homeSnapshotLineup.length > 0
+      ? homeSnapshotLineup.map((slot) => ({
+          player: slot.playerSnapshot,
+          gameStats: slot.playerSnapshot.gameStats,
+        }))
+      : isHomeUser
+        ? team.lineup.map((slot) => ({
+            player: slot.player,
+            gameStats: slot.player
+              ? liveHomeData[slot.player.id]?.gameStats
+              : undefined,
+          }))
+        : [];
+  const awayLineup =
+    awaySnapshotLineup.length > 0
+      ? awaySnapshotLineup.map((slot) => ({
+          player: slot.playerSnapshot,
+          gameStats:
+            liveAwayData[slot.playerSnapshot.id]?.gameStats ??
+            slot.playerSnapshot.gameStats,
+        }))
+      : !isHomeUser
+        ? team.lineup.map((slot) => ({
+            player: slot.player,
+            gameStats: slot.player
+              ? liveAwayData[slot.player.id]?.gameStats
+              : undefined,
+          }))
+        : [];
+  const homeScore =
+    matchup?.homeScore ??
+    homeLineup.reduce(
+      (total, slot) => total + (slot.gameStats?.fantasyPoints ?? 0),
+      0,
+    );
+  const awayScore =
+    matchup?.awayScore ??
+    awayLineup.reduce(
+      (total, slot) => total + (slot.gameStats?.fantasyPoints ?? 0),
+      0,
+    );
 
   const matchupRef = useRef(matchup);
   matchupRef.current = matchup;
@@ -77,12 +125,26 @@ const Arena = () => {
         const homeLineup =
           matchupRef.current?.homeLineupSnapshots[selectedDate] ?? [];
 
-        const awayPlayerIds = awayLineup
-          .map((o) => o.playerSnapshot?.id)
-          .filter((id) => isNotNil(id));
-        const homePlayerIds = homeLineup
-          .map((o) => o.playerSnapshot?.id)
-          .filter((id) => isNotNil(id));
+        const homePlayerIds =
+          homeLineup.length > 0
+            ? homeLineup
+                .map((o) => o.playerSnapshot?.id)
+                .filter((id) => isNotNil(id))
+            : isHomeUser
+              ? team.lineup
+                  .map((o) => o.player?.id)
+                  .filter((id) => isNotNil(id))
+              : [];
+        const awayPlayerIds =
+          awayLineup.length > 0
+            ? awayLineup
+                .map((o) => o.playerSnapshot?.id)
+                .filter((id) => isNotNil(id))
+            : !isHomeUser
+              ? team.lineup
+                  .map((o) => o.player?.id)
+                  .filter((id) => isNotNil(id))
+              : [];
 
         try {
           const [updatedAway, updatedHome] = await Promise.all([
@@ -90,11 +152,14 @@ const Arena = () => {
             fetchLivePlayerData(homePlayerIds),
           ]);
 
+          setLiveAwayData(updatedAway ?? {});
+          setLiveHomeData(updatedHome ?? {});
+
           dispatch(
             updateMatchupWithLiveData({
               date: selectedDate,
-              updatedHome,
-              updatedAway,
+              updatedHome: updatedHome ?? {},
+              updatedAway: updatedAway ?? {},
             }),
           );
         } catch (error) {
@@ -107,9 +172,12 @@ const Arena = () => {
       const intervalId = setInterval(fetchAndUpdateLiveData, 10000);
 
       return () => clearInterval(intervalId);
-    }, [selectedDate, dispatch]),
+    }, [isHomeUser, selectedDate, dispatch, team.lineup]),
   );
 
+  const homeTeamLogo = teamLogoOptions.find(
+    (asset) => asset.url === matchup?.homeTeamSnapshot.logoUrl,
+  )?.source;
   const awayTeamLogo = teamLogoOptions.find(
     (asset) => asset.url === matchup?.awayTeamSnapshot.logoUrl,
   )?.source;
@@ -121,23 +189,23 @@ const Arena = () => {
           <View className="mb-2 w-full flex-row items-start justify-between">
             <Image
               className="h-12 w-12 rounded-full border-2"
-              source={teamLogo}
+              source={homeTeamLogo ?? defaultTeamLogo.source}
             />
 
             <Text className="pbk-h5 text-base-white">
-              {matchup?.homeTeamSnapshot.score ?? "--"}
+              {homeScore > 0 ? homeScore : "--"}
             </Text>
           </View>
 
           <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            {team.name?.toUpperCase()}
+            {matchup?.homeTeamSnapshot.name.toUpperCase() ?? "--"}
           </Text>
         </View>
 
         <View className="w-1/2 items-end border-b border-l border-gray-900 py-4 pl-2 pr-6">
           <View className="mb-2 w-full flex-row items-start justify-between">
             <Text className="pbk-h5 text-base-white">
-              {matchup?.awayTeamSnapshot.score ?? "--"}
+              {awayScore > 0 ? awayScore : "--"}
             </Text>
 
             <Image
@@ -204,7 +272,7 @@ const Arena = () => {
                 setOpenDialog(true);
               }}
             >
-              {matchup.homeTeamSnapshot.augment &&
+              {matchup.homeTeamSnapshot.augmentSnapshot &&
                 selectedAugment === "home" && (
                   <Dialog
                     closeLabel="Close"
@@ -218,7 +286,7 @@ const Arena = () => {
                   >
                     <View className="h-80">
                       <AugmentCard
-                        cardData={matchup.homeTeamSnapshot.augment}
+                        cardData={matchup.homeTeamSnapshot.augmentSnapshot}
                         onPress={() => {
                           setOpenDialog(false);
                           setSelectedAugment(null);
@@ -242,17 +310,19 @@ const Arena = () => {
                 }}
               />
               <View className="w-full rounded-2xl bg-gray-900 p-4">
-                {matchup.homeTeamSnapshot.augment && (
+                {matchup.homeTeamSnapshot.augmentSnapshot && (
                   <View className="flex-col items-center gap-1">
                     <View className="flex-row items-center">
                       <Image
                         className="h-8 w-8"
                         source={
-                          iconMap[matchup.homeTeamSnapshot.augment.iconUrl]
+                          iconMap[
+                            matchup.homeTeamSnapshot.augmentSnapshot.iconUrl
+                          ]
                         }
                       />
                       <Text className="pbk-h7 text-base-white">
-                        {matchup.homeTeamSnapshot.augment.title.toUpperCase()}
+                        {matchup.homeTeamSnapshot.augmentSnapshot.title.toUpperCase()}
                       </Text>
                     </View>
                   </View>
@@ -266,7 +336,7 @@ const Arena = () => {
                 setOpenDialog(true);
               }}
             >
-              {matchup.awayTeamSnapshot.augment &&
+              {matchup.awayTeamSnapshot.augmentSnapshot &&
                 selectedAugment === "away" && (
                   <Dialog
                     closeLabel="Close"
@@ -280,7 +350,7 @@ const Arena = () => {
                   >
                     <View className="h-80">
                       <AugmentCard
-                        cardData={matchup.awayTeamSnapshot.augment}
+                        cardData={matchup.awayTeamSnapshot.augmentSnapshot}
                         onPress={() => {
                           setOpenDialog(false);
                           setSelectedAugment(null);
@@ -304,17 +374,19 @@ const Arena = () => {
                 }}
               />
               <View className="w-full rounded-2xl bg-gray-900 p-4">
-                {matchup.awayTeamSnapshot.augment && (
+                {matchup.awayTeamSnapshot.augmentSnapshot && (
                   <View className="flex-col items-center gap-1">
                     <View className="flex-row items-center">
                       <Image
                         className="h-8 w-8"
                         source={
-                          iconMap[matchup.awayTeamSnapshot.augment.iconUrl]
+                          iconMap[
+                            matchup.awayTeamSnapshot.augmentSnapshot.iconUrl
+                          ]
                         }
                       />
                       <Text className="pbk-h7 text-base-white">
-                        {matchup.awayTeamSnapshot.augment.title.toUpperCase()}
+                        {matchup.awayTeamSnapshot.augmentSnapshot.title.toUpperCase()}
                       </Text>
                     </View>
                   </View>

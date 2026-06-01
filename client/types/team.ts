@@ -31,6 +31,7 @@ export type BenchSlot = {
 export type Team = {
   abbreviation?: string;
   augment?: Augment;
+  augmentId?: string;
   id: string;
   logoUrl?: string;
   name?: string;

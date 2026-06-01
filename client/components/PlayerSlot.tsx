@@ -44,7 +44,7 @@ const PlayerSlot = ({
   const boostedPlayer = playerData && playerQualificationMap[playerData.id];
 
   const { isLineupLocked } = useLineupLock({
-    matchupStartDate: matchup?.weekStartDate,
+    matchupStartDate: matchup?.weekStart,
   });
 
   return (

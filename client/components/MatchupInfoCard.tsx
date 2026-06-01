@@ -10,7 +10,7 @@ const MatchupInfoCard = () => {
   const matchup = useAppSelector(selectMatchup);
 
   const { isLineupLocked, countdown } = useLineupLock({
-    matchupStartDate: matchup?.weekStartDate,
+    matchupStartDate: matchup?.weekStart,
   });
 
   const title = isLineupLocked

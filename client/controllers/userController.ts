@@ -1,5 +1,4 @@
 import firestore from "@react-native-firebase/firestore";
-import { Augment } from "@/types/augment";
 import { defaultTeam, TeamLineupSlot, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
 
@@ -16,7 +15,7 @@ export type UserEditModel = Partial<{
 
 export type TeamEditModel = {
   abbreviation: string;
-  augment?: Augment;
+  augmentId?: string;
   logoUrl: string;
   name: string;
 };
@@ -104,15 +103,16 @@ export class UserController {
         .doc(teamId)
         .get();
 
-      const augment = await firestore()
-        .collection(AUGMENT_COLLECTION)
-        .doc(team.data()?.augment)
-        .get();
+      const augmentId = team.data()?.augmentId;
+      const augment = augmentId
+        ? await firestore().collection(AUGMENT_COLLECTION).doc(augmentId).get()
+        : undefined;
 
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
-            augment: augment.data() as any,
+            augment: augment?.data() as any,
+            augmentId,
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
@@ -137,6 +137,7 @@ export class UserController {
 
       return teams.docs.map((team) => ({
         abbreviation: team.data()?.abbreviation,
+        augmentId: team.data()?.augmentId,
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,

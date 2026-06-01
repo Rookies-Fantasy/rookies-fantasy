@@ -1,7 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { GameInfo, GameStats, Matchup } from "@/types/matchup";
-import { applyAugmentEffects, validateAugment } from "@/utils/augmentUtils";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNil, isNotNil } from "@/utils/jsUtils";
 
@@ -23,35 +22,7 @@ const matchupSlice = createSlice({
   initialState: defaultMatchup,
   reducers: {
     setMatchup: (state, action: PayloadAction<Matchup>) => {
-      const matchup = action.payload;
-
-      // Validate and compute qualifying players for each daily matchup
-      Object.keys(matchup.dailyMatchups).forEach((date) => {
-        const dailyMatchup = matchup.dailyMatchups[date];
-
-        const homeValidation = validateAugment(
-          matchup.home.homeAugment,
-          dailyMatchup.homeTeam.lineup,
-        );
-        dailyMatchup.homeTeam.qualifyingPlayers =
-          homeValidation.qualifyingPlayers;
-
-        const awayValidation = validateAugment(
-          matchup.away.awayAugment,
-          dailyMatchup.awayTeam.lineup,
-        );
-        dailyMatchup.awayTeam.qualifyingPlayers =
-          awayValidation.qualifyingPlayers;
-
-        if (matchup.home.homeAugment) {
-          matchup.home.homeAugment.isActive = homeValidation.isValid;
-        }
-        if (matchup.away.awayAugment) {
-          matchup.away.awayAugment.isActive = awayValidation.isValid;
-        }
-      });
-
-      state.data = matchup;
+      state.data = action.payload;
     },
     clearMatchup: () => defaultMatchup,
     updateMatchupWithLiveData: (
@@ -66,106 +37,64 @@ const matchupSlice = createSlice({
         return;
       }
 
-      const newMatchup = state.data.dailyMatchups[action.payload.date];
+      const updateSnapshot = (
+        snapshot: Matchup["homeLineupSnapshots"][string] | undefined,
+        liveData: Record<string, PlayerGameData | null>,
+      ) => {
+        snapshot?.forEach((slot) => {
+          const newData = liveData[slot.playerSnapshot.id];
 
-      newMatchup.homeTeam.lineup.forEach((o) => {
-        if (isNotNil(o.player?.id)) {
-          const newData = action.payload.updatedHome[o.player?.id];
-          o.gameInfo = newData?.gameInfo;
-          if (newData?.gameStats) {
-            const baseFpts = calculateFantasyPoints(newData.gameStats);
-            const homeAugment = state.data?.home.homeAugment;
-            const qualifyingPlayers = newMatchup.homeTeam.qualifyingPlayers;
-
-            // Only apply augment if it's active and has qualifying players
-            const shouldApplyAugment =
-              homeAugment &&
-              homeAugment.isActive &&
-              qualifyingPlayers &&
-              qualifyingPlayers.length >= homeAugment.playerCount;
-
-            const finalFpts = shouldApplyAugment
-              ? applyAugmentEffects(
-                  baseFpts,
-                  newData.gameStats,
-                  o.player.id,
-                  qualifyingPlayers,
-                  homeAugment,
-                )
-              : baseFpts;
-
-            o.gameStats = {
-              ...newData.gameStats,
-              fantasyPoints: finalFpts,
-            };
-          } else {
-            o.gameStats = newData?.gameStats;
+          if (isNotNil(newData?.gameInfo)) {
+            slot.playerSnapshot.gameInfo = newData.gameInfo;
           }
-        }
-      });
 
-      newMatchup.awayTeam.lineup.forEach((o) => {
-        if (isNotNil(o.player?.id)) {
-          const newData = action.payload.updatedAway[o.player?.id];
-          o.gameInfo = newData?.gameInfo;
-          if (newData?.gameStats) {
-            const baseFpts = calculateFantasyPoints(newData.gameStats);
-            const awayAugment = state.data?.away.awayAugment;
-            const qualifyingPlayers = newMatchup.awayTeam.qualifyingPlayers;
-
-            // Only apply augment if it's active and has qualifying players
-            const shouldApplyAugment =
-              awayAugment &&
-              awayAugment.isActive &&
-              qualifyingPlayers &&
-              qualifyingPlayers.length >= awayAugment.playerCount;
-
-            const finalFpts = shouldApplyAugment
-              ? applyAugmentEffects(
-                  baseFpts,
-                  newData.gameStats,
-                  o.player.id,
-                  qualifyingPlayers,
-                  awayAugment,
-                )
-              : baseFpts;
-
-            o.gameStats = {
+          if (isNotNil(newData?.gameStats)) {
+            const fantasyPoints = calculateFantasyPoints(newData.gameStats);
+            slot.playerSnapshot.gameStats = {
               ...newData.gameStats,
-              fantasyPoints: finalFpts,
+              fantasyPoints,
             };
-          } else {
-            o.gameStats = newData?.gameStats;
           }
-        }
-      });
+        });
+      };
 
-      const homeScore = newMatchup.homeTeam.lineup.reduce(
-        (total, slot) => total + (slot.gameStats?.fantasyPoints ?? 0),
-        0,
+      updateSnapshot(
+        state.data.homeLineupSnapshots[action.payload.date],
+        action.payload.updatedHome,
+      );
+      updateSnapshot(
+        state.data.awayLineupSnapshots[action.payload.date],
+        action.payload.updatedAway,
       );
 
-      const awayScore = newMatchup.awayTeam.lineup.reduce(
-        (total, slot) => total + (slot.gameStats?.fantasyPoints ?? 0),
-        0,
-      );
-
-      newMatchup.homeTeam.score = homeScore;
-      newMatchup.awayTeam.score = awayScore;
-
-      state.data.dailyMatchups[action.payload.date] = newMatchup;
+      state.data.homeScore = Object.values(state.data.homeLineupSnapshots)
+        .flat()
+        .reduce(
+          (total, slot) =>
+            total + (slot.playerSnapshot.gameStats?.fantasyPoints ?? 0),
+          0,
+        );
+      state.data.awayScore = Object.values(state.data.awayLineupSnapshots)
+        .flat()
+        .reduce(
+          (total, slot) =>
+            total + (slot.playerSnapshot.gameStats?.fantasyPoints ?? 0),
+          0,
+        );
     },
   },
 });
 
 export const selectMatchup = (state: RootState) => state.matchup.data;
 export const selectMatchupId = (state: RootState) => state.matchup.data?.id;
-export const selectDailyMatchups = (state: RootState) =>
-  state.matchup.data?.dailyMatchups;
+export const selectHomeLineupSnapshots = (state: RootState) =>
+  state.matchup.data?.homeLineupSnapshots;
+export const selectAwayLineupSnapshots = (state: RootState) =>
+  state.matchup.data?.awayLineupSnapshots;
 export const selectAwayUserId = (state: RootState) =>
-  state.matchup.data?.away.awayUserId;
+  state.matchup.data?.awayUserId;
 export const selectHomeUserId = (state: RootState) =>
-  state.matchup.data?.home.homeUserId;
+  state.matchup.data?.homeUserId;
 
 export const { setMatchup, clearMatchup, updateMatchupWithLiveData } =
   matchupSlice.actions;

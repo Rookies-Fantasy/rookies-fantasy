@@ -1,5 +1,5 @@
-import { Player } from "./player";
-import { FlexPosition, Position, TeamRecord } from "./team";
+import { Augment } from "./augment";
+import { SlotPosition, TeamRecord } from "./team";
 
 export type GameInfo = {
   gameStatus: boolean;
@@ -19,40 +19,26 @@ export type GameStats = {
   minutes: number;
 };
 
-// export type MatchupTeam = {
-//   lineup: LineupSlot[];
-//   qualifyingPlayers?: Player[];
-//   score?: number;
-// };
-
-// export type DailyMatchup = {
-//   awayTeam: MatchupTeam;
-//   homeTeam: MatchupTeam;
-// };
-
-type PlayerSnapshot = {
+export type PlayerSnapshot = {
   firstName: string;
   lastName: string;
   headshotUrl: string;
-  positions: Position[];
+  positions: SlotPosition[];
   salary: number;
   id: string;
   gameStats: GameStats;
   gameInfo: GameInfo;
 };
 
-type TeamSnapshot = {
+export type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
-  augment: any;
-  score?: number;
+  augmentSnapshot?: Augment;
 };
 
-type TeamPosition = Position | FlexPosition;
-
-type LineupSnapshotItem = {
-  position: TeamPosition;
+export type LineupSnapshotItem = {
+  position: SlotPosition;
   playerSnapshot: PlayerSnapshot;
 };
 
@@ -66,8 +52,10 @@ export type Matchup = {
   awayTeamId: string;
   homeUserId: string;
   awayUserId: string;
-  status: "active" | "complete";
+  status: "active" | "completed";
   awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
+  awayScore?: number;
+  homeScore?: number;
   winnerId?: string;
 };

@@ -22,14 +22,14 @@ type GameInfo = {
 };
 
 type GameStats = {
-  pts: number;
-  ast: number;
-  reb: number;
-  stl: number;
-  blk: number;
-  tov: number;
-  fpts: number;
-  min: number;
+  points: number;
+  assists: number;
+  rebounds: number;
+  steals: number;
+  blocks: number;
+  turnovers: number;
+  fantasyPoints: number;
+  minutes: number;
 };
 
 type LiveData = Record<
@@ -54,7 +54,7 @@ type PlayerTeamDisplay = {
   firstName: string;
   lastName: string;
   headshotUrl: string;
-  positions: Position[];
+  positions: TeamPosition[];
   salary: number;
   id: string;
   teamAbbreviation: string;
@@ -62,14 +62,14 @@ type PlayerTeamDisplay = {
 
 type TeamLineupSlot = {
   position: TeamPosition;
-  player: PlayerTeamDisplay;
+  player: PlayerTeamDisplay | null;
 };
 
 // Store the augment id for now, maybe reconsider this later. Some things to consider are what we actually need to display the team (probably just name and icon)
 // as well as augment versioning for future patches
 type Team = {
   abbreviation?: string;
-  augmentId: string;
+  augmentId?: string;
   id: string;
   logoUrl?: string;
   name?: string;
@@ -82,7 +82,7 @@ type PlayerSnapshot = {
   firstName: string;
   lastName: string;
   headshotUrl: string;
-  positions: Position[];
+  positions: TeamPosition[];
   salary: number;
   id: string;
   gameStats: GameStats;
@@ -93,7 +93,7 @@ type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
-  augment: any;
+  augmentSnapshot?: any;
   score?: number;
 };
 
@@ -112,9 +112,11 @@ type Matchup = {
   awayTeamId: string;
   homeUserId: string;
   awayUserId: string;
-  status: "active" | "complete";
+  status: "active" | "completed";
   awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
+  awayScore?: number;
+  homeScore?: number;
   winnerId?: string;
 };
 
@@ -126,8 +128,8 @@ const CACHE_EXPIRY_MS = 60 * 1000;
 
 const getPlayersFromCache = (
   playerIds: number[],
-): Record<number, LiveData | null> => {
-  const result: Record<number, LiveData | null> = {};
+): Record<number, LiveData[number] | null> => {
+  const result: Record<number, LiveData[number] | null> = {};
 
   for (const id of playerIds) {
     result[id] = cachedData[id] ?? null;
@@ -186,14 +188,14 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
         cachedData[player.player.id] = {
           gameInfo,
           gameStats: {
-            pts: player.pts ?? 0,
-            ast: player.ast ?? 0,
-            reb: player.reb ?? 0,
-            stl: player.stl ?? 0,
-            blk: player.blk ?? 0,
-            tov: player.turnover ?? 0,
-            fpts: player.fpts ?? 0,
-            min: parseInt(player.min, 10) || 0,
+            points: player.pts ?? 0,
+            assists: player.ast ?? 0,
+            rebounds: player.reb ?? 0,
+            steals: player.stl ?? 0,
+            blocks: player.blk ?? 0,
+            turnovers: player.turnover ?? 0,
+            fantasyPoints: player.fpts ?? 0,
+            minutes: parseInt(player.min, 10) || 0,
           },
         };
       }
@@ -208,14 +210,14 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
         cachedData[player.player.id] = {
           gameInfo,
           gameStats: {
-            pts: player.pts ?? 0,
-            ast: player.ast ?? 0,
-            reb: player.reb ?? 0,
-            stl: player.stl ?? 0,
-            blk: player.blk ?? 0,
-            tov: player.turnover ?? 0,
-            fpts: player.fpts ?? 0,
-            min: parseInt(player.min, 10) || 0,
+            points: player.pts ?? 0,
+            assists: player.ast ?? 0,
+            rebounds: player.reb ?? 0,
+            steals: player.stl ?? 0,
+            blocks: player.blk ?? 0,
+            turnovers: player.turnover ?? 0,
+            fantasyPoints: player.fpts ?? 0,
+            minutes: parseInt(player.min, 10) || 0,
           },
         };
       }
@@ -433,8 +435,8 @@ export const updateDailyPlayerData = functions
       const matchupData = matchupDoc.data();
 
       // Save the current state of the lineups and players to the history. These are immutable snapshots
-      const awayAugment = matchupData.away?.augment;
-      const homeAugment = matchupData.home?.augment;
+      const awayAugment = matchupData.awayTeamSnapshot?.augmentSnapshot;
+      const homeAugment = matchupData.homeTeamSnapshot?.augmentSnapshot;
 
       const [homeTeamDoc, awayTeamDoc] = await Promise.all([
         admin
@@ -548,11 +550,11 @@ const formatDate = (d: Date) => {
 };
 
 const getLineupSnapshot = (
-  lineup: any,
+  lineup: TeamLineupSlot[],
   gamelogMap: Record<string, any>,
   augment?: any,
-) => {
-  if (!lineup || !Array.isArray(lineup)) return lineup;
+): LineupSnapshotItem[] => {
+  if (!lineup || !Array.isArray(lineup)) return [];
 
   const { isValid, qualifyingPlayers } = validateAugment(augment, lineup);
 
@@ -560,15 +562,32 @@ const getLineupSnapshot = (
     `Augment validation for team: isValid=${isValid}, qualifyingCount=${qualifyingPlayers.length}`,
   );
 
-  return lineup.map((playerId: string) => {
-    const latestGamelog = gamelogMap[playerId];
+  return lineup.flatMap((slot) => {
+    if (!slot.player) return [];
 
-    // TODO: What do we do here?
-    if (!latestGamelog) return;
+    const playerId = slot.player.id;
+    const latestGamelog = gamelogMap[playerId];
+    const emptyGameStats: GameStats = {
+      points: 0,
+      assists: 0,
+      rebounds: 0,
+      steals: 0,
+      blocks: 0,
+      turnovers: 0,
+      fantasyPoints: 0,
+      minutes: 0,
+    };
+    const emptyGameInfo: GameInfo = {
+      gameStatus: false,
+      opponent: "",
+      gameDate: "",
+      isHome: false,
+    };
+    const gameStats = latestGamelog ?? emptyGameStats;
 
     // TODO: Do we need to store the fantasy points? Or can we calculate it at runtime?
     // Calculate fantasy points with augment effects
-    let fantasyPoints = latestGamelog?.fantasyPoints;
+    let fantasyPoints = gameStats.fantasyPoints;
     if (latestGamelog && isValid) {
       const baseFantasyPoints = latestGamelog.fantasyPoints;
       fantasyPoints = applyAugmentEffects(
@@ -584,12 +603,27 @@ const getLineupSnapshot = (
       );
     }
 
-    const { playerId: _, team, player, game, ...rest } = latestGamelog;
     return {
-      team,
-      player,
-      game,
-      gameStats: rest,
+      position: slot.position,
+      playerSnapshot: {
+        firstName: slot.player.firstName,
+        lastName: slot.player.lastName,
+        headshotUrl: slot.player.headshotUrl,
+        positions: slot.player.positions,
+        salary: slot.player.salary,
+        id: playerId,
+        gameInfo: latestGamelog?.gameInfo ?? emptyGameInfo,
+        gameStats: {
+          points: gameStats.points ?? 0,
+          assists: gameStats.assists ?? 0,
+          rebounds: gameStats.rebounds ?? 0,
+          steals: gameStats.steals ?? 0,
+          blocks: gameStats.blocks ?? 0,
+          turnovers: gameStats.turnovers ?? 0,
+          fantasyPoints: fantasyPoints ?? 0,
+          minutes: gameStats.minutes ?? 0,
+        },
+      },
     };
   });
 };
@@ -938,10 +972,12 @@ export const processQueue = functions
 
           await Promise.all([
             user1.ref.update({
+              currentMatchupId: matchupId,
               queueStatus: "matched",
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             }),
             user2.ref.update({
+              currentMatchupId: matchupId,
               queueStatus: "matched",
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             }),
@@ -997,17 +1033,10 @@ const createWeeklyMatchup = async (
     const startDate = await getNextMondayDate();
     const matchupRef = admin.firestore().collection("matchups").doc();
 
-    const team1Augment = await admin
-      .firestore()
-      .collection("augments")
-      .doc(team1Info.augmentId)
-      .get();
-
-    const team2Augment = await admin
-      .firestore()
-      .collection("augments")
-      .doc(team2Info.augmentId)
-      .get();
+    const [team1Augment, team2Augment] = await Promise.all([
+      getAugmentSnapshot(team1Info.augmentId),
+      getAugmentSnapshot(team2Info.augmentId),
+    ]);
 
     const matchupData: Matchup = {
       id: matchupRef.id,
@@ -1017,18 +1046,8 @@ const createWeeklyMatchup = async (
       awayTeamId: teamId2,
       homeUserId: userId1,
       awayUserId: userId2,
-      awayTeamSnapshot: {
-        logoUrl: team2Info.logoUrl,
-        name: team2Info.name,
-        record: team2Info.record,
-        augment: team2Augment.data(),
-      },
-      homeTeamSnapshot: {
-        logoUrl: team1Info.logoUrl,
-        name: team1Info.name,
-        record: team1Info.record,
-        augment: team1Augment.data(),
-      },
+      awayTeamSnapshot: createTeamSnapshot(team2Info, team2Augment),
+      homeTeamSnapshot: createTeamSnapshot(team1Info, team1Augment),
       awayLineupSnapshots: {},
       homeLineupSnapshots: {},
       status: "active",
@@ -1041,6 +1060,30 @@ const createWeeklyMatchup = async (
     return undefined;
   }
 };
+
+const getAugmentSnapshot = async (augmentId?: string) => {
+  if (!augmentId) {
+    return undefined;
+  }
+
+  const augment = await admin
+    .firestore()
+    .collection("augments")
+    .doc(augmentId)
+    .get();
+
+  return augment.exists ? { id: augment.id, ...augment.data() } : undefined;
+};
+
+const createTeamSnapshot = (
+  teamInfo: any,
+  augmentSnapshot?: any,
+): TeamSnapshot => ({
+  logoUrl: teamInfo.logoUrl,
+  name: teamInfo.name,
+  record: teamInfo.record,
+  ...(augmentSnapshot ? { augmentSnapshot } : {}),
+});
 
 const getThisMondayString = () => {
   const today = new Date();
@@ -1147,13 +1190,15 @@ export const weeklyMatchupReset = functions.pubsub
 
           for (const day of Object.values(matchupData.homeLineupSnapshots)) {
             for (const player of Object.values(day as any)) {
-              homeTotal += (player as any).gameStats.fpts;
+              homeTotal +=
+                (player as any).playerSnapshot?.gameStats?.fantasyPoints ?? 0;
             }
           }
 
           for (const day of Object.values(matchupData.awayLineupSnapshots)) {
             for (const player of Object.values(day as any)) {
-              awayTotal += (player as any).gameStats.fpts;
+              awayTotal +=
+                (player as any).playerSnapshot?.gameStats?.fantasyPoints ?? 0;
             }
           }
 
@@ -1172,6 +1217,8 @@ export const weeklyMatchupReset = functions.pubsub
           }
 
           await matchupDoc.ref.update({
+            awayScore: awayTotal,
+            homeScore: homeTotal,
             status: "completed",
             winnerId: winnerId,
           });
