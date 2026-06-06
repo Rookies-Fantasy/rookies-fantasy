@@ -22,3 +22,10 @@ From `server/functions/`:
 
 - NEVER commit .env files
 - Issue tracker is Linear — ticket format is `ENG-123` (not `#123`)
+
+## TypeScript Conventions
+
+- Do not use `undefined`, `any`, or `unknown` — use explicit types and proper fallbacks instead
+  - For missing images: use a placeholder asset, not `undefined`
+  - For missing data: use typed defaults, not `undefined` returns
+  - `any` bypasses type safety entirely — map raw data to typed shapes at the boundary (e.g. Firestore responses in controllers)

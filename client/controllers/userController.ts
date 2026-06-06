@@ -104,14 +104,22 @@ export class UserController {
         .get();
 
       const augmentId = team.data()?.augmentId;
-      const augment = augmentId
+      const augmentDoc = augmentId
         ? await firestore().collection(AUGMENT_COLLECTION).doc(augmentId).get()
+        : undefined;
+      const augmentData = augmentDoc?.data();
+      const augment = augmentData
+        ? {
+            ...augmentData,
+            createdAt: augmentData.createdAt?.toDate?.()?.toISOString(),
+            updatedAt: augmentData.updatedAt?.toDate?.()?.toISOString(),
+          }
         : undefined;
 
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
-            augment: augment?.data() as any,
+            augment: augment as any,
             augmentId,
             id: team.id,
             logoUrl: team.data()?.logoUrl,

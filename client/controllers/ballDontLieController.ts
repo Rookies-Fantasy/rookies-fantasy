@@ -28,6 +28,16 @@ export const fetchEarliestGameStartTime = async (date: string) => {
       },
     );
 
+    if (response.status === 404) {
+      // TODO: surface "no games scheduled" state to the user
+      return;
+    }
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(message);
+    }
+
     const data = await response.json();
     return data.earliestGameStart as string | undefined;
   } catch (error) {
