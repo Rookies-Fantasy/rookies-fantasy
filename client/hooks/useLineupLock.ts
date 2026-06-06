@@ -35,7 +35,11 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to fetch game schedule");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to fetch game schedule",
+          );
         }
       }
     };

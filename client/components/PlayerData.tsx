@@ -11,7 +11,11 @@ const PlayerData = ({ player }: PlayerDataProps) => (
     <View className="flex-row items-center gap-2">
       <Image
         className="size-14 rounded-full"
-        source={player.headshotUrl ? { uri: player.headshotUrl } : defaultAvatar.source}
+        source={
+          player.headshotUrl
+            ? { uri: player.headshotUrl }
+            : defaultAvatar.source
+        }
       />
 
       <View className="flex-1">
