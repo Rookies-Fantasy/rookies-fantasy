@@ -59,11 +59,6 @@ const AuthListener = ({ children }: AuthListenerProps) => {
             );
             dispatch(setTeam(teamData));
           }
-
-          const matchupData = await MatchupController.getUserMatchup(user.uid);
-          if (matchupData) {
-            dispatch(setMatchup(matchupData));
-          }
         } catch (error) {
           console.error("Error fetching user document:", error);
         }
