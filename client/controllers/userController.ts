@@ -1,4 +1,5 @@
 import firestore from "@react-native-firebase/firestore";
+import { Augment } from "@/types/augment";
 import { defaultTeam, TeamLineupSlot, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
 
@@ -106,11 +107,12 @@ export class UserController {
       const augmentId = team.data()?.augmentId;
       const augmentDoc = augmentId
         ? await firestore().collection(AUGMENT_COLLECTION).doc(augmentId).get()
-        : undefined;
+        : null;
       const augmentData = augmentDoc?.data();
-      const augment = augmentData
+      const augment: Augment | undefined = augmentDoc?.exists() && augmentData
         ? {
-            ...augmentData,
+            ...(augmentData as Omit<Augment, "id" | "createdAt" | "updatedAt">),
+            id: augmentDoc.id,
             createdAt: augmentData.createdAt?.toDate?.()?.toISOString(),
             updatedAt: augmentData.updatedAt?.toDate?.()?.toISOString(),
           }
@@ -119,7 +121,7 @@ export class UserController {
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
-            augment: augment as any,
+            augment,
             augmentId,
             id: team.id,
             logoUrl: team.data()?.logoUrl,
