@@ -19,13 +19,13 @@ const MatchupInfoCard = () => {
       ? `Lineup locks in ${
           countdown.hours > 0 ? `${countdown.hours}h ` : ""
         }${countdown.minutes}m`
-      : "Calculating lock time…";
+      : "No games today";
 
   const message = isLineupLocked
     ? "Games have already started today. Your lineup is locked until tomorrow."
     : "Track your players’ performance and tweak your strategy as the matchup unfolds.";
 
-  if (queueStatus !== QueueStatus.Matched || !matchup) {
+  if (queueStatus === QueueStatus.Matched || !matchup) {
     return null;
   }
 
