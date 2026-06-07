@@ -109,14 +109,18 @@ export class UserController {
         ? await firestore().collection(AUGMENT_COLLECTION).doc(augmentId).get()
         : null;
       const augmentData = augmentDoc?.data();
-      const augment: Augment | undefined = augmentDoc?.exists() && augmentData
-        ? {
-            ...(augmentData as Omit<Augment, "id" | "createdAt" | "updatedAt">),
-            id: augmentDoc.id,
-            createdAt: augmentData.createdAt?.toDate?.()?.toISOString(),
-            updatedAt: augmentData.updatedAt?.toDate?.()?.toISOString(),
-          }
-        : undefined;
+      const augment: Augment | undefined =
+        augmentDoc?.exists() && augmentData
+          ? {
+              ...(augmentData as Omit<
+                Augment,
+                "id" | "createdAt" | "updatedAt"
+              >),
+              id: augmentDoc.id,
+              createdAt: augmentData.createdAt?.toDate?.()?.toISOString(),
+              updatedAt: augmentData.updatedAt?.toDate?.()?.toISOString(),
+            }
+          : undefined;
 
       return team.exists()
         ? {
