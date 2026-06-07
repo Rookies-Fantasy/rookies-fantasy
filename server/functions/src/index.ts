@@ -5,15 +5,6 @@ import { BalldontlieAPI } from "@balldontlie/sdk";
 
 admin.initializeApp();
 
-// TODO:
-// Update front end matchup stuff
-// Review matchup stuff for backend
-// Compile on real device and test on emulator
-
-// After:
-// Group typings
-//
-
 type GameInfo = {
   gameStatus: boolean;
   opponent: string;
