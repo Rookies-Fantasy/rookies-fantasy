@@ -1,11 +1,23 @@
 import { View, Text, Image } from "react-native";
-import { LineupSlot } from "@/types/team";
+import { GameStats, PlayerSnapshot } from "@/types/matchup";
+import { PlayerTeamDisplay } from "@/types/team";
+
+export type MatchupCardSlot = {
+  player: PlayerSnapshot | PlayerTeamDisplay | null;
+  gameStats?: GameStats;
+};
 
 type PlayerMatchupCardProps = {
   position: string;
-  homeSlot?: LineupSlot;
-  awaySlot?: LineupSlot;
+  homeSlot?: MatchupCardSlot;
+  awaySlot?: MatchupCardSlot;
 };
+
+const getGameStats = (slot?: MatchupCardSlot) =>
+  slot?.gameStats ??
+  ("gameStats" in (slot?.player ?? {})
+    ? (slot?.player as PlayerSnapshot).gameStats
+    : undefined);
 
 const PlayerMatchupCard = ({
   position,
@@ -14,8 +26,8 @@ const PlayerMatchupCard = ({
 }: PlayerMatchupCardProps) => {
   const homePlayer = homeSlot?.player;
   const awayPlayer = awaySlot?.player;
-  const homeStats = homeSlot?.gameStats;
-  const awayStats = awaySlot?.gameStats;
+  const homeStats = getGameStats(homeSlot);
+  const awayStats = getGameStats(awaySlot);
 
   return (
     <View className="mx-4 mb-4 flex-row overflow-hidden rounded-2xl border border-gray-800 bg-gray-920">

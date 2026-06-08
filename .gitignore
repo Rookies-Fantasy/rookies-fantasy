@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+
+# Expo generated native folders (use `npx expo prebuild` to regenerate)
+client/ios/
+client/android/

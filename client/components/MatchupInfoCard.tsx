@@ -9,8 +9,8 @@ const MatchupInfoCard = () => {
   const queueStatus = useAppSelector((state) => state.user.queueStatus);
   const matchup = useAppSelector(selectMatchup);
 
-  const { isLineupLocked, countdown } = useLineupLock({
-    matchupStartDate: matchup?.weekStartDate,
+  const { isLineupLocked, countdown, error } = useLineupLock({
+    matchupStartDate: matchup?.weekStart,
   });
 
   const title = isLineupLocked
@@ -19,11 +19,15 @@ const MatchupInfoCard = () => {
       ? `Lineup locks in ${
           countdown.hours > 0 ? `${countdown.hours}h ` : ""
         }${countdown.minutes}m`
-      : "Calculating lock time…";
+      : error
+        ? "No games scheduled today"
+        : "Calculating lock time…";
 
   const message = isLineupLocked
     ? "Games have already started today. Your lineup is locked until tomorrow."
-    : "Track your players’ performance and tweak your strategy as the matchup unfolds.";
+    : error
+      ? "There are no NBA games today. Your lineup will unlock when games are scheduled."
+      : "Track your players' performance and tweak your strategy as the matchup unfolds.";
 
   if (queueStatus !== QueueStatus.Matched || !matchup) {
     return null;

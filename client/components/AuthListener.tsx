@@ -52,18 +52,14 @@ const AuthListener = ({ children }: AuthListenerProps) => {
 
           const teams = await UserController.getUserTeams(user.uid);
           if (teams?.length > 0) {
-            let firstTeamId: string;
-            firstTeamId = teams[0].id;
-            const teamData = await UserController.getUserTeam(
-              user.uid,
-              firstTeamId,
-            );
-            dispatch(setTeam(teamData));
-          }
-
-          const matchupData = await MatchupController.getUserMatchup(user.uid);
-          if (matchupData) {
-            dispatch(setMatchup(matchupData));
+            const rankedTeam = teams.find((team) => !team.isLeagueTeam);
+            if (rankedTeam) {
+              const teamData = await UserController.getUserTeam(
+                user.uid,
+                rankedTeam.id,
+              );
+              dispatch(setTeam(teamData));
+            }
           }
         } catch (error) {
           console.error("Error fetching user document:", error);
