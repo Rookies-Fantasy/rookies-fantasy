@@ -40,6 +40,7 @@ export type Team = {
   record?: TeamRecord;
   hasUserChanges?: boolean;
   bench: BenchSlot[];
+  isLeagueTeam?: boolean;
 };
 
 export type Position = "PG" | "SG" | "SF" | "PF" | "C";

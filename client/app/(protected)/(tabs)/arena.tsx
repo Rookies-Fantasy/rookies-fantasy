@@ -18,8 +18,17 @@ import { selectTeam } from "@/state/slices/teamSlice";
 import { themes } from "@/theme/theme";
 import { useAppTheme } from "@/theme/ThemeProvider";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { GameInfo, GameStats } from "@/types/matchup";
 import { SLOT_ORDER } from "@/types/team";
 import { isNil, isNotNil } from "@/utils/jsUtils";
+
+type LiveData = Record<
+  string,
+  {
+    gameInfo: GameInfo;
+    gameStats: GameStats;
+  }
+>;
 
 const getCurrentWeekDates = () => {
   const today = new Date();
@@ -59,12 +68,12 @@ const Arena = () => {
   const today = new Date().toLocaleDateString("en-CA");
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(today);
+  const [selectedDate, setSelectedDate] = useState(today);
   const [selectedAugment, setSelectedAugment] = useState<
     "away" | "home" | null
   >(null);
-  const [liveAwayData, setLiveAwayData] = useState<Record<string, any>>({});
-  const [liveHomeData, setLiveHomeData] = useState<Record<string, any>>({});
+  const [liveAwayData, setLiveAwayData] = useState<LiveData>({});
+  const [liveHomeData, setLiveHomeData] = useState<LiveData>({});
 
   const currentWeekDates = getCurrentWeekDates();
   const isQueuing = queueStatus === "queued";
