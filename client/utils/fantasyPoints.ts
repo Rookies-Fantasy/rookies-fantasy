@@ -1,4 +1,4 @@
-import { GameStats } from "@/types/team";
+import { GameStats } from "@/types/matchup";
 
 export const calculateFantasyPoints = (stats: GameStats): number => {
   const { points, rebounds, assists, steals, blocks, turnovers } = stats;

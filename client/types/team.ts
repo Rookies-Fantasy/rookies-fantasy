@@ -1,25 +1,6 @@
 import { Augment } from "./augment";
-import { Player } from "./player";
 
 export const TEAM_BALANCE = 150000000;
-
-export type GameInfo = {
-  gameStatus: boolean;
-  opponent: string;
-  gameDate: string;
-  isHome: boolean;
-};
-
-export type GameStats = {
-  points: number;
-  assists: number;
-  rebounds: number;
-  steals: number;
-  blocks: number;
-  turnovers: number;
-  fantasyPoints: number;
-  minutes: number;
-};
 
 export type TeamRecord = {
   wins: number;
@@ -27,17 +8,38 @@ export type TeamRecord = {
   draws: number;
 };
 
+export type PlayerTeamDisplay = {
+  firstName: string;
+  lastName: string;
+  headshotUrl: string;
+  positions: SlotPosition[];
+  salary: number;
+  id: string;
+  teamAbbreviation: string;
+};
+
+export type TeamLineupSlot = {
+  position: SlotPosition;
+  player: PlayerTeamDisplay | null;
+};
+
+export type BenchSlot = {
+  position: BenchPosition;
+  player: PlayerTeamDisplay;
+};
+
 export type Team = {
   abbreviation?: string;
   augment?: Augment;
+  augmentId?: string;
   id: string;
   logoUrl?: string;
   name?: string;
   balance: number;
-  lineup: LineupSlot[];
-  bench: BenchSlot[];
-  hasUserChanges?: boolean;
+  lineup: TeamLineupSlot[];
   record?: TeamRecord;
+  hasUserChanges?: boolean;
+  bench: BenchSlot[];
   isLeagueTeam?: boolean;
 };
 
@@ -45,18 +47,6 @@ export type Position = "PG" | "SG" | "SF" | "PF" | "C";
 export type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
 export type BenchPosition = `BEN${number}`;
 export type SlotPosition = Position | FlexPosition | BenchPosition;
-
-export type LineupSlot = {
-  position: SlotPosition;
-  player: Player | null;
-  gameInfo?: GameInfo;
-  gameStats?: GameStats;
-};
-
-export type BenchSlot = {
-  position: BenchPosition;
-  player: Player;
-};
 
 export const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
 

@@ -1,10 +1,10 @@
 import firestore from "@react-native-firebase/firestore";
-import { Augment } from "@/types/augment";
-import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/team";
+import { defaultTeam, TeamLineupSlot, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
 
 const USERS_COLLECTION = "users";
 const TEAMS_COLLECTION = "teams";
+const AUGMENT_COLLECTION = "augments";
 
 export type UserEditModel = Partial<{
   avatarUrl: string;
@@ -15,7 +15,7 @@ export type UserEditModel = Partial<{
 
 export type TeamEditModel = {
   abbreviation: string;
-  augment?: Augment;
+  augmentId?: string;
   logoUrl: string;
   name: string;
   isLeagueTeam?: boolean;
@@ -23,7 +23,7 @@ export type TeamEditModel = {
 };
 
 export type LineupUpdateModel = Partial<{
-  lineup: LineupSlot[];
+  lineup: TeamLineupSlot[];
   balance: number;
 }>;
 
@@ -106,10 +106,16 @@ export class UserController {
         .doc(teamId)
         .get();
 
+      const augmentId = team.data()?.augmentId;
+      const augment = augmentId
+        ? await firestore().collection(AUGMENT_COLLECTION).doc(augmentId).get()
+        : undefined;
+
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
-            augment: team.data()?.augment,
+            augment: augment?.data() as any,
+            augmentId,
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
@@ -135,6 +141,7 @@ export class UserController {
 
       return teams.docs.map((team) => ({
         abbreviation: team.data()?.abbreviation,
+        augmentId: team.data()?.augmentId,
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
@@ -192,7 +199,7 @@ export class UserController {
   static getSavedTeamLineup = async (
     userId: string,
     teamId: string,
-  ): Promise<{ lineup: LineupSlot[]; balance: number }> => {
+  ): Promise<{ lineup: TeamLineupSlot[]; balance: number }> => {
     try {
       const team = await firestore()
         .collection(USERS_COLLECTION)

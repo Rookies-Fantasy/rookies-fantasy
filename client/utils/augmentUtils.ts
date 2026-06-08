@@ -1,6 +1,7 @@
 import { Augment, Prerequisite, Condition } from "@/types/augment";
+import { GameStats } from "@/types/matchup";
 import { Player } from "@/types/player";
-import { LineupSlot, GameStats } from "@/types/team";
+import { TeamLineupSlot } from "@/types/team";
 
 const STAT_MULTIPLIERS: Record<string, number> = {
   points: 1,
@@ -20,7 +21,7 @@ export type ValidationResult = {
 
 export const validateAugment = (
   augment: Augment | undefined,
-  lineup: LineupSlot[],
+  lineup: TeamLineupSlot[],
 ): ValidationResult => {
   if (!augment) {
     return {
@@ -33,7 +34,7 @@ export const validateAugment = (
 
   const activePlayers = lineup
     .filter((slot) => slot.player !== null)
-    .map((slot) => slot.player!);
+    .map((slot) => slot.player as Player);
 
   const unmetPrerequisites: string[] = [];
   const metPrerequisites: string[] = [];

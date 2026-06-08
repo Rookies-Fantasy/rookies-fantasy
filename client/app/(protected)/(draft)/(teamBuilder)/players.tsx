@@ -32,7 +32,7 @@ import {
 } from "@/state/slices/teamSlice";
 import { NbaTeam } from "@/types/nbaTeams";
 import { defaultPlayerFilters, Player, PlayerFilters } from "@/types/player";
-import { FlexPosition, UTIL_POSITIONS } from "@/types/team";
+import { FlexPosition, Position, UTIL_POSITIONS } from "@/types/team";
 import { isPlayerInLineup, resetTeamLineup } from "@/utils/teamUtils";
 
 export type FetchPlayersParams = {
@@ -121,7 +121,7 @@ const Players = () => {
       return team.lineup.some(
         (slot) =>
           slot.player === null &&
-          (positions.includes(slot.position) ||
+          (positions.includes(slot.position as Position) ||
             UTIL_POSITIONS.includes(slot.position as FlexPosition)),
       );
     };

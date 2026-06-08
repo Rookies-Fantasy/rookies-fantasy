@@ -13,7 +13,6 @@ type IconButtonProps = {
 const IconButton = ({
   icon,
   onPress,
-  size = 40,
   className = "",
   disabled = false,
 }: IconButtonProps) => (

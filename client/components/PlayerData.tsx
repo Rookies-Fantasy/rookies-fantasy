@@ -1,8 +1,8 @@
 import { View, Text, Image } from "react-native";
-import { Player } from "@/types/player";
+import { PlayerTeamDisplay } from "@/types/team";
 
 type PlayerDataProps = {
-  player: Player;
+  player: PlayerTeamDisplay;
 };
 
 const PlayerData = ({ player }: PlayerDataProps) => (
