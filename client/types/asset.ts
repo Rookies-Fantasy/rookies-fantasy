@@ -55,10 +55,6 @@ export const teamLogoOptions: Asset[] = [
     source: require("../assets/images/placeholder-avatar.png"),
   },
   {
-    url: "../assets/images/team/1.png",
-    source: require("../assets/images/team/1.png"),
-  },
-  {
     url: "../assets/images/team/2.png",
     source: require("../assets/images/team/2.png"),
   },
