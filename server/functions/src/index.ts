@@ -5,15 +5,6 @@ import { BalldontlieAPI } from "@balldontlie/sdk";
 
 admin.initializeApp();
 
-// TODO:
-// Update front end matchup stuff
-// Review matchup stuff for backend
-// Compile on real device and test on emulator
-
-// After:
-// Group typings
-//
-
 type GameInfo = {
   gameStatus: boolean;
   opponent: string;
@@ -1363,7 +1354,7 @@ export const getEarliestGameStartTime = functions.https.onRequest(
       });
 
       if (!data || data.length === 0) {
-        res.status(404).send("No games found");
+        res.status(200).json({ earliestGameStart: null });
         return;
       }
 
