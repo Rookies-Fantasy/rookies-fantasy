@@ -1354,7 +1354,7 @@ export const getEarliestGameStartTime = functions.https.onRequest(
       });
 
       if (!data || data.length === 0) {
-        res.status(404).send("No games found");
+        res.status(200).json({ earliestGameStart: null });
         return;
       }
 
