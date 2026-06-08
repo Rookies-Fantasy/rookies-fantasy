@@ -70,3 +70,10 @@ Before writing new logic, check `utils/` for existing helpers — and add new re
 - **Environments**: development, preview (staging), production. `npm run dev` uses development. Firebase config files are env-specific — don't assume a single config
 - **Typed routes**: Expo Router typed routes are enabled — use typed route strings in `router.push()` calls
 - **Issue tracker**: Linear — ticket format is `ENG-123` (not `#123`)
+
+## TypeScript Conventions
+
+- Do not use `undefined`, `any`, or `unknown` unless purposefully mentioned — use explicit types and proper fallbacks instead
+  - For missing images: use a placeholder asset, not `undefined`
+  - For missing data: use typed defaults, not `undefined` returns
+  - `any` bypasses type safety entirely — map raw data to typed shapes at the boundary (e.g. Firestore responses in controllers)

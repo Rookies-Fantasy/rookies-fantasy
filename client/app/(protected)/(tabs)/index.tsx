@@ -157,7 +157,7 @@ const MyTeam = () => {
         )}
 
       <View className="flex-1 gap-6 px-8">
-        {playerCount > 0 ? (
+        {playerCount > 0 || team.hasUserChanges ? (
           <>
             <ScrollView
               contentContainerClassName={cn("flex-col p-1 gap-4 pb-24 mt-4")}

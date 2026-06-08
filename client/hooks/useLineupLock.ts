@@ -21,6 +21,7 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
   }, [matchupStartDate]);
 
   const [earliestStartTime, setEarliestStartTime] = useState<string>();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,9 +31,16 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
         const startTime = await fetchEarliestGameStartTime(apiDate);
         if (!cancelled) {
           setEarliestStartTime(startTime);
+          setError(null);
         }
       } catch (err) {
-        console.log("Failed to fetch earliest game start time", err);
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to fetch game schedule",
+          );
+        }
       }
     };
 
@@ -62,5 +70,6 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
   return {
     isLineupLocked,
     countdown,
+    error,
   };
 };
