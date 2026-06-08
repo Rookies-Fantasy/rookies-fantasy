@@ -22,3 +22,4 @@ From `server/functions/`:
 
 - NEVER commit .env files
 - Issue tracker is Linear — ticket format is `ENG-123` (not `#123`)
+- Run `npx eslint .` from `client/` before every commit and push; fix all errors before committing
