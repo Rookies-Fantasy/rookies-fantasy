@@ -19,7 +19,7 @@ const PlayerInfo = ({ player }: PlayerInfoProps) => (
       <Text className="pbk-h7 mt-1 text-base-white">
         {player.averageStats.fantasyPoints != null
           ? player.averageStats.fantasyPoints.toFixed(1)
-          : "--"}{" "}
+          : "--"}
         PPG
       </Text>
     </View>
