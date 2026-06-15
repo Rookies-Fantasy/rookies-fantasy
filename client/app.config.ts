@@ -127,6 +127,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       favicon: "./assets/images/favicon.png",
     },
     plugins: [
+      "./plugins/withFmtConstEvalFix",
       "expo-router",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
