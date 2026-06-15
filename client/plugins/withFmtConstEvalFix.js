@@ -2,18 +2,18 @@ const { withDangerousMod } = require("@expo/config-plugins");
 const path = require("path");
 const fs = require("fs");
 
+// Sets FMT_USE_CONSTEVAL=0 as a compiler define on the fmt pod target.
+// fmt/core.h guards its definition with #ifndef FMT_USE_CONSTEVAL, so a
+// GCC_PREPROCESSOR_DEFINITIONS entry prevents the consteval path entirely.
+// This is more reliable than file-patching (headers re-define macros after
+// any prepended #defines).
 const POST_INSTALL_PATCH = `
-    # Fix for fmt consteval incompatibility with Xcode 16 / Clang 16.
-    fmt_pod_root = File.join(installer.sandbox.root.to_s, "fmt")
-    if Dir.exist?(fmt_pod_root)
-      Dir.glob(File.join(fmt_pod_root, "**", "*.{h,cc}")).each do |f|
-        content = File.read(f)
-        unless content.start_with?("// xcode16-fix\\n")
-          patch = "// xcode16-fix\\n" \\
-                  "#undef FMT_USE_CONSTEVAL\\n#define FMT_USE_CONSTEVAL 0\\n" \\
-                  "#undef FMT_CONSTEVAL\\n#define FMT_CONSTEVAL constexpr\\n" \\
-                  "#undef FMT_STRING\\n#define FMT_STRING(s) s\\n"
-          File.write(f, patch + content)
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'fmt'
+      target.build_configurations.each do |cfg|
+        defs = Array(cfg.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || ['$(inherited)'])
+        unless defs.any? { |d| d.to_s.include?('FMT_USE_CONSTEVAL') }
+          cfg.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs + ['FMT_USE_CONSTEVAL=0']
         end
       end
     end
@@ -30,7 +30,7 @@ const withFmtConstEvalFix = (config) =>
 
       let podfile = fs.readFileSync(podfilePath, "utf8");
 
-      if (podfile.includes("xcode16-fix")) {
+      if (podfile.includes("FMT_USE_CONSTEVAL")) {
         return config;
       }
 
