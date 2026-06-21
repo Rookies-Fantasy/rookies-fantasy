@@ -50,7 +50,9 @@ const ApplyAugment = () => {
   const handleUpdateTeamAugment = async (augment?: Augment) => {
     setIsLoading(true);
     try {
-      await UserController.editUserTeam(userId, teamId, { augment });
+      await UserController.editUserTeam(userId, teamId, {
+        augmentId: augment?.id,
+      });
       dispatch(setAugment(augment));
     } catch (error) {
       console.error("Failed to set augment:", error);

@@ -1,8 +1,9 @@
 import auth from "@react-native-firebase/auth";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { SignOut } from "phosphor-react-native";
 import { useState } from "react";
-import { Pressable, Text, View, Image, Alert } from "react-native";
+import { Pressable, Text, View, Image, Alert, Share } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
 import FloatingActionButton from "@/components/FloatingActionButton";
@@ -15,6 +16,11 @@ import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
+  clearCurrentLeague,
+  selectCurrentLeague,
+} from "@/state/slices/leagueSlice";
+import { clearMatchup } from "@/state/slices/matchupSlice";
+import {
   selectAugment,
   selectRosterPlayerCount,
   clearTeam,
@@ -26,6 +32,9 @@ import { QueueStatus } from "@/types/user";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
+// Re-enable once queue bugs are fixed
+const QUEUE_ENABLED = false;
+
 const MyTeam = () => {
   const router = useRouter();
   const team = useAppSelector((state) => state.team);
@@ -33,7 +42,11 @@ const MyTeam = () => {
   const userId = useAppSelector(selectUserId);
   const augment = useAppSelector(selectAugment);
   const playerCount = useAppSelector(selectRosterPlayerCount);
+  const currentLeague = useAppSelector(selectCurrentLeague);
   const dispatch = useAppDispatch();
+
+  const budget = currentLeague?.budget ?? 150000000;
+  const budgetInMillions = budget / 1000000;
 
   const queueStatus = user.queueStatus;
   const isInQueue = queueStatus === QueueStatus.Queued;
@@ -65,6 +78,8 @@ const MyTeam = () => {
       await auth().signOut();
       dispatch(clearUser());
       dispatch(clearTeam());
+      dispatch(clearMatchup());
+      dispatch(clearCurrentLeague());
       router.replace("/(auth)");
     } catch (error) {
       console.log(error);
@@ -123,8 +138,29 @@ const MyTeam = () => {
           onPress={handleLogout}
         />
       </View>
+
+      {currentLeague &&
+        currentLeague.memberCount < currentLeague.numberOfTeams && (
+          <Pressable
+            className="mx-8 mt-4 rounded-lg bg-primary-500 p-4"
+            onPress={async () => {
+              const baseUrl = Constants.expoConfig?.extra?.baseUrl;
+              const inviteUrl = `${baseUrl}/joinLeague?leagueId=${currentLeague.id}`;
+
+              await Share.share({
+                message: `Join my league on Rookies Fantasy!\n`,
+                url: inviteUrl,
+              });
+            }}
+          >
+            <Text className="pbk-h6 text-center text-base-white">
+              INVITE FRIENDS
+            </Text>
+          </Pressable>
+        )}
+
       <View className="flex-1 gap-6 px-8">
-        {playerCount > 0 ? (
+        {playerCount > 0 || team.hasUserChanges ? (
           <>
             <ScrollView
               contentContainerClassName={cn("flex-col p-1 gap-4 pb-24 mt-4")}
@@ -142,7 +178,7 @@ const MyTeam = () => {
                 />
               </View>
             </ScrollView>
-            {!isMatched && !team.hasUserChanges && (
+            {QUEUE_ENABLED && !isMatched && !team.hasUserChanges && (
               <FloatingActionButton
                 buttonBackground={cn(
                   "px-4",
@@ -172,7 +208,7 @@ const MyTeam = () => {
               <Text className="pbk-bl">💸</Text>
               <View className="flex-1">
                 <Text className="pbk-b1 text-base-white">
-                  Build your team. Stay under $150M 💰
+                  Build your team. Stay under ${budgetInMillions}M 💰
                 </Text>
                 <Text className="pbk-b2 text-gray-400">
                   Choose 8 players for your weekly lineup. You&#39;ve got 4

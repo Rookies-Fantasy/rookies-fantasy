@@ -1,8 +1,9 @@
 import { View, Text, Image } from "react-native";
-import { Player } from "@/types/player";
+import { defaultAvatar } from "@/types/asset";
+import { PlayerTeamDisplay } from "@/types/team";
 
 type PlayerDataProps = {
-  player: Player;
+  player: PlayerTeamDisplay;
 };
 
 const PlayerData = ({ player }: PlayerDataProps) => (
@@ -10,7 +11,11 @@ const PlayerData = ({ player }: PlayerDataProps) => (
     <View className="flex-row items-center gap-2">
       <Image
         className="size-14 rounded-full"
-        source={{ uri: player.headshotUrl }}
+        source={
+          player.headshotUrl
+            ? { uri: player.headshotUrl }
+            : defaultAvatar.source
+        }
       />
 
       <View className="flex-1">

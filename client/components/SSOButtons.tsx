@@ -40,8 +40,7 @@ const SSOButtons = () => {
 
         const teams = await UserController.getUserTeams(user.uid);
         if (teams?.length > 0) {
-          let firstTeamId: string;
-          firstTeamId = teams[0].id;
+          const firstTeamId = teams[0].id;
           const teamData = await UserController.getUserTeam(
             user.uid,
             firstTeamId,

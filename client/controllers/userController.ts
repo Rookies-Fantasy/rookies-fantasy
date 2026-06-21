@@ -1,10 +1,11 @@
 import firestore from "@react-native-firebase/firestore";
 import { Augment } from "@/types/augment";
-import { defaultTeam, LineupSlot, Team, TEAM_BALANCE } from "@/types/team";
+import { defaultTeam, TeamLineupSlot, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
 
 const USERS_COLLECTION = "users";
 const TEAMS_COLLECTION = "teams";
+const AUGMENT_COLLECTION = "augments";
 
 export type UserEditModel = Partial<{
   avatarUrl: string;
@@ -15,13 +16,15 @@ export type UserEditModel = Partial<{
 
 export type TeamEditModel = {
   abbreviation: string;
-  augment?: Augment;
+  augmentId?: string;
   logoUrl: string;
   name: string;
+  isLeagueTeam?: boolean;
+  balance?: number;
 };
 
 export type LineupUpdateModel = Partial<{
-  lineup: LineupSlot[];
+  lineup: TeamLineupSlot[];
   balance: number;
 }>;
 
@@ -76,7 +79,8 @@ export class UserController {
         .collection(TEAMS_COLLECTION)
         .add({
           ...params,
-          balance: TEAM_BALANCE,
+          balance: params.balance ?? TEAM_BALANCE,
+          isLeagueTeam: params.isLeagueTeam ?? false,
           record: {
             wins: 0,
             losses: 0,
@@ -103,10 +107,29 @@ export class UserController {
         .doc(teamId)
         .get();
 
+      const augmentId = team.data()?.augmentId;
+      const augmentDoc = augmentId
+        ? await firestore().collection(AUGMENT_COLLECTION).doc(augmentId).get()
+        : null;
+      const augmentData = augmentDoc?.data();
+      const augment: Augment | undefined =
+        augmentDoc?.exists() && augmentData
+          ? {
+              ...(augmentData as Omit<
+                Augment,
+                "id" | "createdAt" | "updatedAt"
+              >),
+              id: augmentDoc.id,
+              createdAt: augmentData.createdAt?.toDate?.()?.toISOString(),
+              updatedAt: augmentData.updatedAt?.toDate?.()?.toISOString(),
+            }
+          : undefined;
+
       return team.exists()
         ? {
             abbreviation: team.data()?.abbreviation,
-            augment: team.data()?.augment,
+            augment,
+            augmentId,
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
@@ -114,6 +137,7 @@ export class UserController {
             bench: team.data()?.bench ?? defaultTeam.bench,
             balance: team.data()?.balance ?? 0,
             record: team.data()?.record ?? defaultTeam.record,
+            isLeagueTeam: team.data()?.isLeagueTeam ?? false,
           }
         : defaultTeam;
     } catch (error) {
@@ -131,13 +155,15 @@ export class UserController {
 
       return teams.docs.map((team) => ({
         abbreviation: team.data()?.abbreviation,
+        augmentId: team.data()?.augmentId,
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
-        lineup: team.data()?.lineup,
-        bench: team.data()?.bench,
-        balance: team.data()?.balance,
-        record: team.data()?.record,
+        lineup: team.data()?.lineup ?? defaultTeam.lineup,
+        bench: team.data()?.bench ?? defaultTeam.bench,
+        balance: team.data()?.balance ?? TEAM_BALANCE,
+        record: team.data()?.record ?? defaultTeam.record,
+        isLeagueTeam: team.data()?.isLeagueTeam ?? false,
       }));
     } catch (error) {
       throw error;
@@ -187,7 +213,7 @@ export class UserController {
   static getSavedTeamLineup = async (
     userId: string,
     teamId: string,
-  ): Promise<{ lineup: LineupSlot[]; balance: number }> => {
+  ): Promise<{ lineup: TeamLineupSlot[]; balance: number }> => {
     try {
       const team = await firestore()
         .collection(USERS_COLLECTION)

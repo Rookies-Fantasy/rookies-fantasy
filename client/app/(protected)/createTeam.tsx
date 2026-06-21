@@ -279,7 +279,7 @@ const CreateTeam = () => {
           control={control}
           name="logoUrl"
           render={({ field: { onChange } }) => (
-            <View className="mb-6 flex-1 flex-row flex-wrap justify-between px-6 py-4">
+            <View className="mb-6 flex-1 flex-row flex-wrap gap-x-[11%] px-6 py-4">
               {teamLogoOptions.map((teamLogoOption, index) => {
                 const isSelected =
                   selectedLogoOption.url === teamLogoOption.url;

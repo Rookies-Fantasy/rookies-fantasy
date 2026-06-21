@@ -1,26 +1,20 @@
 // https://docs.expo.dev/guides/using-eslint/
-import tsPlugin from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser";
 import { defineConfig } from "eslint/config";
 import expoConfig from "eslint-config-expo/flat.js";
 import importPlugin from "eslint-plugin-import";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
   expoConfig,
   importPlugin.flatConfigs.recommended,
   importPlugin.flatConfigs.typescript,
+  tseslint.configs.recommended,
   eslintPluginPrettierRecommended,
   {
     ignores: ["dist/*"],
   },
   {
-    plugins: {
-      "@typescript-eslint": tsPlugin,
-    },
-    languageOptions: {
-      parser: tsParser,
-    },
     rules: {
       "arrow-body-style": ["error", "as-needed"],
       "react/jsx-sort-props": ["error", { ignoreCase: true }],
@@ -43,6 +37,9 @@ export default defineConfig([
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "import/no-named-as-default-member": "off",
     },
     settings: {
       react: {

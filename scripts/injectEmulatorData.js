@@ -517,16 +517,16 @@ const injectUsers = async () => {
       abbreviation: "TT1",
       logoUrl: "https://via.placeholder.com/150",
       balance: 30000000,
-      augment: sampleAugments[0], // Block Party
+      augmentId: sampleAugments[0].id, // Block Party
       lineup: [
         createLineupSlot("PG", samplePlayers[2]), // Luka
         createLineupSlot("SG", samplePlayers[3]), // Anthony Edwards
         createLineupSlot("SF", samplePlayers[0]), // LeBron
         createLineupSlot("PF", samplePlayers[1]), // Giannis
         createLineupSlot("C", samplePlayers[4]), // Bam
-        createLineupSlot("F", null),
-        createLineupSlot("G", null),
-        createLineupSlot("UTIL", null),
+        createLineupSlot("UTIL1", null),
+        createLineupSlot("UTIL2", null),
+        createLineupSlot("UTIL3", null),
       ],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -555,16 +555,16 @@ const injectUsers = async () => {
       abbreviation: "TT2",
       logoUrl: "https://via.placeholder.com/150",
       balance: 35000000,
-      augment: sampleAugments[1], // Frontcourt Focus
+      augmentId: sampleAugments[1].id, // Frontcourt Focus
       lineup: [
         createLineupSlot("PG", null),
         createLineupSlot("SG", null),
         createLineupSlot("SF", samplePlayers[0]), // LeBron
         createLineupSlot("PF", samplePlayers[1]), // Giannis
         createLineupSlot("C", samplePlayers[4]), // Bam
-        createLineupSlot("F", null),
-        createLineupSlot("G", null),
-        createLineupSlot("UTIL", null),
+        createLineupSlot("UTIL1", null),
+        createLineupSlot("UTIL2", null),
+        createLineupSlot("UTIL3", null),
       ],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -615,33 +615,25 @@ const injectMatchup = async (user1Id, user2Id, team1Id, team2Id) => {
     id: matchupId,
     createdAt: new Date(),
     status: "active",
-    weekStartDate: today,
-    away: {
-      awayAugment: team2Data.augment,
-      awayTeamId: team2Id,
-      awayTeamLogo: team2Data.logoUrl,
-      awayTeamName: team2Data.name,
-      awayUserId: user2Id,
-      awayWeeklyAcquisitionsUsed: 0,
+    weekStart: today,
+    homeUserId: user1Id,
+    awayUserId: user2Id,
+    homeTeamId: team1Id,
+    awayTeamId: team2Id,
+    homeTeamSnapshot: {
+      name: team1Data.name,
+      logoUrl: team1Data.logoUrl,
+      record: team1Data.record ?? { wins: 0, losses: 0, draws: 0 },
+      augmentSnapshot: sampleAugments[0],
     },
-    home: {
-      homeAugment: team1Data.augment,
-      homeTeamId: team1Id,
-      homeTeamLogo: team1Data.logoUrl,
-      homeTeamName: team1Data.name,
-      homeUserId: user1Id,
-      homeWeeklyAcquisitionsUsed: 0,
+    awayTeamSnapshot: {
+      name: team2Data.name,
+      logoUrl: team2Data.logoUrl,
+      record: team2Data.record ?? { wins: 0, losses: 0, draws: 0 },
+      augmentSnapshot: sampleAugments[1],
     },
-    [today]: {
-      homeTeam: {
-        score: 0,
-        lineup: team1Data.lineup,
-      },
-      awayTeam: {
-        score: 0,
-        lineup: team2Data.lineup,
-      },
-    },
+    homeLineupSnapshots: {},
+    awayLineupSnapshots: {},
   };
 
   await db.collection("matchups").doc(matchupId).set(matchupData);

@@ -8,21 +8,21 @@ type UseLineupLockArgs = {
 };
 
 export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
-  const apiDate = useMemo(() => {
+  const apiDate = useMemo((): string | null => {
+    if (!matchupStartDate) return null;
+
     const now = new Date();
-
-    if (!matchupStartDate) {
-      return now.toISOString().split("T")[0];
-    }
-
     return now < new Date(matchupStartDate)
       ? matchupStartDate
       : now.toISOString().split("T")[0];
   }, [matchupStartDate]);
 
   const [earliestStartTime, setEarliestStartTime] = useState<string>();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!apiDate) return;
+
     let cancelled = false;
 
     const getEarliestGame = async () => {
@@ -30,9 +30,16 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
         const startTime = await fetchEarliestGameStartTime(apiDate);
         if (!cancelled) {
           setEarliestStartTime(startTime);
+          setError(null);
         }
       } catch (err) {
-        console.log("Failed to fetch earliest game start time", err);
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to fetch game schedule",
+          );
+        }
       }
     };
 
@@ -44,9 +51,12 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
   }, [apiDate]);
 
   const now = new Date();
-  const endOfGameDayPdt = getMidnightPdtFromDate(apiDate);
+  const endOfGameDayPdt = apiDate
+    ? getMidnightPdtFromDate(apiDate)
+    : new Date(0);
 
   const isLineupLocked =
+    !!apiDate &&
     !!earliestStartTime &&
     (now >= new Date(earliestStartTime) ||
       // When local time passes midnight in some timezones, `apiDate` advances to tomorrow
@@ -62,5 +72,6 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
   return {
     isLineupLocked,
     countdown,
+    error,
   };
 };
