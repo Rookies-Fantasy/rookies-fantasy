@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import AuthListener from "@/components/AuthListener";
 import { ThemeWrapper } from "@/components/ThemeWrapper";
+import { connectToEmulators } from "@/utils/emulator";
 import { useAppSelector } from "@/state/hooks";
 import {
   selectIsUserSignedIn,
@@ -27,6 +28,8 @@ import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 const queryClient = new QueryClient();
+
+connectToEmulators();
 
 const RootLayoutNav = () => {
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);

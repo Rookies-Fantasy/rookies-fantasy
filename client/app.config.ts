@@ -111,6 +111,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       supportsTablet: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        ...(environment === "development" && {
+          NSAppTransportSecurity: {
+            NSAllowsLocalNetworking: true,
+            NSAllowsArbitraryLoads: true,
+          },
+        }),
       },
     },
     android: {
