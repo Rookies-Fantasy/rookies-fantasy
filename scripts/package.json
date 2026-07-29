@@ -17,6 +17,7 @@
     "seed:scenario": "tsx emulator/index.ts scenario",
     "seed:nba-players": "tsx emulator/index.ts nba-players",
     "seed:nba-teams": "tsx emulator/index.ts nba-teams",
+    "simulate:day": "tsx emulator/index.ts simulate-day",
     "dev": "tsx emulator/dev.ts"
   },
   "keywords": [],

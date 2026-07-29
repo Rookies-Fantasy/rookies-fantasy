@@ -10,7 +10,8 @@ type ScriptName =
   | "matchup"
   | "scenario"
   | "nba-players"
-  | "nba-teams";
+  | "nba-teams"
+  | "simulate-day";
 
 type ScriptModule = {
   run(db: Firestore, auth: Auth): Promise<void>;
@@ -24,6 +25,7 @@ const SCRIPTS: Record<ScriptName, () => Promise<ScriptModule>> = {
   scenario: () => import("./scripts/injectScenario.js"),
   "nba-players": () => import("./scripts/injectNbaPlayers.js"),
   "nba-teams": () => import("./scripts/injectNbaTeams.js"),
+  "simulate-day": () => import("./scripts/simulateDay.js"),
 };
 
 const main = async (): Promise<void> => {
