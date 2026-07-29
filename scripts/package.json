@@ -8,7 +8,16 @@
     "teams": "node --experimental-json-modules fillNBATeams.js",
     "players": "node --experimental-json-modules fillNBAPlayers.js",
     "playerAverages": "node --experimental-json-modules fillNBAPlayerAverages.js",
-    "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js"
+    "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js",
+    "seed": "tsx emulator/index.ts",
+    "seed:clear": "tsx emulator/index.ts clear",
+    "seed:user": "tsx emulator/index.ts user",
+    "seed:team": "tsx emulator/index.ts team",
+    "seed:matchup": "tsx emulator/index.ts matchup",
+    "seed:scenario": "tsx emulator/index.ts scenario",
+    "seed:nba-players": "tsx emulator/index.ts nba-players",
+    "seed:nba-teams": "tsx emulator/index.ts nba-teams",
+    "dev": "tsx emulator/dev.ts"
   },
   "keywords": [],
   "author": "",
