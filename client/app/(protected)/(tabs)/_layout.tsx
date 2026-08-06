@@ -11,7 +11,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import LeagueSwitcher from "@/components/LeagueSwitcher";
 
 const HomeLayout = () => (
-  <SafeAreaView className="flex-1" edges={["top"]}>
+  // NativeWind's className doesn't reliably apply flex layout to this
+  // SafeAreaView in the current SDK — without an explicit style, its content
+  // (the Tabs navigator) collapses to zero height. See ENG-123.
+  <SafeAreaView className="flex-1" edges={["top"]} style={{ flex: 1 }}>
     <View className="items-center bg-gray-950">
       <LeagueSwitcher />
     </View>
