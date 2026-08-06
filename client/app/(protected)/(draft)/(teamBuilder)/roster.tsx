@@ -5,10 +5,10 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import IconButton from "@/components/IconButton";
 import PlayerRoster from "@/components/PlayerRoster";

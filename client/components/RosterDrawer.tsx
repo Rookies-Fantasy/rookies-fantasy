@@ -1,5 +1,4 @@
-import { View, Text } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { View, Text, ScrollView } from "react-native";
 import BottomSheet from "./BottomSheet";
 import PlayerSlot from "./PlayerSlot";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
