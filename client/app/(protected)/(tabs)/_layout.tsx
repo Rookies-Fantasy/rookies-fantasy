@@ -31,35 +31,37 @@ const HomeLayout = () => (
         name="index"
         options={{
           title: "My Team",
-          tabBarIcon: ({ color }) => <UsersThree color={color} />,
+          tabBarIcon: ({ color }) => <UsersThree color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="arena"
         options={{
           title: "Arena",
-          tabBarIcon: ({ color }) => <Basketball color={color} />,
+          tabBarIcon: ({ color }) => <Basketball color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="matchHistory"
         options={{
           title: "Match History",
-          tabBarIcon: ({ color }) => <ClockCounterClockwise color={color} />,
+          tabBarIcon: ({ color }) => (
+            <ClockCounterClockwise color={color as string} />
+          ),
         }}
       />
       <Tabs.Screen
         name="freeAgents"
         options={{
           title: "Free Agents",
-          tabBarIcon: ({ color }) => <ListBullets color={color} />,
+          tabBarIcon: ({ color }) => <ListBullets color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="leaderboard"
         options={{
           title: "Leaderboard",
-          tabBarIcon: ({ color }) => <Ranking color={color} />,
+          tabBarIcon: ({ color }) => <Ranking color={color as string} />,
         }}
       />
     </Tabs>

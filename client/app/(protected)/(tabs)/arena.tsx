@@ -1,8 +1,7 @@
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 import { Empty, MagnifyingGlass } from "phosphor-react-native";
 import { useCallback, useRef, useState } from "react";
-import { Text, View, Image, Pressable } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { Text, View, Image, Pressable, ScrollView } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import AugmentCard, { iconMap } from "@/components/AugmentCard";
 import DateSelector from "@/components/DateSelector";

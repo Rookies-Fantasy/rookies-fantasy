@@ -1,8 +1,7 @@
 import { Image } from "expo-image";
 import { Check } from "phosphor-react-native";
 import { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
 import Button from "./Button";
