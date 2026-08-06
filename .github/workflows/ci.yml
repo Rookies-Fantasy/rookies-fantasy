@@ -43,7 +43,7 @@ jobs:
 
       - name: Check TypeScript
         working-directory: client
-        run: npm run tsc
+        run: npm run typecheck
 
       - name: Run Linting
         working-directory: client
