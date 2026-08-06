@@ -16,6 +16,10 @@ export default defineConfig([
   },
   {
     rules: {
+      // React Compiler lint rules require React Compiler to be enabled — disabled until adopted
+      "react-hooks/refs": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/set-state-in-effect": "off",
       "arrow-body-style": ["error", "as-needed"],
       "react/jsx-sort-props": ["error", { ignoreCase: true }],
       "react/sort-prop-types": "error",
