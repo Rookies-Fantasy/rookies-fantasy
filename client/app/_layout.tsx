@@ -25,7 +25,7 @@ import { store } from "@/state/store";
 import { themes, ThemeMode } from "@/theme/theme";
 import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
 
-RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 const queryClient = new QueryClient();
 
 const RootLayoutNav = () => {
