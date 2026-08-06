@@ -167,6 +167,14 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
       throw new Error(`Matchup "${matchupId}" not found.`);
     }
 
+    const matchup = doc.data() as Matchup;
+    if (matchup.status !== "active") {
+      console.warn(
+        `Matchup "${matchupId}" is already ${matchup.status}. Skipping simulation.`,
+      );
+      return;
+    }
+
     await updateMatchup(db, doc as QueryDocumentSnapshot<DocumentData>, date);
     return;
   }

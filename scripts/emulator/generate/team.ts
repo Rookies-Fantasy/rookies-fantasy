@@ -1,6 +1,7 @@
+import { TeamLineupSlot } from "../../../client/types/team.js";
 import type { TeamDoc } from "../types/firestore.js";
 
-const defaultLineup = [
+const defaultLineup: TeamLineupSlot[] = [
   { position: "PG", player: null },
   { position: "SG", player: null },
   { position: "SF", player: null },
