@@ -70,10 +70,14 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   const homeUser = createUserDoc(homeEmail, {
     id: home.uid,
     emailVerified: true,
+    queueStatus: "matched",
+    teamId: homeTeamId,
   });
   const awayUser = createUserDoc(awayEmail, {
     id: away.uid,
     emailVerified: true,
+    queueStatus: "matched",
+    teamId: awayTeamId,
   });
   await Promise.all([
     db.collection("users").doc(home.uid).set(homeUser),
@@ -124,15 +128,11 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   );
   batch.set(db.collection("matchups").doc(matchupId), matchup);
   batch.update(db.collection("users").doc(home.uid), {
-    queueStatus: "matched",
     currentMatchupId: matchup.id,
-    teamId: homeTeamId,
     updatedAt: now,
   });
   batch.update(db.collection("users").doc(away.uid), {
-    queueStatus: "matched",
     currentMatchupId: matchup.id,
-    teamId: awayTeamId,
     updatedAt: now,
   });
 

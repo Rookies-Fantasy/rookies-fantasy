@@ -23,5 +23,6 @@ This folder contains local testing helpers for the Firestore/Auth emulators.
 - This is the first pass of the emulator workflow.
 - The seed helpers are intentionally small and schema-aligned.
 - `simulate:day` writes deterministic fake snapshots for active matchups so we can step through a week without live NBA data.
-- `simulate:week` runs `simulate:day` across a sequence of dates. Use `SIM_DATE` and `SIM_DAYS` to control the range.
+- `simulate:week` runs `simulate:day` across the current Monday-Sunday matchup week. Use `SIM_DATE` to choose the starting day and `SIM_DAYS` to limit how many missing days are filled.
+- Re-running the same seed/sim command is intended to be safe for the default scenario because the scripts now skip already-created matchup snapshots.
 - `seed:end-matchup` marks the current default matchup completed and resets both users back to idle.

@@ -112,6 +112,11 @@ const updateMatchup = async (
 ) => {
   const matchup = matchupDoc.data() as Matchup;
 
+  if (matchup.homeLineupSnapshots?.[date] || matchup.awayLineupSnapshots?.[date]) {
+    console.log(`Matchup ${matchupDoc.id} already has snapshots for ${date}. Skipping.`);
+    return;
+  }
+
   const [homeTeamSnap, awayTeamSnap] = await Promise.all([
     db
       .collection("users")
