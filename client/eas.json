@@ -13,7 +13,7 @@
         "image": "latest"
       },
       "ios": {
-        "image": "latest"
+        "image": "sdk-53"
       }
     },
     "ios-simulator": {

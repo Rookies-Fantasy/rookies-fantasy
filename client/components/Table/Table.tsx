@@ -1,6 +1,5 @@
 import { useRef } from "react";
-import { View, FlatList } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { View, FlatList, ScrollView } from "react-native";
 import Row, { RowData } from "./Row";
 
 type TableProps = {

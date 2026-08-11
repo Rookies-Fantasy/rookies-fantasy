@@ -30,7 +30,7 @@ app/
 ## Commands (run from `client/`)
 - Dev: `npm run dev`
 - Test: `npm run test-ci`
-- Typecheck: `npm run tsc`
+- Typecheck: `npm run typecheck`
 - Lint: `npm run lint`
 
 ## Styling (NativeWind + Design System)

@@ -98,13 +98,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     icon: icon,
     scheme: scheme,
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
-    splash: {
-      imageWidth: 200,
-      image: "./assets/images/splash.png",
-      resizeMode: "contain",
-      backgroundColor: "#3B2689",
-    },
     ios: {
       googleServicesFile: getGoogleServicesFile(),
       bundleIdentifier: bundleIdentifier,
@@ -134,6 +127,20 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       "expo-router",
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          imageWidth: 200,
+          image: "./assets/images/splash.png",
+          resizeMode: "contain",
+          backgroundColor: "#3B2689",
+        },
+      ],
+      "expo-status-bar",
+      "expo-web-browser",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "@react-native-firebase/crashlytics",

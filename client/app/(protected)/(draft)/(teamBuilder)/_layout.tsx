@@ -32,14 +32,18 @@ const TeamBuilderLayout = () => {
         name="roster"
         options={{
           title: `ROSTER (${selectedPlayers}/${MAX_PLAYERS})`,
-          tabBarIcon: ({ color }) => <UsersThree color={color} size={20} />,
+          tabBarIcon: ({ color }) => (
+            <UsersThree color={color as string} size={20} />
+          ),
         }}
       />
       <Tabs.Screen
         name="players"
         options={{
           title: "ADD PLAYERS",
-          tabBarIcon: ({ color }) => <UserPlus color={color} size={20} />,
+          tabBarIcon: ({ color }) => (
+            <UserPlus color={color as string} size={20} />
+          ),
         }}
       />
     </Tabs>

@@ -3,8 +3,15 @@ import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { SignOut } from "phosphor-react-native";
 import { useState } from "react";
-import { Pressable, Text, View, Image, Alert, Share } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import {
+  Pressable,
+  Text,
+  View,
+  Image,
+  Alert,
+  Share,
+  ScrollView,
+} from "react-native";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
