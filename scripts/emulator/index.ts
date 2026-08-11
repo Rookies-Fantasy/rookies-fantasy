@@ -8,6 +8,7 @@ type ScriptName =
   | "user"
   | "team"
   | "matchup"
+  | "end-matchup"
   | "scenario"
   | "nba-players"
   | "nba-teams"
@@ -23,6 +24,7 @@ const SCRIPTS: Record<ScriptName, () => Promise<ScriptModule>> = {
   user: () => import("./scripts/injectUser.js"),
   team: () => import("./scripts/injectTeam.js"),
   matchup: () => import("./scripts/injectMatchup.js"),
+  "end-matchup": () => import("./scripts/endMatchup.js"),
   scenario: () => import("./scripts/injectScenario.js"),
   "nba-players": () => import("./scripts/injectNbaPlayers.js"),
   "nba-teams": () => import("./scripts/injectNbaTeams.js"),

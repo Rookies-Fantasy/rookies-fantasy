@@ -10,6 +10,7 @@ This folder contains local testing helpers for the Firestore/Auth emulators.
 - `npm run seed:user`
 - `npm run seed:team`
 - `npm run seed:matchup`
+- `npm run seed:end-matchup`
 - `npm run seed:scenario`
 - `npm run seed:nba-players`
 - `npm run seed:nba-teams`
@@ -23,3 +24,4 @@ This folder contains local testing helpers for the Firestore/Auth emulators.
 - The seed helpers are intentionally small and schema-aligned.
 - `simulate:day` writes deterministic fake snapshots for active matchups so we can step through a week without live NBA data.
 - `simulate:week` runs `simulate:day` across a sequence of dates. Use `SIM_DATE` and `SIM_DAYS` to control the range.
+- `seed:end-matchup` marks the current default matchup completed and resets both users back to idle.

@@ -16,6 +16,7 @@
     "seed:user": "tsx emulator/index.ts user",
     "seed:team": "tsx emulator/index.ts team",
     "seed:matchup": "tsx emulator/index.ts matchup",
+    "seed:end-matchup": "tsx emulator/index.ts end-matchup",
     "seed:scenario": "tsx emulator/index.ts scenario",
     "seed:nba-players": "tsx emulator/index.ts nba-players",
     "seed:nba-teams": "tsx emulator/index.ts nba-teams",
