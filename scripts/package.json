@@ -10,6 +10,8 @@
     "playerAverages": "node --experimental-json-modules fillNBAPlayerAverages.js",
     "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js",
     "seed": "tsx emulator/index.ts",
+    "seed:dev-user": "cross-env USER_EMAIL=dev@test.com USER_PASSWORD=password123 tsx emulator/index.ts user",
+    "seed:opponent": "cross-env USER_EMAIL=opponent@test.com USER_PASSWORD=password123 tsx emulator/index.ts user",
     "seed:clear": "tsx emulator/index.ts clear",
     "seed:user": "tsx emulator/index.ts user",
     "seed:team": "tsx emulator/index.ts team",

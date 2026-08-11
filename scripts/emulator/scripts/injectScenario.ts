@@ -35,29 +35,43 @@ const buildLineup = (players: SeedPlayer[]) =>
   }));
 
 export const run = async (db: Firestore, auth: Auth): Promise<void> => {
-  const password = process.env.USER_PASSWORD ?? "Test1234!";
+  const password = process.env.USER_PASSWORD ?? "password123";
   const playerPool = [...PLAYERS].sort((a, b) =>
     a.playerId.localeCompare(b.playerId),
   );
   const homePlayers = playerPool.slice(0, 8);
   const awayPlayers = playerPool.slice(0, 8).reverse();
+  const homeEmail = process.env.HOME_USER_EMAIL ?? "dev@test.com";
+  const awayEmail = process.env.AWAY_USER_EMAIL ?? "opponent@test.com";
+  const homeTeamId = process.env.HOME_TEAM_ID ?? "default-team";
+  const awayTeamId = process.env.AWAY_TEAM_ID ?? "default-team";
+  const matchupId = process.env.MATCHUP_ID ?? "default-matchup";
 
-  const home = await auth.createUser({
-    email: "home@r.test",
-    password,
-    emailVerified: true,
-  });
-  const away = await auth.createUser({
-    email: "away@r.test",
-    password,
-    emailVerified: true,
-  });
+  const ensureAuthUser = async (email: string) => {
+    try {
+      const existing = await auth.getUserByEmail(email);
+      await auth.updateUser(existing.uid, {
+        password,
+        emailVerified: true,
+      });
+      return existing;
+    } catch {
+      return auth.createUser({
+        email,
+        password,
+        emailVerified: true,
+      });
+    }
+  };
 
-  const homeUser = createUserDoc("home@r.test", {
+  const home = await ensureAuthUser(homeEmail);
+  const away = await ensureAuthUser(awayEmail);
+
+  const homeUser = createUserDoc(homeEmail, {
     id: home.uid,
     emailVerified: true,
   });
-  const awayUser = createUserDoc("away@r.test", {
+  const awayUser = createUserDoc(awayEmail, {
     id: away.uid,
     emailVerified: true,
   });
@@ -70,12 +84,12 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     .collection("users")
     .doc(home.uid)
     .collection("teams")
-    .doc();
+    .doc(homeTeamId);
   const awayTeamRef = db
     .collection("users")
     .doc(away.uid)
     .collection("teams")
-    .doc();
+    .doc(awayTeamId);
   const homeTeam = createTeamDoc({
     id: homeTeamRef.id,
     name: "Home Team",
@@ -98,19 +112,25 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     away.uid,
     awayTeamRef.id,
     awayTeam,
-    { id: matchupRef.id },
+    {
+      id: matchupId,
+      status: "active",
+      updatedAt: new Date(),
+    },
   );
-  await matchupRef.set(matchup);
+  await db.collection("matchups").doc(matchupId).set(matchup);
 
   await Promise.all([
     db.collection("users").doc(home.uid).update({
       queueStatus: "matched",
       currentMatchupId: matchup.id,
+      teamId: homeTeamId,
       updatedAt: new Date(),
     }),
     db.collection("users").doc(away.uid).update({
       queueStatus: "matched",
       currentMatchupId: matchup.id,
+      teamId: awayTeamId,
       updatedAt: new Date(),
     }),
   ]);

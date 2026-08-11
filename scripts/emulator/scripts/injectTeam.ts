@@ -13,9 +13,21 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
     throw new Error(`User "${userId}" not found. Run seed:user first.`);
   }
 
-  const teamRef = db.collection("users").doc(userId).collection("teams").doc();
-  const teamDoc = createTeamDoc({ id: teamRef.id });
+  const teamId = process.env.TEAM_ID ?? "default-team";
+  const teamRef = db.collection("users").doc(userId).collection("teams").doc(teamId);
+  const existingTeamSnap = await teamRef.get();
+  const existingTeam = existingTeamSnap.exists ? existingTeamSnap.data() : undefined;
+  const teamDoc = createTeamDoc({
+    ...(existingTeam ?? {}),
+    id: teamId,
+    updatedAt: new Date(),
+  });
   await teamRef.set(teamDoc);
+
+  await db.collection("users").doc(userId).update({
+    teamId,
+    updatedAt: new Date(),
+  });
 
   console.log("Created team");
   console.log(`  Team ID: ${teamRef.id}`);

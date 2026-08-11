@@ -5,6 +5,8 @@ This folder contains local testing helpers for the Firestore/Auth emulators.
 ## Commands
 
 - `npm run seed:clear`
+- `npm run seed:dev-user`
+- `npm run seed:opponent`
 - `npm run seed:user`
 - `npm run seed:team`
 - `npm run seed:matchup`

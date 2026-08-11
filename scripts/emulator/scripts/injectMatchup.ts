@@ -5,13 +5,14 @@ import type { TeamDoc } from "../types/firestore.js";
 
 export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   const homeUserId = process.env.HOME_USER_ID;
-  const homeTeamId = process.env.HOME_TEAM_ID;
   const awayUserId = process.env.AWAY_USER_ID;
-  const awayTeamId = process.env.AWAY_TEAM_ID;
+  const homeTeamId = process.env.HOME_TEAM_ID ?? "default-team";
+  const awayTeamId = process.env.AWAY_TEAM_ID ?? "default-team";
+  const matchupId = process.env.MATCHUP_ID ?? "default-matchup";
 
-  if (!homeUserId || !homeTeamId || !awayUserId || !awayTeamId) {
+  if (!homeUserId || !awayUserId) {
     throw new Error(
-      "Required env vars: HOME_USER_ID, HOME_TEAM_ID, AWAY_USER_ID, AWAY_TEAM_ID.",
+      "Required env vars: HOME_USER_ID and AWAY_USER_ID. TEAM_ID defaults to default-team.",
     );
   }
 
@@ -27,7 +28,8 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   const homeTeam = homeTeamSnap.data() as TeamDoc;
   const awayTeam = awayTeamSnap.data() as TeamDoc;
 
-  const matchupRef = db.collection("matchups").doc();
+  const matchupRef = db.collection("matchups").doc(matchupId);
+  const existingMatchupSnap = await matchupRef.get();
   const matchupDoc = createMatchupDoc(
     homeUserId,
     homeTeamId,
@@ -35,7 +37,12 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
     awayUserId,
     awayTeamId,
     awayTeam,
-    { id: matchupRef.id },
+    {
+      ...(existingMatchupSnap.exists ? existingMatchupSnap.data() : {}),
+      id: matchupId,
+      status: "active",
+      updatedAt: new Date(),
+    } as any,
   );
 
   await matchupRef.set(matchupDoc);
