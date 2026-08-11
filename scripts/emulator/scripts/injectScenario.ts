@@ -102,9 +102,14 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     abbreviation: "AWY",
     lineup: buildLineup(awayPlayers),
   });
-  await Promise.all([homeTeamRef.set(homeTeam), awayTeamRef.set(awayTeam)]);
+  const batch = db.batch();
+  const now = new Date();
 
-  const matchupRef = db.collection("matchups").doc();
+  batch.set(db.collection("users").doc(home.uid), homeUser);
+  batch.set(db.collection("users").doc(away.uid), awayUser);
+  batch.set(homeTeamRef, homeTeam);
+  batch.set(awayTeamRef, awayTeam);
+
   const matchup = createMatchupDoc(
     home.uid,
     homeTeamRef.id,
@@ -115,25 +120,23 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     {
       id: matchupId,
       status: "active",
-      updatedAt: new Date(),
     },
   );
-  await db.collection("matchups").doc(matchupId).set(matchup);
+  batch.set(db.collection("matchups").doc(matchupId), matchup);
+  batch.update(db.collection("users").doc(home.uid), {
+    queueStatus: "matched",
+    currentMatchupId: matchup.id,
+    teamId: homeTeamId,
+    updatedAt: now,
+  });
+  batch.update(db.collection("users").doc(away.uid), {
+    queueStatus: "matched",
+    currentMatchupId: matchup.id,
+    teamId: awayTeamId,
+    updatedAt: now,
+  });
 
-  await Promise.all([
-    db.collection("users").doc(home.uid).update({
-      queueStatus: "matched",
-      currentMatchupId: matchup.id,
-      teamId: homeTeamId,
-      updatedAt: new Date(),
-    }),
-    db.collection("users").doc(away.uid).update({
-      queueStatus: "matched",
-      currentMatchupId: matchup.id,
-      teamId: awayTeamId,
-      updatedAt: new Date(),
-    }),
-  ]);
+  await batch.commit();
 
   console.log("Created scenario");
   console.log(`  Home UID: ${home.uid}`);

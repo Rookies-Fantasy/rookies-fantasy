@@ -20,7 +20,6 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   await matchupRef.set(
     {
       status: "completed",
-      updatedAt: new Date(),
     },
     { merge: true },
   );
@@ -36,14 +35,11 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
         : awayUserId;
 
   const batch = db.batch();
-  const now = new Date();
-
   batch.set(
     matchupRef,
     {
       status: "completed",
       winnerId,
-      updatedAt: now,
     },
     { merge: true },
   );
@@ -52,7 +48,6 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
     batch.update(db.collection("users").doc(homeUserId), {
         queueStatus: "idle",
         currentMatchupId: null,
-        updatedAt: now,
       });
   }
 
@@ -60,7 +55,6 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
     batch.update(db.collection("users").doc(awayUserId), {
         queueStatus: "idle",
         currentMatchupId: null,
-        updatedAt: now,
       });
   }
 
@@ -69,7 +63,6 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
       db.collection("users").doc(homeUserId).collection("teams").doc(homeTeamId),
       {
         matchupId: null,
-        updatedAt: now,
       },
     );
   }
@@ -79,7 +72,6 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
       db.collection("users").doc(awayUserId).collection("teams").doc(awayTeamId),
       {
         matchupId: null,
-        updatedAt: now,
       },
     );
   }

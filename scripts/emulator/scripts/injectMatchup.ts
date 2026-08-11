@@ -41,32 +41,39 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
       ...(existingMatchupSnap.exists ? existingMatchupSnap.data() : {}),
       id: matchupId,
       status: "active",
-      updatedAt: new Date(),
     } as any,
   );
 
-  await matchupRef.set(matchupDoc);
+  const batch = db.batch();
+  const now = new Date();
 
-  await Promise.all([
-    db.collection("users").doc(homeUserId).update({
-      queueStatus: "matched",
-      currentMatchupId: matchupDoc.id,
-      updatedAt: new Date(),
-    }),
-    db.collection("users").doc(awayUserId).update({
-      queueStatus: "matched",
-      currentMatchupId: matchupDoc.id,
-      updatedAt: new Date(),
-    }),
-    db.collection("users").doc(homeUserId).collection("teams").doc(homeTeamId).update({
+  batch.set(matchupRef, matchupDoc);
+  batch.update(db.collection("users").doc(homeUserId), {
+    queueStatus: "matched",
+    currentMatchupId: matchupDoc.id,
+    updatedAt: now,
+  });
+  batch.update(db.collection("users").doc(awayUserId), {
+    queueStatus: "matched",
+    currentMatchupId: matchupDoc.id,
+    updatedAt: now,
+  });
+  batch.update(
+    db.collection("users").doc(homeUserId).collection("teams").doc(homeTeamId),
+    {
       matchupId: matchupDoc.id,
-      updatedAt: new Date(),
-    }),
-    db.collection("users").doc(awayUserId).collection("teams").doc(awayTeamId).update({
+      updatedAt: now,
+    },
+  );
+  batch.update(
+    db.collection("users").doc(awayUserId).collection("teams").doc(awayTeamId),
+    {
       matchupId: matchupDoc.id,
-      updatedAt: new Date(),
-    }),
-  ]);
+      updatedAt: now,
+    },
+  );
+
+  await batch.commit();
 
   console.log("Created matchup");
   console.log(`  Matchup ID: ${matchupDoc.id}`);
