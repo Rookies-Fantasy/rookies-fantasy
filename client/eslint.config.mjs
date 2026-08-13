@@ -12,7 +12,7 @@ export default defineConfig([
   tseslint.configs.recommended,
   eslintPluginPrettierRecommended,
   {
-    ignores: ["dist/*"],
+    ignores: ["dist/*", ".expo/**", "expo-env.d.ts"],
   },
   {
     rules: {
