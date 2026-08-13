@@ -13,7 +13,7 @@
         "image": "latest"
       },
       "ios": {
-        "image": "sdk-53"
+        "image": "sdk-57"
       }
     },
     "ios-simulator": {
@@ -50,7 +50,7 @@
     },
     "production": {
       "ios": {
-        "ascAppId": "${ASC_APP_ID_PRODUCTION}"
+        "ascAppId": "6755507347"
       }
     }
   }
