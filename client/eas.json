@@ -50,7 +50,7 @@
     },
     "production": {
       "ios": {
-        "ascAppId": "${ASC_APP_ID_PRODUCTION}"
+        "ascAppId": "6755507347"
       }
     }
   }
