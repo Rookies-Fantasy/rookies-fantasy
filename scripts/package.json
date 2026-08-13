@@ -1,0 +1,24 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "teams": "node --experimental-json-modules fillNBATeams.js",
+    "players": "node --experimental-json-modules fillNBAPlayers.js",
+    "playerAverages": "node --experimental-json-modules fillNBAPlayerAverages.js",
+    "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@balldontlie/sdk": "^1.2.2",
+    "cross-env": "^10.1.0",
+    "dotenv": "^16.5.0",
+    "firebase-admin": "^13.4.0",
+    "fs": "^0.0.1-security"
+  }
+}

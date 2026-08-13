@@ -1,0 +1,38 @@
+import { ReactNode } from "react";
+import { Pressable } from "react-native";
+import Cell from "./Cell";
+
+export type RowData = {
+  id: string;
+  cells: (string | number | ReactNode)[];
+};
+
+type RowProps = {
+  cellVariant?: "scrollable" | "sticky";
+  onPress?: () => void;
+  rowData: RowData;
+  variant?: "header" | "row";
+  widthClasses?: string[];
+};
+
+const Row = ({
+  cellVariant = "sticky",
+  onPress,
+  rowData,
+  variant = "row",
+  widthClasses = [],
+}: RowProps) => (
+  <Pressable className="flex-row" onPress={onPress}>
+    {rowData.cells.map((item, index) => (
+      <Cell
+        cellVariant={cellVariant}
+        content={item}
+        key={index}
+        variant={variant}
+        widthClass={widthClasses[index]}
+      />
+    ))}
+  </Pressable>
+);
+
+export default Row;
