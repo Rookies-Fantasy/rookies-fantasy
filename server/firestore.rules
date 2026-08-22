@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow get, list:
+        if request.auth != null && request.auth.uid == userId;
+      allow create, update:
+        if request.auth != null && request.auth.uid == userId;
+      allow delete:
+        if false;
+    }
+
+    match /users/{userId}/teams/{teamId} {
+      allow get, list:
+        if request.auth != null && request.auth.uid == userId;
+      allow write:
+        if request.auth != null &&
+          request.auth.uid == userId &&
+          request.resource.data.keys().hasAll(['abbreviation', 'logoUrl', 'name']);
+    }
+
+    match /nbaPlayers/{playerId} {
+      allow read:
+        if request.auth != null;
+    }
+
+    match /nbaPlayerAverages/{playerId} {
+      allow read:
+        if request.auth != null;
+    }
+
+    match /nbaTeams/{teamId} {
+      allow read:
+        if request.auth != null;
+    }
+
+    match /augments/{augmentId} {
+      allow read:
+        if request.auth != null;
+      allow write:
+        if request.auth != null;
+    }
+
+    match /matchups/{matchupId} {
+      allow read:
+        if request.auth != null;
+      allow write:
+        if request.auth != null;
+    }
+
+    // League documents are readable by any signed-in user, but every mutation
+    // must go through the createLeague / joinLeague callable Cloud Functions.
+    //
+    // Direct client writes previously allowed any authenticated user to
+    // arrayUnion their own uid onto ANY league's `userIds`. getLeagueStandings
+    // gates access on that field, so a self-join granted read access to every
+    // member's private `users/{uid}/teams` documents. Admin SDK writes from the
+    // Cloud Functions bypass these rules, so denying writes here costs nothing.
+    match /leagues/{leagueId} {
+      allow read:
+        if request.auth != null;
+      allow write:
+        if false;
+    }
+
+    match /leagues/{leagueId}/members/{memberId} {
+      allow read:
+        if request.auth != null;
+      allow write:
+        if false;
+    }
+  }
+}
