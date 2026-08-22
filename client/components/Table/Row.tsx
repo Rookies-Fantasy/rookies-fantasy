@@ -9,6 +9,7 @@ export type RowData = {
 
 type RowProps = {
   cellVariant?: "scrollable" | "sticky";
+  heightClass?: string;
   onPress?: () => void;
   rowData: RowData;
   variant?: "header" | "row";
@@ -17,6 +18,7 @@ type RowProps = {
 
 const Row = ({
   cellVariant = "sticky",
+  heightClass,
   onPress,
   rowData,
   variant = "row",
@@ -27,6 +29,7 @@ const Row = ({
       <Cell
         cellVariant={cellVariant}
         content={item}
+        heightClass={heightClass}
         key={index}
         variant={variant}
         widthClass={widthClasses[index]}
