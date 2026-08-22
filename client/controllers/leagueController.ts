@@ -1,10 +1,13 @@
 import firestore from "@react-native-firebase/firestore";
+import { getFunctionBaseUrl } from "@/firebase/config";
 import { League } from "@/types/league";
-import { Team } from "@/types/team";
-import { callFunction } from "@/utils/callableUtils";
+import { LeagueStandingTeam } from "@/types/standings";
+import { defaultTeam, Team } from "@/types/team";
+import { callFunction, getIdToken } from "@/utils/callableUtils";
 
 const LEAGUE_COLLECTION = "leagues";
 
+const SIGNED_OUT_ERROR = "No authenticated user";
 const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
 const JOIN_SIGNED_OUT_ERROR = "You must be signed in to join a league";
 
@@ -81,6 +84,43 @@ export class LeagueController {
       };
     } catch (error) {
       console.error("Error fetching league:", error);
+      throw error;
+    }
+  };
+
+  // Loads every team competing in a league via the getLeagueStandings cloud
+  // function. Team docs are private to their owner under Firestore rules, so a
+  // client can't read other members' teams directly — the function reads them
+  // with admin privileges and gates access to league members. Returned teams are
+  // mapped into full Team shapes with typed defaults for the fields standings
+  // don't use (lineup/bench/balance).
+  static getLeagueTeams = async (league: League): Promise<Team[]> => {
+    const idToken = await getIdToken(SIGNED_OUT_ERROR);
+    const url = `${getFunctionBaseUrl("getLeagueStandings")}?leagueId=${league.id}`;
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(`HTTP ${response.status}: ${message}`);
+      }
+
+      const data: { teams: LeagueStandingTeam[] } = await response.json();
+
+      return data.teams.map((team) => ({
+        ...defaultTeam,
+        id: team.id,
+        name: team.name,
+        logoUrl: team.logoUrl,
+        record: team.record,
+        isLeagueTeam: true,
+      }));
+    } catch (error) {
+      console.error("getLeagueTeams failed:", url, error);
       throw error;
     }
   };
