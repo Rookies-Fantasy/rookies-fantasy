@@ -200,14 +200,17 @@ const JoinLeague = () => {
         );
       }
 
-      await LeagueController.joinLeague(leagueId, teamId, userId);
+      // The joining user is taken from the auth token by the cloud function. The
+      // response carries the post-join league, so Redux is updated from it
+      // rather than by re-reading the document.
+      const joinedLeague = await LeagueController.joinLeague(leagueId, teamId);
+      dispatch(setCurrentLeague(joinedLeague));
 
       router.replace("/(protected)/(tabs)");
-    } catch (error: any) {
-      Alert.alert(
-        "Failed to join league",
-        `${error.message}. Please try again.`,
-      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Something went wrong";
+      Alert.alert("Failed to join league", `${message}. Please try again.`);
     } finally {
       setIsLoading(false);
     }
