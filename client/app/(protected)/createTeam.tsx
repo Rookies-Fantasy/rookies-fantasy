@@ -68,16 +68,19 @@ const CreateTeam = () => {
         try {
           const teams = await UserController.getUserTeams(userId);
 
-          // A user should only have either 0 or 1 team on the createTeam screen.
-          if (teams?.length === 1) {
+          // This screen edits the user's ranked team. A user may also have
+          // league teams, so target the non-league team rather than assuming
+          // a single team exists.
+          const rankedTeam = teams?.find((team) => !team.isLeagueTeam);
+          if (rankedTeam) {
             const matchedLogo = teamLogoOptions.find(
-              (option) => option.url === teams[0].logoUrl,
+              (option) => option.url === rankedTeam.logoUrl,
             );
             setSelectedLogoOption(matchedLogo || defaultTeamLogo);
             reset({
-              abbreviation: teams[0].abbreviation,
-              name: teams[0].name,
-              logoUrl: teams[0].logoUrl,
+              abbreviation: rankedTeam.abbreviation,
+              name: rankedTeam.name,
+              logoUrl: rankedTeam.logoUrl,
             });
           }
         } catch (error) {
@@ -93,15 +96,16 @@ const CreateTeam = () => {
     setIsLoading(true);
     try {
       const teams = await UserController.getUserTeams(userId);
+      const rankedTeam = teams?.find((team) => !team.isLeagueTeam);
       let newTeamId: string;
 
-      if (teams?.length === 0) {
+      // Create the ranked team if the user doesn't have one yet, otherwise
+      // edit the existing ranked team. League teams are left untouched.
+      if (!rankedTeam) {
         newTeamId = await UserController.addUserTeam(userId, model);
-      } else if (teams?.length === 1) {
-        newTeamId = teams[0].id;
-        await UserController.editUserTeam(userId, newTeamId, model);
       } else {
-        throw new Error("Unexpected number of teams in create team screen");
+        newTeamId = rankedTeam.id;
+        await UserController.editUserTeam(userId, newTeamId, model);
       }
 
       const teamData = await UserController.getUserTeam(userId, newTeamId);

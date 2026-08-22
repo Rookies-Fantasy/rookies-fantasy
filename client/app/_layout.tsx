@@ -10,12 +10,13 @@ import {
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import AuthListener from "@/components/AuthListener";
 import { ThemeWrapper } from "@/components/ThemeWrapper";
+import { initFirebase } from "@/firebase/config";
 import { useAppSelector } from "@/state/hooks";
 import {
   selectIsUserSignedIn,
@@ -73,16 +74,33 @@ const RootLayout = () => {
     "ClashDisplay-Bold": require("../assets/fonts/ClashDisplay-Bold.ttf"),
     "Manrope-Regular": require("../assets/fonts/Manrope-Regular.otf"),
   });
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
-    if (fontsLoaded) {
-      // Hide the splash screen once fonts are loaded
+    let mounted = true;
+    initFirebase()
+      .catch((error) => {
+        console.error("Firebase initialization failed:", error);
+      })
+      .finally(() => {
+        if (mounted) {
+          setFirebaseReady(true);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const appReady = fontsLoaded && firebaseReady;
+
+  useEffect(() => {
+    if (appReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [appReady]);
 
-  // If fonts haven't loaded yet, don't render the app
-  if (!fontsLoaded) {
+  if (!appReady) {
     return null;
   }
 
