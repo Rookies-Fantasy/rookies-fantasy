@@ -27,7 +27,6 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { BalldontlieAPI } from "@balldontlie/sdk";
-import fetch from "node-fetch";
 
 // ---------------------------------------------------------------------------
 // Emulator-aware init (no service account needed)
@@ -42,8 +41,8 @@ process.env.FIREBASE_AUTH_EMULATOR_HOST =
 // NOT FIREBASE_PROJECT_ID, which points at staging for other scripts.
 const projectId = process.env.SEED_PROJECT_ID || "rookies-fantasy-development";
 
-console.log(`🔧 Using Firestore emulator at ${process.env.FIRESTORE_EMULATOR_HOST}`);
-console.log(`📁 Project: ${projectId}`);
+console.log(`Using Firestore emulator at ${process.env.FIRESTORE_EMULATOR_HOST}`);
+console.log(`Project: ${projectId}`);
 
 initializeApp({ projectId });
 const db = getFirestore();
@@ -293,10 +292,10 @@ const calculateSalary = (fpts) => {
 const buildSeededPlayers = async (teams) => {
   const teamsById = new Map(teams.map((t) => [t.id, t]));
 
-  console.log("🌐 Matching curated players against active players...");
+  console.log("Matching curated players against active players...");
   const names = PLAYER_POOL.map((p) => p.name);
   const rawByName = await fetchActivePlayersByName(names);
-  console.log(`   ✓ matched ${rawByName.size}/${names.length}`);
+  console.log(`   - matched ${rawByName.size}/${names.length}`);
 
   const matched = PLAYER_POOL.map((entry) => {
     const raw = rawByName.get(entry.name.toLowerCase());
@@ -307,13 +306,13 @@ const buildSeededPlayers = async (teams) => {
     (p) => !rawByName.has(p.name.toLowerCase()),
   );
   if (missing.length) {
-    console.log(`   ⚠ not found (skipped): ${missing.map((m) => m.name).join(", ")}`);
+    console.log(`   WARN: not found (skipped): ${missing.map((m) => m.name).join(", ")}`);
   }
 
-  console.log("🌐 Fetching 2024 season averages...");
+  console.log("Fetching 2024 season averages...");
   const playerIds = matched.map(({ raw }) => raw.id.toString());
   const statsById = await fetchSeasonAverages(playerIds);
-  console.log(`   ✓ averages for ${statsById.size} players`);
+  console.log(`   - averages for ${statsById.size} players`);
 
   return matched.map(({ entry, raw }) => {
     const id = raw.id.toString();
@@ -511,34 +510,45 @@ const randomRecord = () => {
 // ---------------------------------------------------------------------------
 // Clearing
 // ---------------------------------------------------------------------------
+// Firestore caps a batch at 500 writes. nbaPlayers can hold the full active
+// roster (~570 docs) if `npm run players` was pointed at the emulator, so
+// deletes are chunked rather than assuming the seed-sized dataset.
+const BATCH_LIMIT = 500;
+
+const commitDeletes = async (refs) => {
+  for (const group of chunk(refs, BATCH_LIMIT)) {
+    const batch = db.batch();
+    group.forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+};
+
 const clearCollection = async (name) => {
   const snap = await db.collection(name).get();
-  const batch = db.batch();
-  snap.docs.forEach((d) => batch.delete(d.ref));
-  await batch.commit();
+  await commitDeletes(snap.docs.map((d) => d.ref));
 };
 
 const clearSeedData = async () => {
-  console.log("\n🧹 Clearing existing seed data...");
+  console.log("\nClearing existing seed data...");
   for (const name of ["nbaTeams", "nbaPlayers", "augments", "matchups", "leagues"]) {
     await clearCollection(name);
   }
   // Users + their teams subcollections
   for (const u of USERS) {
     const teams = await db.collection("users").doc(u.id).collection("teams").get();
-    const batch = db.batch();
-    teams.docs.forEach((d) => batch.delete(d.ref));
-    batch.delete(db.collection("users").doc(u.id));
-    await batch.commit();
+    await commitDeletes([
+      ...teams.docs.map((d) => d.ref),
+      db.collection("users").doc(u.id),
+    ]);
   }
-  console.log("   ✓ cleared");
+  console.log("   - cleared");
 };
 
 // ---------------------------------------------------------------------------
 // Injectors
 // ---------------------------------------------------------------------------
 const injectTeamsAndPlayers = async (seededPlayers, teams) => {
-  console.log("\n📊 Injecting nbaTeams + nbaPlayers...");
+  console.log("\nInjecting nbaTeams + nbaPlayers...");
   let batch = db.batch();
   teams.forEach((t) => batch.set(db.collection("nbaTeams").doc(t.id), t));
   await batch.commit();
@@ -546,15 +556,15 @@ const injectTeamsAndPlayers = async (seededPlayers, teams) => {
   batch = db.batch();
   seededPlayers.forEach((p) => batch.set(db.collection("nbaPlayers").doc(p.id), p));
   await batch.commit();
-  console.log(`   ✓ ${teams.length} teams, ${seededPlayers.length} players`);
+  console.log(`   - ${teams.length} teams, ${seededPlayers.length} players`);
 };
 
 const injectAugments = async () => {
-  console.log("🎯 Injecting augments...");
+  console.log("Injecting augments...");
   const batch = db.batch();
   sampleAugments.forEach((a) => batch.set(db.collection("augments").doc(a.id), a));
   await batch.commit();
-  console.log(`   ✓ ${sampleAugments.length} augments`);
+  console.log(`   - ${sampleAugments.length} augments`);
 };
 
 // Creates a team doc in users/{userId}/teams and returns { teamId, selection }.
@@ -580,7 +590,7 @@ const createTeamDoc = async (userId, { name, abbreviation, logoUrl, augmentId, i
 // Creates Auth-emulator accounts whose UID == the Firestore user doc id, so
 // logging in as user1@test.com / Test1234 resolves to the seeded user doc.
 const injectAuthUsers = async () => {
-  console.log("🔐 Injecting Auth accounts (password: " + USER_PASSWORD + ")...");
+  console.log("Injecting Auth accounts (password: " + USER_PASSWORD + ")...");
   for (const u of USERS) {
     try {
       await auth.deleteUser(u.id);
@@ -595,11 +605,11 @@ const injectAuthUsers = async () => {
       displayName: u.username,
     });
   }
-  console.log(`   ✓ ${USERS.length} Auth accounts`);
+  console.log(`   - ${USERS.length} Auth accounts`);
 };
 
 const injectUsersAndTeams = async (seededPlayers) => {
-  console.log("👥 Injecting users + ranked teams...");
+  console.log("Injecting users + ranked teams...");
   const cursor = { value: 0 };
   const result = {};
 
@@ -630,7 +640,7 @@ const injectUsersAndTeams = async (seededPlayers) => {
 
     result[u.id] = { teamId, selection };
   }
-  console.log(`   ✓ ${USERS.length} users with ranked teams`);
+  console.log(`   - ${USERS.length} users with ranked teams`);
   return result;
 };
 
@@ -696,7 +706,7 @@ const injectMatchup = async ({ id, home, away, status, weekStart, gameDate }) =>
 };
 
 const injectMatchups = async (teamsByUser) => {
-  console.log("⚔️  Injecting matchups...");
+  console.log(" Injecting matchups...");
   const thisWeek = fmt(mondayOf(0));
   const lastWeek = fmt(mondayOf(-1));
   const activeGameDate = fmt(new Date());
@@ -738,12 +748,12 @@ const injectMatchups = async (teamsByUser) => {
   await db.collection("users").doc("mock-user-2").update({ currentMatchupId: active.id });
 
   console.log(
-    `   ✓ active ${active.home}-${active.away}, completed ${completed.home}-${completed.away}`,
+    `   - active ${active.home}-${active.away}, completed ${completed.home}-${completed.away}`,
   );
 };
 
 const injectLeague = async (seededPlayers) => {
-  console.log("🏆 Injecting league + league teams...");
+  console.log("Injecting league + league teams...");
   const memberIds = ["mock-user-1", "mock-user-2", "mock-user-5", "mock-user-6"];
   const cursor = { value: 7 }; // offset so league teams differ from ranked ones
   const teamIds = [];
@@ -773,7 +783,40 @@ const injectLeague = async (seededPlayers) => {
     createdAt: new Date(),
     updatedAt: new Date(),
   });
-  console.log(`   ✓ league with ${memberIds.length} teams`);
+  console.log(`   - league with ${memberIds.length} teams`);
+};
+
+// ---------------------------------------------------------------------------
+// Seed self-check
+// ---------------------------------------------------------------------------
+// Season averages come from BallDontLie, so a player can come back without
+// them. toDisplay() copies averageStats straight onto every lineup/bench
+// player, and augment validation reads player.averageStats.<stat> — a missing
+// object crashes selectIsAugmentValid with "Cannot read property 'blocks' of
+// undefined". Fail here instead of seeding data the app cannot open.
+const REQUIRED_STATS = [
+  "points",
+  "rebounds",
+  "assists",
+  "steals",
+  "blocks",
+  "turnovers",
+  "minutes",
+];
+
+const assertAverageStats = (players) => {
+  const bad = players.filter((p) =>
+    REQUIRED_STATS.some((stat) => typeof p.averageStats?.[stat] !== "number"),
+  );
+
+  if (bad.length > 0) {
+    const names = bad.map((p) => `${p.firstName} ${p.lastName}`).join(", ");
+    throw new Error(
+      `Missing averageStats for: ${names}. Seeding these would crash augment validation.`,
+    );
+  }
+
+  console.log(`   - averageStats verified on ${players.length} players`);
 };
 
 // ---------------------------------------------------------------------------
@@ -781,10 +824,10 @@ const injectLeague = async (seededPlayers) => {
 // ---------------------------------------------------------------------------
 const main = async () => {
   try {
-    console.log("🚀 Seeding mock data...");
-    console.log("\n🌐 Fetching teams from BallDontLie...");
+    console.log("Seeding mock data...");
+    console.log("\nFetching teams from BallDontLie...");
     const teams = await fetchTeams();
-    console.log(`   ✓ ${teams.length} teams`);
+    console.log(`   - ${teams.length} teams`);
     const seededPlayers = await buildSeededPlayers(teams);
 
     if (seededPlayers.length < 10) {
@@ -792,6 +835,8 @@ const main = async () => {
         `Only ${seededPlayers.length} players resolved — aborting (check BallDontLie key/tier).`,
       );
     }
+
+    assertAverageStats(seededPlayers);
 
     await clearSeedData();
     await injectTeamsAndPlayers(seededPlayers, teams);
@@ -801,20 +846,20 @@ const main = async () => {
     await injectMatchups(teamsByUser);
     await injectLeague(seededPlayers);
 
-    console.log("\n✨ Seed complete!");
-    console.log("📋 Summary:");
+    console.log("\nSeed complete!");
+    console.log("Summary:");
     console.log(`   - ${teams.length} NBA teams`);
     console.log(`   - ${seededPlayers.length} NBA players`);
     console.log(`   - ${sampleAugments.length} augments`);
     console.log(`   - ${USERS.length} users (Auth + Firestore, each with a ranked team)`);
     console.log(`   - 2 matchups (1 active, 1 completed)`);
     console.log(`   - 1 league (4 teams)`);
-    console.log("\n🔑 Login with any of:");
+    console.log("\nLogin with any of:");
     USERS.forEach((u) => console.log(`   - ${u.email}  /  ${USER_PASSWORD}`));
-    console.log("\n💡 Emulator UI: http://localhost:4000\n");
+    console.log("\nEmulator UI: http://localhost:4000\n");
     process.exit(0);
   } catch (err) {
-    console.error("❌ Seed failed:", err);
+    console.error("Seed failed:", err);
     process.exit(1);
   }
 };
