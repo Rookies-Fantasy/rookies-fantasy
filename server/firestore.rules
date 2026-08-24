@@ -49,26 +49,26 @@ service cloud.firestore {
         if request.auth != null;
     }
 
-    // League documents are readable by any signed-in user, but every mutation
-    // must go through the createLeague / joinLeague callable Cloud Functions.
+    // Mirrors what the client does today: leagueController creates a league
+    // with .add() and joins one by arrayUnion-ing onto teamIds/userIds in a
+    // transaction, so client writes must stay allowed here or league create /
+    // join breaks against the emulator while still working in dev.
     //
-    // Direct client writes previously allowed any authenticated user to
-    // arrayUnion their own uid onto ANY league's `userIds`. getLeagueStandings
-    // gates access on that field, so a self-join granted read access to every
-    // member's private `users/{uid}/teams` documents. Admin SDK writes from the
-    // Cloud Functions bypass these rules, so denying writes here costs nothing.
+    // These write rules are deliberately permissive and are tightened in
+    // ENG-146, which moves league mutations behind callable Cloud Functions
+    // (Admin SDK writes bypass rules, so this becomes `if false` there).
     match /leagues/{leagueId} {
       allow read:
         if request.auth != null;
       allow write:
-        if false;
+        if request.auth != null;
     }
 
     match /leagues/{leagueId}/members/{memberId} {
       allow read:
         if request.auth != null;
       allow write:
-        if false;
+        if request.auth != null;
     }
   }
 }

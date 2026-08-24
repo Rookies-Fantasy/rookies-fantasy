@@ -18,6 +18,19 @@ From `server/functions/`:
 - Lint: `npm run lint`
 - External data: BallDontLie SDK (`@balldontlie/sdk`) for NBA stats
 
+## Local development
+
+Local work runs against the Firebase emulator suite, not the deployed
+`rookies-fantasy-development` project:
+1. `server/functions/` — `npm run serve` (Auth 9099, Firestore 8080, Functions 5001; state persists in `server/emulator-data/`)
+2. `scripts/` — `npm run seed-mock` (needs `BALLDONTLIE_API_KEY` in `scripts/.env`)
+3. `client/` — `npm run dev`
+
+Devices reach the emulators over Tailscale. Setup and caveats live in
+`client/.env.example` and the Local development section of `client/CLAUDE.md`
+— note that emulator work is iOS/simulator only, Android cleartext is not
+configured.
+
 ## Important Notes
 
 - NEVER commit .env files

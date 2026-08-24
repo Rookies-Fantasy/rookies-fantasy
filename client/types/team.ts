@@ -1,6 +1,4 @@
 import { Augment } from "./augment";
-// Type-only import: erased at build, so it introduces no runtime cycle even
-// though player.ts imports Position from this file.
 import type { Player } from "./player";
 
 export const TEAM_BALANCE = 150000000;
@@ -19,10 +17,6 @@ export type PlayerTeamDisplay = {
   salary: number;
   id: string;
   teamAbbreviation: string;
-  // Lineup players must carry season averages: augment validation reads
-  // player.averageStats (see utils/augmentUtils.ts). Reuse Player's shape so
-  // the two can't drift. Required so any construction site that omits it fails
-  // to compile instead of crashing at runtime.
   averageStats: Player["averageStats"];
 };
 
