@@ -1,4 +1,4 @@
-import { ConfigContext, ExpoConfig } from "expo/config";
+import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const EAS_PROJECT_ID = "ee1dd2e5-d9ed-45d5-9c39-85529018afab";
 const PROJECT_SLUG = "rookies-fantasy";
@@ -10,6 +10,40 @@ const PACKAGE_NAME = "com.rookies.rookiesfantasy";
 const ICON = "./assets/images/ios-light-icon.png";
 const ADAPTIVE_ICON = "./assets/images/adaptive-icon.png";
 const SCHEME = "myapp";
+
+type IosInfoPlist = {
+  ITSAppUsesNonExemptEncryption: boolean;
+  NSAppTransportSecurity?: {
+    NSAllowsLocalNetworking: boolean;
+    NSExceptionDomains?: Record<
+      string,
+      {
+        NSExceptionAllowsInsecureHTTPLoads: boolean;
+        NSIncludesSubdomains: boolean;
+      }
+    >;
+  };
+};
+
+// The Firebase project the build talks to. Development's id is known and pinned
+// here; preview and production resolve theirs from EXPO_PUBLIC_FIREBASE_PROJECT_ID
+// or, failing that, from the environment-specific google-services file bundled
+// into the build (see firebase/config.ts). An empty string here deliberately
+// means "resolve at runtime" — it must never silently fall back to development.
+const getFirebaseProjectId = (
+  environment: "development" | "preview" | "production",
+) => {
+  const configured = process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID;
+  if (configured) {
+    return configured;
+  }
+
+  if (environment === "development") {
+    return "rookies-fantasy-development";
+  }
+
+  return "";
+};
 
 const getBaseUrl = (environment: "development" | "preview" | "production") => {
   if (environment === "production") {
@@ -89,6 +123,33 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   const baseUrl = getBaseUrl(environment);
 
+  const getIosInfoPlist = (): IosInfoPlist => {
+    const infoPlist: IosInfoPlist = {
+      ITSAppUsesNonExemptEncryption: false,
+    };
+
+    if (environment !== "development") {
+      return infoPlist;
+    }
+
+    const emulatorHost = process.env.EXPO_PUBLIC_EMULATOR_HOST ?? "";
+
+    infoPlist.NSAppTransportSecurity =
+      emulatorHost === ""
+        ? { NSAllowsLocalNetworking: true }
+        : {
+            NSAllowsLocalNetworking: true,
+            NSExceptionDomains: {
+              [emulatorHost]: {
+                NSExceptionAllowsInsecureHTTPLoads: true,
+                NSIncludesSubdomains: true,
+              },
+            },
+          };
+
+    return infoPlist;
+  };
+
   return {
     ...config,
     name: name,
@@ -102,9 +163,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       googleServicesFile: getGoogleServicesFile(),
       bundleIdentifier: bundleIdentifier,
       supportsTablet: true,
-      infoPlist: {
-        ITSAppUsesNonExemptEncryption: false,
-      },
+      infoPlist: getIosInfoPlist(),
     },
     android: {
       adaptiveIcon: {
@@ -159,6 +218,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         projectId: EAS_PROJECT_ID,
       },
       baseUrl,
+      // Published so runtime code can tell which environment it is in without
+      // re-reading APP_ENV, which is a build-time-only variable.
+      environment,
+      firebaseProjectId: getFirebaseProjectId(environment),
     },
     updates: {
       url: "https://u.expo.dev/ee1dd2e5-d9ed-45d5-9c39-85529018afab",

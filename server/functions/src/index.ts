@@ -1,5 +1,6 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
 
@@ -235,14 +236,21 @@ export const createUserInDatabase = functions.auth
     }
 
     try {
-      await usersRef.doc(uid).set({
-        id: uid,
-        email: email,
-        emailVerified: emailVerified,
-        queueStatus: "idle",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      // Merged, not overwritten: this trigger can land after a profile has
+      // already been written for the uid (local seeding, or any re-fire of the
+      // auth event), and a plain set() would wipe username/dateOfBirth/
+      // avatarUrl/teamId off the doc.
+      await usersRef.doc(uid).set(
+        {
+          id: uid,
+          email: email,
+          emailVerified: emailVerified,
+          queueStatus: "idle",
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     } catch (error) {
       console.error("Error creating user in Firestore:", error);
     }
@@ -392,7 +400,7 @@ export const updateDailyPlayerData = functions
       const playerDocRef = playerQuery.docs[0].ref;
 
       const updateObj: any = {
-        gamelog: admin.firestore.FieldValue.arrayUnion(gamelog),
+        gamelog: FieldValue.arrayUnion(gamelog),
       };
 
       const latestAvg = seasonAvgMap[String(gamelog.playerId)];
@@ -920,12 +928,12 @@ export const processQueue = functions
 
               transaction.update(user1.ref, {
                 queueStatus: "matching",
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
               });
 
               transaction.update(user2.ref, {
                 queueStatus: "matching",
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
               });
             }
           }
@@ -965,12 +973,12 @@ export const processQueue = functions
             user1.ref.update({
               currentMatchupId: matchupId,
               queueStatus: "matched",
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             }),
             user2.ref.update({
               currentMatchupId: matchupId,
               queueStatus: "matched",
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             }),
           ]);
 
@@ -1285,9 +1293,9 @@ export const weeklyMatchupReset = functions.pubsub
       const userUpdates = matchedUsersSnapshot.docs.map(async (userDoc) => {
         await userDoc.ref.update({
           queueStatus: "idle",
-          queuedAt: admin.firestore.FieldValue.delete(),
-          currentMatchupId: admin.firestore.FieldValue.delete(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          queuedAt: FieldValue.delete(),
+          currentMatchupId: FieldValue.delete(),
+          updatedAt: FieldValue.serverTimestamp(),
         });
         console.log(`Reset user ${userDoc.id} to idle`);
       });

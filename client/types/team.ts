@@ -1,4 +1,5 @@
 import { Augment } from "./augment";
+import type { Player } from "./player";
 
 export const TEAM_BALANCE = 150000000;
 
@@ -16,6 +17,7 @@ export type PlayerTeamDisplay = {
   salary: number;
   id: string;
   teamAbbreviation: string;
+  averageStats: Player["averageStats"];
 };
 
 export type TeamLineupSlot = {

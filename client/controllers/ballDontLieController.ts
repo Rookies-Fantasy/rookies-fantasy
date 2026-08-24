@@ -1,10 +1,6 @@
 import { getAuth } from "@react-native-firebase/auth";
+import { getFunctionBaseUrl } from "@/firebase/config";
 import { isNotNil } from "@/utils/jsUtils";
-
-const EARLIEST_GAME_START_TIME_URL =
-  "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getEarliestGameStartTime";
-const LIVE_DATA_URL =
-  "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData";
 
 export const fetchEarliestGameStartTime = async (date: string) => {
   try {
@@ -19,7 +15,7 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     const idToken = await currentUser.getIdToken();
 
     const response = await fetch(
-      `${EARLIEST_GAME_START_TIME_URL}?date=${date}`,
+      `${getFunctionBaseUrl("getEarliestGameStartTime")}?date=${date}`,
       {
         method: "GET",
         headers: {
@@ -62,7 +58,7 @@ export const fetchLivePlayerData = async (playerIds?: string[]) => {
 
     const idToken = await currentUser.getIdToken();
 
-    const response = await fetch(LIVE_DATA_URL, {
+    const response = await fetch(getFunctionBaseUrl("getLiveData"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

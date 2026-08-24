@@ -10,6 +10,12 @@ firebase-debug.*.log*
 # Firebase cache
 .firebase/
 
+# Firebase emulator persisted data
+emulator-data/
+
+# Firebase emulator data export snapshots
+functions/firebase-export-*/
+
 # Firebase config
 
 # Uncomment this if you'd like others to create their own Firebase project.
