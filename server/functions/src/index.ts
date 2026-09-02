@@ -1,27 +1,15 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
-import { FieldPath, FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
-import { mapInBatches } from "./leagues/batching";
-import { STANDINGS_FANOUT_CONCURRENCY } from "./leagues/constants";
+import { EMPTY_PAYLOAD, LeagueDocument, RawPayload } from "./leagues/types";
 import {
   evaluateJoinEligibility,
   JoinRejectionCode,
-} from "./leagues/joinEligibility";
-import { isLeagueMember } from "./leagues/membership";
-import { toLeagueDocument, toStandingTeam } from "./leagues/mapping";
-import { buildStandingsReadPlan } from "./leagues/standingsPlan";
-import {
-  EMPTY_PAYLOAD,
-  LeagueDocument,
-  LeagueStandingTeam,
-  RawPayload,
-} from "./leagues/types";
-import {
+  toLeagueDocument,
   validateCreateLeagueInput,
   validateJoinLeagueInput,
-  validateLeagueId,
 } from "./leagues/validation";
 
 admin.initializeApp();
@@ -1436,13 +1424,24 @@ const TEAM_SUBCOLLECTION = "teams";
 
 // Reads a league document into its typed shape. Returns null when the document
 // does not exist, which the eligibility rules treat as "League not found".
+// Returns null when the league does not exist. A league that exists but does
+// not parse is corrupt — only the server writes these documents — so it throws
+// rather than letting the caller act on a half-read league.
 const readLeagueDocument = (
   snapshot: FirebaseFirestore.DocumentSnapshot,
 ): LeagueDocument | null => {
   if (!snapshot.exists) {
     return null;
   }
-  return toLeagueDocument(snapshot.data() ?? EMPTY_PAYLOAD);
+
+  const league = toLeagueDocument(snapshot.data() ?? EMPTY_PAYLOAD);
+
+  if (league === null) {
+    console.error(`League ${snapshot.id} is missing or has malformed fields`);
+    throw new functions.https.HttpsError("internal", "League data is invalid");
+  }
+
+  return league;
 };
 
 // The league fields returned to the client. Mirrors `League` in
@@ -1474,8 +1473,7 @@ const toLeagueResponse = (
 //
 // `creatorUserId` / `userIds` are stamped from the verified auth context and can
 // never come from the payload — that, plus the Firestore rules denying direct
-// writes to `leagues/{id}`, is what makes the membership list trustworthy for
-// getLeagueStandings' access gate.
+// writes to `leagues/{id}`, is what keeps the membership list trustworthy.
 export const createLeague = functions.https.onCall(
   async (data: RawPayload, context): Promise<{ league: LeagueResponse }> => {
     if (!context.auth) {
@@ -1547,7 +1545,6 @@ const JOIN_REJECTION_STATUS: Record<
   JoinRejectionCode,
   functions.https.FunctionsErrorCode
 > = {
-  "league-not-found": "not-found",
   "team-already-joined": "already-exists",
   "user-already-joined": "already-exists",
   "league-full": "resource-exhausted",
@@ -1591,10 +1588,11 @@ export const joinLeague = functions.https.onCall(
     try {
       return await db.runTransaction(async (transaction) => {
         // All reads must precede writes inside a Firestore transaction.
-        const [leagueSnapshot, teamSnapshot] = await Promise.all([
-          transaction.get(leagueRef),
-          transaction.get(teamRef),
-        ]);
+        // getAll fetches both documents in a single round trip.
+        const [leagueSnapshot, teamSnapshot] = await transaction.getAll(
+          leagueRef,
+          teamRef,
+        );
 
         if (!teamSnapshot.exists) {
           throw new functions.https.HttpsError(
@@ -1604,6 +1602,11 @@ export const joinLeague = functions.https.onCall(
         }
 
         const league = readLeagueDocument(leagueSnapshot);
+
+        if (league === null) {
+          throw new functions.https.HttpsError("not-found", "League not found");
+        }
+
         const eligibility = evaluateJoinEligibility(league, teamId, uid);
 
         if (!eligibility.allowed) {
@@ -1612,10 +1615,6 @@ export const joinLeague = functions.https.onCall(
             eligibility.message,
           );
         }
-
-        // evaluateJoinEligibility only returns `allowed` for a league that
-        // exists, so this cannot be null here.
-        const joinedLeague: LeagueDocument = league ?? toLeagueDocument({});
 
         transaction.update(leagueRef, {
           memberCount: FieldValue.increment(1),
@@ -1626,10 +1625,10 @@ export const joinLeague = functions.https.onCall(
 
         return {
           league: toLeagueResponse(leagueId, {
-            ...joinedLeague,
-            memberCount: joinedLeague.memberCount + 1,
-            teamIds: [...joinedLeague.teamIds, teamId],
-            userIds: [...joinedLeague.userIds, uid],
+            ...league,
+            memberCount: league.memberCount + 1,
+            teamIds: [...league.teamIds, teamId],
+            userIds: [...league.userIds, uid],
           }),
         };
       });
@@ -1639,90 +1638,6 @@ export const joinLeague = functions.https.onCall(
       }
       console.error("Error joining league:", error);
       throw new functions.https.HttpsError("internal", "Failed to join league");
-    }
-  },
-);
-
-// Returns the standings-relevant data for every team in a league. Team docs live
-// under each owner's private `users/{uid}/teams` subcollection, which client
-// security rules only let that owner read. This runs with admin privileges so a
-// league member can see all members' records without opening up those rules.
-// Access is gated to league members only — a gate that is only sound because
-// league membership is now written exclusively by the callables above.
-export const getLeagueStandings = functions.https.onRequest(
-  async (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      res.status(401).send("Unauthorized");
-      return;
-    }
-
-    const idToken = authHeader.split("Bearer ")[1];
-    let uid: string;
-    try {
-      const decoded = await admin.auth().verifyIdToken(idToken);
-      uid = decoded.uid;
-    } catch {
-      res.status(401).send("Unauthorized");
-      return;
-    }
-
-    const rawLeagueId = req.query.leagueId;
-    const idValidation = validateLeagueId(
-      typeof rawLeagueId === "string" ? rawLeagueId : "",
-    );
-
-    if (!idValidation.valid) {
-      res.status(400).send(idValidation.message);
-      return;
-    }
-
-    try {
-      const db = admin.firestore();
-      const leagueSnapshot = await db
-        .collection(LEAGUE_COLLECTION)
-        .doc(idValidation.leagueId)
-        .get();
-
-      const league = readLeagueDocument(leagueSnapshot);
-
-      if (league === null) {
-        res.status(404).send("League not found");
-        return;
-      }
-
-      // Only members of the league may view its standings.
-      if (!isLeagueMember(league, uid)) {
-        res.status(403).send("Forbidden");
-        return;
-      }
-
-      // Each planned read is narrowed to the league's own team ids, so a member
-      // who plays in ten leagues costs one read here rather than ten. The plan
-      // is also capped, and executed in bounded batches instead of firing one
-      // query per member at once.
-      const plan = buildStandingsReadPlan(league.userIds, league.teamIds);
-
-      const snapshots = await mapInBatches(
-        plan,
-        STANDINGS_FANOUT_CONCURRENCY,
-        (task) =>
-          db
-            .collection(USER_COLLECTION)
-            .doc(task.userId)
-            .collection(TEAM_SUBCOLLECTION)
-            .where(FieldPath.documentId(), "in", task.teamIds)
-            .get(),
-      );
-
-      const teams: LeagueStandingTeam[] = snapshots.flatMap((snapshot) =>
-        snapshot.docs.map((doc) => toStandingTeam(doc.id, doc.data())),
-      );
-
-      res.json({ teams });
-    } catch (err) {
-      console.error("Error fetching league standings:", err);
-      res.status(500).json({ error: "Failed to fetch standings" });
     }
   },
 );

@@ -2,47 +2,54 @@ import { getAuth } from "@react-native-firebase/auth";
 import { getFunctionBaseUrl } from "@/firebase/config";
 import { isNil } from "@/utils/jsUtils";
 
-// Firebase HTTPS callables speak a fixed wire protocol: the payload goes out
-// wrapped in `{ data: ... }`, and the response comes back as either
-// `{ result: ... }` or `{ error: { status, message } }`.
-// @react-native-firebase/functions is not installed — adding it would force a
-// native rebuild — so the protocol is spoken directly over fetch here.
-
 export type CallablePayload = Record<string, string | number | boolean>;
 
-export type CallableResponseBody<TResult> = {
-  result?: TResult;
-  error?: { status?: string; message?: string };
+// The callable wire protocol: the payload goes out as `{ data }` and comes back
+// as `{ result }` or `{ error: { message } }`. @react-native-firebase/functions
+// is not installed — it would force a native rebuild — so we speak it over fetch.
+type CallableResponseBody<TResult> = {
+  result: TResult | null;
+  error: { message: string } | null;
 };
 
-export const EMPTY_RESULT_ERROR = "The server returned an empty response";
+// Infrastructure failures (gateway errors, cold-start timeouts) can answer with
+// HTML or an empty body, so the wire shape is normalised here and the status
+// code drives the message when there is nothing to read.
+const readCallableBody = async <TResult>(
+  response: Response,
+): Promise<CallableResponseBody<TResult>> => {
+  try {
+    const parsed: Partial<CallableResponseBody<TResult>> =
+      await response.json();
 
-// Turns a callable's HTTP status + parsed body into its result, or throws with
-// the server's own message. The messages are surfaced to the user as-is, so the
-// server stays the single source of truth for failure copy.
-export const unwrapCallableResponse = <TResult>(
+    return { result: parsed.result ?? null, error: parsed.error ?? null };
+  } catch {
+    return { result: null, error: null };
+  }
+};
+
+// Server error messages are surfaced to the user as-is, so the server stays the
+// single source of truth for failure copy.
+const unwrapCallableResponse = <TResult>(
   status: number,
   body: CallableResponseBody<TResult>,
 ): TResult => {
   if (status < 200 || status > 299) {
-    const message = body.error?.message ?? "";
+    const message = isNil(body.error) ? "" : body.error.message;
+
     throw new Error(
       message.length > 0 ? message : `Request failed with status ${status}`,
     );
   }
 
-  const result = body.result;
-  if (isNil(result)) {
-    throw new Error(EMPTY_RESULT_ERROR);
+  if (isNil(body.result)) {
+    throw new Error("The server returned an empty response");
   }
 
-  return result;
+  return body.result;
 };
 
-// Resolves the signed-in user's ID token, or throws the caller's own
-// "you must be signed in" copy. Shared by every authenticated function call so
-// the unauthenticated path can't drift between them.
-export const getIdToken = async (signedOutMessage: string): Promise<string> => {
+const getIdToken = async (signedOutMessage: string): Promise<string> => {
   const currentUser = getAuth().currentUser;
 
   if (isNil(currentUser)) {
@@ -52,18 +59,6 @@ export const getIdToken = async (signedOutMessage: string): Promise<string> => {
   return currentUser.getIdToken();
 };
 
-const readCallableBody = async <TResult>(
-  response: Response,
-): Promise<CallableResponseBody<TResult>> => {
-  try {
-    return await response.json();
-  } catch {
-    return {};
-  }
-};
-
-// POSTs to an HTTPS callable and returns its result, throwing the server's error
-// message on failure.
 export const callFunction = async <TResult>(
   functionName: string,
   data: CallablePayload,
@@ -80,9 +75,6 @@ export const callFunction = async <TResult>(
     body: JSON.stringify({ data }),
   });
 
-  // Infrastructure failures (gateway errors, cold-start timeouts) can answer with
-  // HTML or an empty body. Falling back to an empty body lets the status code
-  // drive the error message instead of throwing a JSON parse error at the caller.
   const body = await readCallableBody<TResult>(response);
 
   return unwrapCallableResponse<TResult>(response.status, body);
