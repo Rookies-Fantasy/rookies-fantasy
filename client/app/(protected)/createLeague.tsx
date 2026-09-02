@@ -186,6 +186,20 @@ const CreateLeague = () => {
       });
 
       const teamData = await UserController.getUserTeam(userId, teamId);
+
+      // The creator's uid is taken from the auth token by the cloud function, so
+      // it is deliberately not passed here.
+      const league = await LeagueController.createLeague({
+        name: data.leagueName,
+        numberOfTeams: data.numberOfTeams,
+        budget: data.budget,
+        initialTeamId: teamId,
+      });
+
+      // Redux is only pointed at the new team once the league it belongs to
+      // exists. The cloud function rejects for several reasons the old direct
+      // write could not, and making this team active before that succeeds would
+      // leave the app holding a league team with no league.
       if (teamData) {
         dispatch(
           setTeam({
@@ -201,19 +215,16 @@ const CreateLeague = () => {
         );
       }
 
-      const league = await LeagueController.createLeague(userId, {
-        name: data.leagueName,
-        numberOfTeams: data.numberOfTeams,
-        budget: data.budget,
-        initialTeamId: teamId,
-      });
-
       dispatch(setCurrentLeague(league));
       router.dismissAll();
       router.replace("/(protected)/(tabs)");
     } catch (error) {
       console.error("Failed to create league:", error);
-      Alert.alert("Error", "Failed to create league. Please try again.");
+      // The cloud function owns the failure copy, so its message is surfaced
+      // as-is; several of its rejections are things the user can act on.
+      const message =
+        error instanceof Error ? error.message : "Something went wrong";
+      Alert.alert("Failed to create league", `${message}. Please try again.`);
     } finally {
       setIsLoading(false);
     }

@@ -49,26 +49,18 @@ service cloud.firestore {
         if request.auth != null;
     }
 
-    // Mirrors what the client does today: leagueController creates a league
-    // with .add() and joins one by arrayUnion-ing onto teamIds/userIds in a
-    // transaction, so client writes must stay allowed here or league create /
-    // join breaks against the emulator while still working in dev.
-    //
-    // These write rules are deliberately permissive and are tightened in
-    // ENG-146, which moves league mutations behind callable Cloud Functions
-    // (Admin SDK writes bypass rules, so this becomes `if false` there).
     match /leagues/{leagueId} {
       allow read:
         if request.auth != null;
       allow write:
-        if request.auth != null;
+        if false;
     }
 
     match /leagues/{leagueId}/members/{memberId} {
       allow read:
         if request.auth != null;
       allow write:
-        if request.auth != null;
+        if false;
     }
   }
 }

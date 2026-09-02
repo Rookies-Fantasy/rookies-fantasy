@@ -3,6 +3,14 @@ import * as admin from "firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
+import { EMPTY_PAYLOAD, LeagueDocument, RawPayload } from "./leagues/types";
+import {
+  evaluateJoinEligibility,
+  JoinRejectionCode,
+  toLeagueDocument,
+  validateCreateLeagueInput,
+  validateJoinLeagueInput,
+} from "./leagues/validation";
 
 admin.initializeApp();
 
@@ -1409,3 +1417,227 @@ const isValidISODate = (value: string): boolean => {
   const date = new Date(`${value}T00:00:00Z`);
   return !isNaN(date.getTime());
 };
+
+const LEAGUE_COLLECTION = "leagues";
+const USER_COLLECTION = "users";
+const TEAM_SUBCOLLECTION = "teams";
+
+// Reads a league document into its typed shape. Returns null when the document
+// does not exist, which the eligibility rules treat as "League not found".
+// Returns null when the league does not exist. A league that exists but does
+// not parse is corrupt — only the server writes these documents — so it throws
+// rather than letting the caller act on a half-read league.
+const readLeagueDocument = (
+  snapshot: FirebaseFirestore.DocumentSnapshot,
+): LeagueDocument | null => {
+  if (!snapshot.exists) {
+    return null;
+  }
+
+  const league = toLeagueDocument(snapshot.data() ?? EMPTY_PAYLOAD);
+
+  if (league === null) {
+    console.error(`League ${snapshot.id} is missing or has malformed fields`);
+    throw new functions.https.HttpsError("internal", "League data is invalid");
+  }
+
+  return league;
+};
+
+// The league fields returned to the client. Mirrors `League` in
+// client/types/league.ts.
+type LeagueResponse = {
+  id: string;
+  name: string;
+  numberOfTeams: number;
+  budget: number;
+  memberCount: number;
+  teamIds: string[];
+  userIds: string[];
+};
+
+const toLeagueResponse = (
+  id: string,
+  league: LeagueDocument,
+): LeagueResponse => ({
+  id,
+  name: league.name,
+  numberOfTeams: league.numberOfTeams,
+  budget: league.budget,
+  memberCount: league.memberCount,
+  teamIds: league.teamIds,
+  userIds: league.userIds,
+});
+
+// Creates a league on behalf of the caller.
+//
+// `creatorUserId` / `userIds` are stamped from the verified auth context and can
+// never come from the payload — that, plus the Firestore rules denying direct
+// writes to `leagues/{id}`, is what keeps the membership list trustworthy.
+export const createLeague = functions.https.onCall(
+  async (data: RawPayload, context): Promise<{ league: LeagueResponse }> => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "You must be signed in to create a league",
+      );
+    }
+
+    const uid = context.auth.uid;
+    const validation = validateCreateLeagueInput(data ?? EMPTY_PAYLOAD);
+
+    if (!validation.valid) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        validation.message,
+      );
+    }
+
+    const input = validation.input;
+    const db = admin.firestore();
+
+    // The initial team must belong to the caller, otherwise a league could be
+    // seeded with somebody else's team id.
+    const teamDoc = await db
+      .collection(USER_COLLECTION)
+      .doc(uid)
+      .collection(TEAM_SUBCOLLECTION)
+      .doc(input.initialTeamId)
+      .get();
+
+    if (!teamDoc.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "Team not found for the signed-in user",
+      );
+    }
+
+    const leagueRef = db.collection(LEAGUE_COLLECTION).doc();
+    const league: LeagueDocument = {
+      name: input.name,
+      creatorUserId: uid,
+      numberOfTeams: input.numberOfTeams,
+      budget: input.budget,
+      memberCount: 1,
+      teamIds: [input.initialTeamId],
+      userIds: [uid],
+    };
+
+    try {
+      await leagueRef.set({
+        ...league,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Error creating league:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to create league",
+      );
+    }
+
+    return { league: toLeagueResponse(leagueRef.id, league) };
+  },
+);
+
+const JOIN_REJECTION_STATUS: Record<
+  JoinRejectionCode,
+  functions.https.FunctionsErrorCode
+> = {
+  "team-already-joined": "already-exists",
+  "user-already-joined": "already-exists",
+  "league-full": "resource-exhausted",
+};
+
+// Adds the caller's team to a league.
+//
+// This is the server-side replacement for the Firestore transaction that used to
+// run in client/controllers/leagueController.ts. It enforces the same
+// preconditions — league exists, team not already joined, user not already
+// joined, league not full — plus a hard league-size cap, and it verifies the team
+// actually belongs to the caller.
+export const joinLeague = functions.https.onCall(
+  async (data: RawPayload, context): Promise<{ league: LeagueResponse }> => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "You must be signed in to join a league",
+      );
+    }
+
+    const uid = context.auth.uid;
+    const validation = validateJoinLeagueInput(data ?? EMPTY_PAYLOAD);
+
+    if (!validation.valid) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        validation.message,
+      );
+    }
+
+    const { leagueId, teamId } = validation.input;
+    const db = admin.firestore();
+    const leagueRef = db.collection(LEAGUE_COLLECTION).doc(leagueId);
+    const teamRef = db
+      .collection(USER_COLLECTION)
+      .doc(uid)
+      .collection(TEAM_SUBCOLLECTION)
+      .doc(teamId);
+
+    try {
+      return await db.runTransaction(async (transaction) => {
+        // All reads must precede writes inside a Firestore transaction.
+        // getAll fetches both documents in a single round trip.
+        const [leagueSnapshot, teamSnapshot] = await transaction.getAll(
+          leagueRef,
+          teamRef,
+        );
+
+        if (!teamSnapshot.exists) {
+          throw new functions.https.HttpsError(
+            "not-found",
+            "Team not found for the signed-in user",
+          );
+        }
+
+        const league = readLeagueDocument(leagueSnapshot);
+
+        if (league === null) {
+          throw new functions.https.HttpsError("not-found", "League not found");
+        }
+
+        const eligibility = evaluateJoinEligibility(league, teamId, uid);
+
+        if (!eligibility.allowed) {
+          throw new functions.https.HttpsError(
+            JOIN_REJECTION_STATUS[eligibility.code],
+            eligibility.message,
+          );
+        }
+
+        transaction.update(leagueRef, {
+          memberCount: FieldValue.increment(1),
+          teamIds: FieldValue.arrayUnion(teamId),
+          userIds: FieldValue.arrayUnion(uid),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        return {
+          league: toLeagueResponse(leagueId, {
+            ...league,
+            memberCount: league.memberCount + 1,
+            teamIds: [...league.teamIds, teamId],
+            userIds: [...league.userIds, uid],
+          }),
+        };
+      });
+    } catch (error) {
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      console.error("Error joining league:", error);
+      throw new functions.https.HttpsError("internal", "Failed to join league");
+    }
+  },
+);

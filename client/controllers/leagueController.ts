@@ -1,14 +1,18 @@
 import firestore from "@react-native-firebase/firestore";
 import { League } from "@/types/league";
 import { Team } from "@/types/team";
+import { callFunction } from "@/utils/callableUtils";
 
 const LEAGUE_COLLECTION = "leagues";
+
+const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
+const JOIN_SIGNED_OUT_ERROR = "You must be signed in to join a league";
 
 export type LeagueEditModel = {
   name: string;
   numberOfTeams: number;
   budget: number;
-  initialTeamId?: string;
+  initialTeamId: string;
 };
 
 export type LeagueTeamInfo = {
@@ -81,85 +85,55 @@ export class LeagueController {
     }
   };
 
-  static createLeague = async (
-    userId: string,
-    params: LeagueEditModel,
-  ): Promise<League> => {
+  // Creates a league through the createLeague cloud function. `leagues/{id}` is
+  // read-only to clients under Firestore rules — membership has to be written by
+  // the server, otherwise any signed-in user could add themselves to any league
+  // and read every member's private team data through getLeagueStandings.
+  //
+  // The creator's uid comes from the verified auth token, not from here, and the
+  // team must already exist under users/{uid}/teams/{initialTeamId}.
+  static createLeague = async (params: LeagueEditModel): Promise<League> => {
     try {
-      // Create team for the user in their teams subcollection
-
-      const leagueRef = await firestore()
-        .collection(LEAGUE_COLLECTION)
-        .add({
+      const { league } = await callFunction<{ league: League }>(
+        "createLeague",
+        {
           name: params.name,
-          creatorUserId: userId,
           numberOfTeams: params.numberOfTeams,
           budget: params.budget,
-          memberCount: 1,
-          teamIds: [params.initialTeamId],
-          userIds: [userId],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+          initialTeamId: params.initialTeamId,
+        },
+        CREATE_SIGNED_OUT_ERROR,
+      );
 
-      const leagueDoc = await leagueRef.get();
-      const data = leagueDoc.data();
-
-      return {
-        budget: data?.budget,
-        id: leagueDoc.id,
-        name: data?.name,
-        numberOfTeams: data?.numberOfTeams,
-        memberCount: data?.memberCount,
-        teamIds: data?.teamIds ?? [],
-        userIds: data?.userIds ?? [],
-      };
+      return league;
     } catch (error) {
       console.error("Error creating league:", error);
       throw error;
     }
   };
 
+  // Joins a league through the joinLeague cloud function, which enforces the
+  // membership preconditions (league exists, team/user not already joined, league
+  // not full) inside a transaction. There is no userId parameter by design: the
+  // joining user is taken from the verified auth token.
+  //
+  // Returns the league as it stands after the join, so callers can update Redux
+  // without a follow-up read.
   static joinLeague = async (
     leagueId: string,
     teamId: string,
-    userId: string,
-  ) => {
+  ): Promise<League> => {
     try {
-      await firestore().runTransaction(async (transaction) => {
-        const leagueRef = firestore()
-          .collection(LEAGUE_COLLECTION)
-          .doc(leagueId);
+      const { league } = await callFunction<{ league: League }>(
+        "joinLeague",
+        { leagueId, teamId },
+        JOIN_SIGNED_OUT_ERROR,
+      );
 
-        const leagueDoc = await transaction.get(leagueRef);
-
-        if (!leagueDoc.exists) {
-          throw new Error("League not found");
-        }
-
-        const league = leagueDoc.data();
-
-        if (league?.teamIds?.includes(teamId)) {
-          throw new Error("Team already joined");
-        }
-
-        if (league?.userIds?.includes(userId)) {
-          throw new Error("User already joined");
-        }
-
-        if (league?.memberCount >= league?.numberOfTeams) {
-          throw new Error("League is full");
-        }
-
-        transaction.update(leagueRef, {
-          memberCount: firestore.FieldValue.increment(1),
-          teamIds: firestore.FieldValue.arrayUnion(teamId),
-          userIds: firestore.FieldValue.arrayUnion(userId),
-        });
-      });
-    } catch (error: any) {
+      return league;
+    } catch (error) {
       console.error("Join league error:", error);
-      throw new Error(error.message);
+      throw error;
     }
   };
 }
