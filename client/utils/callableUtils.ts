@@ -49,7 +49,7 @@ const unwrapCallableResponse = <TResult>(
   return body.result;
 };
 
-const getIdToken = async (signedOutMessage: string): Promise<string> => {
+export const getIdToken = async (signedOutMessage: string): Promise<string> => {
   const currentUser = getAuth().currentUser;
 
   if (isNil(currentUser)) {

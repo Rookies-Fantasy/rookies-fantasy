@@ -1,15 +1,28 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldPath, FieldValue } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
-import { EMPTY_PAYLOAD, LeagueDocument, RawPayload } from "./leagues/types";
+import { mapInBatches } from "./leagues/batching";
+import {
+  buildStandingsReadPlan,
+  STANDINGS_FANOUT_CONCURRENCY,
+} from "./leagues/standingsPlan";
+import {
+  EMPTY_PAYLOAD,
+  LeagueDocument,
+  LeagueStandingTeam,
+  RawPayload,
+} from "./leagues/types";
 import {
   evaluateJoinEligibility,
+  isLeagueMember,
   JoinRejectionCode,
   toLeagueDocument,
+  toStandingTeam,
   validateCreateLeagueInput,
   validateJoinLeagueInput,
+  validateLeagueId,
 } from "./leagues/validation";
 
 admin.initializeApp();
@@ -1638,6 +1651,92 @@ export const joinLeague = functions.https.onCall(
       }
       console.error("Error joining league:", error);
       throw new functions.https.HttpsError("internal", "Failed to join league");
+    }
+  },
+);
+
+// Returns the standings-relevant data for every team in a league. Team docs live
+// under each owner's private `users/{uid}/teams` subcollection, which client
+// security rules only let that owner read. This runs with admin privileges so a
+// league member can see all members' records without opening up those rules.
+// Access is gated to league members only — a gate that is only sound because
+// league membership is written exclusively by the callables above.
+export const getLeagueStandings = functions.https.onRequest(
+  async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    let uid: string;
+    try {
+      const decoded = await admin.auth().verifyIdToken(idToken);
+      uid = decoded.uid;
+    } catch {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
+    const rawLeagueId = req.query.leagueId;
+    const validation = validateLeagueId(
+      typeof rawLeagueId === "string" ? rawLeagueId : "",
+    );
+
+    if (!validation.valid) {
+      res.status(400).send(validation.message);
+      return;
+    }
+
+    try {
+      const db = admin.firestore();
+      const leagueSnapshot = await db
+        .collection(LEAGUE_COLLECTION)
+        .doc(validation.input)
+        .get();
+
+      // readLeagueDocument throws on a corrupt league doc; that lands in the
+      // catch below as a 500, which is the right answer for server-owned data.
+      const league = readLeagueDocument(leagueSnapshot);
+
+      if (league === null) {
+        res.status(404).send("League not found");
+        return;
+      }
+
+      // Only members of the league may view its standings.
+      if (!isLeagueMember(league, uid)) {
+        res.status(403).send("Forbidden");
+        return;
+      }
+
+      // Each planned read is narrowed to the league's own team ids, so a member
+      // who plays in ten leagues costs one read here rather than ten. The plan
+      // is also capped, and executed in bounded batches instead of firing one
+      // query per member at once.
+      const plan = buildStandingsReadPlan(league.userIds, league.teamIds);
+
+      const snapshots = await mapInBatches(
+        plan,
+        STANDINGS_FANOUT_CONCURRENCY,
+        (task) =>
+          db
+            .collection(USER_COLLECTION)
+            .doc(task.userId)
+            .collection(TEAM_SUBCOLLECTION)
+            .where(FieldPath.documentId(), "in", task.teamIds)
+            .get(),
+      );
+
+      const teams: LeagueStandingTeam[] = snapshots.flatMap((snapshot) =>
+        snapshot.docs.map((doc) => toStandingTeam(doc.id, doc.data())),
+      );
+
+      res.json({ teams });
+    } catch (err) {
+      console.error("Error fetching league standings:", err);
+      res.status(500).json({ error: "Failed to fetch standings" });
     }
   },
 );
