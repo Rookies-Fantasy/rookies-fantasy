@@ -1,127 +1,126 @@
 import {
+  CreateLeagueInput,
+  JoinLeagueInput,
+  JsonValue,
+  LeagueDocument,
+  BUDGET_STEP,
   MAX_BUDGET,
   MAX_LEAGUE_NAME_LENGTH,
   MAX_TEAMS,
   MIN_BUDGET,
   MIN_TEAMS,
-} from "./constants";
-import {
-  CreateLeagueInput,
-  JoinLeagueInput,
-  JsonValue,
+  TEAMS_STEP,
   RawPayload,
 } from "./types";
 
-// Firestore rejects document ids that are empty, contain "/", are the reserved
-// relative-path segments "." / "..", or exceed 1500 bytes. Passing such a value
-// to .doc() throws, which would surface to the caller as a 500 rather than the
-// 400 the request actually deserves — so we validate the shape up front.
-const MAX_DOCUMENT_ID_BYTES = 1500;
+type InputValidation<TInput> =
+  | { valid: true; input: TInput }
+  | { valid: false; message: string };
 
-export type DocumentIdValidation =
-  | { valid: true; id: string }
-  | { valid: false; reason: "required" | "malformed" };
+export type JoinRejectionCode =
+  | "team-already-joined"
+  | "user-already-joined"
+  | "league-full";
 
-export const validateDocumentId = (value: JsonValue): DocumentIdValidation => {
+export type JoinEligibility =
+  | { allowed: true }
+  | { allowed: false; code: JoinRejectionCode; message: string };
+
+const isFiniteNumber = (value: JsonValue): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const isStringArray = (value: JsonValue): value is string[] =>
+  Array.isArray(value) && value.every((entry) => typeof entry === "string");
+
+// Firestore hands back untyped documents. A league doc is written only by the
+// server, so a field that fails to parse means the data is corrupt — returning
+// null lets the caller fail loudly instead of joining against typed defaults.
+export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
+  const {
+    name,
+    creatorUserId,
+    numberOfTeams,
+    budget,
+    memberCount,
+    teamIds,
+    userIds,
+  } = data;
+
+  if (
+    typeof name !== "string" ||
+    typeof creatorUserId !== "string" ||
+    !isFiniteNumber(numberOfTeams) ||
+    !isFiniteNumber(budget) ||
+    !isFiniteNumber(memberCount) ||
+    !isStringArray(teamIds) ||
+    !isStringArray(userIds)
+  ) {
+    return null;
+  }
+
+  return {
+    name,
+    creatorUserId,
+    numberOfTeams,
+    budget,
+    memberCount,
+    teamIds,
+    userIds,
+  };
+};
+
+// Passing an empty id, or one containing "/", to .doc() throws — which would
+// reach the caller as a 500 rather than the 400 the request deserves. Ids that
+// are merely wrong still resolve to a missing document and answer with 404.
+const readDocumentId = (value: JsonValue): string | null => {
   if (typeof value !== "string") {
-    return { valid: false, reason: "required" };
+    return null;
   }
 
   const id = value.trim();
-
-  if (id.length === 0) {
-    return { valid: false, reason: "required" };
-  }
-
-  // The cap is on bytes, not characters: a multi-byte id can sit under 1500
-  // characters and still exceed Firestore's limit, which would throw in .doc()
-  // and produce the 500 this check exists to prevent.
-  if (
-    id.includes("/") ||
-    id === "." ||
-    id === ".." ||
-    Buffer.byteLength(id, "utf8") > MAX_DOCUMENT_ID_BYTES
-  ) {
-    return { valid: false, reason: "malformed" };
-  }
-
-  return { valid: true, id };
+  return id.length > 0 && !id.includes("/") ? id : null;
 };
 
-export type LeagueIdValidation =
-  | { valid: true; leagueId: string }
-  | { valid: false; message: string };
-
-export const validateLeagueId = (value: JsonValue): LeagueIdValidation => {
-  const result = validateDocumentId(value);
-
-  if (!result.valid) {
-    return { valid: false, message: idErrorMessage("leagueId", result.reason) };
-  }
-
-  return { valid: true, leagueId: result.id };
-};
-
-const idErrorMessage = (
-  field: string,
-  reason: "required" | "malformed",
-): string => `Invalid request: ${field} is ${reason}`;
-
-export type JoinLeagueValidation =
-  | { valid: true; input: JoinLeagueInput }
-  | { valid: false; message: string };
+const idErrorMessage = (field: string): string =>
+  `Invalid request: ${field} is missing or malformed`;
 
 // Validates a `joinLeague` payload. Note there is no userId here: the joining
 // user is taken from the verified auth context, never from the request body.
 export const validateJoinLeagueInput = (
   payload: RawPayload,
-): JoinLeagueValidation => {
-  const leagueId = validateDocumentId(payload.leagueId);
-  if (!leagueId.valid) {
-    return {
-      valid: false,
-      message: idErrorMessage("leagueId", leagueId.reason),
-    };
+): InputValidation<JoinLeagueInput> => {
+  const leagueId = readDocumentId(payload.leagueId);
+  if (leagueId === null) {
+    return { valid: false, message: idErrorMessage("leagueId") };
   }
 
-  const teamId = validateDocumentId(payload.teamId);
-  if (!teamId.valid) {
-    return { valid: false, message: idErrorMessage("teamId", teamId.reason) };
+  const teamId = readDocumentId(payload.teamId);
+  if (teamId === null) {
+    return { valid: false, message: idErrorMessage("teamId") };
   }
 
-  return { valid: true, input: { leagueId: leagueId.id, teamId: teamId.id } };
+  return { valid: true, input: { leagueId, teamId } };
 };
 
-export type CreateLeagueValidation =
-  | { valid: true; input: CreateLeagueInput }
-  | { valid: false; message: string };
-
-const isWholeNumberInRange = (
+// A value the UI could actually have produced: inside the bounds, and landing on
+// one of the steps the stepper offers from `min` upwards.
+const isOnScale = (
   value: JsonValue,
   min: number,
   max: number,
+  step: number,
 ): value is number =>
-  typeof value === "number" &&
-  Number.isInteger(value) &&
+  isFiniteNumber(value) &&
   value >= min &&
-  value <= max;
-
-const isFiniteNumberInRange = (
-  value: JsonValue,
-  min: number,
-  max: number,
-): value is number =>
-  typeof value === "number" &&
-  Number.isFinite(value) &&
-  value >= min &&
-  value <= max;
+  value <= max &&
+  (value - min) % step === 0;
 
 // Validates a `createLeague` payload. Every field the league document ends up
 // holding is derived from here or from the verified auth context — anything else
 // the caller sends (creatorUserId, userIds, memberCount, ...) is discarded.
 export const validateCreateLeagueInput = (
   payload: RawPayload,
-): CreateLeagueValidation => {
+): InputValidation<CreateLeagueInput> => {
   const rawName = payload.name;
 
   if (typeof rawName !== "string" || rawName.trim().length === 0) {
@@ -137,31 +136,66 @@ export const validateCreateLeagueInput = (
   }
 
   const numberOfTeams = payload.numberOfTeams;
-  if (!isWholeNumberInRange(numberOfTeams, MIN_TEAMS, MAX_TEAMS)) {
+  if (!isOnScale(numberOfTeams, MIN_TEAMS, MAX_TEAMS, TEAMS_STEP)) {
     return {
       valid: false,
-      message: `Number of teams must be a whole number between ${MIN_TEAMS} and ${MAX_TEAMS}`,
+      message: `Number of teams must be between ${MIN_TEAMS} and ${MAX_TEAMS}, in steps of ${TEAMS_STEP}`,
     };
   }
 
   const budget = payload.budget;
-  if (!isFiniteNumberInRange(budget, MIN_BUDGET, MAX_BUDGET)) {
+  if (!isOnScale(budget, MIN_BUDGET, MAX_BUDGET, BUDGET_STEP)) {
     return {
       valid: false,
-      message: `Budget must be between ${MIN_BUDGET} and ${MAX_BUDGET}`,
+      message: `Budget must be between ${MIN_BUDGET} and ${MAX_BUDGET}, in steps of ${BUDGET_STEP}`,
     };
   }
 
-  const initialTeamId = validateDocumentId(payload.initialTeamId);
-  if (!initialTeamId.valid) {
-    return {
-      valid: false,
-      message: idErrorMessage("initialTeamId", initialTeamId.reason),
-    };
+  const initialTeamId = readDocumentId(payload.initialTeamId);
+  if (initialTeamId === null) {
+    return { valid: false, message: idErrorMessage("initialTeamId") };
   }
 
   return {
     valid: true,
-    input: { name, numberOfTeams, budget, initialTeamId: initialTeamId.id },
+    input: { name, numberOfTeams, budget, initialTeamId },
   };
+};
+
+const reject = (code: JoinRejectionCode, message: string): JoinEligibility => ({
+  allowed: false,
+  code,
+  message,
+});
+
+// The preconditions that used to live in the client-side Firestore transaction
+// (client/controllers/leagueController.ts). They are enforced here so the league
+// document can only ever be grown by the server. Messages match the previous
+// client-thrown errors so existing UI copy keeps working.
+export const evaluateJoinEligibility = (
+  league: LeagueDocument,
+  teamId: string,
+  userId: string,
+): JoinEligibility => {
+  if (league.teamIds.includes(teamId)) {
+    return reject("team-already-joined", "Team already joined");
+  }
+
+  if (league.userIds.includes(userId)) {
+    return reject("user-already-joined", "User already joined");
+  }
+
+  // memberCount is only a counter, so the membership arrays are checked too:
+  // whichever is furthest along decides whether the league is full.
+  const membership = Math.max(
+    league.memberCount,
+    league.teamIds.length,
+    league.userIds.length,
+  );
+
+  if (membership >= league.numberOfTeams) {
+    return reject("league-full", "League is full");
+  }
+
+  return { allowed: true };
 };
