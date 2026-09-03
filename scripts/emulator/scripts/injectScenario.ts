@@ -79,10 +79,6 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     queueStatus: "matched",
     teamId: awayTeamId,
   });
-  await Promise.all([
-    db.collection("users").doc(home.uid).set(homeUser),
-    db.collection("users").doc(away.uid).set(awayUser),
-  ]);
 
   const homeTeamRef = db
     .collection("users")

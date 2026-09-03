@@ -8,8 +8,8 @@ export const createUserDoc = (
   email,
   emailVerified: overrides.emailVerified ?? true,
   queueStatus: overrides.queueStatus ?? "idle",
-  teamId: overrides.teamId,
-  currentMatchupId: overrides.currentMatchupId,
+  ...(overrides.teamId ? { teamId: overrides.teamId } : {}),
+  ...(overrides.currentMatchupId ? { currentMatchupId: overrides.currentMatchupId } : {}),
   createdAt: overrides.createdAt ?? new Date(),
   updatedAt: overrides.updatedAt ?? new Date(),
 });

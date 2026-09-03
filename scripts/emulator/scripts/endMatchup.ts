@@ -31,8 +31,8 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
     homeScore === awayScore
       ? undefined
       : homeScore > awayScore
-        ? homeUserId
-        : awayUserId;
+        ? homeTeamId
+        : awayTeamId;
 
   const batch = db.batch();
   batch.set(

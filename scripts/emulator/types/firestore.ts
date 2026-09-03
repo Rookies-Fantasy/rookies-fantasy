@@ -28,7 +28,8 @@ export type TeamDoc = Team & {
   augment?: Augment;
 };
 
-export type MatchupDoc = Matchup & {
+export type MatchupDoc = Omit<Matchup, "createdAt"> & {
+  createdAt: Date;
   homeTeamSnapshot: TeamSnapshot;
   awayTeamSnapshot: TeamSnapshot;
   homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;

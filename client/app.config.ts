@@ -105,6 +105,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         ...(environment === "development" && {
+          NSLocalNetworkUsageDescription:
+            "This app connects to local Firebase emulators during development.",
           NSAppTransportSecurity: {
             NSAllowsLocalNetworking: true,
             NSAllowsArbitraryLoads: true,

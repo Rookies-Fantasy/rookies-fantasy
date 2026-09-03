@@ -1,7 +1,13 @@
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import { Matchup } from "@/types/matchup";
 
 const MATCHUPS_COLLECTION = "matchups";
+
+type FirestoreMatchup = Omit<Matchup, "createdAt"> & {
+  createdAt: FirebaseFirestoreTypes.Timestamp;
+};
 
 export class MatchupController {
   static getUserMatchup = async (userId: string): Promise<Matchup | null> => {
@@ -23,7 +29,16 @@ export class MatchupController {
 
       const matchups = homeMatchups.empty ? awayMatchups : homeMatchups;
 
-      return matchups.empty ? null : (matchups.docs[0].data() as Matchup);
+      if (matchups.empty) {
+        return null;
+      }
+
+      const matchup = matchups.docs[0].data() as FirestoreMatchup;
+
+      return {
+        ...matchup,
+        createdAt: matchup.createdAt.toDate().toISOString(),
+      };
     } catch (error) {
       console.error("Error fetching user matchup:", error);
       throw error;

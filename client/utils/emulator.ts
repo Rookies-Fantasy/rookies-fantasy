@@ -11,11 +11,7 @@ export const connectToEmulators = () => {
   }
 
   auth().useEmulator(`http://${emulatorHost}:9099`);
-  firestore().settings({
-    host: `${emulatorHost}:8080`,
-    ssl: false,
-    persistence: false,
-  });
+  firestore().useEmulator(emulatorHost, 8080);
 
   console.log(`[Emulator] Connected to Firebase emulators at ${emulatorHost}`);
 };
