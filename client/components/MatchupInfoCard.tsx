@@ -20,13 +20,15 @@ const MatchupInfoCard = () => {
           countdown.hours > 0 ? `${countdown.hours}h ` : ""
         }${countdown.minutes}m`
       : error
-        ? "No games scheduled today"
+        ? error
         : "Calculating lock time…";
 
   const message = isLineupLocked
     ? "Games have already started today. Your lineup is locked until tomorrow."
     : error
-      ? "There are no NBA games today. Your lineup will unlock when games are scheduled."
+      ? error === "No games scheduled today"
+        ? "There are no NBA games today. Your lineup will unlock when games are scheduled."
+        : "We could not load today’s game schedule. Please try again later."
       : "Track your players' performance and tweak your strategy as the matchup unfolds.";
 
   if (queueStatus !== QueueStatus.Matched || !matchup) {

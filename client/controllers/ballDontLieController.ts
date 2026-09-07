@@ -22,8 +22,7 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
-      console.error("No authenticated user");
-      return;
+      throw new Error("No authenticated user");
     }
 
     const idToken = await currentUser.getIdToken();
@@ -39,8 +38,7 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     );
 
     if (response.status === 404) {
-      // TODO: surface "no games scheduled" state to the user
-      return;
+      return null;
     }
 
     if (!response.ok) {
@@ -52,7 +50,7 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     return data.earliestGameStart as string | undefined;
   } catch (error) {
     console.error("fetchEarliestGameStartTime error:", error);
-    return undefined;
+    throw error;
   }
 };
 

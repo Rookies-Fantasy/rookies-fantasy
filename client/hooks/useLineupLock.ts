@@ -29,16 +29,13 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
       try {
         const startTime = await fetchEarliestGameStartTime(apiDate);
         if (!cancelled) {
-          setEarliestStartTime(startTime);
-          setError(null);
+          setEarliestStartTime(startTime ?? undefined);
+          setError(startTime === null ? "No games scheduled today" : null);
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Failed to fetch game schedule",
-          );
+          console.error("Unable to load game schedule:", err);
+          setError("Unable to load game schedule");
         }
       }
     };
