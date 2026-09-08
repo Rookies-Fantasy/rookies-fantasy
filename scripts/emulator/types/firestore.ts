@@ -14,6 +14,9 @@ export type UserDoc = {
   id: string;
   email: string;
   emailVerified: boolean;
+  avatarUrl?: string;
+  dateOfBirth?: Date;
+  username?: string;
   queueStatus: "idle" | "queued" | "matched";
   teamId?: string;
   currentMatchupId?: string;

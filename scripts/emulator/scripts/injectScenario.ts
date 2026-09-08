@@ -1,5 +1,7 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
+import { TEAM_BALANCE } from "../../../client/types/team.js";
+import type { Augment } from "../../../client/types/augment.js";
 import { createMatchupDoc } from "../generate/matchup.js";
 import { createTeamDoc } from "../generate/team.js";
 import { createUserDoc } from "../generate/user.js";
@@ -18,21 +20,64 @@ const lineupPositions = [
 
 type SeedPlayer = (typeof PLAYERS)[number];
 
-const buildLineup = (players: SeedPlayer[]) =>
-  lineupPositions.map((position, index) => ({
-    position,
-    player: players[index]
-      ? {
-          id: players[index].playerId,
-          firstName: players[index].firstName,
-          lastName: players[index].lastName,
-          positions: players[index].positions,
-          salary: players[index].salary,
-          headshotUrl: players[index].headshotUrl,
-          teamAbbreviation: players[index].teamAbbreviation,
-        }
-      : null,
-  }));
+const seedAugment: Augment = {
+  id: "seed-augment",
+  title: "Board Lords",
+  description: "Build your team with 3 players averaging 8+ REB per game.",
+  iconUrl: "board-lords.png",
+  info: "Only those 3 players gain +25% to REB.",
+  isActive: true,
+  playerCount: 3,
+  prerequisites: [
+    {
+      type: "statThreshold",
+      condition: { count: 3, stat: "rebounds", operator: ">=", value: 8 },
+      description: "3 players averaging 8+ REB per game",
+    },
+  ],
+  effects: [
+    {
+      target: "qualifying",
+      statBoosts: [{ stat: "rebounds", multiplier: 1.25 }],
+    },
+  ],
+};
+
+const toTeamPlayer = (player: SeedPlayer) => ({
+  id: player.playerId,
+  firstName: player.firstName,
+  lastName: player.lastName,
+  positions: player.positions,
+  salary: player.salary,
+  headshotUrl: player.headshotUrl,
+  teamAbbreviation: player.teamAbbreviation,
+});
+
+const buildLineup = (players: SeedPlayer[], offset = 0) => {
+  const rotatedPlayers = [
+    ...players.slice(offset),
+    ...players.slice(0, offset),
+  ];
+  const selected = new Set<string>();
+
+  return lineupPositions.map((position) => {
+    const player = rotatedPlayers.find(
+      (candidate) =>
+        !selected.has(candidate.playerId) &&
+        (position.startsWith("UTIL") || candidate.positions.includes(position)),
+    );
+
+    if (!player) {
+      throw new Error(`Unable to seed a player for the ${position} position.`);
+    }
+
+    selected.add(player.playerId);
+    return { position, player: toTeamPlayer(player) };
+  });
+};
+
+const getLineupSalary = (lineup: ReturnType<typeof buildLineup>) =>
+  lineup.reduce((total, slot) => total + (slot.player?.salary ?? 0), 0);
 
 export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   const password = process.env.USER_PASSWORD ?? "password123";
@@ -70,12 +115,18 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   const homeUser = createUserDoc(homeEmail, {
     id: home.uid,
     emailVerified: true,
+    avatarUrl: "../assets/images/profile/1.png",
+    dateOfBirth: new Date("1990-01-01"),
+    username: "Dev User",
     queueStatus: "matched",
     teamId: homeTeamId,
   });
   const awayUser = createUserDoc(awayEmail, {
     id: away.uid,
     emailVerified: true,
+    avatarUrl: "../assets/images/profile/2.png",
+    dateOfBirth: new Date("1991-01-01"),
+    username: "Opponent User",
     queueStatus: "matched",
     teamId: awayTeamId,
   });
@@ -90,20 +141,39 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     .doc(away.uid)
     .collection("teams")
     .doc(awayTeamId);
+  const homeLineup = buildLineup(homePlayers);
+  const awayLineup = buildLineup(awayPlayers, 1);
   const homeTeam = createTeamDoc({
     id: homeTeamRef.id,
     name: "Home Team",
     abbreviation: "HME",
-    lineup: buildLineup(homePlayers),
+    logoUrl: "../assets/images/team/2.png",
+    augment: seedAugment,
+    augmentId: seedAugment.id,
+    balance: TEAM_BALANCE - getLineupSalary(homeLineup),
+    lineup: homeLineup,
   });
   const awayTeam = createTeamDoc({
     id: awayTeamRef.id,
     name: "Away Team",
     abbreviation: "AWY",
-    lineup: buildLineup(awayPlayers),
+    logoUrl: "../assets/images/team/3.png",
+    augment: seedAugment,
+    augmentId: seedAugment.id,
+    balance: TEAM_BALANCE - getLineupSalary(awayLineup),
+    lineup: awayLineup,
   });
   const batch = db.batch();
   const now = new Date();
+
+  for (const player of PLAYERS) {
+    batch.set(db.collection("nbaPlayers").doc(player.playerId), player);
+  }
+  batch.set(db.collection("augments").doc(seedAugment.id), {
+    ...seedAugment,
+    createdAt: now,
+    updatedAt: now,
+  });
 
   batch.set(db.collection("users").doc(home.uid), homeUser);
   batch.set(db.collection("users").doc(away.uid), awayUser);

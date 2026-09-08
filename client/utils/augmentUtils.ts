@@ -228,22 +228,22 @@ export const applyAugmentEffects = (
   return baseFantasyPoints + totalBonus;
 };
 
-const getStatValue = (stats: GameStats, stat: string): number => {
+const getStatValue = (stats: Partial<GameStats> | undefined, stat: string): number => {
   switch (stat) {
     case "points":
-      return stats.points;
+      return stats?.points ?? 0;
     case "rebounds":
-      return stats.rebounds;
+      return stats?.rebounds ?? 0;
     case "assists":
-      return stats.assists;
+      return stats?.assists ?? 0;
     case "steals":
-      return stats.steals;
+      return stats?.steals ?? 0;
     case "blocks":
-      return stats.blocks;
+      return stats?.blocks ?? 0;
     case "turnovers":
-      return stats.turnovers;
+      return stats?.turnovers ?? 0;
     case "minutes":
-      return stats.minutes;
+      return stats?.minutes ?? 0;
     // TODO: Add support for FG%, FT%, 3P%, FGA, FGM, FTA, FTM, 3PA, 3PM
     default:
       return 0;

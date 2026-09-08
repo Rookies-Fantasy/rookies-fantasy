@@ -44,6 +44,7 @@ export type LineupSnapshotItem = {
 
 export type Matchup = {
   createdAt: string;
+  updatedAt?: string;
   id: string;
   weekStart: string;
   homeTeamSnapshot: TeamSnapshot;

@@ -7,6 +7,7 @@ const MATCHUPS_COLLECTION = "matchups";
 
 type FirestoreMatchup = Omit<Matchup, "createdAt"> & {
   createdAt: FirebaseFirestoreTypes.Timestamp;
+  updatedAt?: FirebaseFirestoreTypes.Timestamp;
 };
 
 export class MatchupController {
@@ -38,6 +39,9 @@ export class MatchupController {
       return {
         ...matchup,
         createdAt: matchup.createdAt.toDate().toISOString(),
+        ...(matchup.updatedAt
+          ? { updatedAt: matchup.updatedAt.toDate().toISOString() }
+          : {}),
       };
     } catch (error) {
       console.error("Error fetching user matchup:", error);
