@@ -1,7 +1,7 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
-import { clearAll } from "./clear.js";
-import { initEmulatorClient } from "./client.js";
+import { initEmulatorClient } from "./core/client.js";
+import { clearAll } from "./core/reset.js";
 
 type CommandName =
   | "clear"

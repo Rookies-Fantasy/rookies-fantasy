@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 import * as path from "path";
 import * as url from "url";
-import { initEmulatorClient } from "./client.js";
+import { initEmulatorClient } from "./core/client.js";
 import { run as runScenario } from "./commands/seedScenario.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
