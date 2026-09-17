@@ -5,7 +5,7 @@ import type { Augment } from "../../../client/types/augment.js";
 import { createMatchupDoc } from "../generate/matchup.js";
 import { createTeamDoc } from "../generate/team.js";
 import { createUserDoc } from "../generate/user.js";
-import { PLAYERS } from "./injectNbaPlayers.js";
+import { PLAYERS } from "./seedNbaPlayers.js";
 
 const lineupPositions = [
   "PG",

@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import * as path from "path";
 import * as url from "url";
 import { initEmulatorClient } from "./client.js";
-import { run as runScenario } from "./scripts/injectScenario.js";
+import { run as runScenario } from "./commands/seedScenario.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const SERVER_DIR = path.resolve(__dirname, "../../server");

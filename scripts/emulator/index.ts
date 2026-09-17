@@ -3,7 +3,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import { clearAll } from "./clear.js";
 import { initEmulatorClient } from "./client.js";
 
-type ScriptName =
+type CommandName =
   | "clear"
   | "user"
   | "team"
@@ -15,35 +15,35 @@ type ScriptName =
   | "simulate-day"
   | "simulate-week";
 
-type ScriptModule = {
+type CommandModule = {
   run(db: Firestore, auth: Auth): Promise<void>;
 };
 
-const SCRIPTS: Record<ScriptName, () => Promise<ScriptModule>> = {
+const COMMANDS: Record<CommandName, () => Promise<CommandModule>> = {
   clear: async () => ({ run: clearAll }),
-  user: () => import("./scripts/injectUser.js"),
-  team: () => import("./scripts/injectTeam.js"),
-  matchup: () => import("./scripts/injectMatchup.js"),
-  "end-matchup": () => import("./scripts/endMatchup.js"),
-  scenario: () => import("./scripts/injectScenario.js"),
-  "nba-players": () => import("./scripts/injectNbaPlayers.js"),
-  "nba-teams": () => import("./scripts/injectNbaTeams.js"),
-  "simulate-day": () => import("./scripts/simulateDay.js"),
-  "simulate-week": () => import("./scripts/simulateWeek.js"),
+  user: () => import("./commands/seedUser.js"),
+  team: () => import("./commands/seedTeam.js"),
+  matchup: () => import("./commands/seedMatchup.js"),
+  "end-matchup": () => import("./commands/endMatchup.js"),
+  scenario: () => import("./commands/seedScenario.js"),
+  "nba-players": () => import("./commands/seedNbaPlayers.js"),
+  "nba-teams": () => import("./commands/seedNbaTeams.js"),
+  "simulate-day": () => import("./commands/simulateDay.js"),
+  "simulate-week": () => import("./commands/simulateWeek.js"),
 };
 
 const main = async (): Promise<void> => {
-  const scriptName = process.argv[2] as ScriptName | undefined;
+  const commandName = process.argv[2] as CommandName | undefined;
 
-  if (!scriptName) {
-    console.log("Usage: tsx emulator/index.ts <script>");
-    console.log("Scripts:", Object.keys(SCRIPTS).join(", "));
+  if (!commandName) {
+    console.log("Usage: tsx emulator/index.ts <command>");
+    console.log("Commands:", Object.keys(COMMANDS).join(", "));
     process.exit(1);
   }
 
-  const loader = SCRIPTS[scriptName];
+  const loader = COMMANDS[commandName];
   if (!loader) {
-    throw new Error(`Unknown script: ${scriptName}`);
+    throw new Error(`Unknown command: ${commandName}`);
   }
 
   const { db, auth } = initEmulatorClient();
