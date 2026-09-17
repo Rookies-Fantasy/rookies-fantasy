@@ -1,11 +1,11 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
 import { TEAM_BALANCE } from "../../../client/types/team.js";
-import type { Augment } from "../../../client/types/augment.js";
+import { DEFAULT_AUGMENTS } from "../data/augments.js";
+import { DEFAULT_NBA_PLAYERS } from "../data/nbaPlayers.js";
 import { createMatchupDoc } from "../generate/matchup.js";
 import { createTeamDoc } from "../generate/team.js";
 import { createUserDoc } from "../generate/user.js";
-import { PLAYERS } from "./seedNbaPlayers.js";
 
 const lineupPositions = [
   "PG",
@@ -18,30 +18,9 @@ const lineupPositions = [
   "UTIL3",
 ] as const;
 
-type SeedPlayer = (typeof PLAYERS)[number];
+type SeedPlayer = (typeof DEFAULT_NBA_PLAYERS)[number];
 
-const seedAugment: Augment = {
-  id: "seed-augment",
-  title: "Board Lords",
-  description: "Build your team with 3 players averaging 8+ REB per game.",
-  iconUrl: "board-lords.png",
-  info: "Only those 3 players gain +25% to REB.",
-  isActive: true,
-  playerCount: 3,
-  prerequisites: [
-    {
-      type: "statThreshold",
-      condition: { count: 3, stat: "rebounds", operator: ">=", value: 8 },
-      description: "3 players averaging 8+ REB per game",
-    },
-  ],
-  effects: [
-    {
-      target: "qualifying",
-      statBoosts: [{ stat: "rebounds", multiplier: 1.25 }],
-    },
-  ],
-};
+const seedAugment = DEFAULT_AUGMENTS[0];
 
 const toTeamPlayer = (player: SeedPlayer) => ({
   id: player.playerId,
@@ -81,7 +60,7 @@ const getLineupSalary = (lineup: ReturnType<typeof buildLineup>) =>
 
 export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   const password = process.env.USER_PASSWORD ?? "password123";
-  const playerPool = [...PLAYERS].sort((a, b) =>
+  const playerPool = [...DEFAULT_NBA_PLAYERS].sort((a, b) =>
     a.playerId.localeCompare(b.playerId),
   );
   const homePlayers = playerPool.slice(0, 8);
@@ -166,7 +145,7 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   const batch = db.batch();
   const now = new Date();
 
-  for (const player of PLAYERS) {
+  for (const player of DEFAULT_NBA_PLAYERS) {
     batch.set(db.collection("nbaPlayers").doc(player.playerId), player);
   }
   batch.set(db.collection("augments").doc(seedAugment.id), {

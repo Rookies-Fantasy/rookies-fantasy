@@ -1,7 +1,6 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
-import { createMatchupDoc } from "../generate/matchup.js";
-import type { TeamDoc } from "../types/firestore.js";
+import { upsertActiveMatchup } from "../fixtures/matchups.js";
 
 export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   const homeUserId = process.env.HOME_USER_ID;
@@ -16,65 +15,14 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
     );
   }
 
-  const [homeTeamSnap, awayTeamSnap] = await Promise.all([
-    db.collection("users").doc(homeUserId).collection("teams").doc(homeTeamId).get(),
-    db.collection("users").doc(awayUserId).collection("teams").doc(awayTeamId).get(),
-  ]);
-
-  if (!homeTeamSnap.exists || !awayTeamSnap.exists) {
-    throw new Error("Both team docs must exist before creating a matchup.");
-  }
-
-  const homeTeam = homeTeamSnap.data() as TeamDoc;
-  const awayTeam = awayTeamSnap.data() as TeamDoc;
-
-  const matchupRef = db.collection("matchups").doc(matchupId);
-  const existingMatchupSnap = await matchupRef.get();
-  const matchupDoc = createMatchupDoc(
+  const matchup = await upsertActiveMatchup(db, {
+    matchupId,
     homeUserId,
     homeTeamId,
-    homeTeam,
     awayUserId,
     awayTeamId,
-    awayTeam,
-    {
-      ...(existingMatchupSnap.exists ? existingMatchupSnap.data() : {}),
-      id: matchupId,
-      status: "active",
-    } as any,
-  );
-
-  const batch = db.batch();
-  const now = new Date();
-
-  batch.set(matchupRef, matchupDoc);
-  batch.update(db.collection("users").doc(homeUserId), {
-    queueStatus: "matched",
-    currentMatchupId: matchupDoc.id,
-    updatedAt: now,
   });
-  batch.update(db.collection("users").doc(awayUserId), {
-    queueStatus: "matched",
-    currentMatchupId: matchupDoc.id,
-    updatedAt: now,
-  });
-  batch.update(
-    db.collection("users").doc(homeUserId).collection("teams").doc(homeTeamId),
-    {
-      matchupId: matchupDoc.id,
-      updatedAt: now,
-    },
-  );
-  batch.update(
-    db.collection("users").doc(awayUserId).collection("teams").doc(awayTeamId),
-    {
-      matchupId: matchupDoc.id,
-      updatedAt: now,
-    },
-  );
-
-  await batch.commit();
 
   console.log("Created matchup");
-  console.log(`  Matchup ID: ${matchupDoc.id}`);
+  console.log(`  Matchup ID: ${matchup.id}`);
 };
