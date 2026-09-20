@@ -5,17 +5,8 @@ import LinearGradient from "react-native-linear-gradient";
 import Row, { RowData } from "@/components/Table/Row";
 import { StandingsRow } from "@/types/standings";
 import { hexToRgba, themeColors } from "@/utils/colorUtils";
-import { cn } from "@/utils/jsUtils";
-import { widthClassToPixels } from "@/utils/tailwindUtils";
 import { getTeamLogoSource } from "@/utils/teamUtils";
 
-// Each column declares its width once, as the Tailwind class that actually
-// renders it. The pixel width the snap offsets need is derived from that class,
-// so the two can't drift.
-//
-// The class has to be written out in full: Tailwind only emits classes it finds
-// as literals when it scans this file, so a class built from a number at runtime
-// would never make it into the stylesheet.
 const COLUMNS = [
   { label: "#", widthClass: "w-10" },
   { label: "TEAM", widthClass: "w-44" },
@@ -29,31 +20,14 @@ const COLUMNS = [
 const STICKY_COLUMNS = 2;
 const HEADER_HEIGHT_CLASS = "h-11";
 const ROW_HEIGHT_CLASS = "h-16";
-const FADE_WIDTH_CLASS = "w-7";
 
-// The fade's own width, in pixels, for the scroll interpolation below.
-const FADE_WIDTH = widthClassToPixels(FADE_WIDTH_CLASS);
+// How far from the end of the scroll the overflow hint starts fading out.
+const FADE_OUT_DISTANCE = 24;
 
 const STICKY = COLUMNS.slice(0, STICKY_COLUMNS);
 const SCROLLABLE = COLUMNS.slice(STICKY_COLUMNS);
 const STICKY_WIDTHS = STICKY.map((column) => column.widthClass);
 const SCROLLABLE_WIDTHS = SCROLLABLE.map((column) => column.widthClass);
-const SCROLLABLE_WIDTH = SCROLLABLE.reduce(
-  (total, column) => total + widthClassToPixels(column.widthClass),
-  0,
-);
-
-// Left edge of each scrollable column, so a swipe can only ever come to rest
-// with a column boundary flush against the sticky block.
-const COLUMN_STARTS = SCROLLABLE.reduce<number[]>((starts, column, index) => {
-  starts.push(
-    index === 0
-      ? 0
-      : starts[index - 1] +
-          widthClassToPixels(SCROLLABLE[index - 1].widthClass),
-  );
-  return starts;
-}, []);
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
@@ -73,33 +47,20 @@ type StandingsTableProps = {
   standings: StandingsRow[];
 };
 
-// League standings grid. Reuses the shared Row/Cell primitives for the sticky-left
-// + horizontally-scrollable-right layout, but renders rows directly (no inner
-// vertical scroll) so it can live inside the page's ScrollView. Standings are
-// bounded by league size, so virtualization isn't needed.
-//
-// The header sits inside the same horizontal ScrollView as the body, so the two
-// stay aligned by construction rather than by syncing scroll offsets.
 const StandingsTable = ({ standings }: StandingsTableProps) => {
   const scrollX = useRef(new Animated.Value(0)).current;
+  // Both widths come from the ScrollView itself, so they are always what
+  // NativeWind actually rendered rather than a guess at what it would.
   const [viewportWidth, setViewportWidth] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
 
-  const maxScroll = Math.max(SCROLLABLE_WIDTH - viewportWidth, 0);
+  const maxScroll = Math.max(contentWidth - viewportWidth, 0);
   const hasOverflow = maxScroll > 0;
 
-  // Every column start that is actually reachable, plus the far end so the last
-  // column lands flush against the right edge instead of being clipped.
-  const snapOffsets = useMemo(
-    () => [...COLUMN_STARTS.filter((start) => start < maxScroll), maxScroll],
-    [maxScroll],
-  );
-
-  // Fades out over the final stretch of the scroll, so the hint disappears once
-  // there is nothing left to reveal.
   const fadeOpacity = useMemo(() => {
     if (maxScroll <= 0) return 0;
     return scrollX.interpolate({
-      inputRange: [Math.max(maxScroll - FADE_WIDTH, 0), maxScroll],
+      inputRange: [Math.max(maxScroll - FADE_OUT_DISTANCE, 0), maxScroll],
       outputRange: [1, 0],
       extrapolate: "clamp",
     });
@@ -150,6 +111,7 @@ const StandingsTable = ({ standings }: StandingsTableProps) => {
           bounces={false}
           decelerationRate="fast"
           horizontal
+          onContentSizeChange={(width) => setContentWidth(width)}
           onLayout={(e) => setViewportWidth(e.nativeEvent.layout.width)}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -157,7 +119,6 @@ const StandingsTable = ({ standings }: StandingsTableProps) => {
           )}
           scrollEventThrottle={16}
           showsHorizontalScrollIndicator={false}
-          snapToOffsets={snapOffsets}
         >
           <View>
             <Row
@@ -185,19 +146,14 @@ const StandingsTable = ({ standings }: StandingsTableProps) => {
 
       {hasOverflow && (
         <Animated.View
-          className={cn("absolute bottom-0 right-0 top-0", FADE_WIDTH_CLASS)}
+          className="absolute bottom-0 right-0 top-0 w-7"
           pointerEvents="none"
-          // opacity is driven by an Animated value, which only exists on the
-          // style prop — className can't express it.
           style={{ opacity: fadeOpacity }}
         >
           <LinearGradient
             colors={[hexToRgba(themeColors.gray920, 0), themeColors.gray920]}
             end={{ x: 1, y: 0 }}
             start={{ x: 0, y: 0 }}
-            // LinearGradient is a third-party component and NativeWind is not
-            // wired up for it (no cssInterop anywhere in the app), so className
-            // would be dropped. Matches every other LinearGradient in the repo.
             style={{ flex: 1 }}
           />
         </Animated.View>

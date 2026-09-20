@@ -13,10 +13,6 @@ type UseLeagueStandingsResult = {
   refetch: () => void;
 };
 
-// Standings change when matchups settle — weekly — but the query behind them
-// fans out across every team in the league on the server. Five minutes keeps a
-// remount or a reconnect from refiring that whole fan-out for data that cannot
-// have moved.
 const STANDINGS_STALE_TIME_MS = 5 * 60 * 1000;
 
 // Fetches every team in a league and returns them as ranked standings rows.
