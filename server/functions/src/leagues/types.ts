@@ -57,8 +57,6 @@ export type TeamRecord = {
   draws: number;
 };
 
-// The per-team fields getLeagueStandings returns. Mirrors `LeagueStandingTeam`
-// in client/types/standings.ts.
 export type LeagueStandingTeam = {
   id: string;
   name: string;

@@ -212,11 +212,6 @@ export const validateLeagueId = (value: JsonValue): InputValidation<string> => {
   return { valid: true, input: leagueId };
 };
 
-// Team docs are written by their owner from the client, and `record` only
-// appears once weeklyMatchupReset has settled a matchup — so unlike a league
-// doc, a missing or malformed field here is an expected state rather than
-// corruption. Each field degrades to a typed default instead of failing the
-// whole standings read.
 const toStringOrEmpty = (value: JsonValue): string =>
   typeof value === "string" ? value : "";
 
@@ -250,11 +245,6 @@ export const toStandingTeam = (
   record: toTeamRecord(data.record),
 });
 
-// The access gate for league-scoped reads. It is only sound because league
-// membership is written exclusively by the createLeague / joinLeague callables:
-// Firestore rules deny direct client writes to `leagues/{id}`, so a user cannot
-// arrayUnion their own uid onto `userIds` and read every member's private team
-// data through getLeagueStandings.
 export const isLeagueMember = (
   league: LeagueDocument,
   userId: string,
