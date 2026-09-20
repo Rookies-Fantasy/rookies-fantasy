@@ -3,16 +3,13 @@ import * as admin from "firebase-admin";
 import { FieldPath, FieldValue } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
-import { mapInBatches } from "./leagues/batching";
-import {
-  buildStandingsReadPlan,
-  STANDINGS_FANOUT_CONCURRENCY,
-} from "./leagues/standingsPlan";
 import {
   EMPTY_PAYLOAD,
   LeagueDocument,
   LeagueStandingTeam,
+  MAX_TEAMS,
   RawPayload,
+  TeamRecord,
 } from "./leagues/types";
 import {
   evaluateJoinEligibility,
@@ -53,12 +50,6 @@ type LiveData = Record<
   }
 >;
 
-type TeamRecord = {
-  wins: number;
-  losses: number;
-  draws: number;
-};
-
 type Position = "PG" | "SG" | "SF" | "PF" | "C";
 type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
 type TeamPosition = Position | FlexPosition;
@@ -76,19 +67,6 @@ type PlayerTeamDisplay = {
 type TeamLineupSlot = {
   position: TeamPosition;
   player: PlayerTeamDisplay | null;
-};
-
-// Store the augment id for now, maybe reconsider this later. Some things to consider are what we actually need to display the team (probably just name and icon)
-// as well as augment versioning for future patches
-type Team = {
-  abbreviation?: string;
-  augmentId?: string;
-  id: string;
-  logoUrl?: string;
-  name?: string;
-  balance: number;
-  lineup: TeamLineupSlot[];
-  record?: TeamRecord;
 };
 
 type PlayerSnapshot = {
@@ -150,6 +128,8 @@ const getPlayersFromCache = (
 
   return result;
 };
+
+const dedupe = (values: string[]): string[] => Array.from(new Set(values));
 
 export const getLiveData = functions.https.onRequest(async (req, res) => {
   // Verify Firebase ID token
@@ -1655,12 +1635,7 @@ export const joinLeague = functions.https.onCall(
   },
 );
 
-// Returns the standings-relevant data for every team in a league. Team docs live
-// under each owner's private `users/{uid}/teams` subcollection, which client
-// security rules only let that owner read. This runs with admin privileges so a
-// league member can see all members' records without opening up those rules.
-// Access is gated to league members only — a gate that is only sound because
-// league membership is written exclusively by the callables above.
+// Returns the standings-relevant data for every team in a league.
 export const getLeagueStandings = functions.https.onRequest(
   async (req, res) => {
     const authHeader = req.headers.authorization;
@@ -1696,8 +1671,6 @@ export const getLeagueStandings = functions.https.onRequest(
         .doc(validation.input)
         .get();
 
-      // readLeagueDocument throws on a corrupt league doc; that lands in the
-      // catch below as a 500, which is the right answer for server-owned data.
       const league = readLeagueDocument(leagueSnapshot);
 
       if (league === null) {
@@ -1711,23 +1684,22 @@ export const getLeagueStandings = functions.https.onRequest(
         return;
       }
 
-      // Each planned read is narrowed to the league's own team ids, so a member
-      // who plays in ten leagues costs one read here rather than ten. The plan
-      // is also capped, and executed in bounded batches instead of firing one
-      // query per member at once.
-      const plan = buildStandingsReadPlan(league.userIds, league.teamIds);
+      const teamIds = dedupe(league.teamIds).slice(0, MAX_TEAMS);
+      const memberIds = dedupe(league.userIds).slice(0, MAX_TEAMS);
 
-      const snapshots = await mapInBatches(
-        plan,
-        STANDINGS_FANOUT_CONCURRENCY,
-        (task) =>
-          db
-            .collection(USER_COLLECTION)
-            .doc(task.userId)
-            .collection(TEAM_SUBCOLLECTION)
-            .where(FieldPath.documentId(), "in", task.teamIds)
-            .get(),
-      );
+      const snapshots =
+        teamIds.length === 0
+          ? []
+          : await Promise.all(
+              memberIds.map((memberId) =>
+                db
+                  .collection(USER_COLLECTION)
+                  .doc(memberId)
+                  .collection(TEAM_SUBCOLLECTION)
+                  .where(FieldPath.documentId(), "in", teamIds)
+                  .get(),
+              ),
+            );
 
       const teams: LeagueStandingTeam[] = snapshots.flatMap((snapshot) =>
         snapshot.docs.map((doc) => toStandingTeam(doc.id, doc.data())),
