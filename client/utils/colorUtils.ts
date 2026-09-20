@@ -2,7 +2,9 @@
 // NativeWind `className` props. A few third-party props (LinearGradient's
 // `colors`) take raw colour values instead, and TypeScript cannot import
 // tailwind.config.js — it mixes an ESM `import` with `module.exports`, so TS
-// resolves it to a module with no exports. This is the single place those raw
+// resolves it to a module with no exports.
+
+// This is the single place those raw
 // values are declared; every entry must match its token in tailwind.config.js.
 export const themeColors = {
   gray920: "#12151C",

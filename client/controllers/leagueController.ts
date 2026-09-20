@@ -88,12 +88,6 @@ export class LeagueController {
     }
   };
 
-  // Loads every team competing in a league via the getLeagueStandings cloud
-  // function. Team docs are private to their owner under Firestore rules, so a
-  // client can't read other members' teams directly — the function reads them
-  // with admin privileges and gates access to league members. Returned teams are
-  // mapped into full Team shapes with typed defaults for the fields standings
-  // don't use (lineup/bench/balance).
   static getLeagueTeams = async (league: League): Promise<Team[]> => {
     const idToken = await getIdToken(SIGNED_OUT_ERROR);
     const url = `${getFunctionBaseUrl("getLeagueStandings")}?leagueId=${league.id}`;
