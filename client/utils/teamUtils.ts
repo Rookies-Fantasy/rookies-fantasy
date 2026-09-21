@@ -1,5 +1,6 @@
-import { Alert } from "react-native";
+import { Alert, ImageSourcePropType } from "react-native";
 import { UserController } from "@/controllers/userController";
+import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import {
   BenchSlot,
   FlexPosition,
@@ -9,6 +10,13 @@ import {
   TeamLineupSlot,
   UTIL_POSITIONS,
 } from "@/types/team";
+
+// Resolves a stored logoUrl to a bundled team-logo asset, falling back to the
+// default logo when the url is missing or unrecognized.
+export const getTeamLogoSource = (logoUrl?: string): ImageSourcePropType => {
+  const logo = teamLogoOptions.find((option) => option.url === logoUrl);
+  return logo?.source ?? defaultTeamLogo.source;
+};
 
 export type SaveLineupOptions = {
   onSuccess?: () => void;

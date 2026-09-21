@@ -50,3 +50,16 @@ export const MIN_BUDGET = 150_000_000;
 export const MAX_BUDGET = 250_000_000;
 export const BUDGET_STEP = 25_000_000;
 export const MAX_LEAGUE_NAME_LENGTH = 50;
+
+export type TeamRecord = {
+  wins: number;
+  losses: number;
+  draws: number;
+};
+
+export type LeagueStandingTeam = {
+  id: string;
+  name: string;
+  logoUrl: string;
+  record: TeamRecord;
+};
