@@ -1,4 +1,4 @@
-import type { Firestore } from "firebase-admin/firestore";
+import type { Firestore, WriteBatch } from "firebase-admin/firestore";
 import type { SlotPosition } from "../../../client/types/team.js";
 
 export type NbaPlayerFixture = {
@@ -26,14 +26,22 @@ export type NbaPlayerFixture = {
   };
 };
 
+export const stageNbaPlayers = (
+  db: Firestore,
+  batch: WriteBatch,
+  players: readonly NbaPlayerFixture[],
+): void => {
+  for (const player of players) {
+    batch.set(db.collection("nbaPlayers").doc(player.playerId), player);
+  }
+};
+
 export const seedNbaPlayers = async (
   db: Firestore,
   players: readonly NbaPlayerFixture[],
 ): Promise<readonly NbaPlayerFixture[]> => {
   const batch = db.batch();
-  for (const player of players) {
-    batch.set(db.collection("nbaPlayers").doc(player.playerId), player);
-  }
+  stageNbaPlayers(db, batch, players);
   await batch.commit();
   return players;
 };

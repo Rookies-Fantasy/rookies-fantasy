@@ -1,4 +1,4 @@
-import type { Firestore } from "firebase-admin/firestore";
+import type { Firestore, WriteBatch } from "firebase-admin/firestore";
 import { createTeamDoc } from "../generate/team.js";
 import type { TeamDoc } from "../types/firestore.js";
 
@@ -12,6 +12,26 @@ export type SeededTeam = {
   id: string;
   userId: string;
   document: TeamDoc;
+};
+
+export const stageTeam = (
+  db: Firestore,
+  batch: WriteBatch,
+  options: UpsertTeamOptions,
+): TeamDoc => {
+  const teamDocument = createTeamDoc({
+    ...options.document,
+    id: options.teamId,
+  });
+  batch.set(
+    db
+      .collection("users")
+      .doc(options.userId)
+      .collection("teams")
+      .doc(options.teamId),
+    teamDocument,
+  );
+  return teamDocument;
 };
 
 export const upsertTeam = async (

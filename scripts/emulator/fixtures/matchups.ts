@@ -1,4 +1,4 @@
-import type { Firestore } from "firebase-admin/firestore";
+import type { Firestore, WriteBatch } from "firebase-admin/firestore";
 import { createMatchupDoc } from "../generate/matchup.js";
 import type { MatchupDoc, TeamDoc } from "../types/firestore.js";
 
@@ -14,6 +14,27 @@ export type UpsertActiveMatchupOptions = {
 export type SeededMatchup = {
   id: string;
   document: MatchupDoc;
+};
+
+export const stageActiveMatchup = (
+  db: Firestore,
+  batch: WriteBatch,
+  options: UpsertActiveMatchupOptions & {
+    homeTeam: TeamDoc;
+    awayTeam: TeamDoc;
+  },
+): MatchupDoc => {
+  const matchupDocument = createMatchupDoc(
+    options.homeUserId,
+    options.homeTeamId,
+    options.homeTeam,
+    options.awayUserId,
+    options.awayTeamId,
+    options.awayTeam,
+    { ...options.document, id: options.matchupId, status: "active" },
+  );
+  batch.set(db.collection("matchups").doc(options.matchupId), matchupDocument);
+  return matchupDocument;
 };
 
 export const upsertActiveMatchup = async (
@@ -56,24 +77,19 @@ export const upsertActiveMatchup = async (
   const existingMatchup = existingMatchupSnap.exists
     ? (existingMatchupSnap.data() as Partial<MatchupDoc>)
     : {};
-  const matchupDocument = createMatchupDoc(
+  const batch = db.batch();
+  const now = new Date();
+
+  const matchupDocument = stageActiveMatchup(db, batch, {
+    matchupId,
     homeUserId,
     homeTeamId,
     homeTeam,
     awayUserId,
     awayTeamId,
     awayTeam,
-    {
-      ...existingMatchup,
-      ...document,
-      id: matchupId,
-      status: "active",
-    },
-  );
-  const batch = db.batch();
-  const now = new Date();
-
-  batch.set(matchupRef, matchupDocument);
+    document: { ...existingMatchup, ...document },
+  });
   batch.update(db.collection("users").doc(homeUserId), {
     queueStatus: "matched",
     currentMatchupId: matchupDocument.id,
