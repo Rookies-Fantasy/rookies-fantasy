@@ -10,6 +10,7 @@ type CommandName =
   | "matchup"
   | "end-matchup"
   | "scenario"
+  | "draft-ready"
   | "nba-players"
   | "nba-teams"
   | "simulate-day"
@@ -26,6 +27,7 @@ const COMMANDS: Record<CommandName, () => Promise<CommandModule>> = {
   matchup: () => import("./commands/seedMatchup.js"),
   "end-matchup": () => import("./commands/endMatchup.js"),
   scenario: () => import("./commands/seedScenario.js"),
+  "draft-ready": () => import("./commands/seedDraftReady.js"),
   "nba-players": () => import("./commands/seedNbaPlayers.js"),
   "nba-teams": () => import("./commands/seedNbaTeams.js"),
   "simulate-day": () => import("./commands/simulateDay.js"),

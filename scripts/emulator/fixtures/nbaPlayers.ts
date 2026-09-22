@@ -32,7 +32,12 @@ export const stageNbaPlayers = (
   players: readonly NbaPlayerFixture[],
 ): void => {
   for (const player of players) {
-    batch.set(db.collection("nbaPlayers").doc(player.playerId), player);
+    batch.set(db.collection("nbaPlayers").doc(player.playerId), {
+      ...player,
+      firstNameLower: player.firstName.toLowerCase(),
+      lastNameLower: player.lastName.toLowerCase(),
+      fullNameLower: `${player.firstName} ${player.lastName}`.toLowerCase(),
+    });
   }
 };
 

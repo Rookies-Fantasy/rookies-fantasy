@@ -75,18 +75,27 @@ Default credentials:
 
 The scenario is meant to be rerunnable, so using the same command again should not require rebuilding everything by hand.
 
+## Seed A Draft-Ready Team
+
+From `scripts/`:
+
+```bash
+npm run seed:draft-ready
+```
+
+Sign in as `draft@test.com` with password `password123`. This scenario creates a
+registered user with an empty team and full starting balance, plus the default
+NBA players, NBA teams, and augments needed by the draft screens. Draft the
+lineup through the app. Re-running the command restores the empty team; use
+`npm run seed:clear` first if you want to remove other emulator data too.
+
 ## Queue Users For Matchmaking
 
 The actual matchup flow is still handled by the local Cloud Function trigger.
 
-To test matchmaking:
-
-1. Seed the scenario.
-2. Open the Firebase Emulator UI.
-3. Edit the queued users in Firestore and set `queueStatus` to `queued`.
-4. Let the local `processQueue` trigger run.
-
-This is the closest approximation to production behavior for now, without needing two phones to race each other.
+The queue-ready setup is the next checkpoint. The active-matchup scenario above
+already marks users as matched, so it should not be used as the starting point
+for testing matchmaking.
 
 ## Simulate Matchups
 
