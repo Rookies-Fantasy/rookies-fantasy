@@ -19,6 +19,8 @@
     "seed:end-matchup": "tsx emulator/index.ts end-matchup",
     "seed:scenario": "tsx emulator/index.ts scenario",
     "seed:draft-ready": "tsx emulator/index.ts draft-ready",
+    "seed:queue-ready": "tsx emulator/index.ts queue-ready",
+    "queue:opponent": "tsx emulator/index.ts queue-opponent",
     "seed:nba-players": "tsx emulator/index.ts nba-players",
     "seed:nba-teams": "tsx emulator/index.ts nba-teams",
     "simulate:day": "tsx emulator/index.ts simulate-day",

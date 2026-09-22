@@ -16,6 +16,11 @@ export type SeededUser = {
   document: UserDoc;
 };
 
+export type QueueUserOptions = {
+  userId: string;
+  teamId: string;
+};
+
 export const ensureAuthUser = async (
   auth: Auth,
   options: Pick<UpsertUserOptions, "email" | "password"> & {
@@ -68,4 +73,32 @@ export const upsertUser = async (
     password,
     document: userDocument,
   };
+};
+
+export const queueUser = async (
+  db: Firestore,
+  options: QueueUserOptions,
+): Promise<void> => {
+  const userRef = db.collection("users").doc(options.userId);
+  const teamRef = userRef.collection("teams").doc(options.teamId);
+  const [userSnap, teamSnap] = await Promise.all([
+    userRef.get(),
+    teamRef.get(),
+  ]);
+
+  if (!userSnap.exists) {
+    throw new Error(`User "${options.userId}" not found.`);
+  }
+  if (!teamSnap.exists) {
+    throw new Error(
+      `Team "${options.teamId}" not found for user "${options.userId}".`,
+    );
+  }
+
+  await userRef.update({
+    queueStatus: "queued",
+    queuedAt: new Date(),
+    teamId: options.teamId,
+    updatedAt: new Date(),
+  });
 };

@@ -39,8 +39,7 @@ import { QueueStatus } from "@/types/user";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
-// Re-enable once queue bugs are fixed
-const QUEUE_ENABLED = false;
+const QUEUE_ENABLED = process.env.EXPO_PUBLIC_USE_EMULATOR === "true";
 
 const MyTeam = () => {
   const router = useRouter();
