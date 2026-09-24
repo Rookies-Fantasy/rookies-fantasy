@@ -35,7 +35,7 @@ export const createMatchupScenario = async (
     a.playerId.localeCompare(b.playerId),
   );
   const homePlayers = playerPool.slice(0, 8);
-  const awayPlayers = playerPool.slice(0, 8).reverse();
+  const awayPlayers = playerPool.slice(-8).reverse();
   const seedAugment = DEFAULT_AUGMENTS[0];
   const homeLineup = buildLineup(homePlayers);
   const awayLineup = buildLineup(awayPlayers, 1);

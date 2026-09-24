@@ -127,7 +127,9 @@ Run a week starting from a chosen date:
 SIM_DATE=2026-08-11 npm run simulate:week
 ```
 
-The simulator now respects the current Monday-Sunday matchup week and skips days that already have snapshots.
+Without `SIM_DATE`, `simulate:week` starts on Monday and fills the current
+matchup week. With `SIM_DATE`, it starts from the requested date instead. The
+simulator skips days that already have snapshots.
 
 ## End A Matchup
 

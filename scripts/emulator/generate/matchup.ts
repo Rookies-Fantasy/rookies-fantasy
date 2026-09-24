@@ -20,6 +20,7 @@ const buildTeamSnapshot = (team: TeamDoc): MatchupDoc["homeTeamSnapshot"] => ({
   name: team.name ?? "Test Team",
   logoUrl: team.logoUrl ?? "",
   record: team.record ?? { wins: 0, losses: 0, draws: 0 },
+  lineup: team.lineup,
   ...(team.augment ? { augmentSnapshot: team.augment } : {}),
 });
 
@@ -44,7 +45,11 @@ export const createMatchupDoc = (
   awayTeamSnapshot: overrides.awayTeamSnapshot ?? buildTeamSnapshot(awayTeam),
   homeLineupSnapshots: overrides.homeLineupSnapshots ?? {},
   awayLineupSnapshots: overrides.awayLineupSnapshots ?? {},
-  ...(overrides.homeScore !== undefined ? { homeScore: overrides.homeScore } : {}),
-  ...(overrides.awayScore !== undefined ? { awayScore: overrides.awayScore } : {}),
+  ...(overrides.homeScore !== undefined
+    ? { homeScore: overrides.homeScore }
+    : {}),
+  ...(overrides.awayScore !== undefined
+    ? { awayScore: overrides.awayScore }
+    : {}),
   ...(overrides.winnerId ? { winnerId: overrides.winnerId } : {}),
 });

@@ -3,14 +3,6 @@ import type { Firestore } from "firebase-admin/firestore";
 import { run as simulateDay } from "./simulateDay.js";
 import type { Matchup } from "../../../client/types/matchup";
 
-const parseDate = (value?: string): string => {
-  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value;
-  }
-
-  return new Date().toISOString().split("T")[0];
-};
-
 const addDays = (dateString: string, days: number): string => {
   const date = new Date(`${dateString}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
@@ -25,7 +17,17 @@ const getWeekStart = (dateString: string): string => {
   return date.toISOString().split("T")[0];
 };
 
-const getWeekEnd = (dateString: string): string => addDays(getWeekStart(dateString), 6);
+const getWeekEnd = (dateString: string): string =>
+  addDays(getWeekStart(dateString), 6);
+
+const parseStartDate = (value?: string): string => {
+  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  return getWeekStart(today);
+};
 
 const getDatesBetween = (startDate: string, endDate: string): string[] => {
   const dates: string[] = [];
@@ -45,9 +47,14 @@ const getPendingDates = (
 ): string[] => {
   const weekStart = matchup.weekStart || getWeekStart(requestedStartDate);
   const weekEnd = getWeekEnd(weekStart);
-  const simulationStart = requestedStartDate > weekStart ? requestedStartDate : weekStart;
-  const existingHomeDates = new Set(Object.keys(matchup.homeLineupSnapshots ?? {}));
-  const existingAwayDates = new Set(Object.keys(matchup.awayLineupSnapshots ?? {}));
+  const simulationStart =
+    requestedStartDate > weekStart ? requestedStartDate : weekStart;
+  const existingHomeDates = new Set(
+    Object.keys(matchup.homeLineupSnapshots ?? {}),
+  );
+  const existingAwayDates = new Set(
+    Object.keys(matchup.awayLineupSnapshots ?? {}),
+  );
 
   return getDatesBetween(simulationStart, weekEnd).filter(
     (date) => !existingHomeDates.has(date) && !existingAwayDates.has(date),
@@ -55,7 +62,7 @@ const getPendingDates = (
 };
 
 export const run = async (db: Firestore, auth: Auth): Promise<void> => {
-  const startDate = parseDate(process.env.SIM_DATE);
+  const startDate = parseStartDate(process.env.SIM_DATE);
   const days = Number(process.env.SIM_DAYS ?? "7");
 
   if (!Number.isFinite(days) || days <= 0) {
@@ -101,7 +108,10 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
 
   const weekStart = getWeekStart(startDate);
   const weekEnd = getWeekEnd(startDate);
-  const targetDates = getDatesBetween(startDate > weekStart ? startDate : weekStart, weekEnd);
+  const targetDates = getDatesBetween(
+    startDate > weekStart ? startDate : weekStart,
+    weekEnd,
+  );
   const limitedDates = targetDates.slice(0, days);
 
   for (const day of limitedDates) {
@@ -109,5 +119,7 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     await simulateDay(db, auth);
   }
 
-  console.log(`Simulated ${limitedDates.length} day(s) starting from ${startDate}`);
+  console.log(
+    `Simulated ${limitedDates.length} day(s) starting from ${startDate}`,
+  );
 };

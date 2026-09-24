@@ -35,7 +35,7 @@ export const createQueueReadyScenario = async (
     a.playerId.localeCompare(b.playerId),
   );
   const userLineup = buildLineup(playerPool.slice(0, 8));
-  const opponentLineup = buildLineup(playerPool.slice(0, 8).reverse(), 1);
+  const opponentLineup = buildLineup(playerPool.slice(-8).reverse(), 1);
   const seedAugment = DEFAULT_AUGMENTS[0];
   const [user, opponent] = await Promise.all([
     ensureAuthUser(auth, {

@@ -1,5 +1,5 @@
 import { Augment } from "./augment";
-import { SlotPosition, TeamRecord } from "./team";
+import { SlotPosition, TeamLineupSlot, TeamRecord } from "./team";
 
 export type GameInfo = {
   gameStatus: boolean;
@@ -34,6 +34,7 @@ export type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
+  lineup?: TeamLineupSlot[];
   augmentSnapshot?: Augment;
 };
 

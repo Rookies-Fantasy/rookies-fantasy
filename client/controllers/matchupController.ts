@@ -1,13 +1,51 @@
 import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
-import { Matchup } from "@/types/matchup";
+import { Augment } from "@/types/augment";
+import { Matchup, TeamSnapshot } from "@/types/matchup";
 
 const MATCHUPS_COLLECTION = "matchups";
 
-type FirestoreMatchup = Omit<Matchup, "createdAt"> & {
+type FirestoreAugment = Omit<Augment, "createdAt" | "updatedAt"> & {
+  createdAt?: FirebaseFirestoreTypes.Timestamp;
+  updatedAt?: FirebaseFirestoreTypes.Timestamp;
+};
+
+type FirestoreTeamSnapshot = Omit<TeamSnapshot, "augmentSnapshot"> & {
+  augmentSnapshot?: FirestoreAugment;
+};
+
+type FirestoreMatchup = Omit<
+  Matchup,
+  "createdAt" | "updatedAt" | "homeTeamSnapshot" | "awayTeamSnapshot"
+> & {
   createdAt: FirebaseFirestoreTypes.Timestamp;
   updatedAt?: FirebaseFirestoreTypes.Timestamp;
+  homeTeamSnapshot: FirestoreTeamSnapshot;
+  awayTeamSnapshot: FirestoreTeamSnapshot;
+};
+
+const serializeAugment = (augment: FirestoreAugment): Augment => {
+  const { createdAt, updatedAt, ...data } = augment;
+
+  return {
+    ...data,
+    ...(createdAt ? { createdAt: createdAt.toDate().toISOString() } : {}),
+    ...(updatedAt ? { updatedAt: updatedAt.toDate().toISOString() } : {}),
+  };
+};
+
+const serializeTeamSnapshot = (
+  snapshot: FirestoreTeamSnapshot,
+): TeamSnapshot => {
+  const { augmentSnapshot, ...data } = snapshot;
+
+  return {
+    ...data,
+    ...(augmentSnapshot
+      ? { augmentSnapshot: serializeAugment(augmentSnapshot) }
+      : {}),
+  };
 };
 
 export class MatchupController {
@@ -36,12 +74,20 @@ export class MatchupController {
 
       const matchup = matchups.docs[0].data() as FirestoreMatchup;
 
+      const {
+        createdAt,
+        updatedAt,
+        homeTeamSnapshot,
+        awayTeamSnapshot,
+        ...data
+      } = matchup;
+
       return {
-        ...matchup,
-        createdAt: matchup.createdAt.toDate().toISOString(),
-        ...(matchup.updatedAt
-          ? { updatedAt: matchup.updatedAt.toDate().toISOString() }
-          : {}),
+        ...data,
+        createdAt: createdAt.toDate().toISOString(),
+        ...(updatedAt ? { updatedAt: updatedAt.toDate().toISOString() } : {}),
+        homeTeamSnapshot: serializeTeamSnapshot(homeTeamSnapshot),
+        awayTeamSnapshot: serializeTeamSnapshot(awayTeamSnapshot),
       };
     } catch (error) {
       console.error("Error fetching user matchup:", error);

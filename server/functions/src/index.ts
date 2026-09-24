@@ -85,6 +85,7 @@ type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
+  lineup: TeamLineupSlot[];
   augmentSnapshot?: any;
   score?: number;
 };
@@ -1074,6 +1075,7 @@ const createTeamSnapshot = (
   logoUrl: teamInfo.logoUrl,
   name: teamInfo.name,
   record: teamInfo.record,
+  lineup: teamInfo.lineup,
   ...(augmentSnapshot ? { augmentSnapshot } : {}),
 });
 

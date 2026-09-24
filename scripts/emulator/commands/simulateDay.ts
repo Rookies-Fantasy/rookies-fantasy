@@ -108,7 +108,8 @@ const buildSnapshot = (
 
 const sumFantasyPoints = (snapshots: LineupSnapshotItem[]): number =>
   snapshots.reduce(
-    (total, slot) => total + (slot.playerSnapshot.gameStats?.fantasyPoints ?? 0),
+    (total, slot) =>
+      total + (slot.playerSnapshot.gameStats?.fantasyPoints ?? 0),
     0,
   );
 
@@ -119,8 +120,13 @@ const updateMatchup = async (
 ) => {
   const matchup = matchupDoc.data() as Matchup;
 
-  if (matchup.homeLineupSnapshots?.[date] || matchup.awayLineupSnapshots?.[date]) {
-    console.log(`Matchup ${matchupDoc.id} already has snapshots for ${date}. Skipping.`);
+  if (
+    matchup.homeLineupSnapshots?.[date] ||
+    matchup.awayLineupSnapshots?.[date]
+  ) {
+    console.log(
+      `Matchup ${matchupDoc.id} already has snapshots for ${date}. Skipping.`,
+    );
     return;
   }
 
@@ -148,26 +154,34 @@ const updateMatchup = async (
 
   const homeSnapshot = buildSnapshot(homeTeam.lineup, date, true);
   const awaySnapshot = buildSnapshot(awayTeam.lineup, date, false);
+  const homeLineupSnapshots = {
+    ...(matchup.homeLineupSnapshots ?? {}),
+    [date]: homeSnapshot,
+  };
+  const awayLineupSnapshots = {
+    ...(matchup.awayLineupSnapshots ?? {}),
+    [date]: awaySnapshot,
+  };
 
   await matchupDoc.ref.set(
     {
-      homeLineupSnapshots: {
-        ...(matchup.homeLineupSnapshots ?? {}),
-        [date]: homeSnapshot,
-      },
-      awayLineupSnapshots: {
-        ...(matchup.awayLineupSnapshots ?? {}),
-        [date]: awaySnapshot,
-      },
-      homeScore: sumFantasyPoints(homeSnapshot),
-      awayScore: sumFantasyPoints(awaySnapshot),
+      homeLineupSnapshots,
+      awayLineupSnapshots,
+      homeScore: Object.values(homeLineupSnapshots).reduce(
+        (total, snapshots) => total + sumFantasyPoints(snapshots),
+        0,
+      ),
+      awayScore: Object.values(awayLineupSnapshots).reduce(
+        (total, snapshots) => total + sumFantasyPoints(snapshots),
+        0,
+      ),
       updatedAt: new Date(),
     },
     { merge: true },
   );
 
   console.log(`Simulated matchup ${matchupDoc.id} for ${date}`);
-}
+};
 
 export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   const date = parseDate(process.env.SIM_DATE);
