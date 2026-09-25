@@ -1,13 +1,11 @@
-type Teams = {
+export type NBATeam = {
   id: string;
   name: string;
-  abbreviation: string;
-  logoUrl?: string;
-  conference: string;
-  division: string;
   fullName: string;
+  abbreviation: string;
   city: string;
   state: string;
+  conference: string;
+  division: string;
+  logoUrl: string;
 };
-
-// THIS IS FOR REFERENCE

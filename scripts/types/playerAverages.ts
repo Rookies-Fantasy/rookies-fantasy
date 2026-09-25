@@ -1,25 +1,8 @@
-type PlayerAverages = {
-  id: string;
+import type { PlayerAverageStats } from "./players.js";
+
+export type NBAPlayerAverages = {
   playerId: string;
   seasonId: string;
   gamesPlayed: number;
-  averageStats: {
-    minutes: number;
-    fieldGoalsMade: number;
-    fieldGoalsAttempted: number;
-    fieldGoalPercentage: number;
-    freeThrowsAttempted: number;
-    freeThrowsMade: number;
-    freeThrowPerfectange: number;
-    threePointersAttempted: number;
-    threePointersMade: number;
-    threePointerPercentage: number;
-    rebounds: number;
-    assists: number;
-    steals: number;
-    blocks: number;
-    turnovers: number;
-    personalFouls: number;
-    points: number;
-  };
+  averageStats: PlayerAverageStats;
 };
