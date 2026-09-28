@@ -4,19 +4,12 @@ This is an NBA fantasy sports mobile app. Users can play in leagues or in a comp
 
 ## Monorepo structure
 - `client/` — Expo React Native app (see `client/CLAUDE.md`)
-- `server/functions/` — Firebase Cloud Functions (TypeScript, Node 22)
+- `server/functions/` — Firebase Cloud Functions (TypeScript, Node 22) (see `server/CLAUDE.md`)
 - `scripts/` — One-off Node.js scripts for Firestore data changes
 
 ## Conventions
 - Branch: `{type}/eng-{ticket}-{description}` (types: feature, bugfix, docs)
 - PRs: follow `.github/pull_request_template.md`
-
-## Server (Firebase Functions)
-From `server/functions/`:
-- Dev: `npm run serve` (builds + starts emulator)
-- Deploy: `npm run deploy`
-- Lint: `npm run lint`
-- External data: BallDontLie SDK (`@balldontlie/sdk`) for NBA stats
 
 ## Important Notes
 
