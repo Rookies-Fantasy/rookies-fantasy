@@ -16,3 +16,8 @@ export const commitIfNeeded = async (
 
   return { batch, count: count + 1 };
 };
+
+export type BatchState = {
+  batch: FirebaseFirestore.WriteBatch;
+  opCount: number;
+};
