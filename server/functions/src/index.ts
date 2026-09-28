@@ -1,16 +1,12 @@
 import type { UserRecord } from "firebase-admin/auth";
-import * as admin from "firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
 import { cleanUpDeletedUser } from "./users/deleteUserData";
 import * as functions from "firebase-functions/v1";
-import { BalldontlieAPI } from "@balldontlie/sdk";
 import {
   EMPTY_PAYLOAD,
   JsonValue,
   LeagueDocument,
   LeagueStandingTeam,
   RawPayload,
-  TeamRecord,
 } from "./leagues/types";
 import {
   evaluateJoinEligibility,
@@ -30,26 +26,17 @@ import {
   validateUpdateLeagueInput,
 } from "./leagues/validation";
 import { completeMatchup } from "./matchups/completeMatchup";
-
-admin.initializeApp();
-
-type GameInfo = {
-  gameStatus: boolean;
-  opponent: string;
-  gameDate: string;
-  isHome: boolean;
-};
-
-type GameStats = {
-  points: number;
-  assists: number;
-  rebounds: number;
-  steals: number;
-  blocks: number;
-  turnovers: number;
-  fantasyPoints: number;
-  minutes: number;
-};
+import { admin, FieldValue } from "./shared/admin";
+import { api, fetchAllPagesFromUrl } from "./shared/balldontlie";
+import { commitIfNeeded } from "./shared/batch";
+import { formatDate, getThisMondayString } from "./shared/dates";
+import type {
+  GameInfo,
+  GameStats,
+  LineupSnapshotItem,
+  TeamLineupSlot,
+  TeamSnapshot,
+} from "./shared/types";
 
 type LiveData = Record<
   number,
@@ -58,50 +45,6 @@ type LiveData = Record<
     gameStats: GameStats;
   }
 >;
-
-type Position = "PG" | "SG" | "SF" | "PF" | "C";
-type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
-type TeamPosition = Position | FlexPosition;
-
-type PlayerTeamDisplay = {
-  firstName: string;
-  lastName: string;
-  headshotUrl: string;
-  positions: TeamPosition[];
-  salary: number;
-  id: string;
-  teamAbbreviation: string;
-};
-
-type TeamLineupSlot = {
-  position: TeamPosition;
-  player: PlayerTeamDisplay | null;
-};
-
-type PlayerSnapshot = {
-  firstName: string;
-  lastName: string;
-  headshotUrl: string;
-  positions: TeamPosition[];
-  salary: number;
-  id: string;
-  gameStats: GameStats;
-  gameInfo: GameInfo;
-};
-
-type TeamSnapshot = {
-  name: string;
-  logoUrl: string;
-  record: TeamRecord;
-  lineup: TeamLineupSlot[];
-  augmentSnapshot?: any;
-  score?: number;
-};
-
-type LineupSnapshotItem = {
-  position: TeamPosition;
-  playerSnapshot: PlayerSnapshot;
-};
 
 type MatchupBase = {
   createdAt: Date;
@@ -134,8 +77,6 @@ type LeagueMatchup = MatchupBase & {
 
 type Matchup = RankedMatchup | LeagueMatchup;
 
-const apiKey = process.env.BALLDONTLIE_API_KEY || "";
-const api = new BalldontlieAPI({ apiKey });
 const cachedData: LiveData = {};
 let lastFetchTime = 0;
 const CACHE_EXPIRY_MS = 60 * 1000;
@@ -534,55 +475,6 @@ export const updateDailyPlayerData = functions
     console.log("=== Finished updateDailyPlayerData job ===");
   });
 
-const fetchAllPagesFromUrl = async (url: string, apiKey?: string) => {
-  let cursor: number | null = null;
-  let results: any[] = [];
-
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const finalUrl = cursor ? `${url}&cursor=${cursor}` : url;
-
-    console.log("Fetching:", finalUrl);
-
-    const response = await fetch(finalUrl, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-
-    if (!response.ok) {
-      console.error(
-        "Failed to fetch:",
-        response.status,
-        response.statusText,
-        "URL:",
-        finalUrl,
-      );
-      break;
-    }
-
-    const json: any = await response.json();
-
-    if (!json.data || !Array.isArray(json.data)) {
-      console.error("Unexpected response format:", json);
-      break;
-    }
-
-    results = results.concat(json.data);
-
-    if (!json.meta?.next_cursor) break;
-
-    cursor = json.meta.next_cursor;
-  }
-
-  return results;
-};
-
-const formatDate = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
-
 const getLineupSnapshot = (
   lineup: TeamLineupSlot[],
   gamelogMap: Record<string, any>,
@@ -660,23 +552,6 @@ const getLineupSnapshot = (
       },
     };
   });
-};
-
-const commitIfNeeded = async (
-  batch: FirebaseFirestore.WriteBatch,
-  count: number,
-  limit: number,
-) => {
-  if (count >= limit) {
-    await batch.commit();
-    console.log("Committed batch");
-    return {
-      batch: admin.firestore().batch(),
-      count: 0,
-    };
-  }
-
-  return { batch, count: count + 1 };
 };
 
 const calculateFantasyPoints = (s: any) => {
@@ -1120,20 +995,6 @@ const createTeamSnapshot = (
   lineup: teamInfo.lineup,
   ...(augmentSnapshot ? { augmentSnapshot } : {}),
 });
-
-const getThisMondayString = () => {
-  const today = new Date();
-  const day = today.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Difference to Monday
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + diff);
-
-  const year = monday.getFullYear();
-  const month = String(monday.getMonth() + 1).padStart(2, "0");
-  const date = String(monday.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${date}`;
-};
 
 const getNextMondayDate = async (): Promise<string> => {
   const today = new Date();
