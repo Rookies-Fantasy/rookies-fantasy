@@ -1,5 +1,5 @@
 import { Augment } from "./augment";
-import { SlotPosition, TeamRecord } from "./team";
+import { SlotPosition, TeamLineupSlot, TeamRecord } from "./team";
 
 export type GameInfo = {
   gameStatus: boolean;
@@ -34,6 +34,7 @@ export type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
+  lineup?: TeamLineupSlot[];
   augmentSnapshot?: Augment;
 };
 
@@ -43,7 +44,8 @@ export type LineupSnapshotItem = {
 };
 
 export type Matchup = {
-  createdAt: Date;
+  createdAt: string;
+  updatedAt?: string;
   id: string;
   weekStart: string;
   homeTeamSnapshot: TeamSnapshot;

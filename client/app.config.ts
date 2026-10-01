@@ -104,6 +104,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       supportsTablet: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        ...(environment === "development" && {
+          NSLocalNetworkUsageDescription:
+            "This app connects to local Firebase emulators during development.",
+          NSAppTransportSecurity: {
+            NSAllowsLocalNetworking: true,
+            NSAllowsArbitraryLoads: true,
+          },
+        }),
       },
     },
     android: {

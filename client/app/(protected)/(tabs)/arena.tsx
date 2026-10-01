@@ -29,6 +29,13 @@ type LiveData = Record<
   }
 >;
 
+const formatLocalDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const getCurrentWeekDates = () => {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -48,7 +55,7 @@ const getCurrentWeekDates = () => {
 
   while (current <= endDate) {
     // Push as YYYY-MM-DD string
-    dates.push(current.toISOString().split("T")[0]);
+    dates.push(formatLocalDate(current));
     current.setDate(current.getDate() + 1);
   }
 
@@ -79,20 +86,22 @@ const Arena = () => {
   const isHomeUser = matchup?.homeUserId === userId;
   const homeSnapshotLineup = matchup?.homeLineupSnapshots[selectedDate] ?? [];
   const awaySnapshotLineup = matchup?.awayLineupSnapshots[selectedDate] ?? [];
+  const homeTeamLineup =
+    matchup?.homeTeamSnapshot.lineup ?? (isHomeUser ? team.lineup : []);
+  const awayTeamLineup =
+    matchup?.awayTeamSnapshot.lineup ?? (!isHomeUser ? team.lineup : []);
   const homeLineup =
     homeSnapshotLineup.length > 0
       ? homeSnapshotLineup.map((slot) => ({
           player: slot.playerSnapshot,
           gameStats: slot.playerSnapshot.gameStats,
         }))
-      : isHomeUser
-        ? team.lineup.map((slot) => ({
-            player: slot.player,
-            gameStats: slot.player
-              ? liveHomeData[slot.player.id]?.gameStats
-              : undefined,
-          }))
-        : [];
+      : homeTeamLineup.map((slot) => ({
+          player: slot.player,
+          gameStats: slot.player
+            ? liveHomeData[slot.player.id]?.gameStats
+            : undefined,
+        }));
   const awayLineup =
     awaySnapshotLineup.length > 0
       ? awaySnapshotLineup.map((slot) => ({
@@ -101,14 +110,12 @@ const Arena = () => {
             liveAwayData[slot.playerSnapshot.id]?.gameStats ??
             slot.playerSnapshot.gameStats,
         }))
-      : !isHomeUser
-        ? team.lineup.map((slot) => ({
-            player: slot.player,
-            gameStats: slot.player
-              ? liveAwayData[slot.player.id]?.gameStats
-              : undefined,
-          }))
-        : [];
+      : awayTeamLineup.map((slot) => ({
+          player: slot.player,
+          gameStats: slot.player
+            ? liveAwayData[slot.player.id]?.gameStats
+            : undefined,
+        }));
   const homeScore =
     matchup?.homeScore ??
     homeLineup.reduce(
@@ -138,21 +145,23 @@ const Arena = () => {
             ? homeLineup
                 .map((o) => o.playerSnapshot?.id)
                 .filter((id) => isNotNil(id))
-            : isHomeUser
-              ? team.lineup
-                  .map((o) => o.player?.id)
-                  .filter((id) => isNotNil(id))
-              : [];
+            : (
+                matchupRef.current?.homeTeamSnapshot.lineup ??
+                (isHomeUser ? team.lineup : [])
+              )
+                .map((o) => o.player?.id)
+                .filter((id) => isNotNil(id));
         const awayPlayerIds =
           awayLineup.length > 0
             ? awayLineup
                 .map((o) => o.playerSnapshot?.id)
                 .filter((id) => isNotNil(id))
-            : !isHomeUser
-              ? team.lineup
-                  .map((o) => o.player?.id)
-                  .filter((id) => isNotNil(id))
-              : [];
+            : (
+                matchupRef.current?.awayTeamSnapshot.lineup ??
+                (!isHomeUser ? team.lineup : [])
+              )
+                .map((o) => o.player?.id)
+                .filter((id) => isNotNil(id));
 
         try {
           const [updatedAway, updatedHome] = await Promise.all([
