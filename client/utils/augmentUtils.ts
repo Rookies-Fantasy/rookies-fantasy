@@ -228,7 +228,10 @@ export const applyAugmentEffects = (
   return baseFantasyPoints + totalBonus;
 };
 
-const getStatValue = (stats: Partial<GameStats> | undefined, stat: string): number => {
+const getStatValue = (
+  stats: Partial<GameStats> | undefined,
+  stat: string,
+): number => {
   switch (stat) {
     case "points":
       return stats?.points ?? 0;

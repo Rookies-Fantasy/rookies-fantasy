@@ -1,5 +1,5 @@
-import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
 import { useState, useEffect, ReactNode } from "react";
 import { View } from "react-native";
 import Spinner from "./Spinner";
