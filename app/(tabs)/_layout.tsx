@@ -2,12 +2,13 @@ import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
+const tabBarIconStyle = { marginBottom: -3 } as const;
+
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
   color: string;
 }) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return <FontAwesome size={28} style={tabBarIconStyle} {...props} />;
 }
 
 export default function TabLayout() {

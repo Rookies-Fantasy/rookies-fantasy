@@ -8,6 +8,8 @@ import "@/global.css";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
 
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     "ClashDisplay-Bold": require("../assets/fonts/ClashDisplay-Bold.ttf"),
@@ -16,23 +18,17 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      // Hide the splash screen once fonts are loaded
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
-  // If fonts haven't loaded yet, don't render the app
   if (!fontsLoaded) {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
   return (
     <GluestackUIProvider>
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar />
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
