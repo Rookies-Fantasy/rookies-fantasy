@@ -15,16 +15,28 @@ const startEmulators = (): Promise<void> =>
       stdio: ["ignore", "pipe", "pipe"],
     });
 
+    let ready = false;
+
     proc.stdout.on("data", (chunk: Buffer) => {
       const line = chunk.toString();
       process.stdout.write(line);
       if (line.includes("All emulators ready!")) {
+        ready = true;
         resolve();
       }
     });
 
     proc.stderr.on("data", (chunk: Buffer) => process.stderr.write(chunk));
     proc.on("error", reject);
+    proc.on("exit", (code, signal) => {
+      if (!ready) {
+        reject(
+          new Error(
+            `Firebase emulators exited before becoming ready (${signal ? `signal ${signal}` : `code ${code}`}).`,
+          ),
+        );
+      }
+    });
   });
 
 const main = async (): Promise<void> => {
