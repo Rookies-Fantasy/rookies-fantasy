@@ -82,11 +82,12 @@ npm run seed:clear
 
 Choose a workflow:
 
-| Workflow                  | Seed command               | Login            |
-| ------------------------- | -------------------------- | ---------------- |
-| Draft a team              | `npm run seed:draft-ready` | `draft@test.com` |
-| Test matchmaking          | `npm run seed:queue-ready` | `queue@test.com` |
-| Advance a premade matchup | `npm run seed:scenario`    | `dev@test.com`   |
+| Workflow                  | Seed command                | Login            |
+| ------------------------- | --------------------------- | ---------------- |
+| Draft a team              | `npm run seed:draft-ready`  | `draft@test.com` |
+| Test matchmaking          | `npm run seed:queue-ready`  | `queue@test.com` |
+| Advance a premade matchup | `npm run seed:scenario`     | `dev@test.com`   |
+| Browse and join leagues   | `npm run seed:league-ready` | `dev@test.com`   |
 
 ## Workflow Notes
 
@@ -132,6 +133,43 @@ Complete the matchup and return its users to idle:
 npm run seed:end-matchup
 ```
 
+### Browse and Join Leagues
+
+`seed:league-ready` creates four users, a complete ranked team for
+`dev@test.com`, and two leagues:
+
+| League ID              | Name        | Teams | Creator             | `dev@test.com` |
+| ---------------------- | ----------- | ----- | ------------------- | -------------- |
+| `emulator-league-full` | Full League | 4/4   | `dev@test.com`      | Member         |
+| `emulator-league-open` | Open League | 2/6   | `opponent@test.com` | Not a member   |
+
+The other members are `opponent@test.com`, `league1@test.com`, and
+`league2@test.com`. Every member has a complete league team.
+
+Sign in as `dev@test.com` and use the league switcher to open Full League.
+The app only reaches the join screen through an invite link, so open Open
+League with the development build's deep link:
+
+```bash
+# iOS simulator
+xcrun simctl openurl booted "myapp-development://joinLeague?leagueId=emulator-league-open"
+```
+
+Re-running the seed command restores both leagues and their teams.
+
+To add one more league for an existing user, pass that user's UID:
+
+```bash
+npx cross-env USER_ID=<uid> npm run seed:league
+```
+
+`seed:league` creates a league team for the user and a league with the user as
+its creator and only member. It defaults to `LEAGUE_ID=default-league`,
+`LEAGUE_NAME="Dev League"`, and `NUMBER_OF_TEAMS=4`. The league team gets a
+Firestore-generated ID unless `LEAGUE_TEAM_ID` is set. If the league ID already exists, the command logs a
+message and changes nothing; adding members to an existing league is not
+supported yet.
+
 ## Optional Overrides
 
 The default workflows do not require overrides. Use `cross-env` for portable
@@ -153,7 +191,7 @@ Queue-created matchups receive generated IDs. Copy the ID from the Functions
 log or Emulator UI when targeting one of them.
 
 Lower-level commands such as `seed:user`, `seed:team`, and `seed:matchup` are
-available for targeted setup, but the three scenarios above are the supported
+available for targeted setup, but the four scenarios above are the supported
 MVP workflows.
 
 ## Physical Phone Network Setup
