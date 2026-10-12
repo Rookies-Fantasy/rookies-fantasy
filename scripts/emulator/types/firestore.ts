@@ -1,4 +1,5 @@
 import type { Augment } from "../../../client/types/augment";
+import type { League } from "../../../client/types/league";
 import type {
   LineupSnapshotItem,
   Matchup,
@@ -29,6 +30,12 @@ export type TeamDoc = Team & {
   updatedAt: Date;
   matchupId?: string;
   augment?: Augment;
+};
+
+export type LeagueDoc = Omit<League, "id" | "createdAt" | "updatedAt"> & {
+  creatorUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type MatchupDoc = Omit<Matchup, "createdAt"> & {
