@@ -85,7 +85,6 @@ export class LeagueController {
     }
   };
 
-  
   static createLeague = async (params: LeagueEditModel): Promise<League> => {
     try {
       const { league } = await callFunction<{ league: League }>(
@@ -105,7 +104,6 @@ export class LeagueController {
       throw error;
     }
   };
-
 
   static joinLeague = async (
     leagueId: string,

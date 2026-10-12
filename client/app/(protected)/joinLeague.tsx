@@ -200,7 +200,6 @@ const JoinLeague = () => {
         );
       }
 
-
       const joinedLeague = await LeagueController.joinLeague(leagueId, teamId);
       dispatch(setCurrentLeague(joinedLeague));
 
