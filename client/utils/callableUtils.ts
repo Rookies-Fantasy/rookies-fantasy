@@ -4,17 +4,11 @@ import { isNil } from "@/utils/jsUtils";
 
 export type CallablePayload = Record<string, string | number | boolean>;
 
-// The callable wire protocol: the payload goes out as `{ data }` and comes back
-// as `{ result }` or `{ error: { message } }`. @react-native-firebase/functions
-// is not installed — it would force a native rebuild — so we speak it over fetch.
 type CallableResponseBody<TResult> = {
   result: TResult | null;
   error: { message: string } | null;
 };
 
-// Infrastructure failures (gateway errors, cold-start timeouts) can answer with
-// HTML or an empty body, so the wire shape is normalised here and the status
-// code drives the message when there is nothing to read.
 const readCallableBody = async <TResult>(
   response: Response,
 ): Promise<CallableResponseBody<TResult>> => {

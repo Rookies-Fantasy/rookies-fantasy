@@ -1,6 +1,3 @@
-// JSON-shaped boundary types. Callable payloads and Firestore documents arrive
-// untyped, and the project standard forbids `any`/`unknown` — these give the raw
-// data an explicit, narrowable shape so every field is proven before use.
 export type JsonValue =
   | string
   | number
@@ -39,10 +36,6 @@ export type JoinLeagueInput = {
 // The league rules. These mirror the form constants and yup schema in
 // `client/app/(protected)/createLeague.tsx` so a hand-rolled request can't create
 // a league the UI would never allow.
-//
-// The steps matter as much as the bounds: the UI only ever offers 4/6/…/20 teams
-// and $150M/$175M/…/$250M budgets, so a league of 5 teams or $160M is not a
-// league this app knows how to run, however well-formed the request looks.
 export const MIN_TEAMS = 4;
 export const MAX_TEAMS = 20;
 export const TEAMS_STEP = 2;

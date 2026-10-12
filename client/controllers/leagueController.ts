@@ -85,13 +85,7 @@ export class LeagueController {
     }
   };
 
-  // Creates a league through the createLeague cloud function. `leagues/{id}` is
-  // read-only to clients under Firestore rules — membership has to be written by
-  // the server, otherwise any signed-in user could add themselves to any league
-  // and read every member's private team data through getLeagueStandings.
-  //
-  // The creator's uid comes from the verified auth token, not from here, and the
-  // team must already exist under users/{uid}/teams/{initialTeamId}.
+  
   static createLeague = async (params: LeagueEditModel): Promise<League> => {
     try {
       const { league } = await callFunction<{ league: League }>(
@@ -112,13 +106,7 @@ export class LeagueController {
     }
   };
 
-  // Joins a league through the joinLeague cloud function, which enforces the
-  // membership preconditions (league exists, team/user not already joined, league
-  // not full) inside a transaction. There is no userId parameter by design: the
-  // joining user is taken from the verified auth token.
-  //
-  // Returns the league as it stands after the join, so callers can update Redux
-  // without a follow-up read.
+
   static joinLeague = async (
     leagueId: string,
     teamId: string,
