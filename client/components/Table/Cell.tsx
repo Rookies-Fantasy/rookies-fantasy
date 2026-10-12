@@ -12,10 +12,12 @@ type CellProps = {
 const Cell = ({
   content,
   widthClass = "w-24",
+  heightClass,
   variant = "row",
   cellVariant = "sticky",
 }: CellProps) => {
-  const heightClass = variant === "header" ? "h-12" : "h-24";
+  const resolvedHeight =
+    heightClass ?? (variant === "header" ? "h-12" : "h-24");
   const cellClass =
     cellVariant === "scrollable"
       ? "border-b border-t border-gray-900 items-center"
@@ -23,7 +25,7 @@ const Cell = ({
 
   return (
     <View
-      className={`justify-center bg-gray-920 ${widthClass} ${heightClass} ${cellClass}`}
+      className={`justify-center bg-gray-920 ${widthClass} ${resolvedHeight} ${cellClass}`}
     >
       {typeof content === "string" || typeof content === "number" ? (
         <Text className="pbk-b1 text-base-white">{content}</Text>
