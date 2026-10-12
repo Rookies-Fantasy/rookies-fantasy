@@ -3,10 +3,14 @@ import firestore from "@react-native-firebase/firestore";
 import { Platform } from "react-native";
 
 const defaultHost = Platform.OS === "android" ? "10.0.2.2" : "localhost";
-const emulatorHost = process.env.EXPO_PUBLIC_EMULATOR_HOST ?? defaultHost;
+
+export const isEmulatorEnabled =
+  process.env.EXPO_PUBLIC_USE_EMULATOR === "true";
+export const emulatorHost =
+  process.env.EXPO_PUBLIC_EMULATOR_HOST ?? defaultHost;
 
 export const connectToEmulators = () => {
-  if (process.env.EXPO_PUBLIC_USE_EMULATOR !== "true") {
+  if (!isEmulatorEnabled) {
     return;
   }
 
