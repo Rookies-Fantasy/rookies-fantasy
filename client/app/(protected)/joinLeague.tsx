@@ -200,9 +200,6 @@ const JoinLeague = () => {
         );
       }
 
-      // The joining user is taken from the auth token by the cloud function. The
-      // response carries the post-join league, so Redux is updated from it
-      // rather than by re-reading the document.
       const joinedLeague = await LeagueController.joinLeague(leagueId, teamId);
       dispatch(setCurrentLeague(joinedLeague));
 

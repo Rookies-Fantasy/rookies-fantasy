@@ -1458,10 +1458,6 @@ const toLeagueResponse = (
 });
 
 // Creates a league on behalf of the caller.
-//
-// `creatorUserId` / `userIds` are stamped from the verified auth context and can
-// never come from the payload — that, plus the Firestore rules denying direct
-// writes to `leagues/{id}`, is what keeps the membership list trustworthy.
 export const createLeague = functions.https.onCall(
   async (data: RawPayload, context): Promise<{ league: LeagueResponse }> => {
     if (!context.auth) {
@@ -1539,12 +1535,6 @@ const JOIN_REJECTION_STATUS: Record<
 };
 
 // Adds the caller's team to a league.
-//
-// This is the server-side replacement for the Firestore transaction that used to
-// run in client/controllers/leagueController.ts. It enforces the same
-// preconditions — league exists, team not already joined, user not already
-// joined, league not full — plus a hard league-size cap, and it verifies the team
-// actually belongs to the caller.
 export const joinLeague = functions.https.onCall(
   async (data: RawPayload, context): Promise<{ league: LeagueResponse }> => {
     if (!context.auth) {
