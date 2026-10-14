@@ -49,6 +49,10 @@ When using an Android emulator or iOS simulator, omit
 `EXPO_PUBLIC_EMULATOR_HOST`; the app defaults to `10.0.2.2` on Android and
 `localhost` on iOS.
 
+After changing the backend flag or emulator host, restart Expo and fully close
+and reopen the app. Switching between cloud and emulator backends signs you
+out and clears cached Firestore data and pending writes.
+
 ## Start the Environment
 
 Use three terminals.
