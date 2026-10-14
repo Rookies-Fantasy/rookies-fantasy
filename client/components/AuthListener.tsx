@@ -5,6 +5,7 @@ import { View } from "react-native";
 import Spinner from "./Spinner";
 import { MatchupController } from "@/controllers/matchupController";
 import { UserController } from "@/controllers/userController";
+import { getBackendMode } from "@/firebase/config";
 import { useAppDispatch } from "@/state/hooks";
 import { setMatchup, clearMatchup } from "@/state/slices/matchupSlice";
 import { setTeam } from "@/state/slices/teamSlice";
@@ -29,9 +30,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
       if (!environmentChecked) {
         environmentChecked = true;
         const currentEnvironment =
-          process.env.EXPO_PUBLIC_USE_EMULATOR === "true"
-            ? "emulator"
-            : "firebase";
+          getBackendMode() === "emulator" ? "emulator" : "firebase";
         const previousEnvironment = await AsyncStorage.getItem(
           FIREBASE_ENVIRONMENT_KEY,
         );

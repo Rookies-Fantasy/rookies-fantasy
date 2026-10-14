@@ -1,15 +1,13 @@
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
-import { Platform } from "react-native";
-
-const defaultHost = Platform.OS === "android" ? "10.0.2.2" : "localhost";
-const emulatorHost = process.env.EXPO_PUBLIC_EMULATOR_HOST ?? defaultHost;
+import { getBackendMode, getEmulatorHost } from "@/firebase/config";
 
 export const connectToEmulators = () => {
-  if (process.env.EXPO_PUBLIC_USE_EMULATOR !== "true") {
+  if (getBackendMode() !== "emulator") {
     return;
   }
 
+  const emulatorHost = getEmulatorHost();
   auth().useEmulator(`http://${emulatorHost}:9099`);
   firestore().useEmulator(emulatorHost, 8080);
 

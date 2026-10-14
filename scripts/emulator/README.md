@@ -30,9 +30,15 @@ npm ci
 Create the ignored file `client/.env.local`:
 
 ```dotenv
+APP_ENV=development
 EXPO_PUBLIC_USE_EMULATOR=true
 EXPO_PUBLIC_EMULATOR_HOST=192.168.x.x
 ```
+
+The app connects to emulators only when the flag is enabled, `APP_ENV` is
+`development`, and the app is running a debug build. Preview and production
+builds use their native Firebase project's cloud services. Functions use the
+same native project ID as Auth and Firestore.
 
 For a physical phone, replace `192.168.x.x` with the development computer's
 LAN IP. The phone and computer must be on the same reachable network. See
@@ -228,8 +234,9 @@ Firestore batch.
 
 - **Phone cannot load data:** Confirm the LAN IP in
   `EXPO_PUBLIC_EMULATOR_HOST`, then review the network steps above.
-- **Queue button is missing:** Confirm `EXPO_PUBLIC_USE_EMULATOR=true` and
-  restart Expo after changing `.env.local`.
+- **Queue button is missing:** Confirm `EXPO_PUBLIC_USE_EMULATOR=true`,
+  `APP_ENV=development`, and a debug development build. Restart Expo after
+  changing `.env.local`.
 - **Users do not match:** Check the Functions log and confirm both users have
   complete teams.
 - **Functions changes are stale:** Run `npm run build` from
