@@ -1,7 +1,6 @@
 import * as SplashScreen from "expo-splash-screen";
 import { ReactNode, useEffect, useState } from "react";
-import { Text, View } from "react-native";
-import Button from "./Button";
+import StartupError from "./StartupError";
 import { initializeFirebase } from "@/firebase/initialize";
 
 type FirebaseStartupProps = {
@@ -12,7 +11,7 @@ const FirebaseStartup = ({ children }: FirebaseStartupProps) => {
   const [status, setStatus] = useState<
     "loading" | "ready" | "error" | "retrying"
   >("loading");
-  const [attempt, setAttempt] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -29,7 +28,7 @@ const FirebaseStartup = ({ children }: FirebaseStartupProps) => {
     return () => {
       active = false;
     };
-  }, [attempt]);
+  }, [retryCount]);
 
   useEffect(() => {
     if (status === "error") SplashScreen.hide();
@@ -40,27 +39,13 @@ const FirebaseStartup = ({ children }: FirebaseStartupProps) => {
   if (status === "loading") return null;
 
   return (
-    <View className="flex-1 items-center justify-center bg-gray-950 px-6">
-      <View className="w-full max-w-sm gap-4">
-        <Text
-          accessibilityRole="header"
-          className="pbk-h5 text-center text-base-white"
-        >
-          Unable to start the app
-        </Text>
-        <Text className="pbk-b2 text-center text-gray-400">
-          Please try again. If this keeps happening, close and reopen the app.
-        </Text>
-        <Button
-          isLoading={status === "retrying"}
-          label="Retry"
-          onPress={() => {
-            setStatus("retrying");
-            setAttempt((previous) => previous + 1);
-          }}
-        />
-      </View>
-    </View>
+    <StartupError
+      isLoading={status === "retrying"}
+      onRetry={() => {
+        setStatus("retrying");
+        setRetryCount((previous) => previous + 1);
+      }}
+    />
   );
 };
 
