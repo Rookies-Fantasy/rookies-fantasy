@@ -1,8 +1,9 @@
 import type { Augment } from "../../../client/types/augment";
 import type { League } from "../../../client/types/league";
 import type {
+  LeagueMatchup,
   LineupSnapshotItem,
-  Matchup,
+  RankedMatchup,
   TeamSnapshot,
 } from "../../../client/types/matchup";
 import type {
@@ -38,13 +39,21 @@ export type LeagueDoc = Omit<League, "id" | "createdAt" | "updatedAt"> & {
   updatedAt: Date;
 };
 
-export type MatchupDoc = Omit<Matchup, "createdAt"> & {
+type MatchupDocFields = {
   createdAt: Date;
   homeTeamSnapshot: TeamSnapshot;
   awayTeamSnapshot: TeamSnapshot;
   homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
 };
+
+export type RankedMatchupDoc = Omit<RankedMatchup, "createdAt"> &
+  MatchupDocFields;
+
+export type LeagueMatchupDoc = Omit<LeagueMatchup, "createdAt"> &
+  MatchupDocFields;
+
+export type MatchupDoc = RankedMatchupDoc | LeagueMatchupDoc;
 
 export type PlayerDoc = PlayerTeamDisplay & {
   gamesPlayed: number;

@@ -146,6 +146,12 @@ npm run seed:end-matchup
 The other members are `opponent@test.com`, `league1@test.com`, and
 `league2@test.com`. Every member has a complete league team.
 
+It also creates the active week 1 league matchup
+`emulator-league-full-week-1-user` between the Full League teams of
+`dev@test.com` and `opponent@test.com`. Ranked code ignores it: the app's
+ranked matchup lookup and the weekly reset only read matchups with
+`leagueId: null`, and `seed:end-matchup` refuses league matchups.
+
 Sign in as `dev@test.com` and use the league switcher to open Full League.
 The app only reaches the join screen through an invite link, so open Open
 League with the development build's deep link:
@@ -169,6 +175,40 @@ its creator and only member. It defaults to `LEAGUE_ID=default-league`,
 Firestore-generated ID unless `LEAGUE_TEAM_ID` is set. If the league ID already exists, the command logs a
 message and changes nothing; adding members to an existing league is not
 supported yet.
+
+### Test the Weekly Reset
+
+`weeklyMatchupReset` runs on a schedule, which the emulator never triggers, and
+`seed:end-matchup` only imitates it. To run the real function, seed a ranked
+matchup and a league matchup, then call it from the Functions shell while the
+emulators are running:
+
+```bash
+cd scripts
+npm run seed:clear
+npm run seed:league-ready
+npm run seed:scenario
+
+cd ../server/functions
+npm run shell
+```
+
+Seed `league-ready` first. `seed:scenario` then turns `dev@test.com` and
+`opponent@test.com` into matched users with the ranked matchup
+`default-matchup`, and leaves their league teams and league matchup in place.
+
+Before calling the function, confirm the shell logs
+`Connected to running firestore emulator`; otherwise its writes go to the
+development project. Then run:
+
+```text
+firebase > weeklyMatchupReset()
+```
+
+The log should report one active ranked matchup. `default-matchup` ends up
+completed with scores, while `emulator-league-full-week-1-user` stays active and
+the league team records do not change. The shell's warning that the Functions
+emulator is already running is expected. Type `.exit` to leave.
 
 ## Optional Overrides
 

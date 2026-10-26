@@ -12,6 +12,12 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
   }
 
   const matchup = matchupSnap.data();
+  if (matchup?.leagueId) {
+    throw new Error(
+      `Matchup "${matchupId}" belongs to league "${matchup.leagueId}". end-matchup only completes ranked matchups.`,
+    );
+  }
+
   if (matchup?.status === "completed") {
     console.warn(`Matchup "${matchupId}" is already completed. Skipping.`);
     return;
