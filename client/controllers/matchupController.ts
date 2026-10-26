@@ -2,7 +2,7 @@ import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
 import { Augment } from "@/types/augment";
-import { Matchup, TeamSnapshot } from "@/types/matchup";
+import { RankedMatchup, TeamSnapshot } from "@/types/matchup";
 
 const MATCHUPS_COLLECTION = "matchups";
 
@@ -15,8 +15,8 @@ type FirestoreTeamSnapshot = Omit<TeamSnapshot, "augmentSnapshot"> & {
   augmentSnapshot?: FirestoreAugment;
 };
 
-type FirestoreMatchup = Omit<
-  Matchup,
+type FirestoreRankedMatchup = Omit<
+  RankedMatchup,
   "createdAt" | "updatedAt" | "homeTeamSnapshot" | "awayTeamSnapshot"
 > & {
   createdAt: FirebaseFirestoreTypes.Timestamp;
@@ -49,18 +49,22 @@ const serializeTeamSnapshot = (
 };
 
 export class MatchupController {
-  static getUserMatchup = async (userId: string): Promise<Matchup | null> => {
+  static getUserMatchup = async (
+    userId: string,
+  ): Promise<RankedMatchup | null> => {
     try {
       const [homeMatchups, awayMatchups] = await Promise.all([
         firestore()
           .collection(MATCHUPS_COLLECTION)
           .where("homeUserId", "==", userId)
+          .where("leagueId", "==", null)
           .where("status", "==", "active")
           .limit(1)
           .get(),
         firestore()
           .collection(MATCHUPS_COLLECTION)
           .where("awayUserId", "==", userId)
+          .where("leagueId", "==", null)
           .where("status", "==", "active")
           .limit(1)
           .get(),
@@ -72,7 +76,7 @@ export class MatchupController {
         return null;
       }
 
-      const matchup = matchups.docs[0].data() as FirestoreMatchup;
+      const matchup = matchups.docs[0].data() as FirestoreRankedMatchup;
 
       const {
         createdAt,

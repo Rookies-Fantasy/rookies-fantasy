@@ -94,7 +94,7 @@ type LineupSnapshotItem = {
   playerSnapshot: PlayerSnapshot;
 };
 
-type Matchup = {
+type MatchupBase = {
   createdAt: Date;
   id: string;
   weekStart: string;
@@ -104,13 +104,26 @@ type Matchup = {
   awayTeamId: string;
   homeUserId: string;
   awayUserId: string;
-  status: "active" | "completed";
   awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   awayScore?: number;
   homeScore?: number;
   winnerId?: string;
 };
+
+type RankedMatchup = MatchupBase & {
+  leagueId: null;
+  status: "active" | "completed";
+};
+
+type LeagueMatchup = MatchupBase & {
+  leagueId: string;
+  week: number;
+  phase: "regular" | "playoff";
+  status: "scheduled" | "active" | "completed";
+};
+
+type Matchup = RankedMatchup | LeagueMatchup;
 
 const apiKey = process.env.BALLDONTLIE_API_KEY || "";
 const api = new BalldontlieAPI({ apiKey });
@@ -1034,6 +1047,7 @@ const createWeeklyMatchup = async (
 
     const matchupData: Matchup = {
       id: matchupRef.id,
+      leagueId: null,
       createdAt: new Date(),
       weekStart: startDate,
       homeTeamId: teamId1,
@@ -1170,10 +1184,13 @@ export const weeklyMatchupReset = functions.pubsub
 
       const activeMatchupsSnapshot = await db
         .collection("matchups")
+        .where("leagueId", "==", null)
         .where("status", "==", "active")
         .get();
 
-      console.log(`Found ${activeMatchupsSnapshot.size} active matchups`);
+      console.log(
+        `Found ${activeMatchupsSnapshot.size} active ranked matchups`,
+      );
 
       const matchupUpdates = activeMatchupsSnapshot.docs.map(
         async (matchupDoc) => {
