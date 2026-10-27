@@ -55,9 +55,26 @@ out and clears cached Firestore data and pending writes.
 
 ## Start the Environment
 
-Use three terminals.
+From the repository root:
 
-### 1. Firebase
+```bash
+cd scripts
+npm run dev
+```
+
+This builds Functions, starts fresh Firebase emulators, seeds the default
+matchup scenario, and starts Expo in development emulator mode. Sign in as
+`dev@test.com` with `password123`. Press **Ctrl+C** to stop Expo and Firebase.
+Stop any existing Firebase or Expo processes before launching.
+
+Data is discarded when the emulators stop. The Emulator UI is available at
+`http://localhost:4000`. To use another workflow, follow the Test State steps below.
+
+### Manual Startup
+
+To run the pieces separately, use three terminals.
+
+#### 1. Firebase
 
 Build the Functions, then start the emulators:
 
@@ -70,7 +87,7 @@ firebase emulators:start
 
 The Emulator UI is available at `http://localhost:4000`.
 
-### 2. Expo
+#### 2. Expo
 
 ```bash
 cd client
@@ -80,7 +97,7 @@ npm start
 Open the installed development build through the Expo QR code. The client log
 should confirm the emulator host it connected to.
 
-### 3. Test State
+### Test State
 
 Run scenario commands from `scripts/`. Clear existing data before switching
 workflows:
