@@ -30,9 +30,15 @@ npm ci
 Create the ignored file `client/.env.local`:
 
 ```dotenv
+APP_ENV=development
 EXPO_PUBLIC_USE_EMULATOR=true
 EXPO_PUBLIC_EMULATOR_HOST=192.168.x.x
 ```
+
+The app connects to emulators only when the flag is enabled, `APP_ENV` is
+`development`, and the app is running a debug build. Preview and production
+builds use their native Firebase project's cloud services. Functions use the
+same native project ID as Auth and Firestore.
 
 For a physical phone, replace `192.168.x.x` with the development computer's
 LAN IP. The phone and computer must be on the same reachable network. See
@@ -43,11 +49,32 @@ When using an Android emulator or iOS simulator, omit
 `EXPO_PUBLIC_EMULATOR_HOST`; the app defaults to `10.0.2.2` on Android and
 `localhost` on iOS.
 
+After changing the backend flag or emulator host, restart Expo and fully close
+and reopen the app. Switching between cloud and emulator backends signs you
+out and clears cached Firestore data and pending writes.
+
 ## Start the Environment
 
-Use three terminals.
+From the repository root:
 
-### 1. Firebase
+```bash
+cd scripts
+npm run dev
+```
+
+This builds Functions, starts fresh Firebase emulators, seeds the default
+matchup scenario, and starts Expo in development emulator mode. Sign in as
+`dev@test.com` with `password123`. Press **Ctrl+C** to stop Expo and Firebase.
+Stop any existing Firebase or Expo processes before launching.
+
+Data is discarded when the emulators stop. The Emulator UI is available at
+`http://localhost:4000`. To use another workflow, follow the Test State steps below.
+
+### Manual Startup
+
+To run the pieces separately, use three terminals.
+
+#### 1. Firebase
 
 Build the Functions, then start the emulators:
 
@@ -60,7 +87,7 @@ firebase emulators:start
 
 The Emulator UI is available at `http://localhost:4000`.
 
-### 2. Expo
+#### 2. Expo
 
 ```bash
 cd client
@@ -70,7 +97,7 @@ npm start
 Open the installed development build through the Expo QR code. The client log
 should confirm the emulator host it connected to.
 
-### 3. Test State
+### Test State
 
 Run scenario commands from `scripts/`. Clear existing data before switching
 workflows:
@@ -228,8 +255,9 @@ Firestore batch.
 
 - **Phone cannot load data:** Confirm the LAN IP in
   `EXPO_PUBLIC_EMULATOR_HOST`, then review the network steps above.
-- **Queue button is missing:** Confirm `EXPO_PUBLIC_USE_EMULATOR=true` and
-  restart Expo after changing `.env.local`.
+- **Queue button is missing:** Confirm `EXPO_PUBLIC_USE_EMULATOR=true`,
+  `APP_ENV=development`, and a debug development build. Restart Expo after
+  changing `.env.local`.
 - **Users do not match:** Check the Functions log and confirm both users have
   complete teams.
 - **Functions changes are stale:** Run `npm run build` from
