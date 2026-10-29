@@ -19,6 +19,7 @@ import { useAppTheme } from "@/theme/ThemeProvider";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { GameInfo, GameStats } from "@/types/matchup";
 import { SLOT_ORDER } from "@/types/team";
+import { formatLocalDate } from "@/utils/dateUtils";
 import { isNil, isNotNil } from "@/utils/jsUtils";
 
 type LiveData = Record<
@@ -28,13 +29,6 @@ type LiveData = Record<
     gameStats: GameStats;
   }
 >;
-
-const formatLocalDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
 
 const getCurrentWeekDates = () => {
   const today = new Date();

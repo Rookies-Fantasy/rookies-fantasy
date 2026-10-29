@@ -36,10 +36,11 @@ import {
 import { selectUserId, clearUser } from "@/state/slices/userSlice";
 import { SlotPosition } from "@/types/team";
 import { QueueStatus } from "@/types/user";
+import { USE_EMULATOR } from "@/utils/emulator";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
-const QUEUE_ENABLED = process.env.EXPO_PUBLIC_USE_EMULATOR === "true";
+const QUEUE_ENABLED = USE_EMULATOR;
 
 const MyTeam = () => {
   const router = useRouter();

@@ -9,6 +9,7 @@ import { useAppDispatch } from "@/state/hooks";
 import { setMatchup, clearMatchup } from "@/state/slices/matchupSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { setUser, clearUser } from "@/state/slices/userSlice";
+import { USE_EMULATOR } from "@/utils/emulator";
 
 type AuthListenerProps = {
   children: ReactNode;
@@ -28,10 +29,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
     const subscriber = onAuthStateChanged(auth, async (user) => {
       if (!environmentChecked) {
         environmentChecked = true;
-        const currentEnvironment =
-          process.env.EXPO_PUBLIC_USE_EMULATOR === "true"
-            ? "emulator"
-            : "firebase";
+        const currentEnvironment = USE_EMULATOR ? "emulator" : "firebase";
         const previousEnvironment = await AsyncStorage.getItem(
           FIREBASE_ENVIRONMENT_KEY,
         );

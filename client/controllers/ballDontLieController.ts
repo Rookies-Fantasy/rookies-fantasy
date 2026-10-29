@@ -1,12 +1,10 @@
 import { getAuth } from "@react-native-firebase/auth";
-import { Platform } from "react-native";
+import { emulatorHost, USE_EMULATOR } from "@/utils/emulator";
 import { isNotNil } from "@/utils/jsUtils";
 
 const getFunctionsBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_USE_EMULATOR === "true") {
-    const defaultHost = Platform.OS === "android" ? "10.0.2.2" : "localhost";
-    const host = process.env.EXPO_PUBLIC_EMULATOR_HOST ?? defaultHost;
-    return `http://${host}:5001/rookies-fantasy-development/us-central1`;
+  if (USE_EMULATOR) {
+    return `http://${emulatorHost}:5001/rookies-fantasy-development/us-central1`;
   }
 
   return "https://us-central1-rookies-fantasy-development.cloudfunctions.net";
