@@ -14,7 +14,9 @@ const FUNCTIONS_BASE_URL = getFunctionsBaseUrl();
 const EARLIEST_GAME_START_TIME_URL = `${FUNCTIONS_BASE_URL}/getEarliestGameStartTime`;
 const LIVE_DATA_URL = `${FUNCTIONS_BASE_URL}/getLiveData`;
 
-export const fetchEarliestGameStartTime = async (date: string) => {
+export const fetchEarliestGameStartTime = async (
+  date: string,
+): Promise<string | null> => {
   try {
     const auth = getAuth();
     const currentUser = auth.currentUser;
@@ -45,7 +47,14 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     }
 
     const data = await response.json();
-    return data.earliestGameStart as string | undefined;
+    const startTime = data?.earliestGameStart;
+    if (startTime === null) {
+      return null;
+    }
+    if (typeof startTime !== "string" || Number.isNaN(Date.parse(startTime))) {
+      throw new Error("Invalid game schedule response");
+    }
+    return startTime;
   } catch (error) {
     console.error("fetchEarliestGameStartTime error:", error);
     throw error;

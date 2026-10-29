@@ -3,37 +3,61 @@ import { Text, View } from "react-native";
 import { useLineupLock } from "@/hooks/useLineupLock";
 import { useAppSelector } from "@/state/hooks";
 import { selectMatchup } from "@/state/slices/matchupSlice";
+import { LineupLockState } from "@/types/schedule";
 import { QueueStatus } from "@/types/user";
+
+const MATCHUP_MESSAGE =
+  "Track your players' performance and tweak your strategy as the matchup unfolds.";
+
+const getCardContent = (state: LineupLockState) => {
+  switch (state.status) {
+    case "loading":
+      return {
+        title: "Calculating lock time…",
+        message: MATCHUP_MESSAGE,
+      };
+    case "scheduled": {
+      const { hours, minutes } = state.countdown;
+      const hoursLabel = hours > 0 ? `${hours}h ` : "";
+      return {
+        title: `Lineup locks in ${hoursLabel}${minutes}m`,
+        message: MATCHUP_MESSAGE,
+      };
+    }
+    case "locked":
+      return {
+        title: "Your lineup is locked",
+        message:
+          "Games have already started today. Your lineup is locked until tomorrow.",
+      };
+    case "no-games":
+      return {
+        title: "No games scheduled today",
+        message:
+          "There are no NBA games today. Your lineup will unlock when games are scheduled.",
+      };
+    case "error":
+      return {
+        title: "Unable to load game schedule",
+        message:
+          "We could not load today’s game schedule. Please try again later.",
+      };
+  }
+};
 
 const MatchupInfoCard = () => {
   const queueStatus = useAppSelector((state) => state.user.queueStatus);
   const matchup = useAppSelector(selectMatchup);
 
-  const { isLineupLocked, countdown, error } = useLineupLock({
+  const { state } = useLineupLock({
     matchupStartDate: matchup?.weekStart,
   });
-
-  const title = isLineupLocked
-    ? "Your lineup is locked"
-    : countdown
-      ? `Lineup locks in ${
-          countdown.hours > 0 ? `${countdown.hours}h ` : ""
-        }${countdown.minutes}m`
-      : error
-        ? error
-        : "Calculating lock time…";
-
-  const message = isLineupLocked
-    ? "Games have already started today. Your lineup is locked until tomorrow."
-    : error
-      ? error === "No games scheduled today"
-        ? "There are no NBA games today. Your lineup will unlock when games are scheduled."
-        : "We could not load today’s game schedule. Please try again later."
-      : "Track your players' performance and tweak your strategy as the matchup unfolds.";
 
   if (queueStatus !== QueueStatus.Matched || !matchup) {
     return null;
   }
+
+  const { title, message } = getCardContent(state);
 
   return (
     <View className="w-full rounded-2xl bg-gray-900 p-4">
