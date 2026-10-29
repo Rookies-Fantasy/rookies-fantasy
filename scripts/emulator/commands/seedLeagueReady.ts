@@ -25,4 +25,5 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   console.log(`  Password: ${password}`);
   console.log(`  Full league (4/4, user is creator): ${result.fullLeagueId}`);
   console.log(`  Open league (2/6, user can join): ${result.openLeagueId}`);
+  console.log(`  League matchup (active, week 1): ${result.leagueMatchupId}`);
 };
