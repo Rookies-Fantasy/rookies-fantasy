@@ -137,6 +137,11 @@ Complete the matchup and return its users to idle:
 npm run seed:end-matchup
 ```
 
+This command uses the same completion function as the scheduled weekly reset.
+It totals the daily snapshot scores, updates team records, and clears the
+participants' queue and matchup state in one transaction. Running it again
+skips the completed matchup without counting the result twice.
+
 ## Optional Overrides
 
 The default workflows do not require overrides. Use `cross-env` for portable
