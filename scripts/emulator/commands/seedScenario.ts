@@ -1,12 +1,17 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
+import {
+  DEFAULT_OPPONENT_EMAIL,
+  DEFAULT_USER_EMAIL,
+  DEFAULT_USER_PASSWORD,
+} from "../core/defaults.js";
 import { createMatchupScenario } from "../scenarios/matchup.js";
 
 export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   const result = await createMatchupScenario(db, auth, {
-    homeEmail: process.env.HOME_USER_EMAIL ?? "dev@test.com",
-    awayEmail: process.env.AWAY_USER_EMAIL ?? "opponent@test.com",
-    password: process.env.USER_PASSWORD ?? "password123",
+    homeEmail: process.env.HOME_USER_EMAIL ?? DEFAULT_USER_EMAIL,
+    awayEmail: process.env.AWAY_USER_EMAIL ?? DEFAULT_OPPONENT_EMAIL,
+    password: process.env.USER_PASSWORD ?? DEFAULT_USER_PASSWORD,
     homeTeamId: process.env.HOME_TEAM_ID ?? "default-team",
     awayTeamId: process.env.AWAY_TEAM_ID ?? "default-team",
     matchupId: process.env.MATCHUP_ID ?? "default-matchup",

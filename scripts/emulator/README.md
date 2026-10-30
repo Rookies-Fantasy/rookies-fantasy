@@ -82,11 +82,16 @@ npm run seed:clear
 
 Choose a workflow:
 
-| Workflow                  | Seed command               | Login            |
-| ------------------------- | -------------------------- | ---------------- |
-| Draft a team              | `npm run seed:draft-ready` | `draft@test.com` |
-| Test matchmaking          | `npm run seed:queue-ready` | `queue@test.com` |
-| Advance a premade matchup | `npm run seed:scenario`    | `dev@test.com`   |
+| Workflow                  | Seed command               | Login          |
+| ------------------------- | -------------------------- | -------------- |
+| Draft a team              | `npm run seed:draft-ready` | `dev@test.com` |
+| Test matchmaking          | `npm run seed:queue-ready` | `dev@test.com` |
+| Advance a premade matchup | `npm run seed:scenario`    | `dev@test.com` |
+
+All workflows use the same main login, `dev@test.com`, with password
+`password123`. Opponent accounts use `opponent@test.com`. These defaults live
+in `core/defaults.ts`. After clearing emulator Auth, sign out and sign back in
+after reseeding.
 
 ## Workflow Notes
 
@@ -101,13 +106,13 @@ Re-running the seed command restores the seeded team to its empty state.
 ### Test Matchmaking
 
 `seed:queue-ready` creates two idle users with complete teams. Sign in as
-`queue@test.com`, press **QUEUE**, then simulate the opponent joining:
+`dev@test.com`, press **QUEUE**, then simulate the opponent joining:
 
 ```bash
 npm run queue:opponent
 ```
 
-The command only queues `queue-opponent@test.com`. The local `processQueue`
+The command only queues `opponent@test.com`. The local `processQueue`
 Cloud Function performs the actual matchmaking and creates the matchup.
 
 ### Advance a Premade Matchup
@@ -148,6 +153,11 @@ npx cross-env SIM_DAYS=3 npm run simulate:week
 npx cross-env MATCHUP_ID=default-matchup npm run simulate:day
 npx cross-env MATCHUP_ID=default-matchup npm run seed:end-matchup
 ```
+
+For custom logins, use `USER_EMAIL` for `seed:user`, `seed:draft-ready`, and
+`seed:queue-ready`. Use `OPPONENT_EMAIL` for `seed:queue-ready` and
+`queue:opponent`. The premade matchup uses `HOME_USER_EMAIL` and
+`AWAY_USER_EMAIL`. `USER_PASSWORD` overrides the seeded password.
 
 Queue-created matchups receive generated IDs. Copy the ID from the Functions
 log or Emulator UI when targeting one of them.
@@ -218,7 +228,7 @@ macOS, allow incoming connections for Node and Java if the system requests it.
 - `fixtures/` contains reusable Auth and Firestore operations.
 - `scenarios/` composes fixtures into meaningful application states.
 - `commands/` provides terminal entry points and defaults.
-- `core/` configures the emulator client and reset behavior.
+- `core/` configures the emulator client, account defaults, and reset behavior.
 
 Scenario Firestore writes are staged in a batch and committed together. Auth
 users are created separately because Firebase Auth cannot participate in a

@@ -1,10 +1,11 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
+import { DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD } from "../core/defaults.js";
 import { createDraftReadyScenario } from "../scenarios/draftReady.js";
 
 export const run = async (db: Firestore, auth: Auth): Promise<void> => {
-  const email = process.env.USER_EMAIL ?? "draft@test.com";
-  const password = process.env.USER_PASSWORD ?? "password123";
+  const email = process.env.USER_EMAIL ?? DEFAULT_USER_EMAIL;
+  const password = process.env.USER_PASSWORD ?? DEFAULT_USER_PASSWORD;
   const result = await createDraftReadyScenario(db, auth, {
     email,
     password,

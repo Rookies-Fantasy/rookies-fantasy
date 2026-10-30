@@ -1,11 +1,16 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
+import {
+  DEFAULT_OPPONENT_EMAIL,
+  DEFAULT_USER_EMAIL,
+  DEFAULT_USER_PASSWORD,
+} from "../core/defaults.js";
 import { createQueueReadyScenario } from "../scenarios/queueReady.js";
 
 export const run = async (db: Firestore, auth: Auth): Promise<void> => {
-  const userEmail = process.env.USER_EMAIL ?? "queue@test.com";
-  const opponentEmail = process.env.OPPONENT_EMAIL ?? "queue-opponent@test.com";
-  const password = process.env.USER_PASSWORD ?? "password123";
+  const userEmail = process.env.USER_EMAIL ?? DEFAULT_USER_EMAIL;
+  const opponentEmail = process.env.OPPONENT_EMAIL ?? DEFAULT_OPPONENT_EMAIL;
+  const password = process.env.USER_PASSWORD ?? DEFAULT_USER_PASSWORD;
   const result = await createQueueReadyScenario(db, auth, {
     userEmail,
     opponentEmail,
