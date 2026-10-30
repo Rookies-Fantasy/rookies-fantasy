@@ -19,7 +19,7 @@ export type UserDoc = {
   username?: string;
   queueStatus: "idle" | "queued" | "matched";
   teamId?: string;
-  currentMatchupId?: string;
+  currentMatchupId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -27,7 +27,7 @@ export type UserDoc = {
 export type TeamDoc = Team & {
   createdAt: Date;
   updatedAt: Date;
-  matchupId?: string;
+  matchupId?: string | null;
   augment?: Augment;
 };
 

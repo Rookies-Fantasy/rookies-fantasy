@@ -15,13 +15,15 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     userEmail,
     opponentEmail,
     password,
-    userTeamId: process.env.USER_TEAM_ID ?? "default-team",
-    opponentTeamId: process.env.OPPONENT_TEAM_ID ?? "default-team",
+    userTeamId: process.env.USER_TEAM_ID,
+    opponentTeamId: process.env.OPPONENT_TEAM_ID,
   });
 
   console.log("Created queue-ready scenario");
   console.log(`  User: ${userEmail} (${result.userId})`);
   console.log(`  Opponent: ${opponentEmail} (${result.opponentId})`);
+  console.log(`  User team ID: ${result.userTeamId}`);
+  console.log(`  Opponent team ID: ${result.opponentTeamId}`);
   console.log(`  Password: ${password}`);
   console.log("Both users are idle with complete teams.");
 };

@@ -9,7 +9,7 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
   const result = await createDraftReadyScenario(db, auth, {
     email,
     password,
-    teamId: process.env.TEAM_ID ?? "default-team",
+    teamId: process.env.TEAM_ID,
   });
 
   console.log("Created draft-ready scenario");

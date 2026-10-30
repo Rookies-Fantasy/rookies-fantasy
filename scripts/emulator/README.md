@@ -117,8 +117,13 @@ Cloud Function performs the actual matchmaking and creates the matchup.
 
 ### Advance a Premade Matchup
 
-`seed:scenario` creates two complete teams and the active matchup
-`default-matchup`.
+`seed:scenario` creates two complete teams and an active matchup. New teams
+and matchups receive generated Firestore IDs, which the command prints.
+The IDs are stored on the user and team documents for follow-up commands.
+
+Reseeding reuses each user's selected team when it still exists. An existing
+active matchup between those teams is also reused, preserving its snapshots.
+Completed matchups remain in history; the next seed creates a new matchup.
 
 Simulate deterministic scores for today or the whole Monday-Sunday week:
 
@@ -131,7 +136,7 @@ Both commands skip dates that already have snapshots. Running the day command
 before the week command, or rerunning either command, does not duplicate
 scores.
 
-Complete the matchup and return its users to idle:
+Complete the main development user's current matchup and return its users to idle:
 
 ```bash
 npm run seed:end-matchup
@@ -139,8 +144,8 @@ npm run seed:end-matchup
 
 This command uses the same completion function as the scheduled weekly reset.
 It totals the daily snapshot scores, updates team records, and clears the
-participants' queue and matchup state in one transaction. Running it again
-skips the completed matchup without counting the result twice.
+participants' queue and matchup state in one transaction. Repeating completion
+does not count the result twice; with no current matchup, the command does nothing.
 
 ## Optional Overrides
 
@@ -154,9 +159,9 @@ npx cross-env SIM_DATE=2026-08-11 npm run simulate:week
 # Add at most three days
 npx cross-env SIM_DAYS=3 npm run simulate:week
 
-# Target one matchup
-npx cross-env MATCHUP_ID=default-matchup npm run simulate:day
-npx cross-env MATCHUP_ID=default-matchup npm run seed:end-matchup
+# Replace your-matchup-id with the ID printed by a seed command or the Emulator UI
+npx cross-env MATCHUP_ID=your-matchup-id npm run simulate:day
+npx cross-env MATCHUP_ID=your-matchup-id npm run seed:end-matchup
 ```
 
 For custom logins, use `USER_EMAIL` for `seed:user`, `seed:draft-ready`, and
@@ -164,8 +169,16 @@ For custom logins, use `USER_EMAIL` for `seed:user`, `seed:draft-ready`, and
 `queue:opponent`. The premade matchup uses `HOME_USER_EMAIL` and
 `AWAY_USER_EMAIL`. `USER_PASSWORD` overrides the seeded password.
 
-Queue-created matchups receive generated IDs. Copy the ID from the Functions
-log or Emulator UI when targeting one of them.
+`queue:opponent` uses the opponent's selected team. `seed:end-matchup` uses
+the main user's `currentMatchupId`, so normal workflows do not require copying
+IDs. `USER_ID` or `USER_EMAIL` can select another user for completion;
+`HOME_USER_EMAIL` is also supported for the premade scenario.
+
+Use `TEAM_ID`, `USER_TEAM_ID`, `OPPONENT_TEAM_ID`, `HOME_TEAM_ID`,
+`AWAY_TEAM_ID`, or `MATCHUP_ID` to explicitly target seed documents where
+supported. Otherwise, seed commands reuse linked documents or generate IDs
+when creating new ones. Simulation commands still target all active matchups
+unless `MATCHUP_ID` is provided.
 
 Lower-level commands such as `seed:user`, `seed:team`, and `seed:matchup` are
 available for targeted setup, but the three scenarios above are the supported

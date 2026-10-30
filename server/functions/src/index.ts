@@ -58,19 +58,6 @@ type TeamLineupSlot = {
   player: PlayerTeamDisplay | null;
 };
 
-// Store the augment id for now, maybe reconsider this later. Some things to consider are what we actually need to display the team (probably just name and icon)
-// as well as augment versioning for future patches
-type Team = {
-  abbreviation?: string;
-  augmentId?: string;
-  id: string;
-  logoUrl?: string;
-  name?: string;
-  balance: number;
-  lineup: TeamLineupSlot[];
-  record?: TeamRecord;
-};
-
 type PlayerSnapshot = {
   firstName: string;
   lastName: string;
