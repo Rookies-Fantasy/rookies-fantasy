@@ -184,6 +184,12 @@ Lower-level commands such as `seed:user`, `seed:team`, and `seed:matchup` are
 available for targeted setup, but the three scenarios above are the supported
 MVP workflows.
 
+`seed:user` creates a user with defaults on the first run. Reseeding the same
+account updates its credentials and update time while preserving its selected
+team, current matchup, queue state, profile, and creation time. Explicit fields
+passed to the user fixture override existing values; scenario commands still
+set their intended scenario state.
+
 ## Physical Phone Network Setup
 
 Skip this section when using an Android emulator or iOS simulator. A physical
