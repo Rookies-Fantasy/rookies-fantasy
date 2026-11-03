@@ -25,43 +25,22 @@ import Animated, {
 import * as yup from "yup";
 import BottomSheet from "@/components/BottomSheet";
 import Button from "@/components/Button";
+import LeagueSettingsFields from "@/components/LeagueSettingsFields";
 import Screen from "@/components/Screen";
-import StepperInput from "@/components/StepperInput";
 import { LeagueController } from "@/controllers/leagueController";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
-
-// League configuration constants
-const MIN_BUDGET = 150_000_000;
-const MAX_BUDGET = 250_000_000;
-const BUDGET_STEP = 25_000_000;
-const MIN_TEAMS = 4;
-const MAX_TEAMS = 20;
-const TEAMS_STEP = 2;
+import {
+  leagueSettingsSchema,
+  MIN_BUDGET,
+  MIN_TEAMS,
+} from "@/utils/leagueUtils";
 
 // Combined schema for league + team
-const createLeagueSchema = yup.object({
-  // League fields
-  leagueName: yup
-    .string()
-    .required("League name is required")
-    .max(50, "League name must be at most 50 characters"),
-  numberOfTeams: yup
-    .number()
-    .required("Number of teams is required")
-    .min(MIN_TEAMS, `Minimum teams must be at least ${MIN_TEAMS}`)
-    .max(MAX_TEAMS, `Maximum teams is ${MAX_TEAMS}`)
-    .typeError("Must be a number"),
-  budget: yup
-    .number()
-    .required("Budget is required")
-    .min(MIN_BUDGET, `Budget must be at least $${MIN_BUDGET / 1_000_000}M`)
-    .max(MAX_BUDGET, `Budget must be no more than $${MAX_BUDGET / 1_000_000}M`)
-    .typeError("Must be a number"),
-  // Team fields
+const createLeagueSchema = leagueSettingsSchema.shape({
   teamName: yup.string().required("Team Name is required"),
   abbreviation: yup
     .string()
@@ -257,114 +236,7 @@ const CreateLeague = () => {
                 className="absolute left-0 right-0 top-0 flex-1"
                 style={step1AnimatedStyle}
               >
-                <View className="flex-1 flex-col">
-                  <Controller
-                    control={control}
-                    name="leagueName"
-                    render={({ field: { onChange, value } }) => (
-                      <>
-                        <Text className="pbk-b2 mb-1.5 text-base-white">
-                          League Name
-                        </Text>
-                        <View
-                          className={`mb-2 min-h-14 w-full flex-row items-center rounded-xl border ${errors.leagueName ? "border-red-600" : "border-gray-920"} px-2 py-2`}
-                        >
-                          <TextInput
-                            autoCapitalize="words"
-                            className="flex-1 text-base-white placeholder:pbk-b1"
-                            maxLength={50}
-                            onChangeText={onChange}
-                            placeholder="Enter league name"
-                            placeholderTextColor="gray"
-                            value={value}
-                          />
-                          {errors.leagueName && (
-                            <WarningCircle
-                              color="#dc2626"
-                              size={20}
-                              weight="bold"
-                            />
-                          )}
-                        </View>
-                      </>
-                    )}
-                  />
-                  <View className="mb-4">
-                    {errors.leagueName ? (
-                      <Text className="pbk-b3 text-red-600">
-                        {errors.leagueName.message}
-                      </Text>
-                    ) : (
-                      <Text className="pbk-b3 text-gray-600">
-                        Choose a name of your league
-                      </Text>
-                    )}
-                  </View>
-
-                  <Controller
-                    control={control}
-                    name="numberOfTeams"
-                    render={({ field: { onChange, value } }) => (
-                      <>
-                        <Text className="pbk-b2 mb-1.5 text-base-white">
-                          Number of Teams
-                        </Text>
-                        <StepperInput
-                          max={MAX_TEAMS}
-                          min={MIN_TEAMS}
-                          onChange={onChange}
-                          step={TEAMS_STEP}
-                          value={value}
-                        />
-                      </>
-                    )}
-                  />
-                  <View className="mb-4">
-                    {errors.numberOfTeams ? (
-                      <Text className="pbk-b3 text-red-600">
-                        {errors.numberOfTeams.message}
-                      </Text>
-                    ) : (
-                      <Text className="pbk-b3 text-gray-600">
-                        Minimum teams required to start the league
-                      </Text>
-                    )}
-                  </View>
-
-                  <Controller
-                    control={control}
-                    name="budget"
-                    render={({ field: { onChange, value } }) => (
-                      <>
-                        <Text className="pbk-b2 mb-1.5 text-base-white">
-                          Team Budget
-                        </Text>
-                        <StepperInput
-                          formatValue={(value) =>
-                            `$${(value / 1_000_000).toFixed(0)}M`
-                          }
-                          max={MAX_BUDGET}
-                          min={MIN_BUDGET}
-                          onChange={onChange}
-                          step={BUDGET_STEP}
-                          value={value}
-                        />
-                      </>
-                    )}
-                  />
-                  <View className="mb-6">
-                    {errors.budget ? (
-                      <Text className="pbk-b3 text-red-600">
-                        {errors.budget.message}
-                      </Text>
-                    ) : (
-                      <Text className="pbk-b3 text-gray-600">
-                        Budget range: ${MIN_BUDGET / 1_000_000}M - $
-                        {MAX_BUDGET / 1_000_000}M
-                      </Text>
-                    )}
-                  </View>
-                </View>
+                <LeagueSettingsFields control={control} errors={errors} />
               </Animated.View>
 
               <Animated.View
