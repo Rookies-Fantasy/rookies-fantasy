@@ -125,7 +125,7 @@ Reseeding reuses each user's selected team when it still exists. An existing
 active matchup between those teams is also reused, preserving its snapshots.
 Completed matchups remain in history; the next seed creates a new matchup.
 
-Simulate deterministic scores for today or the whole Monday-Sunday week:
+Simulate deterministic scores for the first day or the whole stored matchup week:
 
 ```bash
 npm run simulate:day
@@ -135,6 +135,14 @@ npm run simulate:week
 Both commands skip dates that already have snapshots. Running the day command
 before the week command, or rerunning either command, does not duplicate
 scores.
+
+Dates come from each matchup's stored `weekStart`, even when the matchup is
+from an earlier week. `simulate:day` defaults to that first day;
+`simulate:week` fills the remaining days through `weekStart + 6`. To simulate
+another day or start partway through the week, set `SIM_DATE` to a date within
+that range. Invalid dates and dates outside the matchup's week produce an
+error before any snapshots are written. If active matchups cover different
+weeks, use `MATCHUP_ID` to select the one matching your requested date.
 
 Complete the main development user's current matchup and return its users to idle:
 
@@ -153,10 +161,11 @@ The default workflows do not require overrides. Use `cross-env` for portable
 PowerShell, Command Prompt, and Unix syntax:
 
 ```bash
-# Start from a chosen date
-npx cross-env SIM_DATE=2026-08-11 npm run simulate:week
+# Replace the date with one inside your matchup's stored week
+npx cross-env SIM_DATE=2026-11-03 npm run simulate:day
+npx cross-env SIM_DATE=2026-11-03 npm run simulate:week
 
-# Add at most three days
+# Add at most three pending days per matchup (SIM_DAYS must be a positive integer)
 npx cross-env SIM_DAYS=3 npm run simulate:week
 
 # Replace your-matchup-id with the ID printed by a seed command or the Emulator UI

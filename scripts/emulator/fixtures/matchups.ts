@@ -1,4 +1,8 @@
-import type { Firestore, WriteBatch } from "firebase-admin/firestore";
+import type {
+  DocumentSnapshot,
+  Firestore,
+  WriteBatch,
+} from "firebase-admin/firestore";
 import { createMatchupDoc } from "../generate/matchup.js";
 import type { MatchupDoc, TeamDoc } from "../types/firestore.js";
 
@@ -14,6 +18,34 @@ export type UpsertActiveMatchupOptions = {
 export type SeededMatchup = {
   id: string;
   document: MatchupDoc;
+};
+
+export const getActiveMatchups = async (
+  db: Firestore,
+  matchupId?: string,
+): Promise<DocumentSnapshot[]> => {
+  if (matchupId) {
+    const doc = await db.collection("matchups").doc(matchupId).get();
+    if (!doc.exists) {
+      throw new Error(`Matchup "${matchupId}" not found.`);
+    }
+
+    const matchup = doc.data() as MatchupDoc;
+    if (matchup.status !== "active") {
+      console.warn(
+        `Matchup "${matchupId}" is already ${matchup.status}. Skipping simulation.`,
+      );
+      return [];
+    }
+
+    return [doc];
+  }
+
+  const matchups = await db
+    .collection("matchups")
+    .where("status", "==", "active")
+    .get();
+  return matchups.docs;
 };
 
 export const resolveSeedMatchupId = async (
