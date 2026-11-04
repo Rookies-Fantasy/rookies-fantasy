@@ -25,7 +25,8 @@
     "seed:nba-teams": "tsx emulator/index.ts nba-teams",
     "simulate:day": "tsx emulator/index.ts simulate-day",
     "simulate:week": "tsx emulator/index.ts simulate-week",
-    "dev": "tsx emulator/dev.ts"
+    "dev": "tsx emulator/dev.ts",
+    "dev:app": "tsx emulator/dev.ts --app"
   },
   "keywords": [],
   "author": "",
