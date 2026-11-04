@@ -36,11 +36,11 @@ import {
 import { selectUserId, clearUser } from "@/state/slices/userSlice";
 import { SlotPosition } from "@/types/team";
 import { QueueStatus } from "@/types/user";
+import { USE_EMULATOR } from "@/utils/emulator";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
-// Re-enable once queue bugs are fixed
-const QUEUE_ENABLED = false;
+const QUEUE_ENABLED = USE_EMULATOR;
 
 const MyTeam = () => {
   const router = useRouter();

@@ -1,19 +1,28 @@
 import { getAuth } from "@react-native-firebase/auth";
+import { emulatorHost, USE_EMULATOR } from "@/utils/emulator";
 import { isNotNil } from "@/utils/jsUtils";
 
-const EARLIEST_GAME_START_TIME_URL =
-  "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getEarliestGameStartTime";
-const LIVE_DATA_URL =
-  "https://us-central1-rookies-fantasy-development.cloudfunctions.net/getLiveData";
+const getFunctionsBaseUrl = () => {
+  if (USE_EMULATOR) {
+    return `http://${emulatorHost}:5001/rookies-fantasy-development/us-central1`;
+  }
 
-export const fetchEarliestGameStartTime = async (date: string) => {
+  return "https://us-central1-rookies-fantasy-development.cloudfunctions.net";
+};
+
+const FUNCTIONS_BASE_URL = getFunctionsBaseUrl();
+const EARLIEST_GAME_START_TIME_URL = `${FUNCTIONS_BASE_URL}/getEarliestGameStartTime`;
+const LIVE_DATA_URL = `${FUNCTIONS_BASE_URL}/getLiveData`;
+
+export const fetchEarliestGameStartTime = async (
+  date: string,
+): Promise<string | null> => {
   try {
     const auth = getAuth();
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
-      console.error("No authenticated user");
-      return;
+      throw new Error("No authenticated user");
     }
 
     const idToken = await currentUser.getIdToken();
@@ -29,8 +38,7 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     );
 
     if (response.status === 404) {
-      // TODO: surface "no games scheduled" state to the user
-      return;
+      return null;
     }
 
     if (!response.ok) {
@@ -39,10 +47,17 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     }
 
     const data = await response.json();
-    return data.earliestGameStart as string | undefined;
+    const startTime = data?.earliestGameStart;
+    if (startTime === null) {
+      return null;
+    }
+    if (typeof startTime !== "string" || Number.isNaN(Date.parse(startTime))) {
+      throw new Error("Invalid game schedule response");
+    }
+    return startTime;
   } catch (error) {
     console.error("fetchEarliestGameStartTime error:", error);
-    return undefined;
+    throw error;
   }
 };
 
