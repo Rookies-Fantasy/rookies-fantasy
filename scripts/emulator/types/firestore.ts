@@ -1,14 +1,14 @@
-import type { Augment } from "../../../client/types/augment";
+import type { Augment } from "../../../client/types/augment.js";
 import type {
   LineupSnapshotItem,
   Matchup,
   TeamSnapshot,
-} from "../../../client/types/matchup";
+} from "../../../client/types/matchup.js";
 import type {
   PlayerTeamDisplay,
   Team,
   TeamLineupSlot,
-} from "../../../client/types/team";
+} from "../../../client/types/team.js";
 
 export type UserDoc = {
   id: string;

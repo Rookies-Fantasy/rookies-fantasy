@@ -1,7 +1,7 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
 import { run as simulateDay } from "./simulateDay.js";
-import type { Matchup } from "../../../client/types/matchup";
+import type { Matchup } from "../../../client/types/matchup.js";
 
 const addDays = (dateString: string, days: number): string => {
   const date = new Date(`${dateString}T00:00:00Z`);

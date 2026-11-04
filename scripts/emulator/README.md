@@ -258,6 +258,18 @@ Scenario Firestore writes are staged in a batch and committed together. Auth
 users are created separately because Firebase Auth cannot participate in a
 Firestore batch.
 
+## Typechecking
+
+From `scripts/`, run:
+
+```bash
+npm run typecheck
+```
+
+This checks the TypeScript source files without generating JavaScript or
+connecting to the emulators. Relative imports use `.js` extensions; TypeScript
+and `tsx` resolve them to the corresponding `.ts` source files.
+
 ## Troubleshooting
 
 - **Phone cannot load data:** Confirm the LAN IP in

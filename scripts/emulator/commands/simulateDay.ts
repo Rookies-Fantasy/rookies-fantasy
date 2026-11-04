@@ -11,8 +11,8 @@ import type {
   LineupSnapshotItem,
   Matchup,
   PlayerSnapshot,
-} from "../../../client/types/matchup";
-import type { TeamLineupSlot } from "../../../client/types/team";
+} from "../../../client/types/matchup.js";
+import type { TeamLineupSlot } from "../../../client/types/team.js";
 import { parseDate } from "../utils/dateUtils.js";
 
 const DEFAULT_OPPONENT = "Simulated Opponent";
