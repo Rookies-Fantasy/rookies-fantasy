@@ -15,35 +15,6 @@ npm --prefix server/functions ci
 npm --prefix scripts ci
 ```
 
-Create the ignored file `client/.env.local`:
-
-```dotenv
-APP_ENV=development
-EXPO_PUBLIC_USE_EMULATOR=true
-```
-
-The app connects to emulators only when the flag is enabled, `APP_ENV` is
-`development`, and the app is running a debug build. Preview and production
-builds use their native Firebase project's cloud services. Functions use the
-same native project ID as Auth and Firestore.
-
-Firebase uses Metro's host automatically, with the port removed. Leave
-`EXPO_PUBLIC_EMULATOR_HOST` unset to follow the computer's LAN IP. The phone
-and computer must be on the same reachable network. See
-[Physical Phone Network Setup](#physical-phone-network-setup) if the phone
-cannot connect.
-
-Set `EXPO_PUBLIC_EMULATOR_HOST` only to override this, such as when using an
-Expo tunnel. The tunnel forwards Metro only; Firebase still needs a LAN or VPN
-host reachable from the phone.
-
-If Metro's host is unavailable, the app defaults to `10.0.2.2` on Android and
-`localhost` on iOS. Android also maps Metro's loopback host to `10.0.2.2`.
-
-After changing the backend flag or emulator host, restart Expo and fully close
-and reopen the app. Switching between cloud and emulator backends signs you
-out and clears cached Firestore data and pending writes.
-
 ## Start the Environment
 
 From the repository root:
@@ -58,12 +29,18 @@ matchup scenario, and starts Expo in development emulator mode. Sign in as
 `dev@test.com` with `password123`. Press **Ctrl+C** to stop Expo and Firebase.
 Stop any existing Firebase or Expo processes before launching.
 
-Data is discarded when the emulators stop. The Emulator UI is available at
-`http://localhost:4000`. To use another workflow, follow the Test State steps below.
+Data is discarded when the emulators stop. Open the Emulator UI at
+`http://localhost:4000`. To change scenarios, see [Workflows](#workflows).
+
+The app uses Metro's host to reach Firebase automatically. Leave
+`EXPO_PUBLIC_EMULATOR_HOST` unset unless you need an override. For Expo tunnel
+mode, set it in `client/.env.local` to a LAN or VPN IP reachable from the phone;
+the tunnel only forwards Metro. See [network setup](#physical-phone-network-setup)
+if the phone cannot connect.
 
 ### Manual Startup
 
-To run the pieces separately, use three terminals.
+Use separate terminals for Firebase, Expo, and the [workflow commands](#workflows).
 
 #### 1. Firebase
 
@@ -76,9 +53,14 @@ cd ..
 firebase emulators:start
 ```
 
-The Emulator UI is available at `http://localhost:4000`.
-
 #### 2. Expo
+
+Create `client/.env.local` (the launcher sets these flags automatically):
+
+```dotenv
+APP_ENV=development
+EXPO_PUBLIC_USE_EMULATOR=true
+```
 
 ```bash
 cd client
@@ -86,21 +68,14 @@ npm start
 ```
 
 Open the installed development build through the Expo QR code.
-
-### Test State
-
-Run commands from `scripts/`. Clear existing data before switching workflows:
-
-```bash
-cd scripts
-npm run seed:clear
-```
-
-All workflows use `dev@test.com` as the main account and `opponent@test.com`
-as the opponent. Both use password `password123`. After clearing Auth,
-reseed and relaunch the app; stale sessions are signed out automatically.
+After changing `.env.local`, restart Expo and reopen the app. Switching
+backends signs you out and clears cached Firestore data and pending writes.
 
 ## Workflows
+
+Run commands from `scripts/`. All workflows use `dev@test.com` and
+`opponent@test.com`, both with password `password123`. Before switching
+workflows, run `npm run seed:clear`, then reseed and relaunch the app.
 
 ### Draft a Team
 
