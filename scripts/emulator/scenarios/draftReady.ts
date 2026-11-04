@@ -7,13 +7,13 @@ import { DEFAULT_NBA_TEAMS } from "../data/nbaTeams.js";
 import { stageAugments } from "../fixtures/augments.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
 import { stageNbaTeams } from "../fixtures/nbaTeams.js";
-import { stageTeam } from "../fixtures/teams.js";
+import { resolveSeedTeamId, stageTeam } from "../fixtures/teams.js";
 import { ensureAuthUser, stageUser } from "../fixtures/users.js";
 
 export type DraftReadyScenarioOptions = {
   email: string;
   password: string;
-  teamId: string;
+  teamId?: string;
 };
 
 export type DraftReadyScenarioResult = {
@@ -31,6 +31,7 @@ export const createDraftReadyScenario = async (
     email: options.email,
     password: options.password,
   });
+  const teamId = await resolveSeedTeamId(db, user.uid, options.teamId);
 
   const batch = db.batch();
   stageNbaPlayers(db, batch, DEFAULT_NBA_PLAYERS);
@@ -43,11 +44,11 @@ export const createDraftReadyScenario = async (
     dateOfBirth: new Date("1990-01-01"),
     username: "Draft User",
     queueStatus: "idle",
-    teamId: options.teamId,
+    teamId,
   });
   stageTeam(db, batch, {
     userId: user.uid,
-    teamId: options.teamId,
+    teamId,
     document: {
       name: "Draft Team",
       abbreviation: "DRF",
@@ -59,7 +60,7 @@ export const createDraftReadyScenario = async (
 
   return {
     userId: user.uid,
-    teamId: options.teamId,
+    teamId,
     playersSeeded: DEFAULT_NBA_PLAYERS.length,
   };
 };

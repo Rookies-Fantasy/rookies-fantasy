@@ -2,7 +2,9 @@ import { getAuth } from "@react-native-firebase/auth";
 import { getFunctionUrl } from "@/firebase/config";
 import { isNotNil } from "@/utils/jsUtils";
 
-export const fetchEarliestGameStartTime = async (date: string) => {
+export const fetchEarliestGameStartTime = async (
+  date: string,
+): Promise<string | null> => {
   try {
     const auth = getAuth();
     const currentUser = auth.currentUser;
@@ -33,7 +35,14 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     }
 
     const data = await response.json();
-    return data.earliestGameStart as string | undefined;
+    const startTime = data?.earliestGameStart;
+    if (startTime === null) {
+      return null;
+    }
+    if (typeof startTime !== "string" || Number.isNaN(Date.parse(startTime))) {
+      throw new Error("Invalid game schedule response");
+    }
+    return startTime;
   } catch (error) {
     console.error("fetchEarliestGameStartTime error:", error);
     throw error;
