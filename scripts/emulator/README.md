@@ -32,7 +32,6 @@ Create the ignored file `client/.env.local`:
 ```dotenv
 APP_ENV=development
 EXPO_PUBLIC_USE_EMULATOR=true
-EXPO_PUBLIC_EMULATOR_HOST=192.168.x.x
 ```
 
 The app connects to emulators only when the flag is enabled, `APP_ENV` is
@@ -40,14 +39,18 @@ The app connects to emulators only when the flag is enabled, `APP_ENV` is
 builds use their native Firebase project's cloud services. Functions use the
 same native project ID as Auth and Firestore.
 
-For a physical phone, replace `192.168.x.x` with the development computer's
-LAN IP. The phone and computer must be on the same reachable network. See
+Firebase uses Metro's host automatically, with the port removed. Leave
+`EXPO_PUBLIC_EMULATOR_HOST` unset to follow the computer's LAN IP. The phone
+and computer must be on the same reachable network. See
 [Physical Phone Network Setup](#physical-phone-network-setup) if the phone
 cannot connect.
 
-When using an Android emulator or iOS simulator, omit
-`EXPO_PUBLIC_EMULATOR_HOST`; the app defaults to `10.0.2.2` on Android and
-`localhost` on iOS.
+Set `EXPO_PUBLIC_EMULATOR_HOST` only to override this, such as when using an
+Expo tunnel. The tunnel forwards Metro only; Firebase still needs a LAN or VPN
+host reachable from the phone.
+
+If Metro's host is unavailable, the app defaults to `10.0.2.2` on Android and
+`localhost` on iOS. Android also maps Metro's loopback host to `10.0.2.2`.
 
 After changing the backend flag or emulator host, restart Expo and fully close
 and reopen the app. Switching between cloud and emulator backends signs you
@@ -196,15 +199,11 @@ network keeps the emulators unavailable on public networks.
 ### Windows: Recommended Setup
 
 1. Make sure the phone and computer are connected to the same Wi-Fi network.
-2. Run `ipconfig` in PowerShell and find the IPv4 address for the active Wi-Fi
-   or Ethernet adapter. Do not use `127.0.0.1`.
-3. Put that address in `client/.env.local` as
-   `EXPO_PUBLIC_EMULATOR_HOST`.
-4. Set the Windows network to **Private** under **Settings > Network &
+2. Set the Windows network to **Private** under **Settings > Network &
    internet > Wi-Fi (or Ethernet) > the connected network > Network profile**.
-5. Start Firebase and Expo. If Windows asks for firewall access, allow Node.js
+3. Start Firebase and Expo in LAN mode. If Windows asks for firewall access, allow Node.js
    and Java/OpenJDK on **Private networks** only.
-6. If no prompt appears, open **Windows Security > Firewall & network
+4. If no prompt appears, open **Windows Security > Firewall & network
    protection > Allow an app through firewall** and confirm Node.js and
    Java/OpenJDK are allowed on **Private** networks.
 
@@ -253,8 +252,8 @@ Firestore batch.
 
 ## Troubleshooting
 
-- **Phone cannot load data:** Confirm the LAN IP in
-  `EXPO_PUBLIC_EMULATOR_HOST`, then review the network steps above.
+- **Phone cannot load data:** Check Metro's LAN host and remove any stale
+  `EXPO_PUBLIC_EMULATOR_HOST` override, then review the network steps above.
 - **Queue button is missing:** Confirm `EXPO_PUBLIC_USE_EMULATOR=true`,
   `APP_ENV=development`, and a debug development build. Restart Expo after
   changing `.env.local`.

@@ -16,7 +16,11 @@ export const getBackendMode = () =>
   });
 
 export const getEmulatorHost = () =>
-  resolveEmulatorHost(process.env.EXPO_PUBLIC_EMULATOR_HOST, Platform.OS);
+  resolveEmulatorHost(
+    process.env.EXPO_PUBLIC_EMULATOR_HOST,
+    Platform.OS,
+    Constants.expoConfig?.hostUri,
+  );
 
 // Use the same native project as Auth and Firestore, including in cloud builds.
 export const getFunctionUrl = (functionName: string): string =>

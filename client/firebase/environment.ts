@@ -25,8 +25,26 @@ export const resolveBackendMode = ({
 export const resolveEmulatorHost = (
   override: string | undefined,
   platform: string,
-): string =>
-  override?.trim() || (platform === "android" ? "10.0.2.2" : "localhost");
+  metroHostUri?: string | null,
+): string => {
+  const explicitHost = override?.trim();
+  if (explicitHost) return explicitHost;
+
+  const defaultHost = platform === "android" ? "10.0.2.2" : "localhost";
+  const hostUri = metroHostUri?.trim();
+  if (!hostUri) return defaultHost;
+
+  try {
+    const metroHost = new URL(
+      hostUri.includes("://") ? hostUri : `http://${hostUri}`,
+    ).hostname;
+    const isLoopback = ["localhost", "127.0.0.1", "[::1]"].includes(metroHost);
+    if (platform === "android" && isLoopback) return defaultHost;
+    return metroHost || defaultHost;
+  } catch {
+    return defaultHost;
+  }
+};
 
 export const buildFunctionUrl = ({
   functionName,
