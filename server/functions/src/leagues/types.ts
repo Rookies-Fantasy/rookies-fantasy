@@ -33,9 +33,16 @@ export type JoinLeagueInput = {
   teamId: string;
 };
 
+export type UpdateLeagueInput = {
+  leagueId: string;
+  name: string;
+  numberOfTeams: number;
+  budget: number;
+};
+
 // The league rules. These mirror the form constants and yup schema in
-// `client/app/(protected)/createLeague.tsx` so a hand-rolled request can't create
-// a league the UI would never allow.
+// `client/utils/leagueUtils.ts` so a hand-rolled request can't create or edit
+// a league into a state the UI would never allow.
 export const MIN_TEAMS = 4;
 export const MAX_TEAMS = 20;
 export const TEAMS_STEP = 2;

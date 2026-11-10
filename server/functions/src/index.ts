@@ -13,13 +13,16 @@ import {
 } from "./leagues/types";
 import {
   evaluateJoinEligibility,
+  evaluateUpdateEligibility,
   isLeagueMember,
   JoinRejectionCode,
   toLeagueDocument,
   toStandingTeam,
+  UpdateRejectionCode,
   validateCreateLeagueInput,
   validateJoinLeagueInput,
   validateLeagueId,
+  validateUpdateLeagueInput,
 } from "./leagues/validation";
 import { completeMatchup } from "./matchups/completeMatchup";
 
@@ -1343,6 +1346,7 @@ const readLeagueDocument = (
 type LeagueResponse = {
   id: string;
   name: string;
+  creatorUserId: string;
   numberOfTeams: number;
   budget: number;
   memberCount: number;
@@ -1356,6 +1360,7 @@ const toLeagueResponse = (
 ): LeagueResponse => ({
   id,
   name: league.name,
+  creatorUserId: league.creatorUserId,
   numberOfTeams: league.numberOfTeams,
   budget: league.budget,
   memberCount: league.memberCount,
@@ -1522,6 +1527,87 @@ export const joinLeague = functions.https.onCall(
       }
       console.error("Error joining league:", error);
       throw new functions.https.HttpsError("internal", "Failed to join league");
+    }
+  },
+);
+
+const UPDATE_REJECTION_STATUS: Record<
+  UpdateRejectionCode,
+  functions.https.FunctionsErrorCode
+> = {
+  "not-league-owner": "permission-denied",
+  "below-member-count": "failed-precondition",
+  "budget-locked": "failed-precondition",
+};
+
+// Updates a league's settings on behalf of its owner.
+export const updateLeague = functions.https.onCall(
+  async (data: RawPayload, context): Promise<{ league: LeagueResponse }> => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "You must be signed in to edit a league",
+      );
+    }
+
+    const uid = context.auth.uid;
+    const validation = validateUpdateLeagueInput(data ?? EMPTY_PAYLOAD);
+
+    if (!validation.valid) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        validation.message,
+      );
+    }
+
+    const input = validation.input;
+    const db = admin.firestore();
+    const leagueRef = db.collection(LEAGUE_COLLECTION).doc(input.leagueId);
+
+    try {
+      return await db.runTransaction(async (transaction) => {
+        // Read inside the transaction so a join landing mid-edit can't slip
+        // past the member-count and budget checks.
+        const league = readLeagueDocument(await transaction.get(leagueRef));
+
+        if (league === null) {
+          throw new functions.https.HttpsError("not-found", "League not found");
+        }
+
+        const eligibility = evaluateUpdateEligibility(league, input, uid);
+
+        if (!eligibility.allowed) {
+          throw new functions.https.HttpsError(
+            UPDATE_REJECTION_STATUS[eligibility.code],
+            eligibility.message,
+          );
+        }
+
+        transaction.update(leagueRef, {
+          name: input.name,
+          numberOfTeams: input.numberOfTeams,
+          budget: input.budget,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        return {
+          league: toLeagueResponse(input.leagueId, {
+            ...league,
+            name: input.name,
+            numberOfTeams: input.numberOfTeams,
+            budget: input.budget,
+          }),
+        };
+      });
+    } catch (error) {
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      console.error("Error updating league:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to update league",
+      );
     }
   },
 );
