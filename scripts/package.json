@@ -4,11 +4,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1",
     "teams": "node --experimental-json-modules fillNBATeams.js",
     "players": "node --experimental-json-modules fillNBAPlayers.js",
     "playerAverages": "node --experimental-json-modules fillNBAPlayerAverages.js",
-    "inject-emulator": "cross-env USE_EMULATOR=true node injectEmulatorData.js",
     "seed": "tsx emulator/index.ts",
     "seed:dev-user": "cross-env USER_EMAIL=dev@test.com USER_PASSWORD=password123 tsx emulator/index.ts user",
     "seed:opponent": "cross-env USER_EMAIL=opponent@test.com USER_PASSWORD=password123 tsx emulator/index.ts user",
@@ -27,7 +27,8 @@
     "seed:nba-teams": "tsx emulator/index.ts nba-teams",
     "simulate:day": "tsx emulator/index.ts simulate-day",
     "simulate:week": "tsx emulator/index.ts simulate-week",
-    "dev": "tsx emulator/dev.ts"
+    "dev": "tsx emulator/dev.ts",
+    "dev:app": "tsx emulator/dev.ts --app"
   },
   "keywords": [],
   "author": "",
@@ -40,5 +41,9 @@
     "firebase-admin": "^13.4.0",
     "fs": "^0.0.1-security",
     "tsx": "^4.23.12"
+  },
+  "devDependencies": {
+    "@types/node": "~22.20.5",
+    "typescript": "~6.0.3"
   }
 }

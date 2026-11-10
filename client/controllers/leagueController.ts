@@ -1,5 +1,5 @@
 import firestore from "@react-native-firebase/firestore";
-import { getFunctionBaseUrl } from "@/firebase/config";
+import { getFunctionUrl } from "@/firebase/config";
 import { League } from "@/types/league";
 import { LeagueStandingTeam } from "@/types/standings";
 import { defaultTeam, Team } from "@/types/team";
@@ -90,7 +90,7 @@ export class LeagueController {
 
   static getLeagueTeams = async (league: League): Promise<Team[]> => {
     const idToken = await getIdToken(SIGNED_OUT_ERROR);
-    const url = `${getFunctionBaseUrl("getLeagueStandings")}?leagueId=${league.id}`;
+    const url = `${getFunctionUrl("getLeagueStandings")}?leagueId=${league.id}`;
 
     try {
       const response = await fetch(url, {
