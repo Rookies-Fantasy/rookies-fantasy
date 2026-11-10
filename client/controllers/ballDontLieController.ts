@@ -1,22 +1,10 @@
 import { getAuth } from "@react-native-firebase/auth";
-import { Platform } from "react-native";
+import { getFunctionUrl } from "@/firebase/config";
 import { isNotNil } from "@/utils/jsUtils";
 
-const getFunctionsBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_USE_EMULATOR === "true") {
-    const defaultHost = Platform.OS === "android" ? "10.0.2.2" : "localhost";
-    const host = process.env.EXPO_PUBLIC_EMULATOR_HOST ?? defaultHost;
-    return `http://${host}:5001/rookies-fantasy-development/us-central1`;
-  }
-
-  return "https://us-central1-rookies-fantasy-development.cloudfunctions.net";
-};
-
-const FUNCTIONS_BASE_URL = getFunctionsBaseUrl();
-const EARLIEST_GAME_START_TIME_URL = `${FUNCTIONS_BASE_URL}/getEarliestGameStartTime`;
-const LIVE_DATA_URL = `${FUNCTIONS_BASE_URL}/getLiveData`;
-
-export const fetchEarliestGameStartTime = async (date: string) => {
+export const fetchEarliestGameStartTime = async (
+  date: string,
+): Promise<string | null> => {
   try {
     const auth = getAuth();
     const currentUser = auth.currentUser;
@@ -28,7 +16,7 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     const idToken = await currentUser.getIdToken();
 
     const response = await fetch(
-      `${EARLIEST_GAME_START_TIME_URL}?date=${date}`,
+      `${getFunctionUrl("getEarliestGameStartTime")}?date=${date}`,
       {
         method: "GET",
         headers: {
@@ -47,7 +35,14 @@ export const fetchEarliestGameStartTime = async (date: string) => {
     }
 
     const data = await response.json();
-    return data.earliestGameStart as string | undefined;
+    const startTime = data?.earliestGameStart;
+    if (startTime === null) {
+      return null;
+    }
+    if (typeof startTime !== "string" || Number.isNaN(Date.parse(startTime))) {
+      throw new Error("Invalid game schedule response");
+    }
+    return startTime;
   } catch (error) {
     console.error("fetchEarliestGameStartTime error:", error);
     throw error;
@@ -70,7 +65,7 @@ export const fetchLivePlayerData = async (playerIds?: string[]) => {
 
     const idToken = await currentUser.getIdToken();
 
-    const response = await fetch(LIVE_DATA_URL, {
+    const response = await fetch(getFunctionUrl("getLiveData"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

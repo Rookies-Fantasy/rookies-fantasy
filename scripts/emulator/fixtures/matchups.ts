@@ -1,9 +1,13 @@
-import type { Firestore, WriteBatch } from "firebase-admin/firestore";
+import type {
+  DocumentSnapshot,
+  Firestore,
+  WriteBatch,
+} from "firebase-admin/firestore";
 import { createMatchupDoc } from "../generate/matchup.js";
 import type { MatchupDoc, TeamDoc } from "../types/firestore.js";
 
 export type UpsertActiveMatchupOptions = {
-  matchupId: string;
+  matchupId?: string;
   homeUserId: string;
   homeTeamId: string;
   awayUserId: string;
@@ -16,10 +20,70 @@ export type SeededMatchup = {
   document: MatchupDoc;
 };
 
+export const getActiveMatchups = async (
+  db: Firestore,
+  matchupId?: string,
+): Promise<DocumentSnapshot[]> => {
+  if (matchupId) {
+    const doc = await db.collection("matchups").doc(matchupId).get();
+    if (!doc.exists) {
+      throw new Error(`Matchup "${matchupId}" not found.`);
+    }
+
+    const matchup = doc.data() as MatchupDoc;
+    if (matchup.status !== "active") {
+      console.warn(
+        `Matchup "${matchupId}" is already ${matchup.status}. Skipping simulation.`,
+      );
+      return [];
+    }
+
+    return [doc];
+  }
+
+  const matchups = await db
+    .collection("matchups")
+    .where("status", "==", "active")
+    .get();
+  return matchups.docs;
+};
+
+export const resolveSeedMatchupId = async (
+  db: Firestore,
+  options: UpsertActiveMatchupOptions,
+): Promise<string> => {
+  if (options.matchupId) return options.matchupId;
+
+  const users = await Promise.all([
+    db.collection("users").doc(options.homeUserId).get(),
+    db.collection("users").doc(options.awayUserId).get(),
+  ]);
+  const candidates = new Set<string>();
+  for (const user of users) {
+    const id = user.data()?.currentMatchupId;
+    if (typeof id === "string" && id) candidates.add(id);
+  }
+  for (const id of candidates) {
+    const matchup = await db.collection("matchups").doc(id).get();
+    const data = matchup.data();
+    if (
+      data?.status === "active" &&
+      data.homeUserId === options.homeUserId &&
+      data.awayUserId === options.awayUserId &&
+      data.homeTeamId === options.homeTeamId &&
+      data.awayTeamId === options.awayTeamId
+    ) {
+      return matchup.id;
+    }
+  }
+  return db.collection("matchups").doc().id;
+};
+
 export const stageActiveMatchup = (
   db: Firestore,
   batch: WriteBatch,
   options: UpsertActiveMatchupOptions & {
+    matchupId: string;
     homeTeam: TeamDoc;
     awayTeam: TeamDoc;
   },
@@ -42,7 +106,6 @@ export const upsertActiveMatchup = async (
   options: UpsertActiveMatchupOptions,
 ): Promise<SeededMatchup> => {
   const {
-    matchupId,
     homeUserId,
     homeTeamId,
     awayUserId,
@@ -72,6 +135,7 @@ export const upsertActiveMatchup = async (
 
   const homeTeam = homeTeamSnap.data() as TeamDoc;
   const awayTeam = awayTeamSnap.data() as TeamDoc;
+  const matchupId = await resolveSeedMatchupId(db, options);
   const matchupRef = db.collection("matchups").doc(matchupId);
   const existingMatchupSnap = await matchupRef.get();
   const existingMatchup = existingMatchupSnap.exists
