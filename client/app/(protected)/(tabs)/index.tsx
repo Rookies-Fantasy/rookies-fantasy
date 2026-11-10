@@ -21,6 +21,7 @@ import RosterDrawer from "@/components/RosterDrawer";
 import Spinner from "@/components/Spinner";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
+import { getBackendMode } from "@/firebase/config";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   clearCurrentLeague,
@@ -39,7 +40,7 @@ import { QueueStatus } from "@/types/user";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
-const QUEUE_ENABLED = process.env.EXPO_PUBLIC_USE_EMULATOR === "true";
+const QUEUE_ENABLED = getBackendMode() === "emulator";
 
 const MyTeam = () => {
   const router = useRouter();

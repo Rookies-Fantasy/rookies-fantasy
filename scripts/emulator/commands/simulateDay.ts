@@ -1,8 +1,4 @@
-import type {
-  DocumentData,
-  Firestore,
-  QueryDocumentSnapshot,
-} from "firebase-admin/firestore";
+import type { DocumentSnapshot, Firestore } from "firebase-admin/firestore";
 import type { Auth } from "firebase-admin/auth";
 import { calculateFantasyPoints } from "../../../client/utils/fantasyPoints.js";
 import type {
@@ -11,25 +7,12 @@ import type {
   LineupSnapshotItem,
   Matchup,
   PlayerSnapshot,
-} from "../../../client/types/matchup";
-import type { TeamLineupSlot } from "../../../client/types/team";
+} from "../../../client/types/matchup.js";
+import type { TeamLineupSlot } from "../../../client/types/team.js";
+import { getActiveMatchups } from "../fixtures/matchups.js";
+import { getSimulationDates, parseDate } from "../utils/dateUtils.js";
 
 const DEFAULT_OPPONENT = "Simulated Opponent";
-
-const formatLocalDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const parseDate = (value?: string): string => {
-  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value;
-  }
-
-  return formatLocalDate(new Date());
-};
 
 const hashString = (input: string): number => {
   let hash = 0;
@@ -115,7 +98,7 @@ const sumFantasyPoints = (snapshots: LineupSnapshotItem[]): number =>
 
 const updateMatchup = async (
   db: Firestore,
-  matchupDoc: QueryDocumentSnapshot<DocumentData>,
+  matchupDoc: DocumentSnapshot,
   date: string,
 ) => {
   const matchup = matchupDoc.data() as Matchup;
@@ -183,34 +166,32 @@ const updateMatchup = async (
   console.log(`Simulated matchup ${matchupDoc.id} for ${date}`);
 };
 
-export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
-  const date = parseDate(process.env.SIM_DATE);
-  const matchupId = process.env.MATCHUP_ID;
+type SimulationOptions = {
+  date?: string;
+  matchupId?: string;
+};
 
-  if (matchupId) {
-    const doc = await db.collection("matchups").doc(matchupId).get();
-    if (!doc.exists) {
-      throw new Error(`Matchup "${matchupId}" not found.`);
-    }
-
+export const run = async (
+  db: Firestore,
+  _auth: Auth,
+  options: SimulationOptions = {
+    date: process.env.SIM_DATE,
+    matchupId: process.env.MATCHUP_ID,
+  },
+): Promise<void> => {
+  const requestedDate =
+    options.date === undefined
+      ? undefined
+      : parseDate(options.date, "SIM_DATE");
+  const matchups = await getActiveMatchups(db, options.matchupId);
+  // Validate every matchup's range before writing any snapshots.
+  const plans = matchups.map((doc) => {
     const matchup = doc.data() as Matchup;
-    if (matchup.status !== "active") {
-      console.warn(
-        `Matchup "${matchupId}" is already ${matchup.status}. Skipping simulation.`,
-      );
-      return;
-    }
+    const [date] = getSimulationDates(doc.id, matchup.weekStart, requestedDate);
+    return { doc, date };
+  });
 
-    await updateMatchup(db, doc as QueryDocumentSnapshot<DocumentData>, date);
-    return;
-  }
-
-  const matchups = await db
-    .collection("matchups")
-    .where("status", "==", "active")
-    .get();
-
-  for (const doc of matchups.docs) {
+  for (const { doc, date } of plans) {
     await updateMatchup(db, doc, date);
   }
 };
