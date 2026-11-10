@@ -1,16 +1,16 @@
-import type { Augment } from "../../../client/types/augment";
-import type { League } from "../../../client/types/league";
+import type { Augment } from "../../../client/types/augment.js";
+import type { League } from "../../../client/types/league.js";
 import type {
   LeagueMatchup,
   LineupSnapshotItem,
   RankedMatchup,
   TeamSnapshot,
-} from "../../../client/types/matchup";
+} from "../../../client/types/matchup.js";
 import type {
   PlayerTeamDisplay,
   Team,
   TeamLineupSlot,
-} from "../../../client/types/team";
+} from "../../../client/types/team.js";
 
 export type UserDoc = {
   id: string;
@@ -21,7 +21,7 @@ export type UserDoc = {
   username?: string;
   queueStatus: "idle" | "queued" | "matched";
   teamId?: string;
-  currentMatchupId?: string;
+  currentMatchupId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -29,7 +29,7 @@ export type UserDoc = {
 export type TeamDoc = Team & {
   createdAt: Date;
   updatedAt: Date;
-  matchupId?: string;
+  matchupId?: string | null;
   augment?: Augment;
 };
 
