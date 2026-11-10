@@ -12,7 +12,7 @@ import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
 import { resolveSeedTeamId, stageTeam } from "../fixtures/teams.js";
 import { ensureAuthUser, stageUser } from "../fixtures/users.js";
 import { buildLineup, getLineupSalary } from "../generate/lineup.js";
-import type { MatchupDoc } from "../types/firestore.js";
+import type { RankedMatchupDoc } from "../types/firestore.js";
 
 export type MatchupScenarioOptions = {
   homeEmail: string;
@@ -130,7 +130,7 @@ export const createMatchupScenario = async (
     awayTeamId,
     awayTeam,
     document: existingMatchup.exists
-      ? (existingMatchup.data() as Partial<MatchupDoc>)
+      ? (existingMatchup.data() as Partial<RankedMatchupDoc>)
       : {},
   });
   await batch.commit();

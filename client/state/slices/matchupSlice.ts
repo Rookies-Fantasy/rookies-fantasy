@@ -1,6 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { GameInfo, GameStats, Matchup } from "@/types/matchup";
+import { GameInfo, GameStats, RankedMatchup } from "@/types/matchup";
 import { calculateFantasyPoints } from "@/utils/fantasyPoints";
 import { isNil, isNotNil } from "@/utils/jsUtils";
 
@@ -10,7 +10,7 @@ type PlayerGameData = {
 };
 
 export type MatchupState = {
-  data?: Matchup;
+  data?: RankedMatchup;
 };
 
 const defaultMatchup: MatchupState = {
@@ -21,7 +21,7 @@ const matchupSlice = createSlice({
   name: "matchup",
   initialState: defaultMatchup,
   reducers: {
-    setMatchup: (state, action: PayloadAction<Matchup>) => {
+    setMatchup: (state, action: PayloadAction<RankedMatchup>) => {
       state.data = action.payload;
     },
     clearMatchup: () => defaultMatchup,
@@ -38,7 +38,7 @@ const matchupSlice = createSlice({
       }
 
       const updateSnapshot = (
-        snapshot: Matchup["homeLineupSnapshots"][string] | undefined,
+        snapshot: RankedMatchup["homeLineupSnapshots"][string] | undefined,
         liveData: Record<string, PlayerGameData | null>,
       ) => {
         snapshot?.forEach((slot) => {
