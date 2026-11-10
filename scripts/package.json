@@ -19,13 +19,16 @@
     "seed:end-matchup": "tsx emulator/index.ts end-matchup",
     "seed:scenario": "tsx emulator/index.ts scenario",
     "seed:draft-ready": "tsx emulator/index.ts draft-ready",
+    "seed:league": "tsx emulator/index.ts league",
+    "seed:league-ready": "tsx emulator/index.ts league-ready",
     "seed:queue-ready": "tsx emulator/index.ts queue-ready",
     "queue:opponent": "tsx emulator/index.ts queue-opponent",
     "seed:nba-players": "tsx emulator/index.ts nba-players",
     "seed:nba-teams": "tsx emulator/index.ts nba-teams",
     "simulate:day": "tsx emulator/index.ts simulate-day",
     "simulate:week": "tsx emulator/index.ts simulate-week",
-    "dev": "tsx emulator/dev.ts"
+    "dev": "tsx emulator/dev.ts",
+    "dev:app": "tsx emulator/dev.ts --app"
   },
   "keywords": [],
   "author": "",

@@ -15,25 +15,34 @@ npm --prefix server/functions ci
 npm --prefix scripts ci
 ```
 
-Create the ignored file `client/.env.local`:
-
-```dotenv
-EXPO_PUBLIC_USE_EMULATOR=true
-EXPO_PUBLIC_EMULATOR_HOST=192.168.x.x
-```
-
-For a physical phone, use the computer's LAN IP and connect both devices to
-the same network. See [network setup](#physical-phone-network-setup) if needed.
-
-When using an Android emulator or iOS simulator, omit
-`EXPO_PUBLIC_EMULATOR_HOST`; the app defaults to `10.0.2.2` on Android and
-`localhost` on iOS.
-
 ## Start the Environment
 
-Open three terminals at the repository root.
+From the repository root:
 
-### 1. Firebase
+```bash
+cd scripts
+npm run dev
+```
+
+This builds Functions, starts fresh Firebase emulators, seeds the default
+matchup scenario, and starts Expo in development emulator mode. Sign in as
+`dev@test.com` with `password123`. Press **Ctrl+C** to stop Expo and Firebase.
+Stop any existing Firebase or Expo processes before launching.
+
+Data is discarded when the emulators stop. Open the Emulator UI at
+`http://localhost:4000`. To change scenarios, see [Workflows](#workflows).
+
+The app uses Metro's host to reach Firebase automatically. Leave
+`EXPO_PUBLIC_EMULATOR_HOST` unset unless you need an override. For Expo tunnel
+mode, set it in `client/.env.local` to a LAN or VPN IP reachable from the phone;
+the tunnel only forwards Metro. See [network setup](#physical-phone-network-setup)
+if the phone cannot connect.
+
+### Manual Startup
+
+Use separate terminals for Firebase, Expo, and the [workflow commands](#workflows).
+
+#### 1. Firebase
 
 Build the Functions, then start the emulators:
 
@@ -44,9 +53,14 @@ cd ..
 firebase emulators:start
 ```
 
-The Emulator UI is available at `http://localhost:4000`.
+#### 2. Expo
 
-### 2. Expo
+Create `client/.env.local` (the launcher sets these flags automatically):
+
+```dotenv
+APP_ENV=development
+EXPO_PUBLIC_USE_EMULATOR=true
+```
 
 ```bash
 cd client
@@ -54,21 +68,15 @@ npm start
 ```
 
 Open the installed development build through the Expo QR code.
-
-### 3. Test State
-
-Run commands from `scripts/`. Clear existing data before switching workflows:
-
-```bash
-cd scripts
-npm run seed:clear
-```
-
-All workflows use `dev@test.com` as the main account and `opponent@test.com`
-as the opponent. Both use password `password123`. After clearing Auth,
-sign out in the app, reseed, and sign back in.
+After changing `.env.local`, restart Expo and reopen the app. Switching
+backends signs you out and clears cached Firestore data and pending writes.
 
 ## Workflows
+
+Run commands from `scripts/`. All workflows use `dev@test.com` and
+`opponent@test.com`, both with password `password123`; the league workflow
+also adds `league1@test.com` and `league2@test.com`. Before switching
+workflows, run `npm run seed:clear`, then reseed and relaunch the app.
 
 ### Draft a Team
 
@@ -105,6 +113,43 @@ partway through the week, use `SIM_DATE` below.
 
 Run `npm run seed:end-matchup` to complete the main user's current matchup,
 update team records, and return participants to idle. It is safe to repeat.
+
+### Browse and Join Leagues
+
+`seed:league-ready` creates four users, a complete ranked team for
+`dev@test.com`, and two leagues:
+
+| League ID              | Name        | Teams | Creator             | `dev@test.com` |
+| ---------------------- | ----------- | ----- | ------------------- | -------------- |
+| `emulator-league-full` | Full League | 4/4   | `dev@test.com`      | Member         |
+| `emulator-league-open` | Open League | 2/6   | `opponent@test.com` | Not a member   |
+
+The other members are `opponent@test.com`, `league1@test.com`, and
+`league2@test.com`. Every member has a complete league team.
+
+Sign in as `dev@test.com` and use the league switcher to open Full League.
+The app only reaches the join screen through an invite link, so open Open
+League with the development build's deep link:
+
+```bash
+# iOS simulator
+xcrun simctl openurl booted "myapp-development://joinLeague?leagueId=emulator-league-open"
+```
+
+Re-running the seed command restores both leagues and their teams.
+
+To add one more league for an existing user, pass that user's UID:
+
+```bash
+npx cross-env USER_ID=<uid> npm run seed:league
+```
+
+`seed:league` creates a league team for the user and a league with the user as
+its creator and only member. It defaults to `LEAGUE_ID=default-league`,
+`LEAGUE_NAME="Dev League"`, and `NUMBER_OF_TEAMS=4`. The league team gets a
+Firestore-generated ID unless `LEAGUE_TEAM_ID` is set. If the league ID already exists, the command logs a
+message and changes nothing; adding members to an existing league is not
+supported yet.
 
 ## Optional Overrides
 
@@ -146,8 +191,7 @@ phone itself.
 
 ### Windows: Recommended Setup
 
-1. Run `ipconfig` in PowerShell. Set `EXPO_PUBLIC_EMULATOR_HOST` in
-   `client/.env.local` to the active adapter's LAN IPv4 address.
+1. Make sure the phone and computer are connected to the same Wi-Fi network.
 2. In Windows Settings, set the connected network's profile to **Private**.
 3. Allow Node.js and Java/OpenJDK through the firewall on **Private networks**.
    If no prompt appears, open **Windows Security > Firewall & network protection**
@@ -176,10 +220,11 @@ Run `npm run typecheck` from `scripts/` to check the script types.
 
 ## Troubleshooting
 
-- **Phone cannot load data:** Confirm the LAN IP in
-  `EXPO_PUBLIC_EMULATOR_HOST`, then review the network steps above.
-- **Queue button is missing:** Confirm `EXPO_PUBLIC_USE_EMULATOR=true` and
-  restart Expo after changing `.env.local`.
+- **Phone cannot load data:** Check Metro's LAN host and remove any stale
+  `EXPO_PUBLIC_EMULATOR_HOST` override, then review the network steps above.
+- **Queue button is missing:** Confirm `EXPO_PUBLIC_USE_EMULATOR=true`,
+  `APP_ENV=development`, and a debug development build. Restart Expo after
+  changing `.env.local`.
 - **Users do not match:** Check the Functions log and confirm both users have
   complete teams.
 - **Functions changes are stale:** Run `npm run build` from
