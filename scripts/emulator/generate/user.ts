@@ -12,7 +12,9 @@ export const createUserDoc = (
   ...(overrides.username ? { username: overrides.username } : {}),
   queueStatus: overrides.queueStatus ?? "idle",
   ...(overrides.teamId ? { teamId: overrides.teamId } : {}),
-  ...(overrides.currentMatchupId ? { currentMatchupId: overrides.currentMatchupId } : {}),
+  ...(overrides.currentMatchupId !== undefined
+    ? { currentMatchupId: overrides.currentMatchupId }
+    : {}),
   createdAt: overrides.createdAt ?? new Date(),
   updatedAt: overrides.updatedAt ?? new Date(),
 });

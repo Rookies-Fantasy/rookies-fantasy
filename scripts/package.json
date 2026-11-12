@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1",
     "teams": "node --experimental-json-modules fillNBATeams.js",
     "players": "node --experimental-json-modules fillNBAPlayers.js",
@@ -27,6 +28,7 @@
     "simulate:day": "tsx emulator/index.ts simulate-day",
     "simulate:week": "tsx emulator/index.ts simulate-week",
     "dev": "tsx emulator/dev.ts",
+    "dev:app": "tsx emulator/dev.ts --app",
     "verify": "tsx verify/index.ts"
   },
   "keywords": [],
@@ -40,5 +42,9 @@
     "firebase-admin": "^13.4.0",
     "fs": "^0.0.1-security",
     "tsx": "^4.23.12"
+  },
+  "devDependencies": {
+    "@types/node": "~22.20.5",
+    "typescript": "~6.0.3"
   }
 }
