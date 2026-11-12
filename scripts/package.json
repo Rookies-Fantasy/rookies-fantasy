@@ -28,7 +28,8 @@
     "simulate:day": "tsx emulator/index.ts simulate-day",
     "simulate:week": "tsx emulator/index.ts simulate-week",
     "dev": "tsx emulator/dev.ts",
-    "dev:app": "tsx emulator/dev.ts --app"
+    "dev:app": "tsx emulator/dev.ts --app",
+    "verify": "tsx verify/index.ts"
   },
   "keywords": [],
   "author": "",
