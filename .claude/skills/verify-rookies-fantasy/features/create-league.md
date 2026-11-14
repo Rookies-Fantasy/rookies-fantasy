@@ -13,7 +13,7 @@ A signed-in user names a league, picks a team count and budget, creates their le
 
 ## How to get to it (user POV)
 
-- Leagues → **Create League**: step 1 is the league name, team count and budget; step 2 is the team name, abbreviation and logo; then submit.
+- The league switcher in the tabs header (it shows the current league, or "Ranked") → **Create New League**: step 1 is the league name, team count and budget; step 2 is the team name, abbreviation and logo; then **Create League** submits. There is no separate Leagues screen.
 - The app creates the team under `users/{uid}/teams` first, then calls `createLeague` with its ID.
 
 ## Driving it with verify
@@ -27,10 +27,11 @@ Preconditions:
 npm --prefix scripts run verify -- drive create-league
 ```
 
-- **creates-league:** 200, and both the response and the stored `leagues/{id}` hold `memberCount: 1`, `teamIds: [verify-create-team]`, `userIds: [dev uid]` and `creatorUserId: dev uid`.
+- **creates-league:** 200, and both the response and the stored `leagues/{id}` hold the submitted `name`, `numberOfTeams` and `budget` plus `memberCount: 1`, `teamIds: [verify-create-team]` and `userIds: [dev uid]`. Only the stored document has `creatorUserId: dev uid`; the response doesn't include it.
 - **Every rejection:** the callable error status and message the case names (`INVALID_ARGUMENT`, `NOT_FOUND` or `UNAUTHENTICATED`), and the league count unchanged.
 
 ## Gotchas
 
 - The server keeps its own copy of the form limits (`server/functions/src/leagues/types.ts`, mirroring `createLeague.tsx`). A change to one side needs the other, or the cases drift from the UI.
 - `rejects-someone-elses-team` uses the opponent's Open League team, so it depends on the baseline.
+- Each case stages its own team, so the drive doesn't show what the app does when the server rejects a submit: the team the app wrote first stays in `users/{uid}/teams`. Check that on a phone.
