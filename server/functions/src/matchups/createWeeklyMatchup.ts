@@ -47,6 +47,7 @@ export const createWeeklyMatchup = async (
 
     const matchupData: Matchup = {
       id: matchupRef.id,
+      leagueId: null,
       createdAt: new Date(),
       weekStart: startDate,
       homeTeamId: teamId1,
@@ -89,6 +90,7 @@ const createTeamSnapshot = (
   logoUrl: teamInfo.logoUrl,
   name: teamInfo.name,
   record: teamInfo.record,
+  lineup: teamInfo.lineup,
   ...(augmentSnapshot ? { augmentSnapshot } : {}),
 });
 

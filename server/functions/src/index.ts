@@ -1,3 +1,6 @@
+export { createLeague } from "./leagues/createLeague";
+export { getLeagueStandings } from "./leagues/getLeagueStandings";
+export { joinLeague } from "./leagues/joinLeague";
 export { getEarliestGameStartTime } from "./matchups/getEarliestGameStartTime";
 export { weeklyMatchupReset } from "./matchups/weeklyMatchupReset";
 export { getLiveData } from "./players/getLiveData";

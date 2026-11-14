@@ -41,19 +41,6 @@ export type TeamLineupSlot = {
   player: PlayerTeamDisplay | null;
 };
 
-// Store the augment id for now, maybe reconsider this later. Some things to consider are what we actually need to display the team (probably just name and icon)
-// as well as augment versioning for future patches
-export type Team = {
-  abbreviation?: string;
-  augmentId?: string;
-  id: string;
-  logoUrl?: string;
-  name?: string;
-  balance: number;
-  lineup: TeamLineupSlot[];
-  record?: TeamRecord;
-};
-
 export type PlayerSnapshot = {
   firstName: string;
   lastName: string;
@@ -69,6 +56,7 @@ export type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
+  lineup: TeamLineupSlot[];
   augmentSnapshot?: any;
   score?: number;
 };

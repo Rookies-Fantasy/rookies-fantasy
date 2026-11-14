@@ -1,4 +1,4 @@
-import { admin } from "../shared/admin";
+import { admin, FieldValue } from "../shared/admin";
 import { commitIfNeeded, type BatchState } from "../shared/batch";
 import type { DailyStats } from "./fetchDailyStats";
 
@@ -28,7 +28,7 @@ export const writePlayerStats = async (
     const playerDocRef = playerQuery.docs[0].ref;
 
     const updateObj: any = {
-      gamelog: admin.firestore.FieldValue.arrayUnion(gamelog),
+      gamelog: FieldValue.arrayUnion(gamelog),
     };
 
     const latestAvg = seasonAvgMap[String(gamelog.playerId)];

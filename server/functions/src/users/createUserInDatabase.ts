@@ -1,6 +1,6 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as functions from "firebase-functions/v1";
-import { admin } from "../shared/admin";
+import { admin, FieldValue } from "../shared/admin";
 
 export const createUserInDatabase = functions.auth
   .user()
@@ -19,8 +19,8 @@ export const createUserInDatabase = functions.auth
         email: email,
         emailVerified: emailVerified,
         queueStatus: "idle",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
     } catch (error) {
       console.error("Error creating user in Firestore:", error);

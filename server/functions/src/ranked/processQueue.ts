@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions/v1";
 import { createWeeklyMatchup } from "../matchups/createWeeklyMatchup";
-import { admin } from "../shared/admin";
+import { admin, FieldValue } from "../shared/admin";
 
 export const processQueue = functions
   .runWith({ secrets: ["BALLDONTLIE_URL", "BALLDONTLIE_API_KEY"] })
@@ -40,12 +40,12 @@ export const processQueue = functions
 
               transaction.update(user1.ref, {
                 queueStatus: "matching",
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
               });
 
               transaction.update(user2.ref, {
                 queueStatus: "matching",
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
               });
             }
           }
@@ -85,12 +85,12 @@ export const processQueue = functions
             user1.ref.update({
               currentMatchupId: matchupId,
               queueStatus: "matched",
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             }),
             user2.ref.update({
               currentMatchupId: matchupId,
               queueStatus: "matched",
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             }),
           ]);
 

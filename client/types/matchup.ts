@@ -1,5 +1,5 @@
 import { Augment } from "./augment";
-import { SlotPosition, TeamRecord } from "./team";
+import { SlotPosition, TeamLineupSlot, TeamRecord } from "./team";
 
 export type GameInfo = {
   gameStatus: boolean;
@@ -34,6 +34,7 @@ export type TeamSnapshot = {
   name: string;
   logoUrl: string;
   record: TeamRecord;
+  lineup?: TeamLineupSlot[];
   augmentSnapshot?: Augment;
 };
 
@@ -42,8 +43,9 @@ export type LineupSnapshotItem = {
   playerSnapshot: PlayerSnapshot;
 };
 
-export type Matchup = {
-  createdAt: Date;
+type MatchupBase = {
+  createdAt: string;
+  updatedAt?: string;
   id: string;
   weekStart: string;
   homeTeamSnapshot: TeamSnapshot;
@@ -52,10 +54,25 @@ export type Matchup = {
   awayTeamId: string;
   homeUserId: string;
   awayUserId: string;
-  status: "active" | "completed";
   awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   awayScore?: number;
   homeScore?: number;
   winnerId?: string;
 };
+
+export type RankedMatchup = MatchupBase & {
+  leagueId: null;
+  status: "active" | "completed";
+};
+
+export type LeagueMatchupPhase = "regular" | "playoff";
+
+export type LeagueMatchup = MatchupBase & {
+  leagueId: string;
+  week: number;
+  phase: LeagueMatchupPhase;
+  status: "scheduled" | "active" | "completed";
+};
+
+export type Matchup = RankedMatchup | LeagueMatchup;
