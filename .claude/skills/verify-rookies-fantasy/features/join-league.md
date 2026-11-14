@@ -14,7 +14,8 @@ A user opens an invite link, creates a league team, and joins. The server adds t
 
 ## How to get to it (user POV)
 
-- An invite link `myapp-development://joinLeague?leagueId=<id>` opens the join screen, which loads the league, takes the team name, abbreviation and logo, and submits.
+- A member taps **INVITE FRIENDS** on the My Team tab (shown while the current league has open spots), which shares `<baseUrl>/joinLeague?leagueId=<id>` (`https://dev.rookiesfantasy.com/...` in development).
+- The invite opens the join screen, which loads the league, takes the team name, abbreviation and logo, and submits. In a development build, `myapp-development://joinLeague?leagueId=<id>` opens it directly (see `scripts/emulator/README.md`).
 - The app creates the team under `users/{uid}/teams` first, then calls `joinLeague` with the league and team IDs. There is no in-app browse-to-join path.
 
 ## Driving it with verify
@@ -33,6 +34,6 @@ npm --prefix scripts run verify -- drive join-league
 
 ## Gotchas
 
-- Cases run in order: the later Open League cases see `dev@test.com` as a member because `joins-open-league` ran first.
-- The server checks the team before the league, so `rejects-unknown-league` stages a real team; without one it reports `Team not found` instead.
+- Cases run in order and share state: after `joins-open-league`, Open League has `memberCount` 3, which is what the later cases' "unchanged" checks report.
+- The server checks the team before the league, so `rejects-unknown-league` stages a real team; without one it reports `Team not found for the signed-in user` instead.
 - Every baseline user is already in Full League, so `rejects-full-league` needs the outsider account or it reports `User already joined`.

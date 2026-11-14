@@ -90,6 +90,74 @@ const buildFunctions = (logPath: string): void => {
   }
 };
 
+const startCliDetached = (cli: string, logPath: string): number => {
+  const out = fs.openSync(logPath, "a");
+  const child = spawn(
+    process.execPath,
+    [cli, "emulators:start", "--project", PROJECT_ID],
+    {
+      cwd: SERVER_DIR,
+      detached: true,
+      stdio: ["ignore", out, out],
+    },
+  );
+  child.unref();
+  fs.closeSync(out);
+  return child.pid ?? 0;
+};
+
+const powershell = (script: string): string =>
+  spawnSync(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-Command", script],
+    { encoding: "utf8" },
+  ).stdout.trim();
+
+// On Windows a detached child gets no console, so every console process the
+// Firebase CLI starts (one per Functions worker) opens its own visible window.
+// Start the CLI from a hidden console instead, which those processes share,
+// and return the CLI's own PID: the one the emulator hub reports.
+const startCliInHiddenConsole = async (
+  cli: string,
+  logPath: string,
+  launchDir: string,
+): Promise<number> => {
+  const script = path.join(launchDir, "start-emulators.cmd");
+  fs.writeFileSync(
+    script,
+    [
+      "@echo off",
+      `cd /d "${SERVER_DIR}"`,
+      `"${process.execPath}" "${cli}" emulators:start --project ${PROJECT_ID} >> "${logPath}" 2>&1`,
+      "",
+    ].join("\r\n"),
+  );
+
+  const shellPid = Number(
+    powershell(
+      `(Start-Process -FilePath '${script}' -WindowStyle Hidden -PassThru).Id`,
+    ),
+  );
+  if (!(shellPid > 0)) {
+    return 0;
+  }
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const cliPid = Number(
+      powershell(
+        `(Get-CimInstance Win32_Process -Filter "ParentProcessId=${shellPid} AND Name='node.exe'").ProcessId`,
+      ),
+    );
+    if (cliPid > 0) {
+      return cliPid;
+    }
+    await wait(250);
+  }
+
+  spawnSync("taskkill", ["/PID", String(shellPid), "/T", "/F"]);
+  return 0;
+};
+
 const waitForReady = async (pid: number, logPath: string): Promise<void> => {
   const deadline = Date.now() + READY_TIMEOUT_MS;
 
@@ -159,21 +227,9 @@ export const run = async (): Promise<number> => {
   buildFunctions(logPath);
 
   const cli = resolveFirebaseCli();
-  const out = fs.openSync(logPath, "a");
-  const child = spawn(
-    process.execPath,
-    [cli, "emulators:start", "--project", PROJECT_ID],
-    {
-      cwd: SERVER_DIR,
-      detached: true,
-      stdio: ["ignore", out, out],
-      windowsHide: true,
-    },
-  );
-  child.unref();
-  fs.closeSync(out);
-
-  const pid = child.pid ?? 0;
+  const pid = IS_WINDOWS
+    ? await startCliInHiddenConsole(cli, logPath, launchDir)
+    : startCliDetached(cli, logPath);
   if (pid === 0) {
     throw new Error("The Firebase CLI did not start.");
   }

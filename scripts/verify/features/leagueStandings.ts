@@ -8,7 +8,7 @@ import {
 } from "../core/json.js";
 import { type Feature, check, readDoc } from "./support.js";
 
-const ENTRY_POINT = "getLeagueStandings (league screen standings)";
+const ENTRY_POINT = "getLeagueStandings (Leaderboard tab standings)";
 
 const FULL = "emulator-league-full";
 const OPEN = "emulator-league-open";

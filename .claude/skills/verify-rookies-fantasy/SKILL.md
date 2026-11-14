@@ -23,6 +23,8 @@ npm --prefix scripts run verify -- launch
 
 It builds `server/functions`, starts the emulators (Auth 9099, Firestore 8080, Functions 5001, hub 4400, UI 4000) from an empty state, waits until they are ready, seeds the **baseline** (the `league-ready` scenario from `scripts/emulator`), and finishes by running doctor. Ready means doctor passes, not just that a port answers.
 
+On Windows, launch writes `start-emulators.cmd` into the launch folder and starts it in a hidden console, so the Functions workers the Firebase CLI starts share that console instead of each opening a window. The recorded PID is still the Firebase CLI's own.
+
 If any emulator port is already in use, launch refuses and exits 1. That instance belongs to someone else, usually the user's own terminal: ask them to stop it, then launch again. This skill only ever drives emulators it launched itself.
 
 ## Doctor
@@ -58,7 +60,7 @@ Every drive writes `.claude/skills/verify-rookies-fantasy/runs/<timestamp>-<bran
 - `run.json`: the same, machine-readable.
 - `cases/NN-<case>.json`: each case's preconditions, every request and response (signed-in user named, token omitted), and the Firestore documents it read.
 
-Launch writes `runs/<timestamp>-<branch>-launch/emulators.log`. To report a proof, paste the drive's printed table and link its `summary.md`.
+Launch writes `runs/<timestamp>-<branch>-launch/emulators.log` (plus `start-emulators.cmd` on Windows). To report a proof, paste the drive's printed table and link its `summary.md`.
 
 ## Cleanup
 

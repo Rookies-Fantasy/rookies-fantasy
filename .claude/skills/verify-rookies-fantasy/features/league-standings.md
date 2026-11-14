@@ -12,7 +12,8 @@ A league member opens a league and sees every team's name, logo and win-loss-dra
 
 ## How to get to it (user POV)
 
-- Sign in, open the league switcher, and pick a league. The league screen loads its standings through `getLeagueStandings`.
+- Sign in, pick a league in the tabs-header league switcher (creating or joining a league also selects it), and open the **Leaderboard** tab. It loads the standings through `getLeagueStandings`. With "Ranked" selected, the tab shows a placeholder and sends no request.
+- Rank, points (3 per win, 1 per draw) and win% are computed on the phone from the returned records; the server returns only each team's name, logo and record.
 
 ## Driving it with verify
 
@@ -33,5 +34,5 @@ npm --prefix scripts run verify -- drive league-standings
 
 ## Gotchas
 
-- `getLeagueStandings` is an `onRequest` function, not a callable: errors come back as plain-text bodies, not `{ error }` objects.
+- `getLeagueStandings` is an `onRequest` function, not a callable: the 400, 401, 403 and 404 errors come back as plain-text bodies. Only an unexpected failure (500, including a corrupt league document) returns JSON `{ error }`.
 - Team order in the response isn't guaranteed; the case compares records by team ID.
