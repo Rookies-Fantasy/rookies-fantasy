@@ -10,11 +10,10 @@ export const LEAGUE_COLLECTION = "leagues";
 export const USER_COLLECTION = "users";
 export const TEAM_SUBCOLLECTION = "teams";
 
-// Reads a league document into its typed shape. Returns null when the document
-// does not exist, which the eligibility rules treat as "League not found".
-// Returns null when the league does not exist. A league that exists but does
-// not parse is corrupt — only the server writes these documents — so it throws
-// rather than letting the caller act on a half-read league.
+// Reads a league document into its typed shape. Returns null when the league
+// doesn't exist. A league that exists but doesn't parse is corrupt (only the
+// server writes these documents), so it throws instead of letting the caller
+// act on a half-read league.
 export const readLeagueDocument = (
   snapshot: FirebaseFirestore.DocumentSnapshot,
 ): LeagueDocument | null => {

@@ -170,10 +170,9 @@ const reject = (code: JoinRejectionCode, message: string): JoinEligibility => ({
   message,
 });
 
-// The preconditions that used to live in the client-side Firestore transaction
-// (client/controllers/leagueController.ts). They are enforced here so the league
-// document can only ever be grown by the server. Messages match the previous
-// client-thrown errors so existing UI copy keeps working.
+// Whether a user may add this team to the league. Only joinLeague grows a
+// league, so these are the only join checks; the join screen shows their
+// messages to the user as-is.
 export const evaluateJoinEligibility = (
   league: LeagueDocument,
   teamId: string,
