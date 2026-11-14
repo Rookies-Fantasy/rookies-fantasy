@@ -1,4 +1,5 @@
 import type { DocumentSnapshot, Firestore } from "firebase-admin/firestore";
+import type { TeamRecord } from "../shared/types";
 
 type ScoreSnapshot = {
   playerSnapshot?: {
@@ -16,12 +17,6 @@ type MatchupCompletionData = {
   awayTeamId: string;
   homeLineupSnapshots?: Record<string, ScoreSnapshot[]>;
   awayLineupSnapshots?: Record<string, ScoreSnapshot[]>;
-};
-
-type TeamRecord = {
-  wins: number;
-  losses: number;
-  draws: number;
 };
 
 const sumFantasyPoints = (snapshots: Record<string, ScoreSnapshot[]> = {}) =>

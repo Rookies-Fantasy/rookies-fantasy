@@ -1,3 +1,4 @@
+import type { TeamRecord } from "../shared/types";
 import {
   CreateLeagueInput,
   JoinLeagueInput,
@@ -11,7 +12,6 @@ import {
   MIN_BUDGET,
   MIN_TEAMS,
   TEAMS_STEP,
-  TeamRecord,
   RawPayload,
 } from "./types";
 

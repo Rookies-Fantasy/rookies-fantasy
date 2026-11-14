@@ -16,6 +16,8 @@ export type GameStats = {
   minutes: number;
 };
 
+// The `record` field on a team document. Written by matchups, read by
+// leagues. Mirrors `TeamRecord` in client/types/team.ts.
 export type TeamRecord = {
   wins: number;
   losses: number;
