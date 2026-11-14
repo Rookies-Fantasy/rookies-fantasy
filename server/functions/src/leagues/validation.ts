@@ -1,3 +1,4 @@
+import type { TeamRecord } from "../shared/types";
 import {
   CreateLeagueInput,
   JoinLeagueInput,
@@ -15,7 +16,6 @@ import {
   NewLeagueTeam,
   TEAM_ABBREVIATION_LENGTH,
   TEAMS_STEP,
-  TeamRecord,
   RawPayload,
   UpdateLeagueInput,
 } from "./types";
