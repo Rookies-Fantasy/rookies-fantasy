@@ -103,6 +103,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: bundleIdentifier,
       supportsTablet: false,
       usesAppleSignIn: true,
+      // Required by @invertase/react-native-apple-authentication: Expo only adds
+      // this entitlement automatically via expo-apple-authentication, which we
+      // don't use, so without it Sign in with Apple fails (AKAuthenticationError -7026).
+      entitlements: {
+        "com.apple.developer.applesignin": ["Default"],
+      },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
