@@ -1,11 +1,5 @@
 import { Tabs } from "expo-router";
-import {
-  Basketball,
-  ClockCounterClockwise,
-  ListBullets,
-  Ranking,
-  UsersThree,
-} from "phosphor-react-native";
+import { Basketball, ListBullets, UsersThree } from "phosphor-react-native";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LeagueSwitcher from "@/components/LeagueSwitcher";
@@ -41,15 +35,8 @@ const HomeLayout = () => (
           tabBarIcon: ({ color }) => <Basketball color={color as string} />,
         }}
       />
-      <Tabs.Screen
-        name="matchHistory"
-        options={{
-          title: "Match History",
-          tabBarIcon: ({ color }) => (
-            <ClockCounterClockwise color={color as string} />
-          ),
-        }}
-      />
+      {/* Hidden from the tab bar until the Match History feature ships */}
+      <Tabs.Screen name="matchHistory" options={{ href: null }} />
       <Tabs.Screen
         name="freeAgents"
         options={{
@@ -57,13 +44,8 @@ const HomeLayout = () => (
           tabBarIcon: ({ color }) => <ListBullets color={color as string} />,
         }}
       />
-      <Tabs.Screen
-        name="leaderboard"
-        options={{
-          title: "Leaderboard",
-          tabBarIcon: ({ color }) => <Ranking color={color as string} />,
-        }}
-      />
+      {/* Hidden from the tab bar until the Leaderboard feature ships */}
+      <Tabs.Screen name="leaderboard" options={{ href: null }} />
     </Tabs>
   </SafeAreaView>
 );
