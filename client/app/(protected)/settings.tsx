@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
@@ -17,8 +18,10 @@ import { useSignOut } from "@/hooks/useSignOut";
 import {
   deleteAccount,
   getAccountDeletionErrorMessage,
+  isExpectedAccountDeletionError,
   isPasswordUser,
 } from "@/utils/accountUtils";
+import { cn } from "@/utils/jsUtils";
 
 const Settings = () => {
   const { signOut, clearSessionAndExit } = useSignOut();
@@ -49,7 +52,12 @@ const Settings = () => {
     } catch (error) {
       const message = getAccountDeletionErrorMessage(error);
       if (message) {
-        console.error("Account deletion error:", error);
+        if (isExpectedAccountDeletionError(error)) {
+          console.log("Account deletion failed:", error);
+        } else {
+          console.error("Account deletion error:", error);
+        }
+        setPassword("");
         Alert.alert("Couldn't delete account", message);
       }
     } finally {
@@ -77,6 +85,13 @@ const Settings = () => {
         },
       ],
     );
+  };
+
+  const isPasswordDeleteDisabled = isDeleting || !password;
+
+  const handlePasswordSubmit = () => {
+    if (isPasswordDeleteDisabled) return;
+    runDeletion(password);
   };
 
   const closePasswordPrompt = () => {
@@ -135,50 +150,63 @@ const Settings = () => {
         transparent
         visible={showPasswordPrompt}
       >
-        <KeyboardAvoidingView
-          behavior="padding"
-          className="flex-1 items-center justify-center bg-black/70 px-6"
-        >
-          <View className="w-full gap-4 rounded-xl bg-gray-920 p-6">
-            <Text className="pbk-h6 text-base-white">Confirm password</Text>
-            <Text className="pbk-b2 text-gray-400">
-              Enter your password to permanently delete your account.
-            </Text>
-            <View className="min-h-14 w-full flex-row items-center rounded-xl border border-gray-800 px-2 py-2">
-              <TextInput
-                autoCapitalize="none"
-                autoFocus
-                className="flex-1 text-base-white placeholder:pbk-b1"
-                editable={!isDeleting}
-                onChangeText={setPassword}
-                onSubmitEditing={() => password && runDeletion(password)}
-                placeholder="Enter password"
-                placeholderTextColor="gray"
-                secureTextEntry
-                textContentType="password"
-                value={password}
+        <KeyboardAvoidingView behavior="padding" className="flex-1 bg-black/70">
+          <ScrollView
+            contentContainerClassName="grow items-center justify-center px-6"
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="w-full gap-4 rounded-xl bg-gray-920 p-6">
+              <Text className="pbk-h6 text-base-white">Confirm password</Text>
+              <Text className="pbk-b2 text-gray-400">
+                Enter your password to permanently delete your account.
+              </Text>
+              <View className="min-h-14 w-full flex-row items-center rounded-xl border border-gray-800 px-2 py-2">
+                <TextInput
+                  autoCapitalize="none"
+                  autoFocus
+                  className="flex-1 text-base-white placeholder:pbk-b1"
+                  editable={!isDeleting}
+                  onChangeText={setPassword}
+                  onSubmitEditing={handlePasswordSubmit}
+                  placeholder="Enter password"
+                  placeholderTextColor="gray"
+                  returnKeyType="done"
+                  secureTextEntry
+                  textContentType="password"
+                  value={password}
+                />
+              </View>
+              <Pressable
+                className={cn(
+                  "min-h-12 w-full items-center justify-center rounded-md",
+                  isPasswordDeleteDisabled ? "bg-red-900" : "bg-red-600",
+                )}
+                disabled={isPasswordDeleteDisabled}
+                onPress={handlePasswordSubmit}
+              >
+                {isDeleting ? (
+                  <Spinner />
+                ) : (
+                  <Text
+                    className={cn(
+                      "pbk-h7 text-center uppercase",
+                      isPasswordDeleteDisabled
+                        ? "text-gray-400"
+                        : "text-base-white",
+                    )}
+                  >
+                    Delete account
+                  </Text>
+                )}
+              </Pressable>
+              <Button
+                disabled={isDeleting}
+                label="Cancel"
+                onPress={closePasswordPrompt}
+                variant="secondary"
               />
             </View>
-            <Pressable
-              className="min-h-12 w-full items-center justify-center rounded-md bg-red-600"
-              disabled={isDeleting || !password}
-              onPress={() => runDeletion(password)}
-            >
-              {isDeleting ? (
-                <Spinner />
-              ) : (
-                <Text className="pbk-h7 text-center uppercase text-base-white">
-                  Delete account
-                </Text>
-              )}
-            </Pressable>
-            <Button
-              disabled={isDeleting}
-              label="Cancel"
-              onPress={closePasswordPrompt}
-              variant="secondary"
-            />
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
     </Screen>

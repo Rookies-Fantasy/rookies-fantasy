@@ -164,6 +164,21 @@ const getErrorCode = (error: unknown): string =>
     ? error.code
     : "";
 
+// Auth errors the user can resolve themselves (e.g. a mistyped password).
+// These are shown in an alert and are not logged as errors.
+const EXPECTED_DELETION_ERROR_CODES = [
+  "auth/wrong-password",
+  "auth/invalid-credential",
+  "auth/too-many-requests",
+  "auth/requires-recent-login",
+  "auth/network-request-failed",
+  "auth/user-mismatch",
+];
+
+/** True when a deleteAccount error is a known, user-recoverable auth error. */
+export const isExpectedAccountDeletionError = (error: unknown): boolean =>
+  EXPECTED_DELETION_ERROR_CODES.includes(getErrorCode(error));
+
 /**
  * Maps a deleteAccount error to a user-facing message.
  * Returns null when the error was a user cancellation and should be ignored.
