@@ -1,7 +1,19 @@
 import { Augment, Prerequisite, Condition } from "@/types/augment";
 import { GameStats } from "@/types/matchup";
-import { Player } from "@/types/player";
-import { TeamLineupSlot } from "@/types/team";
+import {
+  defaultAverageStats,
+  defaultPlayer,
+  Player,
+  PlayerAverageStats,
+} from "@/types/player";
+import {
+  Position,
+  PLAYER_POSITIONS,
+  PlayerTeamDisplay,
+  SlotPosition,
+  TeamLineupSlot,
+} from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
 
 const STAT_MULTIPLIERS: Record<string, number> = {
   points: 1,
@@ -33,8 +45,9 @@ export const validateAugment = (
   }
 
   const activePlayers = lineup
-    .filter((slot) => slot.player !== null)
-    .map((slot) => slot.player as Player);
+    .map((slot) => slot.player)
+    .filter(isNotNil)
+    .map(toAugmentPlayer);
 
   const unmetPrerequisites: string[] = [];
   const metPrerequisites: string[] = [];
@@ -73,6 +86,25 @@ export const validateAugment = (
     metPrerequisites,
   };
 };
+
+// Lineup players come straight from the saved team in Firestore and may be
+// missing averageStats (e.g. players with no games played). Fill them with
+// zeros so stat-based prerequisites never read from a missing object.
+const isPlayerPosition = (position: SlotPosition): position is Position =>
+  PLAYER_POSITIONS.includes(position as Position);
+
+const toPlayerPositions = (positions: SlotPosition[]): Position[] =>
+  positions.filter(isPlayerPosition);
+
+const toAugmentPlayer = (player: PlayerTeamDisplay | Player): Player => ({
+  ...defaultPlayer,
+  ...player,
+  positions: toPlayerPositions(player.positions),
+  averageStats: {
+    ...defaultAverageStats,
+    ...("averageStats" in player ? player.averageStats : defaultAverageStats),
+  },
+});
 
 const evaluatePrerequisite = (
   prerequisite: Prerequisite,
@@ -228,22 +260,31 @@ export const applyAugmentEffects = (
   return baseFantasyPoints + totalBonus;
 };
 
-const getStatValue = (stats: GameStats, stat: string): number => {
+type StatLine = GameStats | PlayerAverageStats;
+
+// Stats can be missing or partial in Firestore data despite the type, so
+// any missing stat is read as 0 rather than crashing.
+const getStatValue = (
+  stats: Partial<StatLine> | null | undefined,
+  stat: string,
+): number => {
+  const safeStats: PlayerAverageStats = { ...defaultAverageStats, ...stats };
+
   switch (stat) {
     case "points":
-      return stats.points;
+      return safeStats.points;
     case "rebounds":
-      return stats.rebounds;
+      return safeStats.rebounds;
     case "assists":
-      return stats.assists;
+      return safeStats.assists;
     case "steals":
-      return stats.steals;
+      return safeStats.steals;
     case "blocks":
-      return stats.blocks;
+      return safeStats.blocks;
     case "turnovers":
-      return stats.turnovers;
+      return safeStats.turnovers;
     case "minutes":
-      return stats.minutes;
+      return safeStats.minutes;
     // TODO: Add support for FG%, FT%, 3P%, FGA, FGM, FTA, FTM, 3PA, 3PM
     default:
       return 0;
