@@ -101,7 +101,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       googleServicesFile: getGoogleServicesFile(),
       bundleIdentifier: bundleIdentifier,
-      supportsTablet: true,
+      supportsTablet: false,
+      usesAppleSignIn: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
