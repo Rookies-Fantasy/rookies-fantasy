@@ -81,7 +81,7 @@ const SSOButtons = () => {
       if (provider === LoginProvider.Apple) {
         Alert.alert(
           "Sign in failed",
-          "We couldn't sign you in with Apple. Please try again.",
+          "We couldn't sign you in with Apple. Make sure you're signed in to your Apple Account in Settings, then try again.",
         );
       }
     }
