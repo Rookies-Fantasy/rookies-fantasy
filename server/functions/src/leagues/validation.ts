@@ -3,6 +3,7 @@ import {
   JoinLeagueInput,
   JsonValue,
   LeagueDocument,
+  LeagueStandingTeam,
   BUDGET_STEP,
   MAX_BUDGET,
   MAX_LEAGUE_NAME_LENGTH,
@@ -10,10 +11,11 @@ import {
   MIN_BUDGET,
   MIN_TEAMS,
   TEAMS_STEP,
+  TeamRecord,
   RawPayload,
 } from "./types";
 
-type InputValidation<TInput> =
+export type InputValidation<TInput> =
   | { valid: true; input: TInput }
   | { valid: false; message: string };
 
@@ -199,3 +201,51 @@ export const evaluateJoinEligibility = (
 
   return { allowed: true };
 };
+
+// Validates the `leagueId` query parameter of getLeagueStandings.
+export const validateLeagueId = (value: JsonValue): InputValidation<string> => {
+  const leagueId = readDocumentId(value);
+  if (leagueId === null) {
+    return { valid: false, message: idErrorMessage("leagueId") };
+  }
+
+  return { valid: true, input: leagueId };
+};
+
+const toStringOrEmpty = (value: JsonValue): string =>
+  typeof value === "string" ? value : "";
+
+const toCount = (value: JsonValue): number =>
+  isFiniteNumber(value) && value >= 0 ? value : 0;
+
+const isPayload = (value: JsonValue): value is RawPayload =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const EMPTY_RECORD: TeamRecord = { wins: 0, losses: 0, draws: 0 };
+
+const toTeamRecord = (value: JsonValue): TeamRecord => {
+  if (!isPayload(value)) {
+    return EMPTY_RECORD;
+  }
+
+  return {
+    wins: toCount(value.wins),
+    losses: toCount(value.losses),
+    draws: toCount(value.draws),
+  };
+};
+
+export const toStandingTeam = (
+  id: string,
+  data: RawPayload,
+): LeagueStandingTeam => ({
+  id,
+  name: toStringOrEmpty(data.name),
+  logoUrl: toStringOrEmpty(data.logoUrl),
+  record: toTeamRecord(data.record),
+});
+
+export const isLeagueMember = (
+  league: LeagueDocument,
+  userId: string,
+): boolean => userId.length > 0 && league.userIds.includes(userId);

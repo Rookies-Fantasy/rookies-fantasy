@@ -1,6 +1,6 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
-import { TEAM_BALANCE } from "../../../client/types/team.js";
+import { TEAM_BALANCE, type TeamRecord } from "../../../client/types/team.js";
 import { DEFAULT_AUGMENTS } from "../data/augments.js";
 import { DEFAULT_NBA_PLAYERS } from "../data/nbaPlayers.js";
 import { DEFAULT_NBA_TEAMS } from "../data/nbaTeams.js";
@@ -118,7 +118,11 @@ export const createLeagueReadyScenario = async (
   });
 
   let lineupOffset = 1;
-  const toMember = (leagueUser: LeagueUser, teamId: string): LeagueMember => {
+  const toMember = (
+    leagueUser: LeagueUser,
+    teamId: string,
+    record: TeamRecord = { wins: 0, losses: 0, draws: 0 },
+  ): LeagueMember => {
     const lineup = buildLineup(playerPool, lineupOffset % playerPool.length);
     lineupOffset += 1;
 
@@ -133,6 +137,7 @@ export const createLeagueReadyScenario = async (
         augmentId: seedAugment.id,
         balance: TEAM_BALANCE - getLineupSalary(lineup),
         lineup,
+        record,
       },
     };
   };
@@ -141,10 +146,23 @@ export const createLeagueReadyScenario = async (
     leagueId: FULL_LEAGUE_ID,
     creatorUserId: dev.id,
     members: [
-      toMember(dev, `${FULL_LEAGUE_ID}-user`),
-      toMember(opp, `${FULL_LEAGUE_ID}-opponent`),
-      toMember(one, `${FULL_LEAGUE_ID}-member-1`),
-      toMember(two, `${FULL_LEAGUE_ID}-member-2`),
+      // Distinct records so standings has an order, with the user in second.
+      toMember(dev, `${FULL_LEAGUE_ID}-user`, { wins: 4, losses: 2, draws: 0 }),
+      toMember(opp, `${FULL_LEAGUE_ID}-opponent`, {
+        wins: 5,
+        losses: 1,
+        draws: 0,
+      }),
+      toMember(one, `${FULL_LEAGUE_ID}-member-1`, {
+        wins: 2,
+        losses: 3,
+        draws: 1,
+      }),
+      toMember(two, `${FULL_LEAGUE_ID}-member-2`, {
+        wins: 1,
+        losses: 5,
+        draws: 0,
+      }),
     ],
     document: { name: "Full League", numberOfTeams: 4 },
   });
