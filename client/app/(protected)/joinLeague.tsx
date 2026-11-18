@@ -28,7 +28,6 @@ import Button from "@/components/Button";
 import { PressableLink } from "@/components/PressableLink";
 import Screen from "@/components/Screen";
 import { LeagueController } from "@/controllers/leagueController";
-import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   selectCurrentLeague,
@@ -38,9 +37,16 @@ import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 
 const joinLeagueSchema = yup.object({
-  teamName: yup.string().required("Team Name is required"),
+  // Trimmed and capped to match validateJoinLeagueInput on the server, so the
+  // form rejects what the server would rather than surfacing it as an alert.
+  teamName: yup
+    .string()
+    .trim()
+    .required("Team Name is required")
+    .max(50, "Team Name must be at most 50 characters"),
   abbreviation: yup
     .string()
+    .trim()
     .required("Team Abbreviation is required")
     .length(3, "Team Abbreviation must be exactly 3 characters"),
   logoUrl: yup
@@ -58,7 +64,6 @@ type JoinLeagueFormData = yup.InferType<typeof joinLeagueSchema>;
 const SWIPE_THRESHOLD = 50;
 
 const JoinLeague = () => {
-  const userId = useAppSelector((state) => state.user.id);
   const dispatch = useAppDispatch();
   const { width: screenWidth } = useWindowDimensions();
 
@@ -176,32 +181,16 @@ const JoinLeague = () => {
 
     setIsLoading(true);
     try {
-      const teamId = await UserController.addUserTeam(userId, {
-        name: data.teamName,
+      const { league, team } = await LeagueController.joinLeague(leagueId, {
+        teamName: data.teamName,
         abbreviation: data.abbreviation,
         logoUrl: data.logoUrl,
-        isLeagueTeam: true,
-        balance: currentLeague.budget,
       });
 
-      const teamData = await UserController.getUserTeam(userId, teamId);
-      if (teamData) {
-        dispatch(
-          setTeam({
-            id: teamData.id,
-            name: teamData.name,
-            abbreviation: teamData.abbreviation,
-            logoUrl: teamData.logoUrl,
-            lineup: teamData.lineup,
-            bench: teamData.bench,
-            balance: teamData.balance,
-            isLeagueTeam: teamData.isLeagueTeam,
-          }),
-        );
-      }
-
-      const joinedLeague = await LeagueController.joinLeague(leagueId, teamId);
-      dispatch(setCurrentLeague(joinedLeague));
+      // Only touch Redux once the join has committed, so a failed join leaves
+      // the previously selected team and league in place.
+      dispatch(setTeam(team));
+      dispatch(setCurrentLeague(league));
 
       router.replace("/(protected)/(tabs)");
     } catch (error) {

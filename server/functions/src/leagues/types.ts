@@ -28,9 +28,18 @@ export type CreateLeagueInput = {
   initialTeamId: string;
 };
 
+// The team the caller is joining with. It does not exist yet: joinLeague
+// creates it in the same transaction that adds it to the league, so a rejected
+// join never leaves a team document behind.
+export type NewLeagueTeam = {
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+};
+
 export type JoinLeagueInput = {
   leagueId: string;
-  teamId: string;
+  team: NewLeagueTeam;
 };
 
 // The league rules. These mirror the form constants and yup schema in
@@ -43,3 +52,9 @@ export const MIN_BUDGET = 150_000_000;
 export const MAX_BUDGET = 250_000_000;
 export const BUDGET_STEP = 25_000_000;
 export const MAX_LEAGUE_NAME_LENGTH = 50;
+
+// The team rules, mirroring the yup schema in
+// `client/app/(protected)/joinLeague.tsx`.
+export const TEAM_ABBREVIATION_LENGTH = 3;
+export const MAX_TEAM_NAME_LENGTH = 50;
+export const MAX_LOGO_URL_LENGTH = 2048;
