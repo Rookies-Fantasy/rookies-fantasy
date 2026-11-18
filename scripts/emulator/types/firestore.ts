@@ -1,0 +1,59 @@
+import type { Augment } from "../../../client/types/augment.js";
+import type {
+  LineupSnapshotItem,
+  Matchup,
+  TeamSnapshot,
+} from "../../../client/types/matchup.js";
+import type {
+  PlayerTeamDisplay,
+  Team,
+  TeamLineupSlot,
+} from "../../../client/types/team.js";
+
+export type UserDoc = {
+  id: string;
+  email: string;
+  emailVerified: boolean;
+  avatarUrl?: string;
+  dateOfBirth?: Date;
+  username?: string;
+  queueStatus: "idle" | "queued" | "matched";
+  teamId?: string;
+  currentMatchupId?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type TeamDoc = Team & {
+  createdAt: Date;
+  updatedAt: Date;
+  matchupId?: string | null;
+  augment?: Augment;
+};
+
+export type MatchupDoc = Omit<Matchup, "createdAt"> & {
+  createdAt: Date;
+  homeTeamSnapshot: TeamSnapshot;
+  awayTeamSnapshot: TeamSnapshot;
+  homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
+  awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
+};
+
+export type PlayerDoc = PlayerTeamDisplay & {
+  gamesPlayed: number;
+  averageStats: {
+    assists: number;
+    blocks: number;
+    fantasyPoints: number;
+    minutes: number;
+    points: number;
+    rebounds: number;
+    steals: number;
+    turnovers: number;
+  };
+  height: string;
+  jerseyNumber: string;
+  teamId: string;
+};
+
+export type TeamLineupDoc = TeamLineupSlot;
