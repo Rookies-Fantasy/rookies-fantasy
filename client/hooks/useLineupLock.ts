@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchEarliestGameStartTime } from "@/controllers/ballDontLieController";
 import { useCountdown } from "@/hooks/useCountdown";
+import { LineupLockState, ScheduleState } from "@/types/schedule";
 import { getMidnightPdtFromDate } from "@/utils/dateUtils";
 
 type UseLineupLockArgs = {
@@ -17,10 +18,12 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
       : now.toISOString().split("T")[0];
   }, [matchupStartDate]);
 
-  const [earliestStartTime, setEarliestStartTime] = useState<string>();
-  const [error, setError] = useState<string | null>(null);
+  const [schedule, setSchedule] = useState<ScheduleState>({
+    status: "loading",
+  });
 
   useEffect(() => {
+    setSchedule({ status: "loading" });
     if (!apiDate) return;
 
     let cancelled = false;
@@ -29,16 +32,16 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
       try {
         const startTime = await fetchEarliestGameStartTime(apiDate);
         if (!cancelled) {
-          setEarliestStartTime(startTime);
-          setError(null);
+          setSchedule(
+            startTime === null
+              ? { status: "no-games" }
+              : { status: "scheduled", startTime },
+          );
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Failed to fetch game schedule",
-          );
+          console.error("Unable to load game schedule:", err);
+          setSchedule({ status: "error" });
         }
       }
     };
@@ -50,6 +53,8 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
     };
   }, [apiDate]);
 
+  const earliestStartTime =
+    schedule.status === "scheduled" ? schedule.startTime : null;
   const now = new Date();
   const endOfGameDayPdt = apiDate
     ? getMidnightPdtFromDate(apiDate)
@@ -66,12 +71,20 @@ export const useLineupLock = ({ matchupStartDate }: UseLineupLockArgs) => {
     now < endOfGameDayPdt;
 
   const countdown = useCountdown(
-    isLineupLocked ? undefined : earliestStartTime,
+    isLineupLocked ? undefined : (earliestStartTime ?? undefined),
   );
+
+  let state: LineupLockState = { status: "loading" };
+  if (isLineupLocked) {
+    state = { status: "locked" };
+  } else if (schedule.status !== "scheduled") {
+    state = schedule;
+  } else if (countdown) {
+    state = { status: "scheduled", countdown };
+  }
 
   return {
     isLineupLocked,
-    countdown,
-    error,
+    state,
   };
 };
