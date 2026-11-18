@@ -43,7 +43,7 @@ export type LineupSnapshotItem = {
   playerSnapshot: PlayerSnapshot;
 };
 
-export type Matchup = {
+type MatchupBase = {
   createdAt: string;
   updatedAt?: string;
   id: string;
@@ -54,10 +54,25 @@ export type Matchup = {
   awayTeamId: string;
   homeUserId: string;
   awayUserId: string;
-  status: "active" | "completed";
   awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
   awayScore?: number;
   homeScore?: number;
   winnerId?: string;
 };
+
+export type RankedMatchup = MatchupBase & {
+  leagueId: null;
+  status: "active" | "completed";
+};
+
+export type LeagueMatchupPhase = "regular" | "playoff";
+
+export type LeagueMatchup = MatchupBase & {
+  leagueId: string;
+  week: number;
+  phase: LeagueMatchupPhase;
+  status: "scheduled" | "active" | "completed";
+};
+
+export type Matchup = RankedMatchup | LeagueMatchup;
