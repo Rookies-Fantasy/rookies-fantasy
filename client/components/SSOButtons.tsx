@@ -1,11 +1,17 @@
-import { Pressable, View, Text } from "react-native";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { AppleLogo } from "phosphor-react-native";
+import { Alert, Platform, Pressable, View, Text } from "react-native";
 import GoogleLogo from "@/assets/icons/google.svg";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch } from "@/state/hooks";
 import { setTeam } from "@/state/slices/teamSlice";
 import { setUser } from "@/state/slices/userSlice";
 import { LoginProvider } from "@/types/providers";
-import { signInWithGoogle } from "@/utils/authUtils";
+import {
+  isAppleSignInSupported,
+  signInWithApple,
+  signInWithGoogle,
+} from "@/utils/authUtils";
 import { isNotNil } from "@/utils/jsUtils";
 
 type ProviderConfig = {
@@ -14,42 +20,70 @@ type ProviderConfig = {
   icon: React.ReactNode;
 };
 
-const PROVIDERS: ProviderConfig[] = [
-  {
-    id: LoginProvider.Google,
-    label: "Continue with Google",
-    icon: <GoogleLogo height={20} width={20} />,
-  },
-  // TODO: Add other providers such as Apple
-];
+const APPLE_PROVIDER: ProviderConfig = {
+  id: LoginProvider.Apple,
+  label: "Continue with Apple",
+  icon: <AppleLogo color="white" size={20} weight="fill" />,
+};
+
+const GOOGLE_PROVIDER: ProviderConfig = {
+  id: LoginProvider.Google,
+  label: "Continue with Google",
+  icon: <GoogleLogo height={20} width={20} />,
+};
+
+const PROVIDERS: ProviderConfig[] =
+  Platform.OS === "ios" && isAppleSignInSupported
+    ? [APPLE_PROVIDER, GOOGLE_PROVIDER]
+    : [GOOGLE_PROVIDER];
+
+const signInWithProvider = async (
+  provider: LoginProvider,
+): Promise<FirebaseAuthTypes.UserCredential | null> => {
+  if (provider === LoginProvider.Apple) {
+    return signInWithApple();
+  }
+  return signInWithGoogle();
+};
 
 const SSOButtons = () => {
   const dispatch = useAppDispatch();
 
   const handleSSOAuthentication = async (provider: LoginProvider) => {
     try {
-      if (provider === LoginProvider.Google) {
-        const { user } = await signInWithGoogle();
+      const credential = await signInWithProvider(provider);
 
-        if (!isNotNil(user.email)) {
-          throw new Error("Verified user has no email");
-        }
+      // User dismissed the sign-in sheet
+      if (!credential) {
+        return;
+      }
 
-        const userData = await UserController.getUser(user.uid);
-        dispatch(setUser(userData));
+      const { user } = credential;
 
-        const teams = await UserController.getUserTeams(user.uid);
-        if (teams?.length > 0) {
-          const firstTeamId = teams[0].id;
-          const teamData = await UserController.getUserTeam(
-            user.uid,
-            firstTeamId,
-          );
-          dispatch(setTeam(teamData));
-        }
+      if (!isNotNil(user.email)) {
+        throw new Error("Verified user has no email");
+      }
+
+      const userData = await UserController.getUser(user.uid);
+      dispatch(setUser(userData));
+
+      const teams = await UserController.getUserTeams(user.uid);
+      if (teams?.length > 0) {
+        const firstTeamId = teams[0].id;
+        const teamData = await UserController.getUserTeam(
+          user.uid,
+          firstTeamId,
+        );
+        dispatch(setTeam(teamData));
       }
     } catch (error) {
       console.log(error);
+      if (provider === LoginProvider.Apple) {
+        Alert.alert(
+          "Sign in failed",
+          "We couldn't sign you in with Apple. Make sure you're signed in to your Apple Account in Settings, then try again.",
+        );
+      }
     }
   };
   return (
