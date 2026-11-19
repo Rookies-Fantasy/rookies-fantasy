@@ -10,6 +10,7 @@ import {
   SlotPosition,
   Team,
   TeamLineupSlot,
+  TeamRecord,
   UTIL_POSITIONS,
 } from "@/types/team";
 import { validateAugment } from "@/utils/augmentUtils";
@@ -120,6 +121,9 @@ const teamSlice = createSlice({
       hasUserChanges: false,
     }),
     clearTeam: () => defaultTeam,
+    setTeamRecord: (state, action: PayloadAction<TeamRecord>) => {
+      state.record = action.payload;
+    },
     addPlayerToLineup: (state, action: PayloadAction<PlayerTeamDisplay>) => {
       const player = action.payload;
       const positions = player.positions;
@@ -353,6 +357,7 @@ export const selectTeamLogo = createSelector(
 export const {
   setTeam,
   clearTeam,
+  setTeamRecord,
   addPlayerToLineup,
   removePlayerFromLineup,
   swapPlayersInLineup,

@@ -1,5 +1,5 @@
 import { useFocusEffect } from "expo-router";
-import { Empty, MagnifyingGlass } from "phosphor-react-native";
+import { CalendarBlank, Empty, MagnifyingGlass } from "phosphor-react-native";
 import { useCallback, useRef, useState } from "react";
 import { Text, View, Image, Pressable, ScrollView } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
@@ -19,8 +19,13 @@ import { useAppTheme } from "@/theme/ThemeProvider";
 import { defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { GameInfo, GameStats } from "@/types/matchup";
 import { SLOT_ORDER } from "@/types/team";
+import { QueueStatus } from "@/types/user";
 import { formatLocalDate } from "@/utils/dateUtils";
 import { isNil, isNotNil } from "@/utils/jsUtils";
+import {
+  formatMatchupStartLabel,
+  getMatchupWeekPhase,
+} from "@/utils/matchupUtils";
 
 type LiveData = Record<
   string,
@@ -76,7 +81,10 @@ const Arena = () => {
   const [liveHomeData, setLiveHomeData] = useState<LiveData>({});
 
   const currentWeekDates = getCurrentWeekDates();
-  const isQueuing = queueStatus === "queued";
+  const isQueuing = queueStatus === QueueStatus.Queued;
+  const matchupWeekPhase = isNotNil(matchup)
+    ? getMatchupWeekPhase(matchup.weekStart, currentWeekDates[0])
+    : null;
   const isHomeUser = matchup?.homeUserId === userId;
   const homeSnapshotLineup = matchup?.homeLineupSnapshots[selectedDate] ?? [];
   const awaySnapshotLineup = matchup?.awayLineupSnapshots[selectedDate] ?? [];
@@ -235,7 +243,7 @@ const Arena = () => {
         dates={currentWeekDates}
         onDateChange={setSelectedDate}
       />
-      {isQueuing && (
+      {isNil(matchup) && isQueuing && (
         <View className="flex-1 items-center gap-2 px-4 pt-10">
           <MagnifyingGlass
             color={`rgb(${themes[theme][mode].modeContrast})`}
@@ -245,33 +253,47 @@ const Arena = () => {
             Searching for an Opponent
           </Text>
           <Text className="pbk-b2 text-center text-modeContrast">
-            {`You're in the queue — finding you a worthy opponent. Shouldn't take long!`}
+            {`You're in the queue. We'll match you as soon as another player queues up. You can leave the queue from My Team.`}
           </Text>
         </View>
       )}
-      {isNil(matchup) && (
+      {isNil(matchup) && !isQueuing && (
         <View className="flex-1 items-center gap-2 px-4 pt-10">
           <Empty color={`rgb(${themes[theme][mode].modeContrast})`} size={32} />
           <Text className="pbk-h8 text-center text-modeContrast">
             No Matchup Yet
           </Text>
           <Text className="pbk-b2 text-center text-modeContrast">
-            {`You're not playing against anyone this week. Queue up to get matched up and compete!`}
+            {`You're not playing anyone right now. Fill your lineup on My Team and tap Queue to get matched.`}
           </Text>
         </View>
       )}
-      {isNotNil(matchup) && matchup.weekStart !== currentWeekDates[0] && (
+      {isNotNil(matchup) && matchupWeekPhase === "upcoming" && (
+        <View className="flex-1 items-center gap-2 px-4 pt-10">
+          <CalendarBlank
+            color={`rgb(${themes[theme][mode].modeContrast})`}
+            size={32}
+          />
+          <Text className="pbk-h8 text-center text-modeContrast">
+            Your Matchup Starts {formatMatchupStartLabel(matchup.weekStart)}
+          </Text>
+          <Text className="pbk-b2 text-center text-modeContrast">
+            {`You're matched! Scoring starts Monday and runs through Sunday. Set your lineup on My Team before then.`}
+          </Text>
+        </View>
+      )}
+      {isNotNil(matchup) && matchupWeekPhase === "ended" && (
         <View className="flex-1 items-center gap-2 px-4 pt-10">
           <Empty color={`rgb(${themes[theme][mode].modeContrast})`} size={32} />
           <Text className="pbk-h8 text-center text-modeContrast">
-            Check in Next Week!
+            Matchup Complete
           </Text>
           <Text className="pbk-b2 text-center text-modeContrast">
-            {`You're matched up against an opponent! However, your match is next week. Please come back next week!`}
+            Your matchup week has ended. Final results will be posted shortly.
           </Text>
         </View>
       )}
-      {isNotNil(matchup) && matchup.weekStart === currentWeekDates[0] && (
+      {isNotNil(matchup) && matchupWeekPhase === "current" && (
         <ScrollView
           className="mx-4 w-full flex-1"
           contentContainerStyle={{ paddingVertical: 20 }}

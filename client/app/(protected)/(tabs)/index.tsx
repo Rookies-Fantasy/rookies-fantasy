@@ -21,7 +21,6 @@ import RosterDrawer from "@/components/RosterDrawer";
 import Spinner from "@/components/Spinner";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
-import { getBackendMode } from "@/firebase/config";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   clearCurrentLeague,
@@ -39,8 +38,6 @@ import { SlotPosition } from "@/types/team";
 import { QueueStatus } from "@/types/user";
 import { cn, isNotNil } from "@/utils/jsUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
-
-const QUEUE_ENABLED = getBackendMode() === "emulator";
 
 const MyTeam = () => {
   const router = useRouter();
@@ -185,7 +182,7 @@ const MyTeam = () => {
                 />
               </View>
             </ScrollView>
-            {QUEUE_ENABLED && !isMatched && !team.hasUserChanges && (
+            {!isMatched && !team.hasUserChanges && (
               <FloatingActionButton
                 buttonBackground={cn(
                   "px-4",
