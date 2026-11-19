@@ -35,6 +35,7 @@ import {
 } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { allowedNameTest } from "@/utils/nameModeration";
 
 const joinLeagueSchema = yup.object({
   // Trimmed and capped to match validateJoinLeagueInput on the server, so the
@@ -43,12 +44,14 @@ const joinLeagueSchema = yup.object({
     .string()
     .trim()
     .required("Team Name is required")
-    .max(50, "Team Name must be at most 50 characters"),
+    .max(50, "Team Name must be at most 50 characters")
+    .test(allowedNameTest),
   abbreviation: yup
     .string()
     .trim()
     .required("Team Abbreviation is required")
-    .length(3, "Team Abbreviation must be exactly 3 characters"),
+    .length(3, "Team Abbreviation must be exactly 3 characters")
+    .test(allowedNameTest),
   logoUrl: yup
     .string()
     .required("Logo is required")
