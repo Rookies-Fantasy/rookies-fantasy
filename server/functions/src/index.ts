@@ -4,6 +4,9 @@ import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
 import { completeMatchup } from "./matchups/completeMatchup";
+import { pairQueuedUsers } from "./matchups/processQueue";
+import { writeDailyMatchupSnapshots } from "./matchups/dailySnapshots";
+import { getDailyScoringTarget, isMatchupWeekOver } from "./utils/dates";
 
 admin.initializeApp();
 
@@ -32,12 +35,6 @@ type LiveData = Record<
     gameStats: GameStats;
   }
 >;
-
-type TeamRecord = {
-  wins: number;
-  losses: number;
-  draws: number;
-};
 
 type Position = "PG" | "SG" | "SF" | "PF" | "C";
 type FlexPosition = "UTIL1" | "UTIL2" | "UTIL3";
@@ -69,36 +66,9 @@ type PlayerSnapshot = {
   gameInfo: GameInfo;
 };
 
-type TeamSnapshot = {
-  name: string;
-  logoUrl: string;
-  record: TeamRecord;
-  lineup: TeamLineupSlot[];
-  augmentSnapshot?: any;
-  score?: number;
-};
-
 type LineupSnapshotItem = {
   position: TeamPosition;
   playerSnapshot: PlayerSnapshot;
-};
-
-type Matchup = {
-  createdAt: Date;
-  id: string;
-  weekStart: string;
-  homeTeamSnapshot: TeamSnapshot;
-  awayTeamSnapshot: TeamSnapshot;
-  homeTeamId: string;
-  awayTeamId: string;
-  homeUserId: string;
-  awayUserId: string;
-  status: "active" | "completed";
-  awayLineupSnapshots: Record<string, LineupSnapshotItem[]>;
-  homeLineupSnapshots: Record<string, LineupSnapshotItem[]>;
-  awayScore?: number;
-  homeScore?: number;
-  winnerId?: string;
 };
 
 const apiKey = process.env.BALLDONTLIE_API_KEY || "";
@@ -297,15 +267,12 @@ export const updateDailyPlayerData = functions
     // =======================================
     // ====== FETCH DAILY GAMELOG STATS ======
     // =======================================
-    // Subtract 1 day to get "yesterday" in PDT
-    pacificNow.setDate(pacificNow.getDate() - 1);
+    // The job runs after midnight PT and scores yesterday's (PT) games. They
+    // belong to yesterday's date and to the matchup week containing it, so
+    // Sunday's games count toward the week that is ending.
+    const scoringTarget = getDailyScoringTarget(now);
 
-    const yyyy = pacificNow.getFullYear();
-    const mm = String(pacificNow.getMonth() + 1).padStart(2, "0");
-    const dd = String(pacificNow.getDate()).padStart(2, "0");
-    const formattedDate = `${yyyy}-${mm}-${dd}`;
-
-    const gamelogUrl = `https://api.balldontlie.io/v1/stats?dates[]=${formattedDate}`;
+    const gamelogUrl = `https://api.balldontlie.io/v1/stats?dates[]=${scoringTarget.gameDate}`;
 
     const gamelogData = await fetchAllPagesFromUrl(gamelogUrl, apiKey);
 
@@ -403,71 +370,6 @@ export const updateDailyPlayerData = functions
       opCount = result.count;
     }
 
-    // === UPDATE MATCHUPS COLLECTION ===
-    const weekStartDate = getThisMondayString();
-    const today = formatDate(new Date());
-    const matchupSnapshot = await admin
-      .firestore()
-      .collection("matchups")
-      .where("weekStart", "==", weekStartDate)
-      .get();
-
-    for (const matchupDoc of matchupSnapshot.docs) {
-      const matchupData = matchupDoc.data();
-
-      // Save the current state of the lineups and players to the history. These are immutable snapshots
-      const awayAugment = matchupData.awayTeamSnapshot?.augmentSnapshot;
-      const homeAugment = matchupData.homeTeamSnapshot?.augmentSnapshot;
-
-      const [homeTeamDoc, awayTeamDoc] = await Promise.all([
-        admin
-          .firestore()
-          .doc(
-            `users/${matchupData.homeUserId}/teams/${matchupData.homeTeamId}`,
-          )
-          .get(),
-        admin
-          .firestore()
-          .doc(
-            `users/${matchupData.awayUserId}/teams/${matchupData.awayTeamId}`,
-          )
-          .get(),
-      ]);
-
-      const homeLineup = homeTeamDoc.exists ? homeTeamDoc.data()?.lineup : {};
-      const awayLineup = awayTeamDoc.exists ? awayTeamDoc.data()?.lineup : {};
-
-      console.log("Processing matchup with augments:", {
-        docId: matchupDoc.id,
-        awayAugment: awayAugment?.title,
-        homeAugment: homeAugment?.title,
-      });
-
-      const awayLineupSnapshotsField = `awayLineupSnapshots.${today}`;
-      const homeLineupSnapshotsField = `homeLineupSnapshots.${today}`;
-
-      batch.set(
-        matchupDoc.ref,
-        {
-          [awayLineupSnapshotsField]: getLineupSnapshot(
-            awayLineup,
-            gamelogMap,
-            awayAugment,
-          ),
-          [homeLineupSnapshotsField]: getLineupSnapshot(
-            homeLineup,
-            gamelogMap,
-            homeAugment,
-          ),
-        },
-        { merge: true },
-      );
-
-      const result = await commitIfNeeded(batch, opCount, BATCH_LIMIT);
-      batch = result.batch;
-      opCount = result.count;
-    }
-
     if (opCount > 0) {
       console.log("Final commit with remaining operations:", opCount);
       try {
@@ -476,6 +378,26 @@ export const updateDailyPlayerData = functions
       } catch (err) {
         console.error("Final batch commit FAILED:", err);
       }
+    }
+
+    // === UPDATE MATCHUPS COLLECTION ===
+    // Save the current state of the lineups and players to the history. These are immutable snapshots
+    try {
+      const updatedMatchupIds = await writeDailyMatchupSnapshots(
+        admin.firestore(),
+        scoringTarget,
+        (lineup, augment) =>
+          getLineupSnapshot(
+            lineup as TeamLineupSlot[] | null,
+            gamelogMap,
+            augment,
+          ),
+      );
+      console.log(
+        `Wrote ${scoringTarget.gameDate} snapshots to ${updatedMatchupIds.length} matchups in week ${scoringTarget.weekStart}`,
+      );
+    } catch (err) {
+      console.error("Matchup snapshot update FAILED:", err);
     }
 
     console.log("=== Finished updateDailyPlayerData job ===");
@@ -523,15 +445,8 @@ const fetchAllPagesFromUrl = async (url: string, apiKey?: string) => {
   return results;
 };
 
-const formatDate = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
-
 const getLineupSnapshot = (
-  lineup: TeamLineupSlot[],
+  lineup: TeamLineupSlot[] | null,
   gamelogMap: Record<string, any>,
   augment?: any,
 ): LineupSnapshotItem[] => {
@@ -879,207 +794,30 @@ export const processQueue = functions
     const before = change.before.data();
     const after = change.after.data();
 
-    if (before.queueStatus !== "queued" && after.queueStatus === "queued") {
-      try {
-        await admin.firestore().runTransaction(async (transaction) => {
-          const waitingUsers = await transaction.get(
-            admin
-              .firestore()
-              .collection("users")
-              .where("queueStatus", "==", "queued")
-              .orderBy("queuedAt", "asc")
-              .limit(2),
-          );
+    if (before.queueStatus === "queued" || after.queueStatus !== "queued") {
+      return;
+    }
 
-          if (waitingUsers.size >= 2) {
-            const [user1, user2] = waitingUsers.docs;
-
-            if (
-              user1.data().queueStatus === "queued" &&
-              user2.data().queueStatus === "queued"
-            ) {
-              const teamId1 = user1.data().teamId;
-              const teamId2 = user2.data().teamId;
-
-              if (!teamId1 || !teamId2) {
-                console.error(
-                  `Cannot create matchup: Missing teamId for user1=${teamId1}, user2=${teamId2}`,
-                );
-                return;
-              }
-
-              transaction.update(user1.ref, {
-                queueStatus: "matching",
-                updatedAt: FieldValue.serverTimestamp(),
-              });
-
-              transaction.update(user2.ref, {
-                queueStatus: "matching",
-                updatedAt: FieldValue.serverTimestamp(),
-              });
-            }
-          }
-        });
-
-        const waitingUsers = await admin
-          .firestore()
-          .collection("users")
-          .where("queueStatus", "==", "matching")
-          .orderBy("queuedAt", "asc")
-          .limit(2)
-          .get();
-
-        if (waitingUsers.size >= 2) {
-          const [user1, user2] = waitingUsers.docs;
-
-          const teamId1 = user1.data().teamId;
-          const teamId2 = user2.data().teamId;
-
-          const matchupId = await createWeeklyMatchup(
-            user1.id,
-            user2.id,
-            teamId1,
-            teamId2,
-          );
-
-          if (!matchupId) {
-            console.error("Failed to create matchup, matchupId is undefined");
-            await Promise.all([
-              user1.ref.update({ queueStatus: "queued" }),
-              user2.ref.update({ queueStatus: "queued" }),
-            ]);
-            return;
-          }
-
-          await Promise.all([
-            user1.ref.update({
-              currentMatchupId: matchupId,
-              queueStatus: "matched",
-              updatedAt: FieldValue.serverTimestamp(),
-            }),
-            user2.ref.update({
-              currentMatchupId: matchupId,
-              queueStatus: "matched",
-              updatedAt: FieldValue.serverTimestamp(),
-            }),
-          ]);
-
-          console.log(
-            `Match created: ${matchupId} between ${user1.id} and ${user2.id}`,
-          );
-        }
-
-        // TODO: Implement push notifications
-      } catch (error) {
-        console.error("Error processing queue:", error);
+    try {
+      const result = await pairQueuedUsers(
+        admin.firestore(),
+        getNextMondayDate,
+      );
+      if (result.status === "matched") {
+        console.log(
+          `Match created: ${result.matchupId} between ${result.userIds.join(" and ")}`,
+        );
+      } else if (result.removedUserIds.length > 0) {
+        console.warn(
+          `Removed invalid queue entries: ${result.removedUserIds.join(", ")}`,
+        );
       }
+
+      // TODO: Implement push notifications
+    } catch (error) {
+      console.error("Error processing queue:", error);
     }
   });
-
-const createWeeklyMatchup = async (
-  userId1: string,
-  userId2: string,
-  teamId1: string,
-  teamId2: string,
-): Promise<string | undefined> => {
-  try {
-    const team1Data = await admin
-      .firestore()
-      .collection("users")
-      .doc(userId1)
-      .collection("teams")
-      .doc(teamId1)
-      .get();
-    const team2Data = await admin
-      .firestore()
-      .collection("users")
-      .doc(userId2)
-      .collection("teams")
-      .doc(teamId2)
-      .get();
-
-    if (!team1Data.exists || !team2Data.exists) {
-      console.error("Team data not found!");
-      return undefined;
-    }
-
-    const team1Info = team1Data.data();
-    const team2Info = team2Data.data();
-
-    if (!team1Info || !team2Info) {
-      console.error("Team info is undefined!");
-      return undefined;
-    }
-
-    const startDate = await getNextMondayDate();
-    const matchupRef = admin.firestore().collection("matchups").doc();
-
-    const [team1Augment, team2Augment] = await Promise.all([
-      getAugmentSnapshot(team1Info.augmentId),
-      getAugmentSnapshot(team2Info.augmentId),
-    ]);
-
-    const matchupData: Matchup = {
-      id: matchupRef.id,
-      createdAt: new Date(),
-      weekStart: startDate,
-      homeTeamId: teamId1,
-      awayTeamId: teamId2,
-      homeUserId: userId1,
-      awayUserId: userId2,
-      awayTeamSnapshot: createTeamSnapshot(team2Info, team2Augment),
-      homeTeamSnapshot: createTeamSnapshot(team1Info, team1Augment),
-      awayLineupSnapshots: {},
-      homeLineupSnapshots: {},
-      status: "active",
-    };
-
-    await matchupRef.set(matchupData);
-    return matchupRef.id;
-  } catch (error) {
-    console.error("Error creating weekly matchup:", error);
-    return undefined;
-  }
-};
-
-const getAugmentSnapshot = async (augmentId?: string) => {
-  if (!augmentId) {
-    return undefined;
-  }
-
-  const augment = await admin
-    .firestore()
-    .collection("augments")
-    .doc(augmentId)
-    .get();
-
-  return augment.exists ? { id: augment.id, ...augment.data() } : undefined;
-};
-
-const createTeamSnapshot = (
-  teamInfo: any,
-  augmentSnapshot?: any,
-): TeamSnapshot => ({
-  logoUrl: teamInfo.logoUrl,
-  name: teamInfo.name,
-  record: teamInfo.record,
-  lineup: teamInfo.lineup,
-  ...(augmentSnapshot ? { augmentSnapshot } : {}),
-});
-
-const getThisMondayString = () => {
-  const today = new Date();
-  const day = today.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Difference to Monday
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + diff);
-
-  const year = monday.getFullYear();
-  const month = String(monday.getMonth() + 1).padStart(2, "0");
-  const date = String(monday.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${date}`;
-};
 
 const getNextMondayDate = async (): Promise<string> => {
   const today = new Date();
@@ -1160,16 +898,23 @@ export const weeklyMatchupReset = functions.pubsub
         .where("status", "==", "active")
         .get();
 
-      console.log(`Found ${activeMatchupsSnapshot.size} active matchups`);
-
-      const matchupUpdates = activeMatchupsSnapshot.docs.map(
-        async (matchupDoc) => {
-          const completed = await completeMatchup(db, matchupDoc);
-          if (completed) {
-            console.log(`Matchup ${matchupDoc.id} completed`);
-          }
-        },
+      // Only complete matchups whose week has ended. Matchups created during
+      // the past week for the week starting today stay active.
+      const now = new Date();
+      const endedMatchups = activeMatchupsSnapshot.docs.filter((matchupDoc) =>
+        isMatchupWeekOver(matchupDoc.data().weekStart, now),
       );
+
+      console.log(
+        `Found ${activeMatchupsSnapshot.size} active matchups, ${endedMatchups.length} from previous weeks`,
+      );
+
+      const matchupUpdates = endedMatchups.map(async (matchupDoc) => {
+        const completed = await completeMatchup(db, matchupDoc);
+        if (completed) {
+          console.log(`Matchup ${matchupDoc.id} completed`);
+        }
+      });
 
       await Promise.all(matchupUpdates);
 
