@@ -1,17 +1,32 @@
 import { Position } from "./team";
 import { NbaTeam } from "@/types/nbaTeams";
 
+export type PlayerAverageStats = {
+  assists: number;
+  blocks: number;
+  fantasyPoints: number;
+  minutes: number;
+  points: number;
+  rebounds: number;
+  steals: number;
+  turnovers: number;
+};
+
+// Some players have no averageStats in Firestore (e.g. no games played yet),
+// so missing stats are treated as zeros.
+export const defaultAverageStats: PlayerAverageStats = {
+  assists: 0,
+  blocks: 0,
+  fantasyPoints: 0,
+  minutes: 0,
+  points: 0,
+  rebounds: 0,
+  steals: 0,
+  turnovers: 0,
+};
+
 export type Player = {
-  averageStats: {
-    assists: number;
-    blocks: number;
-    fantasyPoints: number;
-    minutes: number;
-    points: number;
-    rebounds: number;
-    steals: number;
-    turnovers: number;
-  };
+  averageStats: PlayerAverageStats;
   firstName: string;
   gamesPlayed: number;
   headshotUrl: string;
@@ -51,16 +66,7 @@ export const defaultPlayerFilters: PlayerFilters = {
 
 export const defaultPlayer: Player = {
   id: "",
-  averageStats: {
-    assists: 0,
-    blocks: 0,
-    fantasyPoints: 0,
-    minutes: 0,
-    points: 0,
-    rebounds: 0,
-    steals: 0,
-    turnovers: 0,
-  },
+  averageStats: defaultAverageStats,
   firstName: "",
   gamesPlayed: 0,
   headshotUrl: "",

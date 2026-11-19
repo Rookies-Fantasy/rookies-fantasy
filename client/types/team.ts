@@ -49,6 +49,7 @@ export type BenchPosition = `BEN${number}`;
 export type SlotPosition = Position | FlexPosition | BenchPosition;
 
 export const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
+export const PLAYER_POSITIONS: Position[] = ["PG", "SG", "SF", "PF", "C"];
 
 export const SLOT_ORDER: SlotPosition[] = [
   "PG",
