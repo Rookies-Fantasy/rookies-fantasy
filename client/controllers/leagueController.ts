@@ -1,0 +1,158 @@
+import firestore from "@react-native-firebase/firestore";
+import { League } from "@/types/league";
+import { defaultTeam, Team } from "@/types/team";
+import { callFunction } from "@/utils/callableUtils";
+
+const LEAGUE_COLLECTION = "leagues";
+
+const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
+const JOIN_SIGNED_OUT_ERROR = "You must be signed in to join a league";
+
+export type LeagueEditModel = {
+  name: string;
+  numberOfTeams: number;
+  budget: number;
+  initialTeamId: string;
+};
+
+export type JoinLeagueTeamModel = {
+  teamName: string;
+  abbreviation: string;
+  logoUrl: string;
+};
+
+type JoinedTeamResponse = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+  balance: number;
+  isLeagueTeam: boolean;
+};
+
+export type LeagueTeamInfo = {
+  league: League;
+  team: Team;
+};
+
+export class LeagueController {
+  static getLeaguesByTeamIds = async (
+    teamIds: string[],
+  ): Promise<Map<string, League>> => {
+    if (teamIds.length === 0) return new Map();
+
+    try {
+      const leagues = await firestore()
+        .collection(LEAGUE_COLLECTION)
+        .where("teamIds", "array-contains-any", teamIds)
+        .get();
+
+      const teamToLeague = new Map<string, League>();
+
+      leagues.docs.forEach((doc) => {
+        const data = doc.data();
+        const league: League = {
+          id: doc.id,
+          name: data?.name,
+          numberOfTeams: data?.numberOfTeams,
+          budget: data?.budget,
+          memberCount: data?.memberCount,
+          teamIds: data?.teamIds ?? [],
+          userIds: data.userIds ?? [],
+        };
+
+        (data?.teamIds ?? []).forEach((teamId: string) => {
+          if (teamIds.includes(teamId)) {
+            teamToLeague.set(teamId, league);
+          }
+        });
+      });
+
+      return teamToLeague;
+    } catch (error) {
+      console.error("Error fetching leagues by team IDs:", error);
+      throw error;
+    }
+  };
+
+  static getLeague = async (leagueId: string): Promise<League | null> => {
+    try {
+      const leagueDoc = await firestore()
+        .collection(LEAGUE_COLLECTION)
+        .doc(leagueId)
+        .get();
+
+      if (!leagueDoc.exists()) return null;
+
+      const data = leagueDoc.data();
+      return {
+        id: leagueDoc.id,
+        name: data?.name,
+        numberOfTeams: data?.numberOfTeams,
+        budget: data?.budget,
+        memberCount: data?.memberCount,
+        teamIds: data?.teamIds ?? [],
+        userIds: data?.userIds ?? [],
+      };
+    } catch (error) {
+      console.error("Error fetching league:", error);
+      throw error;
+    }
+  };
+
+  static createLeague = async (params: LeagueEditModel): Promise<League> => {
+    try {
+      const { league } = await callFunction<{ league: League }>(
+        "createLeague",
+        {
+          name: params.name,
+          numberOfTeams: params.numberOfTeams,
+          budget: params.budget,
+          initialTeamId: params.initialTeamId,
+        },
+        CREATE_SIGNED_OUT_ERROR,
+      );
+
+      return league;
+    } catch (error) {
+      console.error("Error creating league:", error);
+      throw error;
+    }
+  };
+
+  // The server creates the team and joins it to the league in one transaction,
+  // so on failure nothing has been written and there is no team to clean up.
+  static joinLeague = async (
+    leagueId: string,
+    team: JoinLeagueTeamModel,
+  ): Promise<LeagueTeamInfo> => {
+    try {
+      const response = await callFunction<{
+        league: League;
+        team: JoinedTeamResponse;
+      }>(
+        "joinLeague",
+        {
+          leagueId,
+          teamName: team.teamName,
+          abbreviation: team.abbreviation,
+          logoUrl: team.logoUrl,
+        },
+        JOIN_SIGNED_OUT_ERROR,
+      );
+
+      return {
+        league: response.league,
+        team: {
+          ...response.team,
+          lineup: defaultTeam.lineup,
+          bench: defaultTeam.bench,
+          record: defaultTeam.record,
+        },
+      };
+    } catch (error) {
+      console.error("Join league error:", error);
+      throw error;
+    }
+  };
+}

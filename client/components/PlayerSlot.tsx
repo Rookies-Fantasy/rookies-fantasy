@@ -1,0 +1,140 @@
+import { useRouter } from "expo-router";
+import { UserPlus, XCircle } from "phosphor-react-native";
+import { View, Text, Pressable, Image } from "react-native";
+import LinearGradient from "react-native-linear-gradient";
+import { iconMap } from "./AugmentCard";
+import IconButton from "./IconButton";
+import PlayerData from "./PlayerData";
+import { useLineupLock } from "@/hooks/useLineupLock";
+import { useAppDispatch, useAppSelector } from "@/state/hooks";
+import { selectMatchup } from "@/state/slices/matchupSlice";
+import {
+  removePlayerFromLineup,
+  selectAugment,
+  selectPlayerQualificationMap,
+} from "@/state/slices/teamSlice";
+import { PlayerTeamDisplay } from "@/types/team";
+import { cn } from "@/utils/jsUtils";
+
+type PlayerSlotProps = {
+  isCard?: boolean;
+  position: string;
+  playerData: PlayerTeamDisplay | null;
+  openDrawer?: () => void;
+  isSelected?: boolean;
+  onPlayerRemove?: () => void;
+};
+
+const PlayerSlot = ({
+  isCard = false,
+  isSelected,
+  position,
+  playerData,
+  openDrawer,
+  onPlayerRemove,
+}: PlayerSlotProps) => {
+  const augmentIconURL = useAppSelector((state) => state.team.augment?.iconUrl);
+  const playerQualificationMap = useAppSelector(selectPlayerQualificationMap);
+  const dispatch = useAppDispatch();
+  const augmentId = useAppSelector(selectAugment);
+  const matchup = useAppSelector(selectMatchup);
+
+  const router = useRouter();
+
+  const boostedPlayer = playerData && playerQualificationMap[playerData.id];
+
+  const { isLineupLocked } = useLineupLock({
+    matchupStartDate: matchup?.weekStart,
+  });
+
+  return (
+    <View className="justify-center">
+      {boostedPlayer && (
+        <LinearGradient
+          colors={["#CCE8FE", "#CDA0FF", "#8489F5", "#CDF1FF", "#B591E9"]}
+          end={{ x: 1, y: 1 }}
+          start={{ x: 0, y: 0 }}
+          style={{
+            position: "absolute",
+            top: -3,
+            right: -3,
+            bottom: -3,
+            left: -3,
+            borderRadius: 16,
+            borderWidth: 1,
+          }}
+        />
+      )}
+      <View
+        className={cn(
+          "min-h-24 flex-row items-center justify-between p-3",
+          isCard && "rounded-2xl border-2 border-gray-900",
+          isSelected ? "bg-gray-900" : "bg-gray-920",
+        )}
+      >
+        <Pressable
+          className="mx-2 flex-1 flex-row items-center gap-2"
+          onPress={() => {
+            if (!playerData) {
+              const route = !augmentId
+                ? "/(protected)/(draft)/applyAugment"
+                : "/(protected)/(draft)/(teamBuilder)/players";
+              router.push(route);
+            }
+          }}
+        >
+          <Pressable
+            className={cn(
+              "h-8 min-w-16 items-center justify-center rounded-3xl",
+              isSelected ? "bg-purple-400" : "border border-purple-400",
+            )}
+            disabled={isLineupLocked}
+            onPress={openDrawer}
+          >
+            <Text
+              className={cn(
+                "pbk-h8",
+                isSelected ? "text-gray-900" : "text-purple-400",
+              )}
+            >
+              {position}
+            </Text>
+          </Pressable>
+          <View className="flex-1">
+            {playerData ? (
+              <PlayerData player={playerData} />
+            ) : (
+              <Text className="pbk-b2 ml-2 text-base-white">Empty slot</Text>
+            )}
+          </View>
+
+          {isCard &&
+            !isLineupLocked &&
+            (playerData ? (
+              <>
+                {augmentIconURL && boostedPlayer && (
+                  <Image className="h-8 w-8" source={iconMap[augmentIconURL]} />
+                )}
+                <IconButton
+                  icon={<XCircle color="#535862" size={20} />}
+                  onPress={() => {
+                    dispatch(removePlayerFromLineup(playerData));
+                    onPlayerRemove?.();
+                  }}
+                />
+              </>
+            ) : (
+              <IconButton
+                icon={<UserPlus color="#6042FF" size={20} />}
+                onPress={() =>
+                  router.push("/(protected)/(draft)/(teamBuilder)/players")
+                }
+              />
+            ))}
+        </Pressable>
+      </View>
+    </View>
+  );
+};
+
+export default PlayerSlot;

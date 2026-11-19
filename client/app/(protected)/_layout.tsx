@@ -1,0 +1,26 @@
+import { Stack } from "expo-router";
+import { useAppSelector } from "@/state/hooks";
+import { selectIsTeamRegistered } from "@/state/slices/teamSlice";
+import { selectIsUserRegistered } from "@/state/slices/userSlice";
+
+const ProtectedLayout = () => {
+  const isUserRegistered = useAppSelector(selectIsUserRegistered);
+  const isTeamRegistered = useAppSelector(selectIsTeamRegistered);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!isUserRegistered || !isTeamRegistered}>
+        <Stack.Screen name="createProfile" />
+      </Stack.Protected>
+      <Stack.Protected guard={isUserRegistered && !isTeamRegistered}>
+        <Stack.Screen name="createTeam" />
+      </Stack.Protected>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(draft)" />
+      <Stack.Screen name="createLeague" />
+      <Stack.Screen name="joinLeague" />
+    </Stack>
+  );
+};
+
+export default ProtectedLayout;

@@ -1,0 +1,82 @@
+import { getAuth } from "@react-native-firebase/auth";
+import { getFunctionUrl } from "@/firebase/config";
+import { isNotNil } from "@/utils/jsUtils";
+
+export const fetchEarliestGameStartTime = async (
+  date: string,
+): Promise<string | null> => {
+  try {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      throw new Error("No authenticated user");
+    }
+
+    const idToken = await currentUser.getIdToken();
+
+    const response = await fetch(
+      `${getFunctionUrl("getEarliestGameStartTime")}?date=${date}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(message);
+    }
+
+    const data = await response.json();
+    const startTime = data?.earliestGameStart;
+    if (startTime === null) {
+      return null;
+    }
+    if (typeof startTime !== "string" || Number.isNaN(Date.parse(startTime))) {
+      throw new Error("Invalid game schedule response");
+    }
+    return startTime;
+  } catch (error) {
+    console.error("fetchEarliestGameStartTime error:", error);
+    throw error;
+  }
+};
+
+export const fetchLivePlayerData = async (playerIds?: string[]) => {
+  try {
+    const filteredIds = playerIds?.filter((id) => isNotNil(id));
+
+    if (filteredIds?.length === 0) return;
+
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      console.error("No authenticated user");
+      return;
+    }
+
+    const idToken = await currentUser.getIdToken();
+
+    const response = await fetch(getFunctionUrl("getLiveData"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ playerIds: filteredIds }),
+    });
+
+    return response.json();
+  } catch (error) {
+    console.error("fetchLivePlayerData error:", error);
+    return {};
+  }
+};
