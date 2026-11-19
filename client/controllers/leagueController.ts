@@ -18,6 +18,21 @@ export type LeagueEditModel = {
   initialTeamId: string;
 };
 
+export type JoinLeagueTeamModel = {
+  teamName: string;
+  abbreviation: string;
+  logoUrl: string;
+};
+
+type JoinedTeamResponse = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+  balance: number;
+  isLeagueTeam: boolean;
+};
+
 export type LeagueTeamInfo = {
   league: League;
   team: Team;
@@ -139,18 +154,36 @@ export class LeagueController {
     }
   };
 
+  // The server creates the team and joins it to the league in one transaction,
+  // so on failure nothing has been written and there is no team to clean up.
   static joinLeague = async (
     leagueId: string,
-    teamId: string,
-  ): Promise<League> => {
+    team: JoinLeagueTeamModel,
+  ): Promise<LeagueTeamInfo> => {
     try {
-      const { league } = await callFunction<{ league: League }>(
+      const response = await callFunction<{
+        league: League;
+        team: JoinedTeamResponse;
+      }>(
         "joinLeague",
-        { leagueId, teamId },
+        {
+          leagueId,
+          teamName: team.teamName,
+          abbreviation: team.abbreviation,
+          logoUrl: team.logoUrl,
+        },
         JOIN_SIGNED_OUT_ERROR,
       );
 
-      return league;
+      return {
+        league: response.league,
+        team: {
+          ...response.team,
+          lineup: defaultTeam.lineup,
+          bench: defaultTeam.bench,
+          record: defaultTeam.record,
+        },
+      };
     } catch (error) {
       console.error("Join league error:", error);
       throw error;

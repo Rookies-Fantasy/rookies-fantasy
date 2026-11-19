@@ -136,7 +136,9 @@ League with the development build's deep link:
 xcrun simctl openurl booted "myapp-development://joinLeague?leagueId=emulator-league-open"
 ```
 
-Re-running the seed command restores both leagues and their teams.
+Re-running the seed command restores both leagues and their teams. It also
+deletes league teams that no other league uses, owned by the seeded users or by
+anyone who joined these leagues, including teams left behind by a failed join.
 
 To add one more league for an existing user, pass that user's UID:
 
@@ -147,7 +149,9 @@ npx cross-env USER_ID=<uid> npm run seed:league
 `seed:league` creates a league team for the user and a league with the user as
 its creator and only member. It defaults to `LEAGUE_ID=default-league`,
 `LEAGUE_NAME="Dev League"`, and `NUMBER_OF_TEAMS=4`. The league team gets a
-Firestore-generated ID unless `LEAGUE_TEAM_ID` is set. If the league ID already exists, the command logs a
+Firestore-generated ID unless `LEAGUE_TEAM_ID` is set; the command fails rather
+than overwrite a team that already has that ID (such as the ranked
+`default-team`). If the league ID already exists, the command logs a
 message and changes nothing; adding members to an existing league is not
 supported yet.
 
