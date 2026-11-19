@@ -16,6 +16,10 @@ import {
   TEAMS_STEP,
   RawPayload,
 } from "./types";
+import {
+  containsObjectionableContent,
+  NAME_NOT_ALLOWED_MESSAGE,
+} from "../moderation/nameModeration";
 
 type InputValidation<TInput> =
   | { valid: true; input: TInput }
@@ -118,6 +122,15 @@ const validateNewLeagueTeam = (
     };
   }
 
+  // Other members see the team name and abbreviation, so they go through the
+  // same filter the client applies in its form schema.
+  if (
+    containsObjectionableContent(name) ||
+    containsObjectionableContent(abbreviation)
+  ) {
+    return { valid: false, message: NAME_NOT_ALLOWED_MESSAGE };
+  }
+
   if (
     typeof logoUrl !== "string" ||
     logoUrl.trim().length === 0 ||
@@ -186,6 +199,11 @@ export const validateCreateLeagueInput = (
       valid: false,
       message: `League name must be at most ${MAX_LEAGUE_NAME_LENGTH} characters`,
     };
+  }
+
+  // League names are shared with everyone who joins via the league code.
+  if (containsObjectionableContent(name)) {
+    return { valid: false, message: NAME_NOT_ALLOWED_MESSAGE };
   }
 
   const numberOfTeams = payload.numberOfTeams;

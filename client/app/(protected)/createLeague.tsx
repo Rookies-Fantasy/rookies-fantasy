@@ -33,6 +33,7 @@ import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { allowedNameTest } from "@/utils/nameModeration";
 
 // League configuration constants
 const MIN_BUDGET = 150_000_000;
@@ -48,7 +49,8 @@ const createLeagueSchema = yup.object({
   leagueName: yup
     .string()
     .required("League name is required")
-    .max(50, "League name must be at most 50 characters"),
+    .max(50, "League name must be at most 50 characters")
+    .test(allowedNameTest),
   numberOfTeams: yup
     .number()
     .required("Number of teams is required")
@@ -62,11 +64,15 @@ const createLeagueSchema = yup.object({
     .max(MAX_BUDGET, `Budget must be no more than $${MAX_BUDGET / 1_000_000}M`)
     .typeError("Must be a number"),
   // Team fields
-  teamName: yup.string().required("Team Name is required"),
+  teamName: yup
+    .string()
+    .required("Team Name is required")
+    .test(allowedNameTest),
   abbreviation: yup
     .string()
     .required("Team Abbreviation is required")
-    .length(3, "Team Abbreviation must be exactly 3 characters"),
+    .length(3, "Team Abbreviation must be exactly 3 characters")
+    .test(allowedNameTest),
   logoUrl: yup
     .string()
     .required("Logo is required")

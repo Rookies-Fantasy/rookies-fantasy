@@ -1,5 +1,5 @@
 import { useFocusEffect } from "expo-router";
-import { Empty, MagnifyingGlass } from "phosphor-react-native";
+import { Empty, Flag, MagnifyingGlass } from "phosphor-react-native";
 import { useCallback, useRef, useState } from "react";
 import { Text, View, Image, Pressable, ScrollView } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
@@ -21,6 +21,7 @@ import { GameInfo, GameStats } from "@/types/matchup";
 import { SLOT_ORDER } from "@/types/team";
 import { formatLocalDate } from "@/utils/dateUtils";
 import { isNil, isNotNil } from "@/utils/jsUtils";
+import { confirmTeamReport } from "@/utils/reportUtils";
 
 type LiveData = Record<
   string,
@@ -193,6 +194,34 @@ const Arena = () => {
     (asset) => asset.url === matchup?.awayTeamSnapshot.logoUrl,
   )?.source;
 
+  // The opponent's team name is user-generated, so it can be reported.
+  const reportOpponentTeam = () => {
+    if (isNil(matchup)) {
+      return;
+    }
+
+    confirmTeamReport({
+      teamName: isHomeUser
+        ? matchup.awayTeamSnapshot.name
+        : matchup.homeTeamSnapshot.name,
+      teamId: isHomeUser ? matchup.awayTeamId : matchup.homeTeamId,
+      matchupId: matchup.id,
+      reporterUserId: userId,
+    });
+  };
+
+  const reportButton = (
+    <Pressable
+      accessibilityLabel="Report team name"
+      accessibilityRole="button"
+      className="p-1"
+      hitSlop={8}
+      onPress={reportOpponentTeam}
+    >
+      <Flag color={`rgb(${themes[theme][mode].modeContrast})`} size={14} />
+    </Pressable>
+  );
+
   return (
     <View className="flex-1 flex-col items-center bg-gray-950">
       <View className="w-full flex-row">
@@ -208,9 +237,12 @@ const Arena = () => {
             </Text>
           </View>
 
-          <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            {matchup?.homeTeamSnapshot.name.toUpperCase() ?? "--"}
-          </Text>
+          <View className="w-full flex-row items-center gap-1">
+            <Text className="pbk-h6 shrink text-base-white" numberOfLines={1}>
+              {matchup?.homeTeamSnapshot.name.toUpperCase() ?? "--"}
+            </Text>
+            {isNotNil(matchup) && !isHomeUser && reportButton}
+          </View>
         </View>
 
         <View className="w-1/2 items-end border-b border-l border-gray-900 py-4 pl-2 pr-6">
@@ -225,9 +257,12 @@ const Arena = () => {
             />
           </View>
 
-          <Text className="pbk-h6 text-base-white" numberOfLines={1}>
-            {matchup?.awayTeamSnapshot.name.toUpperCase() ?? "--"}
-          </Text>
+          <View className="w-full flex-row items-center justify-end gap-1">
+            {isNotNil(matchup) && isHomeUser && reportButton}
+            <Text className="pbk-h6 shrink text-base-white" numberOfLines={1}>
+              {matchup?.awayTeamSnapshot.name.toUpperCase() ?? "--"}
+            </Text>
+          </View>
         </View>
       </View>
       <DateSelector

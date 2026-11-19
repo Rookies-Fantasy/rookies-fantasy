@@ -22,6 +22,7 @@ import { UserController, UserEditModel } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setUser } from "@/state/slices/userSlice";
 import { Asset, avatarOptions, defaultAvatar } from "@/types/asset";
+import { allowedNameTest } from "@/utils/nameModeration";
 
 export type UserEditFormModel = Pick<
   Required<UserEditModel>,
@@ -38,7 +39,7 @@ const schema = yup.object({
       (value) => value !== defaultAvatar.url,
     ),
   dateOfBirth: yup.date().required("Date of Birth is required"),
-  username: yup.string().required("Username is required"),
+  username: yup.string().required("Username is required").test(allowedNameTest),
 });
 
 const CreateProfile = () => {
