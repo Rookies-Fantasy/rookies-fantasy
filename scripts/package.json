@@ -23,6 +23,7 @@
     "queue:opponent": "tsx emulator/index.ts queue-opponent",
     "seed:nba-players": "tsx emulator/index.ts nba-players",
     "seed:nba-teams": "tsx emulator/index.ts nba-teams",
+    "seed:review-matchup": "tsx review/seedReviewMatchup.ts",
     "simulate:day": "tsx emulator/index.ts simulate-day",
     "simulate:week": "tsx emulator/index.ts simulate-week",
     "dev": "tsx emulator/dev.ts",
