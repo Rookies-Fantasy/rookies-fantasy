@@ -2,8 +2,10 @@ import { useColorScheme } from "nativewind";
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { ThemeMode, ThemeName } from "./theme";
@@ -30,22 +32,28 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     setColorScheme(ThemeMode.Dark);
   }, [setColorScheme]);
 
-  const setMode = (mode: ThemeMode) => {
-    _setMode(mode);
-    setColorScheme(mode);
-  };
+  const setMode = useCallback(
+    (mode: ThemeMode) => {
+      _setMode(mode);
+      setColorScheme(mode);
+    },
+    [setColorScheme],
+  );
 
   // Default to dark if null gets returned for some reason
   const systemMode =
     useColorScheme().colorScheme === "light" ? ThemeMode.Light : ThemeMode.Dark;
   const resolvedMode = mode === ThemeMode.System ? systemMode : mode;
 
+  // Memoize the context value so consumers only re-render when the theme
+  // actually changes, not on every ThemeProvider render.
+  const value = useMemo(
+    () => ({ theme, setTheme, mode: resolvedMode, setMode }),
+    [theme, resolvedMode, setMode],
+  );
+
   return (
-    <ThemeContext.Provider
-      value={{ theme, setTheme, mode: resolvedMode, setMode }}
-    >
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
 };
 
