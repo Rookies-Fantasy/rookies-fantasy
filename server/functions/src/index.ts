@@ -1,6 +1,6 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
-import { FieldPath, FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
 import {
@@ -8,7 +8,6 @@ import {
   JsonValue,
   LeagueDocument,
   LeagueStandingTeam,
-  MAX_TEAMS,
   RawPayload,
   TeamRecord,
 } from "./leagues/types";
@@ -17,6 +16,7 @@ import {
   isLeagueMember,
   JoinRejectionCode,
   toLeagueDocument,
+  toLeagueTeamRefs,
   toStandingTeam,
   validateCreateLeagueInput,
   validateJoinLeagueInput,
@@ -131,8 +131,6 @@ const getPlayersFromCache = (
 
   return result;
 };
-
-const dedupe = (values: string[]): string[] => Array.from(new Set(values));
 
 export const getLiveData = functions.https.onRequest(async (req, res) => {
   // Verify Firebase ID token
@@ -1395,6 +1393,7 @@ export const createLeague = functions.https.onCall(
       memberCount: 1,
       teamIds: [input.initialTeamId],
       userIds: [uid],
+      teamOwners: { [input.initialTeamId]: uid },
     };
 
     try {
@@ -1574,6 +1573,9 @@ export const joinLeague = functions.https.onCall(
           memberCount: FieldValue.increment(1),
           teamIds: FieldValue.arrayUnion(teamRef.id),
           userIds: FieldValue.arrayUnion(uid),
+          // Auto-generated doc ids never contain ".", so this field path is
+          // always a single key in the map.
+          [`teamOwners.${teamRef.id}`]: uid,
           updatedAt: FieldValue.serverTimestamp(),
         });
 
@@ -1583,6 +1585,7 @@ export const joinLeague = functions.https.onCall(
             memberCount: league.memberCount + 1,
             teamIds: [...league.teamIds, teamRef.id],
             userIds: [...league.userIds, uid],
+            teamOwners: { ...league.teamOwners, [teamRef.id]: uid },
           }),
           team: {
             id: teamRef.id,
@@ -1653,25 +1656,23 @@ export const getLeagueStandings = functions.https.onRequest(
         return;
       }
 
-      const teamIds = dedupe(league.teamIds).slice(0, MAX_TEAMS);
-      const memberIds = dedupe(league.userIds).slice(0, MAX_TEAMS);
+      // Each team is read from the member who registered it, so a team doc
+      // another user created under a league team's id is never included.
+      const teamRefs = toLeagueTeamRefs(league).map(({ teamId, ownerId }) =>
+        db
+          .collection(USER_COLLECTION)
+          .doc(ownerId)
+          .collection(TEAM_SUBCOLLECTION)
+          .doc(teamId),
+      );
 
       const snapshots =
-        teamIds.length === 0
-          ? []
-          : await Promise.all(
-              memberIds.map((memberId) =>
-                db
-                  .collection(USER_COLLECTION)
-                  .doc(memberId)
-                  .collection(TEAM_SUBCOLLECTION)
-                  .where(FieldPath.documentId(), "in", teamIds)
-                  .get(),
-              ),
-            );
+        teamRefs.length === 0 ? [] : await db.getAll(...teamRefs);
 
       const teams: LeagueStandingTeam[] = snapshots.flatMap((snapshot) =>
-        snapshot.docs.map((doc) => toStandingTeam(doc.id, doc.data())),
+        snapshot.exists
+          ? [toStandingTeam(snapshot.id, snapshot.data() ?? EMPTY_PAYLOAD)]
+          : [],
       );
 
       res.json({ teams });

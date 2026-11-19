@@ -34,6 +34,7 @@ export type TeamDoc = Team & {
 
 export type LeagueDoc = Omit<League, "id" | "createdAt" | "updatedAt"> & {
   creatorUserId: string;
+  teamOwners: Record<string, string>;
   createdAt: Date;
   updatedAt: Date;
 };

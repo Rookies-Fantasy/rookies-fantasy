@@ -19,6 +19,10 @@ export type LeagueDocument = {
   memberCount: number;
   teamIds: string[];
   userIds: string[];
+  // Team id -> uid of the member who registered it. Team docs live under
+  // users/{uid}/teams, so this is how the server finds a league team without
+  // trusting whichever user happens to hold a doc with that id.
+  teamOwners: Record<string, string>;
 };
 
 export type CreateLeagueInput = {

@@ -38,6 +38,12 @@ const isFiniteNumber = (value: JsonValue): value is number =>
 const isStringArray = (value: JsonValue): value is string[] =>
   Array.isArray(value) && value.every((entry) => typeof entry === "string");
 
+const isStringRecord = (value: JsonValue): value is Record<string, string> =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  Object.values(value).every((entry) => typeof entry === "string");
+
 // Firestore hands back untyped documents. A league doc is written only by the
 // server, so a field that fails to parse means the data is corrupt — returning
 // null lets the caller fail loudly instead of joining against typed defaults.
@@ -50,6 +56,7 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     memberCount,
     teamIds,
     userIds,
+    teamOwners,
   } = data;
 
   if (
@@ -59,7 +66,8 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     !isFiniteNumber(budget) ||
     !isFiniteNumber(memberCount) ||
     !isStringArray(teamIds) ||
-    !isStringArray(userIds)
+    !isStringArray(userIds) ||
+    !isStringRecord(teamOwners)
   ) {
     return null;
   }
@@ -72,6 +80,7 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     memberCount,
     teamIds,
     userIds,
+    teamOwners,
   };
 };
 
@@ -297,6 +306,29 @@ export const toStandingTeam = (
   logoUrl: toStringOrEmpty(data.logoUrl),
   record: toTeamRecord(data.record),
 });
+
+export type LeagueTeamRef = {
+  teamId: string;
+  ownerId: string;
+};
+
+// Pairs each league team with the member who registered it. A team without a
+// recorded owner, or whose owner is no longer a member, is skipped: standings
+// read users/{ownerId}/teams/{teamId} only, so a doc that another user created
+// under a league team's id is never picked up.
+export const toLeagueTeamRefs = (league: LeagueDocument): LeagueTeamRef[] =>
+  Array.from(new Set(league.teamIds))
+    .slice(0, MAX_TEAMS)
+    .flatMap((teamId) => {
+      const ownerId = Object.prototype.hasOwnProperty.call(
+        league.teamOwners,
+        teamId,
+      )
+        ? league.teamOwners[teamId]
+        : "";
+
+      return league.userIds.includes(ownerId) ? [{ teamId, ownerId }] : [];
+    });
 
 export const isLeagueMember = (
   league: LeagueDocument,
