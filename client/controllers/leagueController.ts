@@ -1,9 +1,11 @@
 import firestore from "@react-native-firebase/firestore";
 import { getFunctionUrl } from "@/firebase/config";
+import { JsonValue } from "@/types/json";
 import { League } from "@/types/league";
 import { LeagueStandingTeam } from "@/types/standings";
 import { defaultTeam, Team } from "@/types/team";
 import { callFunction, getIdToken } from "@/utils/callableUtils";
+import { parseLeagueStandingTeams } from "@/utils/standingsUtils";
 
 const LEAGUE_COLLECTION = "leagues";
 
@@ -103,7 +105,9 @@ export class LeagueController {
     }
   };
 
-  static getLeagueTeams = async (league: League): Promise<Team[]> => {
+  static getLeagueStandingTeams = async (
+    league: League,
+  ): Promise<LeagueStandingTeam[]> => {
     const idToken = await getIdToken(SIGNED_OUT_ERROR);
     const url = `${getFunctionUrl("getLeagueStandings")}?leagueId=${league.id}`;
 
@@ -118,18 +122,11 @@ export class LeagueController {
         throw new Error(`HTTP ${response.status}: ${message}`);
       }
 
-      const data: { teams: LeagueStandingTeam[] } = await response.json();
+      const payload: JsonValue = await response.json();
 
-      return data.teams.map((team) => ({
-        ...defaultTeam,
-        id: team.id,
-        name: team.name,
-        logoUrl: team.logoUrl,
-        record: team.record,
-        isLeagueTeam: true,
-      }));
+      return parseLeagueStandingTeams(payload);
     } catch (error) {
-      console.error("getLeagueTeams failed:", url, error);
+      console.error("getLeagueStandingTeams failed:", url, error);
       throw error;
     }
   };

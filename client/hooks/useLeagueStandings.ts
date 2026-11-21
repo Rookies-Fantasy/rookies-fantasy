@@ -29,7 +29,7 @@ export const useLeagueStandings = (
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["leagueStandings", league.id],
-    queryFn: () => LeagueController.getLeagueTeams(league),
+    queryFn: () => LeagueController.getLeagueStandingTeams(league),
     staleTime: STANDINGS_STALE_TIME_MS,
     subscribed: isFocused,
   });
