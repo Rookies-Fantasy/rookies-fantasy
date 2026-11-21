@@ -16,8 +16,8 @@ import {
 } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { selectUserId } from "@/state/slices/userSlice";
-import { teamLogoOptions, defaultTeamLogo } from "@/types/asset";
 import { Team } from "@/types/team";
+import { getTeamLogoSource } from "@/utils/teamUtils";
 
 type LeagueSwitcherProps = {
   className?: string;
@@ -72,11 +72,6 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
       setIsLoading(false);
     }
   }, [userId]);
-
-  const getTeamLogoSource = (logoUrl?: string) => {
-    const logo = teamLogoOptions.find((option) => option.url === logoUrl);
-    return logo?.source ?? defaultTeamLogo.source;
-  };
 
   const handleSelectRanked = async () => {
     if (rankedTeam && userId) {
