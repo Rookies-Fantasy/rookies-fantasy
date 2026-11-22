@@ -71,7 +71,7 @@ const createLeagueSchema = yup.object({
     .min(MIN_BUDGET, `Budget must be at least $${MIN_BUDGET / 1_000_000}M`)
     .max(MAX_BUDGET, `Budget must be no more than $${MAX_BUDGET / 1_000_000}M`)
     .typeError("Must be a number"),
-  deadline: yup.string().required("Choose the last day to join"),
+  deadline: yup.string().required("Registration deadline is required"),
   // Team fields
   teamName: yup.string().required("Team Name is required"),
   abbreviation: yup
@@ -417,7 +417,7 @@ const CreateLeague = () => {
                     render={({ field: { onChange, value } }) => (
                       <>
                         <Text className="pbk-b2 mb-1.5 text-base-white">
-                          Last day to join
+                          Registration Deadline
                         </Text>
                         <Pressable
                           disabled={isNil(deadlineRange)}
@@ -523,7 +523,7 @@ const CreateLeague = () => {
                       </Text>
                     ) : (
                       <Text className="pbk-b3 text-gray-600">
-                        Joining closes at midnight Pacific Time
+                        Registration closes at midnight Pacific Time
                       </Text>
                     )}
                   </View>
