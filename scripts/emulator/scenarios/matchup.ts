@@ -9,6 +9,7 @@ import {
   stageActiveMatchup,
 } from "../fixtures/matchups.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
+import { stageSeasonConfig } from "../fixtures/season.js";
 import { resolveSeedTeamId, stageTeam } from "../fixtures/teams.js";
 import { ensureAuthUser, stageUser } from "../fixtures/users.js";
 import { buildLineup, getLineupSalary } from "../generate/lineup.js";
@@ -70,6 +71,7 @@ export const createMatchupScenario = async (
   const batch = db.batch();
   stageNbaPlayers(db, batch, DEFAULT_NBA_PLAYERS);
   stageAugments(db, batch, DEFAULT_AUGMENTS);
+  stageSeasonConfig(db, batch);
 
   stageUser(db, batch, options.homeEmail, {
     id: home.uid,

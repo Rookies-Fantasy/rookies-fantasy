@@ -1,6 +1,6 @@
 import firestore from "@react-native-firebase/firestore";
 import { getFunctionUrl } from "@/firebase/config";
-import { League } from "@/types/league";
+import { League, LeagueDeadlineBounds } from "@/types/league";
 import { LeagueStandingTeam } from "@/types/standings";
 import { defaultTeam, Team } from "@/types/team";
 import { callFunction, getIdToken } from "@/utils/callableUtils";
@@ -16,6 +16,7 @@ export type LeagueEditModel = {
   numberOfTeams: number;
   budget: number;
   initialTeamId: string;
+  deadline: string;
 };
 
 export type LeagueTeamInfo = {
@@ -47,6 +48,11 @@ export class LeagueController {
           memberCount: data?.memberCount,
           teamIds: data?.teamIds ?? [],
           userIds: data.userIds ?? [],
+          deadline: data?.deadline,
+          status: data?.status,
+          playoffTeams: data?.playoffTeams ?? null,
+          regularSeasonWeeks: data?.regularSeasonWeeks ?? null,
+          playoffStartWeek: data?.playoffStartWeek ?? null,
         };
 
         (data?.teamIds ?? []).forEach((teamId: string) => {
@@ -81,6 +87,11 @@ export class LeagueController {
         memberCount: data?.memberCount,
         teamIds: data?.teamIds ?? [],
         userIds: data?.userIds ?? [],
+        deadline: data?.deadline,
+        status: data?.status,
+        playoffTeams: data?.playoffTeams ?? null,
+        regularSeasonWeeks: data?.regularSeasonWeeks ?? null,
+        playoffStartWeek: data?.playoffStartWeek ?? null,
       };
     } catch (error) {
       console.error("Error fetching league:", error);
@@ -128,6 +139,7 @@ export class LeagueController {
           numberOfTeams: params.numberOfTeams,
           budget: params.budget,
           initialTeamId: params.initialTeamId,
+          deadline: params.deadline,
         },
         CREATE_SIGNED_OUT_ERROR,
       );
@@ -135,6 +147,19 @@ export class LeagueController {
       return league;
     } catch (error) {
       console.error("Error creating league:", error);
+      throw error;
+    }
+  };
+
+  static getLeagueDeadlineBounds = async (): Promise<LeagueDeadlineBounds> => {
+    try {
+      return await callFunction<LeagueDeadlineBounds>(
+        "getLeagueDeadlineBounds",
+        {},
+        CREATE_SIGNED_OUT_ERROR,
+      );
+    } catch (error) {
+      console.error("Error fetching league deadline bounds:", error);
       throw error;
     }
   };

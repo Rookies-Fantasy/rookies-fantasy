@@ -36,6 +36,9 @@ import {
 } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { getPacificDateString } from "@/utils/dateUtils";
+import { isNotNil } from "@/utils/jsUtils";
+import { isLeagueClosed } from "@/utils/leagueUtils";
 
 const joinLeagueSchema = yup.object({
   teamName: yup.string().required("Team Name is required"),
@@ -218,6 +221,29 @@ const JoinLeague = () => {
       <Screen>
         <View className="flex-1 items-center justify-center px-6">
           <Text className="pbk-h5 text-base-white">Invalid invite link</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (
+    isNotNil(currentLeague) &&
+    currentLeague.id === leagueId &&
+    isLeagueClosed(currentLeague, getPacificDateString(new Date()))
+  ) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="pbk-h5 mb-3 text-center text-base-white">
+            League Closed
+          </Text>
+          <Text className="pbk-b2 mb-8 text-center text-gray-400">
+            This league is no longer accepting members.
+          </Text>
+          <Button
+            label="Back to My Team"
+            onPress={() => router.replace("/(protected)/(tabs)")}
+          />
         </View>
       </Screen>
     );

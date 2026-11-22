@@ -9,6 +9,7 @@
     "teams": "node --experimental-json-modules fillNBATeams.js",
     "players": "node --experimental-json-modules fillNBAPlayers.js",
     "playerAverages": "node --experimental-json-modules fillNBAPlayerAverages.js",
+    "season": "tsx seedSeasonConfig.ts",
     "seed": "tsx emulator/index.ts",
     "seed:dev-user": "cross-env USER_EMAIL=dev@test.com USER_PASSWORD=password123 tsx emulator/index.ts user",
     "seed:opponent": "cross-env USER_EMAIL=opponent@test.com USER_PASSWORD=password123 tsx emulator/index.ts user",

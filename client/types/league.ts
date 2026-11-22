@@ -1,3 +1,11 @@
+export type LeagueStatus =
+  | "forming"
+  | "scheduled"
+  | "unscheduled"
+  | "active"
+  | "playoffs"
+  | "complete";
+
 export type League = {
   id: string;
   name: string;
@@ -6,6 +14,23 @@ export type League = {
   memberCount: number;
   teamIds: string[];
   userIds: string[];
+  deadline: string;
+  status: LeagueStatus;
+  playoffTeams: number | null;
+  regularSeasonWeeks: number | null;
+  playoffStartWeek: number | null;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type PlayoffTeams = 4 | 6;
+
+export type DeadlineWindow = {
+  default: string;
+  latest: string;
+};
+
+export type LeagueDeadlineBounds = {
+  earliest: string;
+  byPlayoffTeams: Record<PlayoffTeams, DeadlineWindow | null>;
 };

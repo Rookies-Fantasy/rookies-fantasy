@@ -2,7 +2,9 @@ import {
   CreateLeagueInput,
   JoinLeagueInput,
   JsonValue,
+  LEAGUE_STATUSES,
   LeagueDocument,
+  LeagueStatus,
   LeagueStandingTeam,
   BUDGET_STEP,
   MAX_BUDGET,
@@ -14,6 +16,7 @@ import {
   TeamRecord,
   RawPayload,
 } from "./types";
+import { hasDeadlinePassed, isIsoDate } from "./season";
 
 export type InputValidation<TInput> =
   | { valid: true; input: TInput }
@@ -22,6 +25,7 @@ export type InputValidation<TInput> =
 export type JoinRejectionCode =
   | "team-already-joined"
   | "user-already-joined"
+  | "league-closed"
   | "league-full";
 
 export type JoinEligibility =
@@ -33,6 +37,12 @@ const isFiniteNumber = (value: JsonValue): value is number =>
 
 const isStringArray = (value: JsonValue): value is string[] =>
   Array.isArray(value) && value.every((entry) => typeof entry === "string");
+
+const isLeagueStatus = (value: JsonValue): value is LeagueStatus =>
+  LEAGUE_STATUSES.some((status) => status === value);
+
+const isNullableCount = (value: JsonValue): value is number | null =>
+  value === null || isFiniteNumber(value);
 
 // Firestore hands back untyped documents. A league doc is written only by the
 // server, so a field that fails to parse means the data is corrupt — returning
@@ -46,6 +56,11 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     memberCount,
     teamIds,
     userIds,
+    deadline,
+    status,
+    playoffTeams,
+    regularSeasonWeeks,
+    playoffStartWeek,
   } = data;
 
   if (
@@ -55,7 +70,12 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     !isFiniteNumber(budget) ||
     !isFiniteNumber(memberCount) ||
     !isStringArray(teamIds) ||
-    !isStringArray(userIds)
+    !isStringArray(userIds) ||
+    !isIsoDate(deadline) ||
+    !isLeagueStatus(status) ||
+    !isNullableCount(playoffTeams) ||
+    !isNullableCount(regularSeasonWeeks) ||
+    !isNullableCount(playoffStartWeek)
   ) {
     return null;
   }
@@ -68,6 +88,11 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     memberCount,
     teamIds,
     userIds,
+    deadline,
+    status,
+    playoffTeams,
+    regularSeasonWeeks,
+    playoffStartWeek,
   };
 };
 
@@ -158,9 +183,21 @@ export const validateCreateLeagueInput = (
     return { valid: false, message: idErrorMessage("initialTeamId") };
   }
 
+  const rawDeadline = "deadline" in payload ? payload.deadline : null;
+  const deadline = isIsoDate(rawDeadline) ? rawDeadline : null;
+  if (rawDeadline !== null && deadline === null) {
+    return { valid: false, message: "Deadline must be a YYYY-MM-DD date" };
+  }
+
   return {
     valid: true,
-    input: { name, numberOfTeams, budget, initialTeamId },
+    input: {
+      name,
+      numberOfTeams,
+      budget,
+      initialTeamId,
+      deadline,
+    },
   };
 };
 
@@ -178,6 +215,7 @@ export const evaluateJoinEligibility = (
   league: LeagueDocument,
   teamId: string,
   userId: string,
+  today: string,
 ): JoinEligibility => {
   if (league.teamIds.includes(teamId)) {
     return reject("team-already-joined", "Team already joined");
@@ -185,6 +223,16 @@ export const evaluateJoinEligibility = (
 
   if (league.userIds.includes(userId)) {
     return reject("user-already-joined", "User already joined");
+  }
+
+  if (
+    league.status !== "forming" ||
+    hasDeadlinePassed(league.deadline, today)
+  ) {
+    return reject(
+      "league-closed",
+      "This league is no longer accepting members",
+    );
   }
 
   // memberCount is only a counter, so the membership arrays are checked too:

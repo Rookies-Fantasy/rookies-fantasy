@@ -21,6 +21,14 @@ import {
   validateJoinLeagueInput,
   validateLeagueId,
 } from "./leagues/validation";
+import {
+  getDeadlineBounds,
+  LeagueDeadlineBounds,
+  resolveDeadline,
+  SeasonConfig,
+  todayInPacific,
+  toSeasonConfig,
+} from "./leagues/season";
 import { completeMatchup } from "./matchups/completeMatchup";
 
 admin.initializeApp();
@@ -1315,6 +1323,30 @@ const isValidISODate = (value: string): boolean => {
 const LEAGUE_COLLECTION = "leagues";
 const USER_COLLECTION = "users";
 const TEAM_SUBCOLLECTION = "teams";
+const CONFIG_COLLECTION = "config";
+const SEASON_CONFIG_DOC = "season";
+
+const readSeasonConfig = async (
+  db: FirebaseFirestore.Firestore,
+): Promise<SeasonConfig> => {
+  const snapshot = await db
+    .collection(CONFIG_COLLECTION)
+    .doc(SEASON_CONFIG_DOC)
+    .get();
+  const season = snapshot.exists
+    ? toSeasonConfig(snapshot.data() ?? EMPTY_PAYLOAD)
+    : null;
+
+  if (season === null) {
+    console.error("config/season is missing or has malformed fields");
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "Season dates are not configured",
+    );
+  }
+
+  return season;
+};
 
 // Reads a league document into its typed shape. Returns null when the document
 // does not exist, which the eligibility rules treat as "League not found".
@@ -1348,6 +1380,11 @@ type LeagueResponse = {
   memberCount: number;
   teamIds: string[];
   userIds: string[];
+  deadline: string;
+  status: LeagueDocument["status"];
+  playoffTeams: number | null;
+  regularSeasonWeeks: number | null;
+  playoffStartWeek: number | null;
 };
 
 const toLeagueResponse = (
@@ -1361,7 +1398,26 @@ const toLeagueResponse = (
   memberCount: league.memberCount,
   teamIds: league.teamIds,
   userIds: league.userIds,
+  deadline: league.deadline,
+  status: league.status,
+  playoffTeams: league.playoffTeams,
+  regularSeasonWeeks: league.regularSeasonWeeks,
+  playoffStartWeek: league.playoffStartWeek,
 });
+
+export const getLeagueDeadlineBounds = functions.https.onCall(
+  async (_data: RawPayload, context): Promise<LeagueDeadlineBounds> => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "You must be signed in to create a league",
+      );
+    }
+
+    const season = await readSeasonConfig(admin.firestore());
+    return getDeadlineBounds(season, todayInPacific(new Date()));
+  },
+);
 
 // Creates a league on behalf of the caller.
 export const createLeague = functions.https.onCall(
@@ -1385,6 +1441,21 @@ export const createLeague = functions.https.onCall(
 
     const input = validation.input;
     const db = admin.firestore();
+    const season = await readSeasonConfig(db);
+    const resolution = resolveDeadline(
+      input.deadline,
+      input.numberOfTeams,
+      getDeadlineBounds(season, todayInPacific(new Date())),
+    );
+
+    if (!resolution.ok) {
+      throw new functions.https.HttpsError(
+        resolution.reason === "closed"
+          ? "failed-precondition"
+          : "invalid-argument",
+        resolution.message,
+      );
+    }
 
     // The initial team must belong to the caller, otherwise a league could be
     // seeded with somebody else's team id.
@@ -1411,6 +1482,11 @@ export const createLeague = functions.https.onCall(
       memberCount: 1,
       teamIds: [input.initialTeamId],
       userIds: [uid],
+      deadline: resolution.deadline,
+      status: "forming",
+      playoffTeams: null,
+      regularSeasonWeeks: null,
+      playoffStartWeek: null,
     };
 
     try {
@@ -1437,6 +1513,7 @@ const JOIN_REJECTION_STATUS: Record<
 > = {
   "team-already-joined": "already-exists",
   "user-already-joined": "already-exists",
+  "league-closed": "failed-precondition",
   "league-full": "resource-exhausted",
 };
 
@@ -1491,7 +1568,12 @@ export const joinLeague = functions.https.onCall(
           throw new functions.https.HttpsError("not-found", "League not found");
         }
 
-        const eligibility = evaluateJoinEligibility(league, teamId, uid);
+        const eligibility = evaluateJoinEligibility(
+          league,
+          teamId,
+          uid,
+          todayInPacific(new Date()),
+        );
 
         if (!eligibility.allowed) {
           throw new functions.https.HttpsError(
