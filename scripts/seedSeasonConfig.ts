@@ -54,7 +54,7 @@ const main = async (): Promise<void> => {
   );
 };
 
-main().catch((err: unknown) => {
-  console.error(err instanceof Error ? err.message : String(err));
+main().catch((err: Error) => {
+  console.error(err.message);
   process.exit(1);
 });

@@ -1,10 +1,13 @@
-export type LeagueStatus =
-  | "forming"
-  | "scheduled"
-  | "unscheduled"
-  | "active"
-  | "playoffs"
-  | "complete";
+export const LEAGUE_STATUSES = [
+  "forming",
+  "scheduled",
+  "unscheduled",
+  "active",
+  "playoffs",
+  "complete",
+] as const;
+
+export type LeagueStatus = (typeof LEAGUE_STATUSES)[number];
 
 export type League = {
   id: string;

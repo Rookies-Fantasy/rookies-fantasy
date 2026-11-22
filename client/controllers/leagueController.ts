@@ -4,6 +4,7 @@ import { League, LeagueDeadlineBounds } from "@/types/league";
 import { LeagueStandingTeam } from "@/types/standings";
 import { defaultTeam, Team } from "@/types/team";
 import { callFunction, getIdToken } from "@/utils/callableUtils";
+import { toLeagueStatus } from "@/utils/leagueUtils";
 
 const LEAGUE_COLLECTION = "leagues";
 
@@ -48,8 +49,8 @@ export class LeagueController {
           memberCount: data?.memberCount,
           teamIds: data?.teamIds ?? [],
           userIds: data.userIds ?? [],
-          deadline: data?.deadline,
-          status: data?.status,
+          deadline: typeof data?.deadline === "string" ? data.deadline : "",
+          status: toLeagueStatus(data?.status ?? ""),
           playoffTeams: data?.playoffTeams ?? null,
           regularSeasonWeeks: data?.regularSeasonWeeks ?? null,
           playoffStartWeek: data?.playoffStartWeek ?? null,
@@ -87,8 +88,8 @@ export class LeagueController {
         memberCount: data?.memberCount,
         teamIds: data?.teamIds ?? [],
         userIds: data?.userIds ?? [],
-        deadline: data?.deadline,
-        status: data?.status,
+        deadline: typeof data?.deadline === "string" ? data.deadline : "",
+        status: toLeagueStatus(data?.status ?? ""),
         playoffTeams: data?.playoffTeams ?? null,
         regularSeasonWeeks: data?.regularSeasonWeeks ?? null,
         playoffStartWeek: data?.playoffStartWeek ?? null,

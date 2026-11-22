@@ -1,7 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useLocalSearchParams, router } from "expo-router";
 import { WarningCircle } from "phosphor-react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   View,
@@ -29,13 +29,13 @@ import { PressableLink } from "@/components/PressableLink";
 import Screen from "@/components/Screen";
 import { LeagueController } from "@/controllers/leagueController";
 import { UserController } from "@/controllers/userController";
+import { useLeague } from "@/hooks/useLeague";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
-import { League } from "@/types/league";
 import { getPacificDateString } from "@/utils/dateUtils";
-import { isNotNil } from "@/utils/jsUtils";
+import { isNil, isNotNil } from "@/utils/jsUtils";
 import { isLeagueClosed } from "@/utils/leagueUtils";
 
 const joinLeagueSchema = yup.object({
@@ -70,29 +70,11 @@ const JoinLeague = () => {
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
 
   const { leagueId } = useLocalSearchParams<{ leagueId?: string }>();
-  const [invitedLeague, setInvitedLeague] = useState<League | null>(null);
-
-  useEffect(() => {
-    if (!leagueId) return;
-
-    const fetchLeague = async () => {
-      try {
-        const league = await LeagueController.getLeague(leagueId);
-
-        if (!league) {
-          Alert.alert("Error", "League not found.");
-          return;
-        }
-
-        setInvitedLeague(league);
-      } catch (error) {
-        console.error("Failed to fetch league:", error);
-        Alert.alert("Error", "Failed to load league.");
-      }
-    };
-
-    fetchLeague();
-  }, [leagueId]);
+  const {
+    league: invitedLeague,
+    isLoading: isLeagueLoading,
+    isError: isLeagueError,
+  } = useLeague(leagueId ?? "");
 
   // Animation value for sliding
   const gestureTranslateX = useSharedValue(0);
@@ -219,6 +201,18 @@ const JoinLeague = () => {
       <Screen>
         <View className="flex-1 items-center justify-center px-6">
           <Text className="pbk-h5 text-base-white">Invalid invite link</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (isLeagueError || (!isLeagueLoading && isNil(invitedLeague))) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="pbk-h5 text-base-white">
+            {isLeagueError ? "Failed to load league" : "League not found"}
+          </Text>
         </View>
       </Screen>
     );
