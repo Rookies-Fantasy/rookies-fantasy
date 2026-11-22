@@ -30,12 +30,10 @@ import Screen from "@/components/Screen";
 import { LeagueController } from "@/controllers/leagueController";
 import { UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import {
-  selectCurrentLeague,
-  setCurrentLeague,
-} from "@/state/slices/leagueSlice";
+import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { League } from "@/types/league";
 import { getPacificDateString } from "@/utils/dateUtils";
 import { isNotNil } from "@/utils/jsUtils";
 import { isLeagueClosed } from "@/utils/leagueUtils";
@@ -72,7 +70,7 @@ const JoinLeague = () => {
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
 
   const { leagueId } = useLocalSearchParams<{ leagueId?: string }>();
-  const currentLeague = useAppSelector(selectCurrentLeague);
+  const [invitedLeague, setInvitedLeague] = useState<League | null>(null);
 
   useEffect(() => {
     if (!leagueId) return;
@@ -86,7 +84,7 @@ const JoinLeague = () => {
           return;
         }
 
-        dispatch(setCurrentLeague(league));
+        setInvitedLeague(league);
       } catch (error) {
         console.error("Failed to fetch league:", error);
         Alert.alert("Error", "Failed to load league.");
@@ -94,7 +92,7 @@ const JoinLeague = () => {
     };
 
     fetchLeague();
-  }, [dispatch, leagueId]);
+  }, [leagueId]);
 
   // Animation value for sliding
   const gestureTranslateX = useSharedValue(0);
@@ -172,7 +170,7 @@ const JoinLeague = () => {
   };
 
   const handleJoinLeague = async (data: JoinLeagueFormData) => {
-    if (!leagueId || !currentLeague) {
+    if (!leagueId || !invitedLeague) {
       Alert.alert("No league found", "Please try again.");
       return;
     }
@@ -184,7 +182,7 @@ const JoinLeague = () => {
         abbreviation: data.abbreviation,
         logoUrl: data.logoUrl,
         isLeagueTeam: true,
-        balance: currentLeague.budget,
+        balance: invitedLeague.budget,
       });
 
       const teamData = await UserController.getUserTeam(userId, teamId);
@@ -227,9 +225,8 @@ const JoinLeague = () => {
   }
 
   if (
-    isNotNil(currentLeague) &&
-    currentLeague.id === leagueId &&
-    isLeagueClosed(currentLeague, getPacificDateString(new Date()))
+    isNotNil(invitedLeague) &&
+    isLeagueClosed(invitedLeague, getPacificDateString(new Date()))
   ) {
     return (
       <Screen>
@@ -289,10 +286,10 @@ const JoinLeague = () => {
                     </Text>
                   </View>
 
-                  {currentLeague && (
+                  {invitedLeague && (
                     <View className="rounded-3xl bg-gray-900 p-6 shadow-lg">
                       <Text className="pbk-h5 mb-1 text-center text-base-white">
-                        {currentLeague.name}
+                        {invitedLeague.name}
                       </Text>
 
                       <View className="mb-8">
@@ -301,8 +298,8 @@ const JoinLeague = () => {
                             Teams Joined
                           </Text>
                           <Text className="pbk-b1 text-base-white">
-                            {currentLeague.memberCount} /{" "}
-                            {currentLeague.numberOfTeams}
+                            {invitedLeague.memberCount} /{" "}
+                            {invitedLeague.numberOfTeams}
                           </Text>
                         </View>
 
@@ -311,8 +308,8 @@ const JoinLeague = () => {
                             className="h-3 rounded-full bg-white"
                             style={{
                               width: `${
-                                (currentLeague.memberCount /
-                                  currentLeague.numberOfTeams) *
+                                (invitedLeague.memberCount /
+                                  invitedLeague.numberOfTeams) *
                                 100
                               }%`,
                             }}
@@ -326,7 +323,7 @@ const JoinLeague = () => {
                         </Text>
 
                         <Text className="text-4xl font-bold text-base-white">
-                          ${(currentLeague.budget / 1_000_000).toFixed(0)}M
+                          ${(invitedLeague.budget / 1_000_000).toFixed(0)}M
                         </Text>
 
                         <Text className="pbk-b3 mt-2 px-6 text-center text-gray-500">
