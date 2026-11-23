@@ -11,11 +11,15 @@ const LEAGUE_COLLECTION = "leagues";
 const SIGNED_OUT_ERROR = "No authenticated user";
 const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
 const JOIN_SIGNED_OUT_ERROR = "You must be signed in to join a league";
+const UPDATE_SIGNED_OUT_ERROR = "You must be signed in to edit a league";
 
-export type LeagueEditModel = {
+export type LeagueSettingsModel = {
   name: string;
   numberOfTeams: number;
   budget: number;
+};
+
+export type LeagueEditModel = LeagueSettingsModel & {
   initialTeamId: string;
   deadline: string;
 };
@@ -44,6 +48,7 @@ export class LeagueController {
         const league: League = {
           id: doc.id,
           name: data?.name,
+          creatorUserId: data?.creatorUserId,
           numberOfTeams: data?.numberOfTeams,
           budget: data?.budget,
           memberCount: data?.memberCount,
@@ -83,6 +88,7 @@ export class LeagueController {
       return {
         id: leagueDoc.id,
         name: data?.name,
+        creatorUserId: data?.creatorUserId,
         numberOfTeams: data?.numberOfTeams,
         budget: data?.budget,
         memberCount: data?.memberCount,
@@ -179,6 +185,29 @@ export class LeagueController {
       return league;
     } catch (error) {
       console.error("Join league error:", error);
+      throw error;
+    }
+  };
+
+  static updateLeague = async (
+    leagueId: string,
+    params: LeagueSettingsModel,
+  ): Promise<League> => {
+    try {
+      const { league } = await callFunction<{ league: League }>(
+        "updateLeague",
+        {
+          leagueId,
+          name: params.name,
+          numberOfTeams: params.numberOfTeams,
+          budget: params.budget,
+        },
+        UPDATE_SIGNED_OUT_ERROR,
+      );
+
+      return league;
+    } catch (error) {
+      console.error("Error updating league:", error);
       throw error;
     }
   };

@@ -15,6 +15,7 @@ import {
   TEAMS_STEP,
   TeamRecord,
   RawPayload,
+  UpdateLeagueInput,
 } from "./types";
 import { hasDeadlinePassed, isIsoDate } from "./season";
 
@@ -142,12 +143,25 @@ const isOnScale = (
   value <= max &&
   (value - min) % step === 0;
 
-// Validates a `createLeague` payload. Every field the league document ends up
-// holding is derived from here or from the verified auth context — anything else
-// the caller sends (creatorUserId, userIds, memberCount, ...) is discarded.
-export const validateCreateLeagueInput = (
+type LeagueSettings = Pick<LeagueDocument, "name" | "numberOfTeams" | "budget">;
+
+// "on-scale" is the create rule. Edits use "any-count" because a scheduled league
+// stores its actual (possibly odd) team count, and renaming it must still pass;
+// evaluateUpdateEligibility applies the scale only when the count changes.
+type TeamsRule = "on-scale" | "any-count";
+
+const TEAMS_SCALE_MESSAGE = `Number of teams must be between ${MIN_TEAMS} and ${MAX_TEAMS}, in steps of ${TEAMS_STEP}`;
+
+const isTeamCount = (value: JsonValue, rule: TeamsRule): value is number =>
+  rule === "on-scale"
+    ? isOnScale(value, MIN_TEAMS, MAX_TEAMS, TEAMS_STEP)
+    : isFiniteNumber(value) && Number.isInteger(value) && value > 0;
+
+// The owner-chosen settings shared by `createLeague` and `updateLeague`.
+const validateLeagueSettings = (
   payload: RawPayload,
-): InputValidation<CreateLeagueInput> => {
+  teamsRule: TeamsRule,
+): InputValidation<LeagueSettings> => {
   const rawName = payload.name;
 
   if (typeof rawName !== "string" || rawName.trim().length === 0) {
@@ -163,11 +177,8 @@ export const validateCreateLeagueInput = (
   }
 
   const numberOfTeams = payload.numberOfTeams;
-  if (!isOnScale(numberOfTeams, MIN_TEAMS, MAX_TEAMS, TEAMS_STEP)) {
-    return {
-      valid: false,
-      message: `Number of teams must be between ${MIN_TEAMS} and ${MAX_TEAMS}, in steps of ${TEAMS_STEP}`,
-    };
+  if (!isTeamCount(numberOfTeams, teamsRule)) {
+    return { valid: false, message: TEAMS_SCALE_MESSAGE };
   }
 
   const budget = payload.budget;
@@ -176,6 +187,20 @@ export const validateCreateLeagueInput = (
       valid: false,
       message: `Budget must be between ${MIN_BUDGET} and ${MAX_BUDGET}, in steps of ${BUDGET_STEP}`,
     };
+  }
+
+  return { valid: true, input: { name, numberOfTeams, budget } };
+};
+
+// Validates a `createLeague` payload. Every field the league document ends up
+// holding is derived from here or from the verified auth context — anything else
+// the caller sends (creatorUserId, userIds, memberCount, ...) is discarded.
+export const validateCreateLeagueInput = (
+  payload: RawPayload,
+): InputValidation<CreateLeagueInput> => {
+  const settings = validateLeagueSettings(payload, "on-scale");
+  if (!settings.valid) {
+    return settings;
   }
 
   const initialTeamId = readDocumentId(payload.initialTeamId);
@@ -191,15 +216,37 @@ export const validateCreateLeagueInput = (
 
   return {
     valid: true,
-    input: {
-      name,
-      numberOfTeams,
-      budget,
-      initialTeamId,
-      deadline,
-    },
+    input: { ...settings.input, initialTeamId, deadline },
   };
 };
+
+// Validates an `updateLeague` payload. Only the settings are editable; the
+// owner and membership fields can't be changed through this path.
+export const validateUpdateLeagueInput = (
+  payload: RawPayload,
+): InputValidation<UpdateLeagueInput> => {
+  const leagueId = readDocumentId(payload.leagueId);
+  if (leagueId === null) {
+    return { valid: false, message: idErrorMessage("leagueId") };
+  }
+
+  const settings = validateLeagueSettings(payload, "any-count");
+  if (!settings.valid) {
+    return settings;
+  }
+
+  return { valid: true, input: { leagueId, ...settings.input } };
+};
+
+// memberCount is only a counter, so the membership arrays are checked too:
+// whichever is furthest along is how many teams the league holds.
+const membershipOf = (league: LeagueDocument): number =>
+  Math.max(league.memberCount, league.teamIds.length, league.userIds.length);
+
+// Registration closes when the deadline day ends (midnight PT) or once the league
+// has left `forming`, whichever comes first.
+const isRegistrationClosed = (league: LeagueDocument, today: string): boolean =>
+  league.status !== "forming" || hasDeadlinePassed(league.deadline, today);
 
 const reject = (code: JoinRejectionCode, message: string): JoinEligibility => ({
   allowed: false,
@@ -225,26 +272,90 @@ export const evaluateJoinEligibility = (
     return reject("user-already-joined", "User already joined");
   }
 
-  if (
-    league.status !== "forming" ||
-    hasDeadlinePassed(league.deadline, today)
-  ) {
+  if (isRegistrationClosed(league, today)) {
     return reject(
       "league-closed",
       "This league is no longer accepting members",
     );
   }
 
-  // memberCount is only a counter, so the membership arrays are checked too:
-  // whichever is furthest along decides whether the league is full.
-  const membership = Math.max(
-    league.memberCount,
-    league.teamIds.length,
-    league.userIds.length,
-  );
-
-  if (membership >= league.numberOfTeams) {
+  if (membershipOf(league) >= league.numberOfTeams) {
     return reject("league-full", "League is full");
+  }
+
+  return { allowed: true };
+};
+
+export type UpdateRejectionCode =
+  | "not-league-owner"
+  | "registration-closed"
+  | "invalid-team-count"
+  | "below-member-count"
+  | "budget-locked";
+
+export type UpdateEligibility =
+  | { allowed: true }
+  | { allowed: false; code: UpdateRejectionCode; message: string };
+
+// Only the creator may edit a league. Once registration closes, the team count
+// and budget are fixed for the season; only the name can change. Before that, the
+// team count can't drop below the teams already in it, and the budget is locked
+// once anyone else has joined: each team's balance is copied from the budget when
+// it is created, so changing it afterwards would leave existing teams out of step
+// with new ones.
+export const evaluateUpdateEligibility = (
+  league: LeagueDocument,
+  input: UpdateLeagueInput,
+  userId: string,
+  today: string,
+): UpdateEligibility => {
+  if (league.creatorUserId !== userId) {
+    return {
+      allowed: false,
+      code: "not-league-owner",
+      message: "Only the league owner can edit this league",
+    };
+  }
+
+  const teamsChanged = input.numberOfTeams !== league.numberOfTeams;
+  const budgetChanged = input.budget !== league.budget;
+
+  if (isRegistrationClosed(league, today) && (teamsChanged || budgetChanged)) {
+    return {
+      allowed: false,
+      code: "registration-closed",
+      message:
+        "Number of teams and budget can't be changed after the registration deadline",
+    };
+  }
+
+  if (
+    teamsChanged &&
+    !isOnScale(input.numberOfTeams, MIN_TEAMS, MAX_TEAMS, TEAMS_STEP)
+  ) {
+    return {
+      allowed: false,
+      code: "invalid-team-count",
+      message: TEAMS_SCALE_MESSAGE,
+    };
+  }
+
+  const membership = membershipOf(league);
+
+  if (input.numberOfTeams < membership) {
+    return {
+      allowed: false,
+      code: "below-member-count",
+      message: `Number of teams can't be lower than the ${membership} teams already in the league`,
+    };
+  }
+
+  if (budgetChanged && membership > 1) {
+    return {
+      allowed: false,
+      code: "budget-locked",
+      message: "Budget can't be changed after other teams have joined",
+    };
   }
 
   return { allowed: true };
