@@ -16,12 +16,13 @@ module.exports = {
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: "./tsconfig.json",
+    project: ["./tsconfig.json", "./tsconfig.test.json"],
     sourceType: "module",
     tsconfigRootDir: __dirname,
   },
   ignorePatterns: [
     "/lib/**/*", // Ignore built files.
+    "/lib-test/**/*", // Ignore built test files.
     "/generated/**/*", // Ignore generated files.
     ".eslintrc.js", // Ignore this config file itself
   ],

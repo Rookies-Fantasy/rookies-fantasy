@@ -13,6 +13,7 @@ type CommandName =
   | "draft-ready"
   | "league"
   | "league-ready"
+  | "schedule-ready"
   | "queue-ready"
   | "queue-opponent"
   | "nba-players"
@@ -34,6 +35,7 @@ const COMMANDS: Record<CommandName, () => Promise<CommandModule>> = {
   "draft-ready": () => import("./commands/seedDraftReady.js"),
   league: () => import("./commands/seedLeague.js"),
   "league-ready": () => import("./commands/seedLeagueReady.js"),
+  "schedule-ready": () => import("./commands/seedScheduleReady.js"),
   "queue-ready": () => import("./commands/seedQueueReady.js"),
   "queue-opponent": () => import("./commands/queueOpponent.js"),
   "nba-players": () => import("./commands/seedNbaPlayers.js"),

@@ -371,18 +371,18 @@ export const validateLeagueId = (value: JsonValue): InputValidation<string> => {
   return { valid: true, input: leagueId };
 };
 
-const toStringOrEmpty = (value: JsonValue): string =>
+export const toStringOrEmpty = (value: JsonValue): string =>
   typeof value === "string" ? value : "";
 
 const toCount = (value: JsonValue): number =>
   isFiniteNumber(value) && value >= 0 ? value : 0;
 
-const isPayload = (value: JsonValue): value is RawPayload =>
+export const isPayload = (value: JsonValue): value is RawPayload =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const EMPTY_RECORD: TeamRecord = { wins: 0, losses: 0, draws: 0 };
 
-const toTeamRecord = (value: JsonValue): TeamRecord => {
+export const toTeamRecord = (value: JsonValue): TeamRecord => {
   if (!isPayload(value)) {
     return EMPTY_RECORD;
   }
