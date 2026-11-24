@@ -7,18 +7,17 @@ type ThemeWrapperProps = {
   children: React.ReactNode;
 };
 
-const baseStyle = { flex: 1 } as const;
-
 export const ThemeWrapper = ({ children }: ThemeWrapperProps) => {
   const { mode, theme } = useAppTheme();
 
   // Keep the CSS variable object stable between renders. A new vars() object
   // makes NativeWind treat the theme variables as changed and re-render every
   // component that reads them.
-  const style = useMemo(
-    () => [baseStyle, applyCssTheme(theme, mode)],
-    [theme, mode],
-  );
+  const cssTheme = useMemo(() => applyCssTheme(theme, mode), [theme, mode]);
 
-  return <View style={style}>{children}</View>;
+  return (
+    <View className="flex-1" style={cssTheme}>
+      {children}
+    </View>
+  );
 };
