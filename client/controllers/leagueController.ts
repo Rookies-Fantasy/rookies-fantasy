@@ -1,14 +1,33 @@
 import firestore from "@react-native-firebase/firestore";
 import { League } from "@/types/league";
-import { Team } from "@/types/team";
+import { defaultTeam, Team } from "@/types/team";
+import { callFunction } from "@/utils/callableUtils";
 
 const LEAGUE_COLLECTION = "leagues";
+
+const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
+const JOIN_SIGNED_OUT_ERROR = "You must be signed in to join a league";
 
 export type LeagueEditModel = {
   name: string;
   numberOfTeams: number;
   budget: number;
-  initialTeamId?: string;
+  initialTeamId: string;
+};
+
+export type JoinLeagueTeamModel = {
+  teamName: string;
+  abbreviation: string;
+  logoUrl: string;
+};
+
+type JoinedTeamResponse = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+  balance: number;
+  isLeagueTeam: boolean;
 };
 
 export type LeagueTeamInfo = {
@@ -81,85 +100,59 @@ export class LeagueController {
     }
   };
 
-  static createLeague = async (
-    userId: string,
-    params: LeagueEditModel,
-  ): Promise<League> => {
+  static createLeague = async (params: LeagueEditModel): Promise<League> => {
     try {
-      // Create team for the user in their teams subcollection
-
-      const leagueRef = await firestore()
-        .collection(LEAGUE_COLLECTION)
-        .add({
+      const { league } = await callFunction<{ league: League }>(
+        "createLeague",
+        {
           name: params.name,
-          creatorUserId: userId,
           numberOfTeams: params.numberOfTeams,
           budget: params.budget,
-          memberCount: 1,
-          teamIds: [params.initialTeamId],
-          userIds: [userId],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+          initialTeamId: params.initialTeamId,
+        },
+        CREATE_SIGNED_OUT_ERROR,
+      );
 
-      const leagueDoc = await leagueRef.get();
-      const data = leagueDoc.data();
-
-      return {
-        budget: data?.budget,
-        id: leagueDoc.id,
-        name: data?.name,
-        numberOfTeams: data?.numberOfTeams,
-        memberCount: data?.memberCount,
-        teamIds: data?.teamIds ?? [],
-        userIds: data?.userIds ?? [],
-      };
+      return league;
     } catch (error) {
       console.error("Error creating league:", error);
       throw error;
     }
   };
 
+  // The server creates the team and joins it to the league in one transaction,
+  // so on failure nothing has been written and there is no team to clean up.
   static joinLeague = async (
     leagueId: string,
-    teamId: string,
-    userId: string,
-  ) => {
+    team: JoinLeagueTeamModel,
+  ): Promise<LeagueTeamInfo> => {
     try {
-      await firestore().runTransaction(async (transaction) => {
-        const leagueRef = firestore()
-          .collection(LEAGUE_COLLECTION)
-          .doc(leagueId);
+      const response = await callFunction<{
+        league: League;
+        team: JoinedTeamResponse;
+      }>(
+        "joinLeague",
+        {
+          leagueId,
+          teamName: team.teamName,
+          abbreviation: team.abbreviation,
+          logoUrl: team.logoUrl,
+        },
+        JOIN_SIGNED_OUT_ERROR,
+      );
 
-        const leagueDoc = await transaction.get(leagueRef);
-
-        if (!leagueDoc.exists) {
-          throw new Error("League not found");
-        }
-
-        const league = leagueDoc.data();
-
-        if (league?.teamIds?.includes(teamId)) {
-          throw new Error("Team already joined");
-        }
-
-        if (league?.userIds?.includes(userId)) {
-          throw new Error("User already joined");
-        }
-
-        if (league?.memberCount >= league?.numberOfTeams) {
-          throw new Error("League is full");
-        }
-
-        transaction.update(leagueRef, {
-          memberCount: firestore.FieldValue.increment(1),
-          teamIds: firestore.FieldValue.arrayUnion(teamId),
-          userIds: firestore.FieldValue.arrayUnion(userId),
-        });
-      });
-    } catch (error: any) {
+      return {
+        league: response.league,
+        team: {
+          ...response.team,
+          lineup: defaultTeam.lineup,
+          bench: defaultTeam.bench,
+          record: defaultTeam.record,
+        },
+      };
+    } catch (error) {
       console.error("Join league error:", error);
-      throw new Error(error.message);
+      throw error;
     }
   };
 }

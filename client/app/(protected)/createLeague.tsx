@@ -186,6 +186,14 @@ const CreateLeague = () => {
       });
 
       const teamData = await UserController.getUserTeam(userId, teamId);
+
+      const league = await LeagueController.createLeague({
+        name: data.leagueName,
+        numberOfTeams: data.numberOfTeams,
+        budget: data.budget,
+        initialTeamId: teamId,
+      });
+
       if (teamData) {
         dispatch(
           setTeam({
@@ -201,19 +209,15 @@ const CreateLeague = () => {
         );
       }
 
-      const league = await LeagueController.createLeague(userId, {
-        name: data.leagueName,
-        numberOfTeams: data.numberOfTeams,
-        budget: data.budget,
-        initialTeamId: teamId,
-      });
-
       dispatch(setCurrentLeague(league));
       router.dismissAll();
       router.replace("/(protected)/(tabs)");
     } catch (error) {
       console.error("Failed to create league:", error);
-      Alert.alert("Error", "Failed to create league. Please try again.");
+
+      const message =
+        error instanceof Error ? error.message : "Something went wrong";
+      Alert.alert("Failed to create league", `${message}. Please try again.`);
     } finally {
       setIsLoading(false);
     }
