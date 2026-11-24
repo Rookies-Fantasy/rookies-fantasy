@@ -1,7 +1,15 @@
 import { Augment, Prerequisite, Condition } from "@/types/augment";
 import { GameStats } from "@/types/matchup";
-import { Player } from "@/types/player";
-import { TeamLineupSlot } from "@/types/team";
+import { defaultPlayer, Player, RawStatLine } from "@/types/player";
+import {
+  Position,
+  PLAYER_POSITIONS,
+  PlayerTeamDisplay,
+  SlotPosition,
+  TeamLineupSlot,
+} from "@/types/team";
+import { isNotNil } from "@/utils/jsUtils";
+import { toPlayerAverageStats } from "@/utils/playerUtils";
 
 const STAT_MULTIPLIERS: Record<string, number> = {
   points: 1,
@@ -33,8 +41,9 @@ export const validateAugment = (
   }
 
   const activePlayers = lineup
-    .filter((slot) => slot.player !== null)
-    .map((slot) => slot.player as Player);
+    .map((slot) => slot.player)
+    .filter(isNotNil)
+    .map(toAugmentPlayer);
 
   const unmetPrerequisites: string[] = [];
   const metPrerequisites: string[] = [];
@@ -73,6 +82,22 @@ export const validateAugment = (
     metPrerequisites,
   };
 };
+
+const isPlayerPosition = (position: SlotPosition): position is Position =>
+  PLAYER_POSITIONS.includes(position as Position);
+
+const toPlayerPositions = (positions: SlotPosition[]): Position[] =>
+  positions.filter(isPlayerPosition);
+
+// Lineup players are already mapped to a typed shape (with zero-filled
+// averageStats and a positions fallback) by UserController. This only narrows
+// a player's eligible positions to real positions (PG/SG/SF/PF/C) for the
+// prerequisite checks.
+const toAugmentPlayer = (player: PlayerTeamDisplay): Player => ({
+  ...defaultPlayer,
+  ...player,
+  positions: toPlayerPositions(player.positions),
+});
 
 const evaluatePrerequisite = (
   prerequisite: Prerequisite,
@@ -129,7 +154,7 @@ const evaluatePositionRequirement = (
   }
 
   const qualifyingPlayers = players.filter((player) =>
-    player.positions.some((pos) => position.includes(pos as any)),
+    player.positions.some((pos) => position.includes(pos)),
   );
 
   return {
@@ -228,25 +253,27 @@ export const applyAugmentEffects = (
   return baseFantasyPoints + totalBonus;
 };
 
-const getStatValue = (
-  stats: Partial<GameStats> | undefined,
-  stat: string,
-): number => {
+// Stats can be missing, partial or explicitly null in Firestore data despite
+// the type (e.g. `minutes: null`), so every stat is normalized to a number,
+// with missing and null values read as 0.
+const getStatValue = (stats: GameStats | RawStatLine, stat: string): number => {
+  const safeStats = toPlayerAverageStats(stats);
+
   switch (stat) {
     case "points":
-      return stats?.points ?? 0;
+      return safeStats.points;
     case "rebounds":
-      return stats?.rebounds ?? 0;
+      return safeStats.rebounds;
     case "assists":
-      return stats?.assists ?? 0;
+      return safeStats.assists;
     case "steals":
-      return stats?.steals ?? 0;
+      return safeStats.steals;
     case "blocks":
-      return stats?.blocks ?? 0;
+      return safeStats.blocks;
     case "turnovers":
-      return stats?.turnovers ?? 0;
+      return safeStats.turnovers;
     case "minutes":
-      return stats?.minutes ?? 0;
+      return safeStats.minutes;
     // TODO: Add support for FG%, FT%, 3P%, FGA, FGM, FTA, FTM, 3PA, 3PM
     default:
       return 0;
