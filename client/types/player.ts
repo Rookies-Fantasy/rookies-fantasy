@@ -14,6 +14,8 @@ export type Player = {
   };
   firstName: string;
   gamesPlayed: number;
+  // NBA-owned image URL. Intentionally not rendered (App Store Guideline 5.2);
+  // kept so Firestore data shape is unchanged. Use PlayerAvatar instead.
   headshotUrl: string;
   height: string;
   id: string;
