@@ -74,7 +74,8 @@ backends signs you out and clears cached Firestore data and pending writes.
 ## Workflows
 
 Run commands from `scripts/`. All workflows use `dev@test.com` and
-`opponent@test.com`, both with password `password123`. Before switching
+`opponent@test.com`, both with password `password123`; the league workflow
+also adds `league1@test.com` and `league2@test.com`. Before switching
 workflows, run `npm run seed:clear`, then reseed and relaunch the app.
 
 ### Draft a Team
@@ -112,6 +113,47 @@ partway through the week, use `SIM_DATE` below.
 
 Run `npm run seed:end-matchup` to complete the main user's current matchup,
 update team records, and return participants to idle. It is safe to repeat.
+
+### Browse and Join Leagues
+
+`seed:league-ready` creates four users, a complete ranked team for
+`dev@test.com`, and two leagues:
+
+| League ID              | Name        | Teams | Creator             | `dev@test.com` |
+| ---------------------- | ----------- | ----- | ------------------- | -------------- |
+| `emulator-league-full` | Full League | 4/4   | `dev@test.com`      | Member         |
+| `emulator-league-open` | Open League | 2/6   | `opponent@test.com` | Not a member   |
+
+The other members are `opponent@test.com`, `league1@test.com`, and
+`league2@test.com`. Every member has a complete league team.
+
+Sign in as `dev@test.com` and use the league switcher to open Full League.
+The app only reaches the join screen through an invite link, so open Open
+League with the development build's deep link:
+
+```bash
+# iOS simulator
+xcrun simctl openurl booted "myapp-development://joinLeague?leagueId=emulator-league-open"
+```
+
+Re-running the seed command restores both leagues and their teams. It also
+deletes league teams that no other league uses, owned by the seeded users or by
+anyone who joined these leagues, including teams left behind by a failed join.
+
+To add one more league for an existing user, pass that user's UID:
+
+```bash
+npx cross-env USER_ID=<uid> npm run seed:league
+```
+
+`seed:league` creates a league team for the user and a league with the user as
+its creator and only member. It defaults to `LEAGUE_ID=default-league`,
+`LEAGUE_NAME="Dev League"`, and `NUMBER_OF_TEAMS=4`. The league team gets a
+Firestore-generated ID unless `LEAGUE_TEAM_ID` is set; the command fails rather
+than overwrite a team that already has that ID (such as the ranked
+`default-team`). If the league ID already exists, the command logs a
+message and changes nothing; adding members to an existing league is not
+supported yet.
 
 ## Optional Overrides
 

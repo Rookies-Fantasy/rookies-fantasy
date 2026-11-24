@@ -20,7 +20,12 @@ const configureFirebase = async (): Promise<void> => {
   );
 
   if (previousEnvironment !== currentEnvironment) {
-    await signOut(getAuth());
+    // signOut rejects with auth/no-current-user when nobody is signed in,
+    // which is always the case on a fresh install.
+    const auth = getAuth();
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
 
     // Only discard cached documents and pending writes for a known backend switch.
     // The web implementation has no persistent Firestore cache to clear.

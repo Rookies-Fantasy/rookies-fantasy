@@ -1,4 +1,3 @@
-import { Image } from "expo-image";
 import { Check } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -6,6 +5,7 @@ import Accordion from "./Accordion";
 import BottomSheet from "./BottomSheet";
 import Button from "./Button";
 import RangeSlider from "./RangeSlider";
+import TeamBadge from "./TeamBadge";
 import { NbaTeam } from "@/types/nbaTeams";
 import {
   PlayerFilters,
@@ -166,14 +166,10 @@ const FiltersDrawer = ({
                 onPress={() => handleTeamPress(team)}
               >
                 <View className="flex-row items-center gap-2">
-                  <Image
-                    contentFit="contain"
-                    source={{ uri: team.logoUrl }}
-                    style={{ width: 32, height: 32 }}
+                  <TeamBadge
+                    abbreviation={team.abbreviation}
+                    teamName={team.name}
                   />
-                  <Text className="pbk-b2 text-center text-base-white">
-                    {team.abbreviation}
-                  </Text>
                   <View className="h-5 w-5 items-center justify-center">
                     {isTeamSelected(team) && (
                       <Check color="#A4A7AE" size={20} />
