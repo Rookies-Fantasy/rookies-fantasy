@@ -1,10 +1,15 @@
 import firestore from "@react-native-firebase/firestore";
+import { getFunctionUrl } from "@/firebase/config";
+import { JsonValue } from "@/types/json";
 import { League } from "@/types/league";
+import { LeagueStandingTeam } from "@/types/standings";
 import { defaultTeam, Team } from "@/types/team";
-import { callFunction } from "@/utils/callableUtils";
+import { callFunction, getIdToken } from "@/utils/callableUtils";
+import { parseLeagueStandingTeams } from "@/utils/standingsUtils";
 
 const LEAGUE_COLLECTION = "leagues";
 
+const SIGNED_OUT_ERROR = "No authenticated user";
 const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
 const JOIN_SIGNED_OUT_ERROR = "You must be signed in to join a league";
 
@@ -96,6 +101,32 @@ export class LeagueController {
       };
     } catch (error) {
       console.error("Error fetching league:", error);
+      throw error;
+    }
+  };
+
+  static getLeagueStandingTeams = async (
+    league: League,
+  ): Promise<LeagueStandingTeam[]> => {
+    const idToken = await getIdToken(SIGNED_OUT_ERROR);
+    const url = `${getFunctionUrl("getLeagueStandings")}?leagueId=${league.id}`;
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(`HTTP ${response.status}: ${message}`);
+      }
+
+      const payload: JsonValue = await response.json();
+
+      return parseLeagueStandingTeams(payload);
+    } catch (error) {
+      console.error("getLeagueStandingTeams failed:", url, error);
       throw error;
     }
   };

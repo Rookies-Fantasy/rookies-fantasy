@@ -14,7 +14,10 @@ export type StageLeagueOptions = {
   creatorUserId: string;
   members: LeagueMember[];
   document?: Partial<
-    Omit<LeagueDoc, "creatorUserId" | "memberCount" | "teamIds" | "userIds">
+    Omit<
+      LeagueDoc,
+      "creatorUserId" | "memberCount" | "teamIds" | "userIds" | "teamOwners"
+    >
   >;
 };
 
@@ -47,6 +50,9 @@ export const stageLeague = (
     creatorUserId: options.creatorUserId,
     teamIds: options.members.map((member) => member.teamId),
     userIds: options.members.map((member) => member.userId),
+    teamOwners: Object.fromEntries(
+      options.members.map((member) => [member.teamId, member.userId]),
+    ),
   });
   batch.set(db.collection("leagues").doc(options.leagueId), leagueDocument);
   return leagueDocument;
