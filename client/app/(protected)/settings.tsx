@@ -68,7 +68,7 @@ const Settings = () => {
   const handleDeletePress = () => {
     Alert.alert(
       "Delete account?",
-      "This permanently deletes your account, profile, teams, and league memberships. This cannot be undone.",
+      "This permanently deletes your account and personal information and removes you from your leagues. This cannot be undone.",
       [
         { style: "cancel", text: "Cancel" },
         {
@@ -125,8 +125,9 @@ const Settings = () => {
 
         <View className="mb-8 mt-auto gap-3">
           <Text className="pbk-b3 text-gray-400">
-            Deleting your account permanently removes your profile, teams, and
-            league memberships.
+            Deleting your account permanently removes your personal information
+            and your league memberships. Past match results stay, but are no
+            longer linked to you.
           </Text>
           <Pressable
             className="min-h-12 w-full items-center justify-center rounded-md bg-red-600"
