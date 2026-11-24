@@ -1,4 +1,5 @@
 import { Augment } from "./augment";
+import { PlayerAverageStats } from "./player";
 
 export const TEAM_BALANCE = 150000000;
 
@@ -9,8 +10,13 @@ export type TeamRecord = {
 };
 
 export type PlayerTeamDisplay = {
+  // Saved with the lineup so augment prerequisites can be checked on the
+  // client and by the server's scoring. Mapped with zero fallbacks on read.
+  averageStats: PlayerAverageStats;
   firstName: string;
   lastName: string;
+  // NBA-owned image URL. Intentionally not rendered (App Store Guideline 5.2);
+  // kept so Firestore data shape is unchanged. Use PlayerAvatar instead.
   headshotUrl: string;
   positions: SlotPosition[];
   salary: number;
@@ -49,6 +55,7 @@ export type BenchPosition = `BEN${number}`;
 export type SlotPosition = Position | FlexPosition | BenchPosition;
 
 export const UTIL_POSITIONS: FlexPosition[] = ["UTIL1", "UTIL2", "UTIL3"];
+export const PLAYER_POSITIONS: Position[] = ["PG", "SG", "SF", "PF", "C"];
 
 export const SLOT_ORDER: SlotPosition[] = [
   "PG",

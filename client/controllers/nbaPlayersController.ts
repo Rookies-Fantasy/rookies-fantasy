@@ -3,6 +3,7 @@ import firestore, {
 } from "@react-native-firebase/firestore";
 import { defaultPlayer, Player, PlayerFilters } from "@/types/player";
 import { isNotNil } from "@/utils/jsUtils";
+import { toPlayerAverageStats } from "@/utils/playerUtils";
 
 const PLAYERS_COLLECTION = "nbaPlayers";
 
@@ -29,27 +30,17 @@ export class NbaPlayersController {
         .get();
 
       const data = player.data();
-      const avg = data?.averageStats ?? {};
 
       return player.exists() && isNotNil(data)
         ? {
-            averageStats: {
-              assists: avg.assists ?? 0,
-              blocks: avg.blocks ?? 0,
-              fantasyPoints: avg.fantasyPoints ?? 0,
-              minutes: avg.minutes ?? 0,
-              points: avg.points ?? 0,
-              rebounds: avg.rebounds ?? 0,
-              steals: avg.steals ?? 0,
-              turnovers: avg.turnovers ?? 0,
-            },
+            averageStats: toPlayerAverageStats(data.averageStats),
             firstName: data.firstName,
             gamesPlayed: data.gamesPlayed,
             headshotUrl: data.headshotUrl ?? data.headshotURL ?? "",
             height: data.height,
             id: player.id,
             jerseyNumber: data.jerseyNumber,
-            positions: data.positions,
+            positions: data.positions ?? [],
             salary: data.salary,
             lastName: data.lastName,
             teamAbbreviation: data.teamAbbreviation,
@@ -153,26 +144,16 @@ export class NbaPlayersController {
         .map((doc) => {
           const data = doc.data();
           if (!data) return null;
-          const avg = data.averageStats ?? {};
 
           return {
-            averageStats: {
-              assists: avg.assists ?? 0,
-              blocks: avg.blocks ?? 0,
-              fantasyPoints: avg.fantasyPoints ?? 0,
-              minutes: avg.minutes ?? 0,
-              points: avg.points ?? 0,
-              rebounds: avg.rebounds ?? 0,
-              steals: avg.steals ?? 0,
-              turnovers: avg.turnovers ?? 0,
-            },
+            averageStats: toPlayerAverageStats(data.averageStats),
             firstName: data.firstName,
             gamesPlayed: data.gamesPlayed,
             headshotUrl: data.headshotUrl ?? data.headshotURL ?? "",
             height: data.height,
             id: doc.id,
             jerseyNumber: data.jerseyNumber,
-            positions: data.positions,
+            positions: data.positions ?? [],
             salary: data.salary,
             lastName: data.lastName,
             teamAbbreviation: data.teamAbbreviation,
