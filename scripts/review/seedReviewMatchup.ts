@@ -17,6 +17,7 @@ import {
   type Firestore,
 } from "firebase-admin/firestore";
 import { parseArgs } from "node:util";
+import type { PlayerAverageStats } from "../../client/types/player.js";
 import { TEAM_BALANCE } from "../../client/types/team.js";
 import type {
   PlayerTeamDisplay,
@@ -96,6 +97,24 @@ const initFirebase = ({ live, projectId }: Options) => {
   return { db: getFirestore(), auth: getAuth() };
 };
 
+const readStat = (stats: DocumentData, key: keyof PlayerAverageStats) =>
+  typeof stats[key] === "number" ? (stats[key] as number) : 0;
+
+// Missing stats are saved as zeros, matching the app's lineupMapper.
+const toAverageStats = (raw: DocumentData | null): PlayerAverageStats => {
+  const stats = raw ?? {};
+  return {
+    assists: readStat(stats, "assists"),
+    blocks: readStat(stats, "blocks"),
+    fantasyPoints: readStat(stats, "fantasyPoints"),
+    minutes: readStat(stats, "minutes"),
+    points: readStat(stats, "points"),
+    rebounds: readStat(stats, "rebounds"),
+    steals: readStat(stats, "steals"),
+    turnovers: readStat(stats, "turnovers"),
+  };
+};
+
 const toTeamPlayer = (doc: DocumentData): PlayerTeamDisplay | null => {
   const id = String(doc.playerId ?? "");
   const positions = Array.isArray(doc.positions)
@@ -105,6 +124,7 @@ const toTeamPlayer = (doc: DocumentData): PlayerTeamDisplay | null => {
     return null;
   }
   return {
+    averageStats: toAverageStats(doc.averageStats ?? null),
     id,
     firstName: String(doc.firstName ?? ""),
     lastName: String(doc.lastName ?? ""),
