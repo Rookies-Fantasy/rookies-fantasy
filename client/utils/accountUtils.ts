@@ -45,7 +45,11 @@ export const isPasswordUser = (): boolean => {
   return user !== null && getReauthProviderId(user) === "password";
 };
 
-const reauthenticateWithApple = async (user: FirebaseAuthTypes.User) => {
+// Returns Apple's one-time authorization code, which `deleteAccount` uses to
+// revoke the user's Apple tokens once the account is actually deleted.
+const reauthenticateWithApple = async (
+  user: FirebaseAuthTypes.User,
+): Promise<string | null> => {
   if (Platform.OS !== "ios" || !appleAuth.isSupported) {
     throw new Error(
       "Please use an iOS device to delete an account created with Apple.",
@@ -56,7 +60,7 @@ const reauthenticateWithApple = async (user: FirebaseAuthTypes.User) => {
   try {
     response = await appleAuth.performRequest({
       requestedOperation: appleAuth.Operation.LOGIN,
-      requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      requestedScopes: [appleAuth.Scope.EMAIL],
     });
   } catch (error) {
     if (getErrorCode(error) === appleAuth.Error.CANCELED) {
@@ -74,10 +78,7 @@ const reauthenticateWithApple = async (user: FirebaseAuthTypes.User) => {
     auth.AppleAuthProvider.credential(identityToken, nonce),
   );
 
-  // Apple requires revoking the user's tokens when their account is deleted.
-  if (authorizationCode) {
-    await auth().revokeToken(authorizationCode);
-  }
+  return authorizationCode ?? null;
 };
 
 const reauthenticateWithGoogle = async (user: FirebaseAuthTypes.User) => {
@@ -131,10 +132,11 @@ export const deleteAccount = async (password: string = "") => {
   }
 
   const providerId = getReauthProviderId(user);
+  let appleAuthorizationCode: string | null = null;
 
   switch (providerId) {
     case "apple.com":
-      await reauthenticateWithApple(user);
+      appleAuthorizationCode = await reauthenticateWithApple(user);
       break;
     case "google.com":
       await reauthenticateWithGoogle(user);
@@ -149,6 +151,16 @@ export const deleteAccount = async (password: string = "") => {
   }
 
   await user.delete();
+
+  // Apple requires revoking the user's tokens when their account is deleted.
+  // This runs only after the delete succeeds, so a failed delete never leaves
+  // a live account with revoked Apple tokens. The account is already gone at
+  // this point, so a revoke failure is logged rather than surfaced.
+  if (appleAuthorizationCode) {
+    await auth()
+      .revokeToken(appleAuthorizationCode)
+      .catch((error) => console.log("Apple token revocation failed:", error));
+  }
 
   if (providerId === "google.com") {
     await GoogleSignin.signOut().catch(() => null);
