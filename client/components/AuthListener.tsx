@@ -3,66 +3,88 @@ import {
   onAuthStateChanged,
   signOut,
 } from "@react-native-firebase/auth";
+import * as SplashScreen from "expo-splash-screen";
 import { useState, useEffect, ReactNode } from "react";
-import { View } from "react-native";
-import Spinner from "./Spinner";
+import StartupError from "./StartupError";
 import { MatchupController } from "@/controllers/matchupController";
 import { UserController } from "@/controllers/userController";
+import { validateEmulatorSession } from "@/firebase/session";
 import { useAppDispatch } from "@/state/hooks";
+import { clearCurrentLeague } from "@/state/slices/leagueSlice";
 import { setMatchup, clearMatchup } from "@/state/slices/matchupSlice";
-import { setTeam } from "@/state/slices/teamSlice";
+import { setTeam, clearTeam } from "@/state/slices/teamSlice";
 import { setUser, clearUser } from "@/state/slices/userSlice";
-import { hasLiveSession } from "@/utils/authUtils";
 
 type AuthListenerProps = {
   children: ReactNode;
 };
 
 const AuthListener = ({ children }: AuthListenerProps) => {
-  const [initializing, setInitializing] = useState(true);
+  const [status, setStatus] = useState<
+    "loading" | "ready" | "error" | "retrying"
+  >("loading");
+  const [retryCount, setRetryCount] = useState(0);
   const auth = getAuth();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    let userUnsubscribe: (() => void) | null = null;
+    let active = true;
+    let cancelSession: (() => void) | undefined;
 
     const clearSession = () => {
       dispatch(clearUser());
+      dispatch(clearTeam());
       dispatch(clearMatchup());
-      if (userUnsubscribe) {
-        userUnsubscribe();
-        userUnsubscribe = null;
-      }
+      dispatch(clearCurrentLeague());
     };
 
-    const subscriber = onAuthStateChanged(auth, async (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (!active) return;
+      cancelSession?.();
+
+      // Each Auth event replaces the previous session's work and subscription.
+      let cancelled = false;
+      let userUnsubscribe: (() => void) | null = null;
+      cancelSession = () => {
+        cancelled = true;
+        userUnsubscribe?.();
+        userUnsubscribe = null;
+      };
+
       if (!user) {
         clearSession();
-        setInitializing(false);
+        setStatus("ready");
         return;
       }
 
-      // A cached session outlives the account it points at, so verify it before
-      // letting the route guards treat the user as signed in.
-      if (!(await hasLiveSession(user))) {
-        clearSession();
-        try {
+      try {
+        const valid = await validateEmulatorSession(user);
+        if (cancelled) return;
+
+        if (!valid) {
+          clearSession();
           await signOut(auth);
-        } catch (error) {
-          console.error("Error signing out revoked session:", error);
+          if (!cancelled) setStatus("ready");
+          return;
         }
-        setInitializing(false);
+      } catch (error: unknown) {
+        if (!cancelled) {
+          console.error("Error restoring emulator session:", error);
+          setStatus("error");
+        }
         return;
       }
 
       try {
         const userData = await UserController.getUser(user.uid);
+        if (cancelled) return;
         dispatch(setUser(userData));
 
         // Subscribe to real-time user updates
         userUnsubscribe = UserController.subscribeToUser(
           user.uid,
           async (updatedUser) => {
+            if (cancelled) return;
             if (updatedUser) {
               dispatch(setUser(updatedUser));
 
@@ -71,7 +93,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
                   const matchupData = await MatchupController.getUserMatchup(
                     user.uid,
                   );
-                  if (matchupData) {
+                  if (!cancelled && matchupData) {
                     dispatch(setMatchup(matchupData));
                   }
                 } catch (error) {
@@ -83,6 +105,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
         );
 
         const teams = await UserController.getUserTeams(user.uid);
+        if (cancelled) return;
         if (teams?.length > 0) {
           const rankedTeam = teams.find((team) => !team.isLeagueTeam);
           if (rankedTeam) {
@@ -90,28 +113,39 @@ const AuthListener = ({ children }: AuthListenerProps) => {
               user.uid,
               rankedTeam.id,
             );
+            if (cancelled) return;
             dispatch(setTeam(teamData));
           }
         }
       } catch (error) {
-        console.error("Error fetching user document:", error);
+        if (!cancelled) console.error("Error fetching user document:", error);
       }
-      setInitializing(false);
+      if (!cancelled) setStatus("ready");
     });
 
     return () => {
-      subscriber();
-      if (userUnsubscribe) {
-        userUnsubscribe();
-      }
+      active = false;
+      unsubscribeAuth();
+      cancelSession?.();
     };
-  }, [auth, dispatch]);
+  }, [auth, dispatch, retryCount]);
 
-  if (initializing) {
+  useEffect(() => {
+    if (status === "ready" || status === "error") SplashScreen.hide();
+  }, [status]);
+
+  if (status === "loading") return null;
+  if (status === "error" || status === "retrying") {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Spinner />
-      </View>
+      <StartupError
+        isLoading={status === "retrying"}
+        message="Check that the emulators are running and your device can reach them, then try again."
+        onRetry={() => {
+          setStatus("retrying");
+          setRetryCount((previous) => previous + 1);
+        }}
+        title="Unable to restore your session"
+      />
     );
   }
 

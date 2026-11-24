@@ -1,9 +1,11 @@
-import { useColorScheme } from "nativewind";
+import { colorScheme, useColorScheme } from "nativewind";
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { ThemeMode, ThemeName } from "./theme";
@@ -24,28 +26,36 @@ type ThemeProviderProps = {
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [theme, setTheme] = useState<ThemeName>(ThemeName.Purple);
   const [mode, _setMode] = useState<ThemeMode>(ThemeMode.Dark);
-  const { setColorScheme } = useColorScheme();
 
+  // Use NativeWind's imperative colorScheme API rather than the hook's
+  // setColorScheme: its identity changes every render, which re-ran the
+  // effect and reset NativeWind to dark after the user picked another mode.
+  // ThemeMode values ("dark" | "light" | "system") match what
+  // colorScheme.set() accepts, so System hands control back to the OS.
   useEffect(() => {
-    setColorScheme(ThemeMode.Dark);
-  }, [setColorScheme]);
+    colorScheme.set(ThemeMode.Dark);
+  }, []);
 
-  const setMode = (mode: ThemeMode) => {
+  const setMode = useCallback((mode: ThemeMode) => {
     _setMode(mode);
-    setColorScheme(mode);
-  };
+    colorScheme.set(mode);
+  }, []);
 
-  // Default to dark if null gets returned for some reason
+  // In System mode NativeWind follows the OS, so its resolved scheme is the
+  // system preference. Default to dark if null gets returned for some reason.
   const systemMode =
     useColorScheme().colorScheme === "light" ? ThemeMode.Light : ThemeMode.Dark;
   const resolvedMode = mode === ThemeMode.System ? systemMode : mode;
 
+  // Memoize the context value so consumers only re-render when the theme
+  // actually changes, not on every ThemeProvider render.
+  const value = useMemo(
+    () => ({ theme, setTheme, mode: resolvedMode, setMode }),
+    [theme, resolvedMode, setMode],
+  );
+
   return (
-    <ThemeContext.Provider
-      value={{ theme, setTheme, mode: resolvedMode, setMode }}
-    >
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
 };
 

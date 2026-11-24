@@ -1,14 +1,42 @@
 import firestore from "@react-native-firebase/firestore";
+import { getFunctionUrl } from "@/firebase/config";
+import { JsonValue } from "@/types/json";
 import { League } from "@/types/league";
-import { Team } from "@/types/team";
+import { LeagueStandingTeam } from "@/types/standings";
+import { defaultTeam, Team } from "@/types/team";
+import { callFunction, getIdToken } from "@/utils/callableUtils";
+import { parseLeagueStandingTeams } from "@/utils/standingsUtils";
 
 const LEAGUE_COLLECTION = "leagues";
 
-export type LeagueEditModel = {
+const SIGNED_OUT_ERROR = "No authenticated user";
+const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
+const JOIN_SIGNED_OUT_ERROR = "You must be signed in to join a league";
+const UPDATE_SIGNED_OUT_ERROR = "You must be signed in to edit a league";
+
+export type LeagueSettingsModel = {
   name: string;
   numberOfTeams: number;
   budget: number;
-  initialTeamId?: string;
+};
+
+export type LeagueEditModel = LeagueSettingsModel & {
+  initialTeamId: string;
+};
+
+export type JoinLeagueTeamModel = {
+  teamName: string;
+  abbreviation: string;
+  logoUrl: string;
+};
+
+type JoinedTeamResponse = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+  balance: number;
+  isLeagueTeam: boolean;
 };
 
 export type LeagueTeamInfo = {
@@ -35,6 +63,7 @@ export class LeagueController {
         const league: League = {
           id: doc.id,
           name: data?.name,
+          creatorUserId: data?.creatorUserId,
           numberOfTeams: data?.numberOfTeams,
           budget: data?.budget,
           memberCount: data?.memberCount,
@@ -69,6 +98,7 @@ export class LeagueController {
       return {
         id: leagueDoc.id,
         name: data?.name,
+        creatorUserId: data?.creatorUserId,
         numberOfTeams: data?.numberOfTeams,
         budget: data?.budget,
         memberCount: data?.memberCount,
@@ -81,85 +111,108 @@ export class LeagueController {
     }
   };
 
-  static createLeague = async (
-    userId: string,
-    params: LeagueEditModel,
-  ): Promise<League> => {
-    try {
-      // Create team for the user in their teams subcollection
+  static getLeagueStandingTeams = async (
+    league: League,
+  ): Promise<LeagueStandingTeam[]> => {
+    const idToken = await getIdToken(SIGNED_OUT_ERROR);
+    const url = `${getFunctionUrl("getLeagueStandings")}?leagueId=${league.id}`;
 
-      const leagueRef = await firestore()
-        .collection(LEAGUE_COLLECTION)
-        .add({
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(`HTTP ${response.status}: ${message}`);
+      }
+
+      const payload: JsonValue = await response.json();
+
+      return parseLeagueStandingTeams(payload);
+    } catch (error) {
+      console.error("getLeagueStandingTeams failed:", url, error);
+      throw error;
+    }
+  };
+
+  static createLeague = async (params: LeagueEditModel): Promise<League> => {
+    try {
+      const { league } = await callFunction<{ league: League }>(
+        "createLeague",
+        {
           name: params.name,
-          creatorUserId: userId,
           numberOfTeams: params.numberOfTeams,
           budget: params.budget,
-          memberCount: 1,
-          teamIds: [params.initialTeamId],
-          userIds: [userId],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+          initialTeamId: params.initialTeamId,
+        },
+        CREATE_SIGNED_OUT_ERROR,
+      );
 
-      const leagueDoc = await leagueRef.get();
-      const data = leagueDoc.data();
-
-      return {
-        budget: data?.budget,
-        id: leagueDoc.id,
-        name: data?.name,
-        numberOfTeams: data?.numberOfTeams,
-        memberCount: data?.memberCount,
-        teamIds: data?.teamIds ?? [],
-        userIds: data?.userIds ?? [],
-      };
+      return league;
     } catch (error) {
       console.error("Error creating league:", error);
       throw error;
     }
   };
 
+  // The server creates the team and joins it to the league in one transaction,
+  // so on failure nothing has been written and there is no team to clean up.
   static joinLeague = async (
     leagueId: string,
-    teamId: string,
-    userId: string,
-  ) => {
+    team: JoinLeagueTeamModel,
+  ): Promise<LeagueTeamInfo> => {
     try {
-      await firestore().runTransaction(async (transaction) => {
-        const leagueRef = firestore()
-          .collection(LEAGUE_COLLECTION)
-          .doc(leagueId);
+      const response = await callFunction<{
+        league: League;
+        team: JoinedTeamResponse;
+      }>(
+        "joinLeague",
+        {
+          leagueId,
+          teamName: team.teamName,
+          abbreviation: team.abbreviation,
+          logoUrl: team.logoUrl,
+        },
+        JOIN_SIGNED_OUT_ERROR,
+      );
 
-        const leagueDoc = await transaction.get(leagueRef);
-
-        if (!leagueDoc.exists) {
-          throw new Error("League not found");
-        }
-
-        const league = leagueDoc.data();
-
-        if (league?.teamIds?.includes(teamId)) {
-          throw new Error("Team already joined");
-        }
-
-        if (league?.userIds?.includes(userId)) {
-          throw new Error("User already joined");
-        }
-
-        if (league?.memberCount >= league?.numberOfTeams) {
-          throw new Error("League is full");
-        }
-
-        transaction.update(leagueRef, {
-          memberCount: firestore.FieldValue.increment(1),
-          teamIds: firestore.FieldValue.arrayUnion(teamId),
-          userIds: firestore.FieldValue.arrayUnion(userId),
-        });
-      });
-    } catch (error: any) {
+      return {
+        league: response.league,
+        team: {
+          ...response.team,
+          lineup: defaultTeam.lineup,
+          bench: defaultTeam.bench,
+          record: defaultTeam.record,
+        },
+      };
+    } catch (error) {
       console.error("Join league error:", error);
-      throw new Error(error.message);
+      throw error;
+    }
+  };
+
+  static updateLeague = async (
+    leagueId: string,
+    params: LeagueSettingsModel,
+  ): Promise<League> => {
+    try {
+      const { league } = await callFunction<{ league: League }>(
+        "updateLeague",
+        {
+          leagueId,
+          name: params.name,
+          numberOfTeams: params.numberOfTeams,
+          budget: params.budget,
+        },
+        UPDATE_SIGNED_OUT_ERROR,
+      );
+
+      return league;
+    } catch (error) {
+      console.error("Error updating league:", error);
+      throw error;
     }
   };
 }

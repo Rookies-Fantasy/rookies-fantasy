@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Countdown } from "@/types/schedule";
 
 /**
  * useCountdown
@@ -9,10 +10,7 @@ export const useCountdown = (
   targetISO: string | undefined,
   intervalMs: number = 60 * 1000,
 ) => {
-  const [timeRemaining, setTimeRemaining] = useState<{
-    hours: number;
-    minutes: number;
-  }>();
+  const [timeRemaining, setTimeRemaining] = useState<Countdown>();
 
   useEffect(() => {
     if (!targetISO) {
