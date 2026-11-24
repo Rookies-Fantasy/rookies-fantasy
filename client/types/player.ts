@@ -12,6 +12,12 @@ export type PlayerAverageStats = {
   turnovers: number;
 };
 
+// A stat line as it can arrive from Firestore: the object itself, or any of
+// its keys, may be missing or explicitly null (e.g. a player with no games).
+export type RawStatLine = Partial<
+  Record<keyof PlayerAverageStats, number | null>
+> | null;
+
 // Some players have no averageStats in Firestore (e.g. no games played yet),
 // so missing stats are treated as zeros.
 export const defaultAverageStats: PlayerAverageStats = {

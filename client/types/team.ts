@@ -1,4 +1,5 @@
 import { Augment } from "./augment";
+import { PlayerAverageStats } from "./player";
 
 export const TEAM_BALANCE = 150000000;
 
@@ -9,6 +10,9 @@ export type TeamRecord = {
 };
 
 export type PlayerTeamDisplay = {
+  // Saved with the lineup so augment prerequisites can be checked on the
+  // client and by the server's scoring. Mapped with zero fallbacks on read.
+  averageStats: PlayerAverageStats;
   firstName: string;
   lastName: string;
   // NBA-owned image URL. Intentionally not rendered (App Store Guideline 5.2);
