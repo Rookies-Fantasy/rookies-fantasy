@@ -14,9 +14,12 @@ import {
 import {
   evaluateJoinEligibility,
   evaluateUpdateEligibility,
+  getOwnerTeamId,
   isLeagueMember,
   JoinRejectionCode,
+  recomputeBalance,
   toLeagueDocument,
+  toRosterCost,
   toStandingTeam,
   UpdateRejectionCode,
   validateCreateLeagueInput,
@@ -1649,6 +1652,57 @@ const UPDATE_REJECTION_STATUS: Record<
   "not-league-owner": "permission-denied",
   "below-member-count": "failed-precondition",
   "budget-locked": "failed-precondition",
+  "roster-over-budget": "failed-precondition",
+};
+
+type OwnerTeamBalance = {
+  ref: FirebaseFirestore.DocumentReference;
+  balance: number;
+};
+
+// Reads the owner's league team inside the update transaction and works out
+// its balance under the new budget. Throws when the roster costs more than the
+// budget, so neither the league nor the team is written.
+const readOwnerTeamBalance = async (
+  transaction: FirebaseFirestore.Transaction,
+  league: LeagueDocument,
+  budget: number,
+): Promise<OwnerTeamBalance | null> => {
+  const teamId = getOwnerTeamId(league);
+  if (teamId === null) {
+    return null;
+  }
+
+  const teamRef = admin
+    .firestore()
+    .collection(USER_COLLECTION)
+    .doc(league.creatorUserId)
+    .collection(TEAM_SUBCOLLECTION)
+    .doc(teamId);
+  const teamSnapshot = await transaction.get(teamRef);
+
+  if (!teamSnapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      "Your league team was not found",
+    );
+  }
+
+  const rosterCost = toRosterCost(teamSnapshot.data() ?? EMPTY_PAYLOAD);
+  if (rosterCost === null) {
+    console.error(`Team ${teamId} has a malformed lineup or bench`);
+    throw new functions.https.HttpsError("internal", "Team data is invalid");
+  }
+
+  const recompute = recomputeBalance(budget, rosterCost);
+  if (!recompute.allowed) {
+    throw new functions.https.HttpsError(
+      UPDATE_REJECTION_STATUS[recompute.code],
+      recompute.message,
+    );
+  }
+
+  return { ref: teamRef, balance: recompute.balance };
 };
 
 // Updates a league's settings on behalf of its owner.
@@ -1694,12 +1748,27 @@ export const updateLeague = functions.https.onCall(
           );
         }
 
+        // Each team's balance starts at the budget, so a budget change has to
+        // carry over to the owner's team (the only one in the league, since
+        // the budget locks once anyone else joins). Read before any write.
+        const ownerTeam =
+          input.budget === league.budget
+            ? null
+            : await readOwnerTeamBalance(transaction, league, input.budget);
+
         transaction.update(leagueRef, {
           name: input.name,
           numberOfTeams: input.numberOfTeams,
           budget: input.budget,
           updatedAt: FieldValue.serverTimestamp(),
         });
+
+        if (ownerTeam !== null) {
+          transaction.update(ownerTeam.ref, {
+            balance: ownerTeam.balance,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
 
         return {
           league: toLeagueResponse(input.leagueId, {

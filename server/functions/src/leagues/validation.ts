@@ -232,7 +232,8 @@ export const evaluateJoinEligibility = (
 export type UpdateRejectionCode =
   | "not-league-owner"
   | "below-member-count"
-  | "budget-locked";
+  | "budget-locked"
+  | "roster-over-budget";
 
 export type UpdateEligibility =
   | { allowed: true }
@@ -323,3 +324,81 @@ export const isLeagueMember = (
   league: LeagueDocument,
   userId: string,
 ): boolean => userId.length > 0 && league.userIds.includes(userId);
+
+// The team whose balance follows the budget. A budget change is only allowed
+// while the owner is the sole member, so the league's only team is theirs.
+// Returns null when the league has no single team to recompute.
+export const getOwnerTeamId = (league: LeagueDocument): string | null =>
+  league.teamIds.length === 1 ? league.teamIds[0] : null;
+
+// The salary of the player in one lineup or bench slot: 0 for an empty slot,
+// null when the slot or its player is malformed.
+const slotSalary = (slot: JsonValue): number | null => {
+  if (!isPayload(slot)) {
+    return null;
+  }
+
+  const player = slot.player ?? null;
+  if (player === null) {
+    return 0;
+  }
+
+  if (!isPayload(player) || !isFiniteNumber(player.salary)) {
+    return null;
+  }
+
+  return player.salary;
+};
+
+// What a team's players cost: the salaries of everyone in its lineup and on
+// its bench. Mirrors the client's team builder (`addPlayerToLineup` /
+// `removePlayerFromLineup` in client/state/slices/teamSlice.ts), which takes a
+// player's salary out of the balance when they join the lineup and keeps it
+// out while they sit on the bench. Returns null when the roster is malformed,
+// so the caller fails loudly instead of writing a wrong balance.
+export const toRosterCost = (team: RawPayload): number | null => {
+  const lineup = team.lineup ?? [];
+  const bench = team.bench ?? [];
+
+  if (!Array.isArray(lineup) || !Array.isArray(bench)) {
+    return null;
+  }
+
+  let cost = 0;
+  for (const slot of [...lineup, ...bench]) {
+    const salary = slotSalary(slot);
+    if (salary === null) {
+      return null;
+    }
+    cost += salary;
+  }
+
+  return cost;
+};
+
+const formatMillions = (value: number): string =>
+  `$${Math.round(value / 1_000_000)}M`;
+
+export type BalanceRecompute =
+  | { allowed: true; balance: number }
+  | { allowed: false; code: UpdateRejectionCode; message: string };
+
+// The owner's balance under a new budget: what is left after paying for the
+// players they already have. Recomputing from the roster, rather than shifting
+// the old balance by the difference, also corrects a balance that has drifted.
+// A budget the roster doesn't fit in is rejected rather than leaving the team
+// with a negative balance.
+export const recomputeBalance = (
+  budget: number,
+  rosterCost: number,
+): BalanceRecompute => {
+  if (rosterCost > budget) {
+    return {
+      allowed: false,
+      code: "roster-over-budget",
+      message: `Your roster costs ${formatMillions(rosterCost)}, which is more than a ${formatMillions(budget)} budget`,
+    };
+  }
+
+  return { allowed: true, balance: budget - rosterCost };
+};

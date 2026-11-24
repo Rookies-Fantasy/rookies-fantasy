@@ -6,6 +6,7 @@ import { cn } from "@/utils/jsUtils";
 import {
   BUDGET_STEP,
   formatBudget,
+  getMinEditableBudget,
   LeagueSettingsFormData,
   MAX_BUDGET,
   MAX_LEAGUE_NAME_LENGTH,
@@ -20,6 +21,7 @@ type LeagueSettingsFieldsProps<TForm extends LeagueSettingsFormData> = {
   errors: FieldErrors<LeagueSettingsFormData>;
   minTeams?: number;
   isBudgetLocked?: boolean;
+  rosterCost?: number;
 };
 
 // League name, team count and budget inputs, shared by the create and edit
@@ -30,12 +32,14 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
   errors,
   minTeams = MIN_TEAMS,
   isBudgetLocked = false,
+  rosterCost = 0,
 }: LeagueSettingsFieldsProps<TForm>) => {
   // react-hook-form's Control is invariant in its form type, so a form that
   // only adds fields still can't be passed as Control<LeagueSettingsFormData>.
   // TForm is constrained to contain every field used here, so narrowing it
   // once at this boundary is safe.
   const control = formControl as unknown as Control<LeagueSettingsFormData>;
+  const minBudget = getMinEditableBudget(rosterCost);
 
   return (
     <View className="flex-1 flex-col">
@@ -127,7 +131,7 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
               <StepperInput
                 formatValue={formatBudget}
                 max={MAX_BUDGET}
-                min={MIN_BUDGET}
+                min={minBudget}
                 onChange={onChange}
                 step={BUDGET_STEP}
                 value={value}
@@ -143,7 +147,9 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
           <Text className="pbk-b3 text-gray-600">
             {isBudgetLocked
               ? "Budget can't be changed after other teams have joined"
-              : `Budget range: ${formatBudget(MIN_BUDGET)} - ${formatBudget(MAX_BUDGET)}`}
+              : minBudget > MIN_BUDGET
+                ? `Your roster costs ${formatBudget(rosterCost)}, so the budget can't go below ${formatBudget(minBudget)}`
+                : `Budget range: ${formatBudget(MIN_BUDGET)} - ${formatBudget(MAX_BUDGET)}`}
           </Text>
         )}
       </View>

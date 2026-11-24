@@ -2,9 +2,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, router } from "expo-router";
 import { ArrowLeft } from "phosphor-react-native";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Pressable,
@@ -16,16 +17,21 @@ import Button from "@/components/Button";
 import LeagueSettingsFields from "@/components/LeagueSettingsFields";
 import Screen from "@/components/Screen";
 import { LeagueController } from "@/controllers/leagueController";
+import { useOwnerRosterCost } from "@/hooks/useOwnerRosterCost";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
   selectCurrentLeague,
   setCurrentLeague,
 } from "@/state/slices/leagueSlice";
+import { selectTeam, setBalance } from "@/state/slices/teamSlice";
 import { selectUserId } from "@/state/slices/userSlice";
 import { League } from "@/types/league";
+import { getErrorAlertMessage } from "@/utils/errorUtils";
 import {
   buildLeagueSettingsSchema,
+  getBalanceForBudget,
   getMinEditableTeams,
+  getOwnerTeamId,
   isLeagueBudgetLocked,
   isLeagueOwner,
   LeagueSettingsFormData,
@@ -33,22 +39,33 @@ import {
 
 type EditLeagueFormProps = {
   league: League;
+  ownerTeamId: string | null;
+  rosterCost: number;
 };
 
-const EditLeagueForm = ({ league }: EditLeagueFormProps) => {
+const EditLeagueForm = ({
+  league,
+  ownerTeamId,
+  rosterCost,
+}: EditLeagueFormProps) => {
   const dispatch = useAppDispatch();
+  const team = useAppSelector(selectTeam);
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
 
   const minTeams = getMinEditableTeams(league);
   const isBudgetLocked = isLeagueBudgetLocked(league);
+  const schema = useMemo(
+    () => buildLeagueSettingsSchema(minTeams, rosterCost),
+    [minTeams, rosterCost],
+  );
 
   const {
     control,
     handleSubmit,
     formState: { errors, isDirty },
   } = useForm<LeagueSettingsFormData>({
-    resolver: yupResolver(buildLeagueSettingsSchema(minTeams)),
+    resolver: yupResolver(schema),
     defaultValues: {
       leagueName: league.name,
       numberOfTeams: league.numberOfTeams,
@@ -67,16 +84,20 @@ const EditLeagueForm = ({ league }: EditLeagueFormProps) => {
       });
 
       dispatch(setCurrentLeague(updatedLeague));
+
+      // The server recomputed the owner's saved balance for the new budget, so
+      // the team in the builder follows suit, keeping any unsaved changes.
+      if (updatedLeague.budget !== league.budget && team.id === ownerTeamId) {
+        dispatch(setBalance(getBalanceForBudget(updatedLeague.budget, team)));
+      }
+
       await queryClient.invalidateQueries({
         queryKey: ["leagueStandings", league.id],
       });
       router.back();
     } catch (error) {
       console.error("Failed to update league:", error);
-
-      const message =
-        error instanceof Error ? error.message : "Something went wrong";
-      Alert.alert("Failed to update league", `${message}. Please try again.`);
+      Alert.alert("Failed to update league", getErrorAlertMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +128,7 @@ const EditLeagueForm = ({ league }: EditLeagueFormProps) => {
             errors={errors}
             isBudgetLocked={isBudgetLocked}
             minTeams={minTeams}
+            rosterCost={rosterCost}
           />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -123,6 +145,33 @@ const EditLeagueForm = ({ league }: EditLeagueFormProps) => {
   );
 };
 
+type EditLeagueContentProps = {
+  league: League;
+};
+
+const EditLeagueContent = ({ league }: EditLeagueContentProps) => {
+  const ownerTeamId = getOwnerTeamId(league);
+  const { rosterCost, isLoading } = useOwnerRosterCost(league, ownerTeamId);
+
+  // The budget's floor depends on the roster cost, so the form mounts once
+  // that is known.
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator color="white" />
+      </View>
+    );
+  }
+
+  return (
+    <EditLeagueForm
+      league={league}
+      ownerTeamId={ownerTeamId}
+      rosterCost={rosterCost}
+    />
+  );
+};
+
 const EditLeague = () => {
   const userId = useAppSelector(selectUserId);
   const currentLeague = useAppSelector(selectCurrentLeague);
@@ -135,7 +184,7 @@ const EditLeague = () => {
 
   return (
     <Screen>
-      <EditLeagueForm league={currentLeague} />
+      <EditLeagueContent league={currentLeague} />
     </Screen>
   );
 };
