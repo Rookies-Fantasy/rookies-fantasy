@@ -21,7 +21,7 @@ type AuthListenerProps = {
 
 const AuthListener = ({ children }: AuthListenerProps) => {
   const [status, setStatus] = useState<
-    "loading" | "ready" | "error" | "retrying"
+    "loading" | "ready" | "error" | "retrying" | "signingOut"
   >("loading");
   const [retryCount, setRetryCount] = useState(0);
   const auth = getAuth();
@@ -135,7 +135,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
   }, [status]);
 
   if (status === "loading") return null;
-  if (status === "error" || status === "retrying") {
+  if (status === "error" || status === "retrying" || status === "signingOut") {
     return (
       <StartupError
         isLoading={status === "retrying"}
@@ -143,6 +143,18 @@ const AuthListener = ({ children }: AuthListenerProps) => {
         onRetry={() => {
           setStatus("retrying");
           setRetryCount((previous) => previous + 1);
+        }}
+        // A failure we can't classify must never leave the user stuck here.
+        // Signing out fires onAuthStateChanged(null), which marks us ready.
+        signOutAction={{
+          isLoading: status === "signingOut",
+          onPress: () => {
+            setStatus("signingOut");
+            signOut(auth).catch((error: unknown) => {
+              console.error("Error signing out from startup error:", error);
+              setStatus("error");
+            });
+          },
         }}
         title="Unable to restore your session"
       />

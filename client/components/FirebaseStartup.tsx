@@ -45,6 +45,7 @@ const FirebaseStartup = ({ children }: FirebaseStartupProps) => {
         setStatus("retrying");
         setRetryCount((previous) => previous + 1);
       }}
+      signOutAction={null}
     />
   );
 };
