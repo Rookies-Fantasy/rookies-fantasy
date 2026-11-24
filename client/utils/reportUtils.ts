@@ -21,22 +21,37 @@ export const buildTeamReportEmailUrl = (report: TeamNameReport): string => {
   return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 };
 
-const showSupportEmailAlert = () =>
-  Alert.alert(
-    "Couldn't open Mail",
+// Builds a `mailto:` link for general support requests and problem reports.
+export const buildSupportEmailUrl = (): string => {
+  const subject = "Rookies Fantasy support";
+  const body = "Describe your question or the problem you ran into:\n\n";
+
+  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+};
+
+// Opens the user's mail app with `url`, falling back to an alert that shows
+// `fallbackMessage` (which includes the support address) when no mail app can
+// handle the link (e.g. Mail isn't set up, or on the iOS Simulator).
+const openSupportMailUrl = async (url: string, fallbackMessage: string) => {
+  try {
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert("Couldn't open Mail", fallbackMessage);
+  }
+};
+
+export const openTeamReportEmail = (report: TeamNameReport) =>
+  openSupportMailUrl(
+    buildTeamReportEmailUrl(report),
     `Please email ${SUPPORT_EMAIL} with the team name you'd like to report.`,
   );
 
-// Opens the user's mail app with the report prefilled, falling back to an
-// alert with the support address when no mail app can handle the link (e.g.
-// Mail isn't set up, or on the iOS Simulator).
-export const openTeamReportEmail = async (report: TeamNameReport) => {
-  try {
-    await Linking.openURL(buildTeamReportEmailUrl(report));
-  } catch {
-    showSupportEmailAlert();
-  }
-};
+// Used by the Settings "Contact support" row.
+export const openSupportEmail = () =>
+  openSupportMailUrl(
+    buildSupportEmailUrl(),
+    `Please email us at ${SUPPORT_EMAIL}.`,
+  );
 
 // Asks the user to confirm before handing off to the mail app.
 export const confirmTeamReport = (report: TeamNameReport) =>
