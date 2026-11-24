@@ -22,6 +22,7 @@ import {
   isPasswordUser,
 } from "@/utils/accountUtils";
 import { cn } from "@/utils/jsUtils";
+import { openSupportEmail, SUPPORT_EMAIL } from "@/utils/reportUtils";
 
 const Settings = () => {
   const { signOut, clearSessionAndExit } = useSignOut();
@@ -121,6 +122,16 @@ const Settings = () => {
             onPress={handleLogout}
             variant="secondary"
           />
+          <View className="gap-2">
+            <Button
+              label="Contact support"
+              onPress={openSupportEmail}
+              variant="secondary"
+            />
+            <Text className="pbk-b3 text-gray-400">
+              Questions, or something to report? Email us at {SUPPORT_EMAIL}.
+            </Text>
+          </View>
         </View>
 
         <View className="mb-8 mt-auto gap-3">

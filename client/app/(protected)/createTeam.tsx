@@ -20,13 +20,15 @@ import { TeamEditModel, UserController } from "@/controllers/userController";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { allowedNameTest } from "@/utils/nameModeration";
 
 const schema = yup.object({
   abbreviation: yup
     .string()
     .required("Team Abbreviation is required")
-    .length(3, "Team Abbreviation must be exactly 3 characters"),
-  name: yup.string().required("Team Name is required"),
+    .length(3, "Team Abbreviation must be exactly 3 characters")
+    .test(allowedNameTest),
+  name: yup.string().required("Team Name is required").test(allowedNameTest),
   logoUrl: yup
     .string()
     .required("Logo is required")
