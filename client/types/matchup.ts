@@ -22,6 +22,8 @@ export type GameStats = {
 export type PlayerSnapshot = {
   firstName: string;
   lastName: string;
+  // NBA-owned image URL. Intentionally not rendered (App Store Guideline 5.2);
+  // kept so Firestore data shape is unchanged. Use PlayerAvatar instead.
   headshotUrl: string;
   positions: SlotPosition[];
   salary: number;

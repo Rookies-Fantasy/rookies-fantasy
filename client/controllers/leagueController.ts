@@ -1,9 +1,11 @@
 import firestore from "@react-native-firebase/firestore";
 import { getFunctionUrl } from "@/firebase/config";
+import { JsonValue } from "@/types/json";
 import { League } from "@/types/league";
 import { LeagueStandingTeam } from "@/types/standings";
 import { defaultTeam, Team } from "@/types/team";
 import { callFunction, getIdToken } from "@/utils/callableUtils";
+import { parseLeagueStandingTeams } from "@/utils/standingsUtils";
 
 const LEAGUE_COLLECTION = "leagues";
 
@@ -20,6 +22,21 @@ export type LeagueSettingsModel = {
 
 export type LeagueEditModel = LeagueSettingsModel & {
   initialTeamId: string;
+};
+
+export type JoinLeagueTeamModel = {
+  teamName: string;
+  abbreviation: string;
+  logoUrl: string;
+};
+
+type JoinedTeamResponse = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+  balance: number;
+  isLeagueTeam: boolean;
 };
 
 export type LeagueTeamInfo = {
@@ -94,7 +111,9 @@ export class LeagueController {
     }
   };
 
-  static getLeagueTeams = async (league: League): Promise<Team[]> => {
+  static getLeagueStandingTeams = async (
+    league: League,
+  ): Promise<LeagueStandingTeam[]> => {
     const idToken = await getIdToken(SIGNED_OUT_ERROR);
     const url = `${getFunctionUrl("getLeagueStandings")}?leagueId=${league.id}`;
 
@@ -109,18 +128,11 @@ export class LeagueController {
         throw new Error(`HTTP ${response.status}: ${message}`);
       }
 
-      const data: { teams: LeagueStandingTeam[] } = await response.json();
+      const payload: JsonValue = await response.json();
 
-      return data.teams.map((team) => ({
-        ...defaultTeam,
-        id: team.id,
-        name: team.name,
-        logoUrl: team.logoUrl,
-        record: team.record,
-        isLeagueTeam: true,
-      }));
+      return parseLeagueStandingTeams(payload);
     } catch (error) {
-      console.error("getLeagueTeams failed:", url, error);
+      console.error("getLeagueStandingTeams failed:", url, error);
       throw error;
     }
   };
@@ -145,18 +157,36 @@ export class LeagueController {
     }
   };
 
+  // The server creates the team and joins it to the league in one transaction,
+  // so on failure nothing has been written and there is no team to clean up.
   static joinLeague = async (
     leagueId: string,
-    teamId: string,
-  ): Promise<League> => {
+    team: JoinLeagueTeamModel,
+  ): Promise<LeagueTeamInfo> => {
     try {
-      const { league } = await callFunction<{ league: League }>(
+      const response = await callFunction<{
+        league: League;
+        team: JoinedTeamResponse;
+      }>(
         "joinLeague",
-        { leagueId, teamId },
+        {
+          leagueId,
+          teamName: team.teamName,
+          abbreviation: team.abbreviation,
+          logoUrl: team.logoUrl,
+        },
         JOIN_SIGNED_OUT_ERROR,
       );
 
-      return league;
+      return {
+        league: response.league,
+        team: {
+          ...response.team,
+          lineup: defaultTeam.lineup,
+          bench: defaultTeam.bench,
+          record: defaultTeam.record,
+        },
+      };
     } catch (error) {
       console.error("Join league error:", error);
       throw error;

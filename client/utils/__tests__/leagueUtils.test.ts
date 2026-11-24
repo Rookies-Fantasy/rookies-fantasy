@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { League } from "@/types/league";
+import { defaultAverageStats } from "@/types/player";
 import {
   BenchSlot,
   PlayerTeamDisplay,
@@ -28,6 +29,7 @@ const player = (id: string, salary: number): PlayerTeamDisplay => ({
   headshotUrl: "",
   positions: ["PG"],
   teamAbbreviation: "NBA",
+  averageStats: defaultAverageStats,
 });
 
 const lineupSlot = (

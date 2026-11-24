@@ -19,6 +19,10 @@ export type LeagueDocument = {
   memberCount: number;
   teamIds: string[];
   userIds: string[];
+  // Team id -> uid of the member who registered it. Team docs live under
+  // users/{uid}/teams, so this is how the server finds a league team without
+  // trusting whichever user happens to hold a doc with that id.
+  teamOwners: Record<string, string>;
 };
 
 export type CreateLeagueInput = {
@@ -28,9 +32,18 @@ export type CreateLeagueInput = {
   initialTeamId: string;
 };
 
+// The team the caller is joining with. It does not exist yet: joinLeague
+// creates it in the same transaction that adds it to the league, so a rejected
+// join never leaves a team document behind.
+export type NewLeagueTeam = {
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+};
+
 export type JoinLeagueInput = {
   leagueId: string;
-  teamId: string;
+  team: NewLeagueTeam;
 };
 
 export type UpdateLeagueInput = {
@@ -63,3 +76,9 @@ export type LeagueStandingTeam = {
   logoUrl: string;
   record: TeamRecord;
 };
+
+// The team rules, mirroring the yup schema in
+// `client/app/(protected)/joinLeague.tsx`.
+export const TEAM_ABBREVIATION_LENGTH = 3;
+export const MAX_TEAM_NAME_LENGTH = 50;
+export const MAX_LOGO_URL_LENGTH = 2048;

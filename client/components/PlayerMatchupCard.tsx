@@ -1,4 +1,5 @@
-import { View, Text, Image } from "react-native";
+import { View, Text } from "react-native";
+import PlayerAvatar from "@/components/PlayerAvatar";
 import { GameStats, PlayerSnapshot } from "@/types/matchup";
 import { PlayerTeamDisplay } from "@/types/team";
 
@@ -46,9 +47,10 @@ const PlayerMatchupCard = ({
                   {homePlayer.lastName}
                 </Text>
               </View>
-              <Image
-                className="h-16 w-16 rounded-full"
-                source={{ uri: homePlayer.headshotUrl }}
+              <PlayerAvatar
+                firstName={homePlayer.firstName}
+                lastName={homePlayer.lastName}
+                size="lg"
               />
             </View>
 
@@ -132,9 +134,10 @@ const PlayerMatchupCard = ({
                   {awayPlayer.lastName}
                 </Text>
               </View>
-              <Image
-                className="h-16 w-16 rounded-full"
-                source={{ uri: awayPlayer.headshotUrl }}
+              <PlayerAvatar
+                firstName={awayPlayer.firstName}
+                lastName={awayPlayer.lastName}
+                size="lg"
               />
             </View>
 

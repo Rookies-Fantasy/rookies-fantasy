@@ -7,9 +7,13 @@ import {
   BUDGET_STEP,
   MAX_BUDGET,
   MAX_LEAGUE_NAME_LENGTH,
+  MAX_LOGO_URL_LENGTH,
+  MAX_TEAM_NAME_LENGTH,
   MAX_TEAMS,
   MIN_BUDGET,
   MIN_TEAMS,
+  NewLeagueTeam,
+  TEAM_ABBREVIATION_LENGTH,
   TEAMS_STEP,
   TeamRecord,
   RawPayload,
@@ -35,6 +39,12 @@ const isFiniteNumber = (value: JsonValue): value is number =>
 const isStringArray = (value: JsonValue): value is string[] =>
   Array.isArray(value) && value.every((entry) => typeof entry === "string");
 
+const isStringRecord = (value: JsonValue): value is Record<string, string> =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  Object.values(value).every((entry) => typeof entry === "string");
+
 // Firestore hands back untyped documents. A league doc is written only by the
 // server, so a field that fails to parse means the data is corrupt — returning
 // null lets the caller fail loudly instead of joining against typed defaults.
@@ -47,6 +57,7 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     memberCount,
     teamIds,
     userIds,
+    teamOwners,
   } = data;
 
   if (
@@ -56,7 +67,8 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     !isFiniteNumber(budget) ||
     !isFiniteNumber(memberCount) ||
     !isStringArray(teamIds) ||
-    !isStringArray(userIds)
+    !isStringArray(userIds) ||
+    !isStringRecord(teamOwners)
   ) {
     return null;
   }
@@ -69,6 +81,7 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     memberCount,
     teamIds,
     userIds,
+    teamOwners,
   };
 };
 
@@ -87,8 +100,57 @@ const readDocumentId = (value: JsonValue): string | null => {
 const idErrorMessage = (field: string): string =>
   `Invalid request: ${field} is missing or malformed`;
 
+// Validates the team fields of a `joinLeague` payload. The team document is
+// written by the server, so these checks are the only thing standing between a
+// hand-rolled request and the stored team.
+const validateNewLeagueTeam = (
+  payload: RawPayload,
+): InputValidation<NewLeagueTeam> => {
+  const { teamName, abbreviation, logoUrl } = payload;
+
+  if (typeof teamName !== "string" || teamName.trim().length === 0) {
+    return { valid: false, message: "Team name is required" };
+  }
+
+  const name = teamName.trim();
+  if (name.length > MAX_TEAM_NAME_LENGTH) {
+    return {
+      valid: false,
+      message: `Team name must be at most ${MAX_TEAM_NAME_LENGTH} characters`,
+    };
+  }
+
+  if (
+    typeof abbreviation !== "string" ||
+    abbreviation.trim().length !== TEAM_ABBREVIATION_LENGTH
+  ) {
+    return {
+      valid: false,
+      message: `Team abbreviation must be exactly ${TEAM_ABBREVIATION_LENGTH} characters`,
+    };
+  }
+
+  if (
+    typeof logoUrl !== "string" ||
+    logoUrl.trim().length === 0 ||
+    logoUrl.length > MAX_LOGO_URL_LENGTH
+  ) {
+    return { valid: false, message: "Team logo is required" };
+  }
+
+  return {
+    valid: true,
+    input: {
+      name,
+      abbreviation: abbreviation.trim(),
+      logoUrl: logoUrl.trim(),
+    },
+  };
+};
+
 // Validates a `joinLeague` payload. Note there is no userId here: the joining
 // user is taken from the verified auth context, never from the request body.
+// There is no teamId either: the team is created by the join itself.
 export const validateJoinLeagueInput = (
   payload: RawPayload,
 ): InputValidation<JoinLeagueInput> => {
@@ -97,12 +159,12 @@ export const validateJoinLeagueInput = (
     return { valid: false, message: idErrorMessage("leagueId") };
   }
 
-  const teamId = readDocumentId(payload.teamId);
-  if (teamId === null) {
-    return { valid: false, message: idErrorMessage("teamId") };
+  const team = validateNewLeagueTeam(payload);
+  if (!team.valid) {
+    return team;
   }
 
-  return { valid: true, input: { leagueId, teamId } };
+  return { valid: true, input: { leagueId, team: team.input } };
 };
 
 // A value the UI could actually have produced: inside the bounds, and landing on
@@ -319,6 +381,29 @@ export const toStandingTeam = (
   logoUrl: toStringOrEmpty(data.logoUrl),
   record: toTeamRecord(data.record),
 });
+
+export type LeagueTeamRef = {
+  teamId: string;
+  ownerId: string;
+};
+
+// Pairs each league team with the member who registered it. A team without a
+// recorded owner, or whose owner is no longer a member, is skipped: standings
+// read users/{ownerId}/teams/{teamId} only, so a doc that another user created
+// under a league team's id is never picked up.
+export const toLeagueTeamRefs = (league: LeagueDocument): LeagueTeamRef[] =>
+  Array.from(new Set(league.teamIds))
+    .slice(0, MAX_TEAMS)
+    .flatMap((teamId) => {
+      const ownerId = Object.prototype.hasOwnProperty.call(
+        league.teamOwners,
+        teamId,
+      )
+        ? league.teamOwners[teamId]
+        : "";
+
+      return league.userIds.includes(ownerId) ? [{ teamId, ownerId }] : [];
+    });
 
 export const isLeagueMember = (
   league: LeagueDocument,
