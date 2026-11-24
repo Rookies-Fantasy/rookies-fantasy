@@ -5,8 +5,16 @@ service cloud.firestore {
     match /users/{userId} {
       allow get, list:
         if request.auth != null && request.auth.uid == userId;
-      allow create, update:
-        if request.auth != null && request.auth.uid == userId;
+      // `status` and `deletedAt` are only set by the server when an account is
+      // deleted. Clients can't set them, or a user could mark themselves deleted
+      // to forfeit instead of taking a loss.
+      allow create:
+        if request.auth != null && request.auth.uid == userId &&
+          !request.resource.data.keys().hasAny(['status', 'deletedAt']);
+      allow update:
+        if request.auth != null && request.auth.uid == userId &&
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['status', 'deletedAt']);
       allow delete:
         if false;
     }

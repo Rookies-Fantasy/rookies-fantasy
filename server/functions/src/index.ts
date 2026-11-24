@@ -1,6 +1,7 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { cleanUpDeletedUser } from "./users/deleteUserData";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
 import {
@@ -257,39 +258,16 @@ export const deleteUserData = functions.auth
   .user()
   .onDelete(async (user: UserRecord) => {
     const { uid } = user;
-    const db = admin.firestore();
-    const userRef = db.collection("users").doc(uid);
 
     try {
-      const teamsSnapshot = await userRef.collection("teams").get();
-      const teamIds = teamsSnapshot.docs.map((teamDoc) => teamDoc.id);
-
-      const leaguesSnapshot = await db
-        .collection("leagues")
-        .where("userIds", "array-contains", uid)
-        .get();
-
-      await Promise.all(
-        leaguesSnapshot.docs.map((leagueDoc) => {
-          const updates: Record<string, unknown> = {
-            userIds: admin.firestore.FieldValue.arrayRemove(uid),
-            memberCount: admin.firestore.FieldValue.increment(-1),
-          };
-          if (teamIds.length > 0) {
-            updates.teamIds = admin.firestore.FieldValue.arrayRemove(
-              ...teamIds,
-            );
-          }
-          return leagueDoc.ref.update(updates);
-        }),
-      );
-
-      await db.recursiveDelete(userRef);
+      const result = await cleanUpDeletedUser(admin.firestore(), uid);
       console.log(
-        `Deleted data for ${uid} (${leaguesSnapshot.size} leagues updated)`,
+        `Cleaned up deleted user ${uid}: anonymized=${result.anonymized}, ` +
+          `leaguesRemovedFrom=${result.leaguesRemovedFrom}, ` +
+          `leaguesDeleted=${result.leaguesDeleted}`,
       );
     } catch (error) {
-      console.error(`Error deleting data for ${uid}:`, error);
+      console.error(`Error cleaning up deleted user ${uid}:`, error);
       throw error;
     }
   });
