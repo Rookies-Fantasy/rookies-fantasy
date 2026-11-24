@@ -8,6 +8,8 @@ import { setTeam } from "@/state/slices/teamSlice";
 import { setUser } from "@/state/slices/userSlice";
 import { LoginProvider } from "@/types/providers";
 import {
+  getAuthErrorCode,
+  getSsoErrorMessage,
   isAppleSignInSupported,
   signInWithApple,
   signInWithGoogle,
@@ -78,12 +80,10 @@ const SSOButtons = () => {
       }
     } catch (error) {
       console.log(error);
-      if (provider === LoginProvider.Apple) {
-        Alert.alert(
-          "Sign in failed",
-          "We couldn't sign you in with Apple. Make sure you're signed in to your Apple Account in Settings, then try again.",
-        );
-      }
+      Alert.alert(
+        "Sign in failed",
+        getSsoErrorMessage(provider, getAuthErrorCode(error)),
+      );
     }
   };
   return (
