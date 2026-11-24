@@ -10,11 +10,11 @@ import {
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import AuthListener from "@/components/AuthListener";
+import FirebaseStartup from "@/components/FirebaseStartup";
 import { ThemeWrapper } from "@/components/ThemeWrapper";
 import { useAppSelector } from "@/state/hooks";
 import {
@@ -24,12 +24,14 @@ import {
 import { store } from "@/state/store";
 import { themes, ThemeMode } from "@/theme/theme";
 import { ThemeProvider, useAppTheme } from "@/theme/ThemeProvider";
-import { connectToEmulators } from "@/utils/emulator";
 
 global.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 const queryClient = new QueryClient();
 
-connectToEmulators();
+// Hold the native splash until startup succeeds or the error screen is ready.
+SplashScreen.preventAutoHideAsync().catch((error: unknown) => {
+  console.warn("Unable to keep the splash screen visible:", error);
+});
 
 const RootLayoutNav = () => {
   const isUserSignedIn = useAppSelector(selectIsUserSignedIn);
@@ -77,13 +79,6 @@ const RootLayout = () => {
     "Manrope-Regular": require("../assets/fonts/Manrope-Regular.otf"),
   });
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      // Hide the splash screen once fonts are loaded
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
   // If fonts haven't loaded yet, don't render the app
   if (!fontsLoaded) {
     return null;
@@ -92,7 +87,9 @@ const RootLayout = () => {
   return (
     <ThemeProvider>
       <Provider store={store}>
-        <RootLayoutNav />
+        <FirebaseStartup>
+          <RootLayoutNav />
+        </FirebaseStartup>
       </Provider>
     </ThemeProvider>
   );

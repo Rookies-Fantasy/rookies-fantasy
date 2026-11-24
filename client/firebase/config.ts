@@ -1,25 +1,32 @@
 import { getApp } from "@react-native-firebase/app";
-import { emulatorHost, isEmulatorEnabled } from "@/utils/emulator";
+import Constants from "expo-constants";
+import { Platform } from "react-native";
+import {
+  buildFunctionUrl,
+  normalizeEnvironment,
+  resolveBackendMode,
+  resolveEmulatorHost,
+} from "./environment";
 
-const FUNCTIONS_REGION = "us-central1";
-const FUNCTIONS_EMULATOR_PORT = 5001;
+export const getBackendMode = () =>
+  resolveBackendMode({
+    flag: process.env.EXPO_PUBLIC_USE_EMULATOR,
+    environment: normalizeEnvironment(Constants.expoConfig?.extra?.environment),
+    isDebugBuild: __DEV__,
+  });
 
-// The native SDK is initialised from the environment's GoogleService-Info.plist /
-// google-services.json, so its project id matches whichever build is running.
-const getProjectId = (): string => {
-  const { projectId } = getApp().options;
+export const getEmulatorHost = () =>
+  resolveEmulatorHost(
+    process.env.EXPO_PUBLIC_EMULATOR_HOST,
+    Platform.OS,
+    Constants.expoConfig?.hostUri,
+  );
 
-  if (projectId.length === 0) {
-    throw new Error("Firebase project id is missing from the native config");
-  }
-
-  return projectId;
-};
-
-export const getFunctionBaseUrl = (functionName: string): string => {
-  const projectId = getProjectId();
-
-  return isEmulatorEnabled
-    ? `http://${emulatorHost}:${FUNCTIONS_EMULATOR_PORT}/${projectId}/${FUNCTIONS_REGION}/${functionName}`
-    : `https://${FUNCTIONS_REGION}-${projectId}.cloudfunctions.net/${functionName}`;
-};
+// Use the same native project as Auth and Firestore, including in cloud builds.
+export const getFunctionUrl = (functionName: string): string =>
+  buildFunctionUrl({
+    functionName,
+    projectId: getApp().options.projectId,
+    mode: getBackendMode(),
+    emulatorHost: getEmulatorHost(),
+  });

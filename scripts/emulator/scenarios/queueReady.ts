@@ -7,7 +7,7 @@ import { DEFAULT_NBA_TEAMS } from "../data/nbaTeams.js";
 import { stageAugments } from "../fixtures/augments.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
 import { stageNbaTeams } from "../fixtures/nbaTeams.js";
-import { stageTeam } from "../fixtures/teams.js";
+import { resolveSeedTeamId, stageTeam } from "../fixtures/teams.js";
 import { ensureAuthUser, stageUser } from "../fixtures/users.js";
 import { buildLineup, getLineupSalary } from "../generate/lineup.js";
 
@@ -15,8 +15,8 @@ export type QueueReadyScenarioOptions = {
   userEmail: string;
   opponentEmail: string;
   password: string;
-  userTeamId: string;
-  opponentTeamId: string;
+  userTeamId?: string;
+  opponentTeamId?: string;
 };
 
 export type QueueReadyScenarioResult = {
@@ -47,6 +47,10 @@ export const createQueueReadyScenario = async (
       password: options.password,
     }),
   ]);
+  const [userTeamId, opponentTeamId] = await Promise.all([
+    resolveSeedTeamId(db, user.uid, options.userTeamId),
+    resolveSeedTeamId(db, opponent.uid, options.opponentTeamId),
+  ]);
 
   const batch = db.batch();
   stageNbaPlayers(db, batch, DEFAULT_NBA_PLAYERS);
@@ -60,7 +64,7 @@ export const createQueueReadyScenario = async (
     dateOfBirth: new Date("1990-01-01"),
     username: "Queue User",
     queueStatus: "idle",
-    teamId: options.userTeamId,
+    teamId: userTeamId,
   });
   stageUser(db, batch, options.opponentEmail, {
     id: opponent.uid,
@@ -69,12 +73,12 @@ export const createQueueReadyScenario = async (
     dateOfBirth: new Date("1991-01-01"),
     username: "Queue Opponent",
     queueStatus: "idle",
-    teamId: options.opponentTeamId,
+    teamId: opponentTeamId,
   });
 
   stageTeam(db, batch, {
     userId: user.uid,
-    teamId: options.userTeamId,
+    teamId: userTeamId,
     document: {
       name: "Queue Team",
       abbreviation: "QUE",
@@ -87,7 +91,7 @@ export const createQueueReadyScenario = async (
   });
   stageTeam(db, batch, {
     userId: opponent.uid,
-    teamId: options.opponentTeamId,
+    teamId: opponentTeamId,
     document: {
       name: "Opponent Team",
       abbreviation: "OPP",
@@ -103,7 +107,7 @@ export const createQueueReadyScenario = async (
   return {
     userId: user.uid,
     opponentId: opponent.uid,
-    userTeamId: options.userTeamId,
-    opponentTeamId: options.opponentTeamId,
+    userTeamId,
+    opponentTeamId,
   };
 };

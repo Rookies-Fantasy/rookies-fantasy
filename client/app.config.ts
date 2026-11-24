@@ -167,6 +167,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         projectId: EAS_PROJECT_ID,
       },
       baseUrl,
+      environment,
     },
     updates: {
       url: "https://u.expo.dev/ee1dd2e5-d9ed-45d5-9c39-85529018afab",

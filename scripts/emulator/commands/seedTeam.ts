@@ -8,7 +8,7 @@ export const run = async (db: Firestore, _auth: Auth): Promise<void> => {
     throw new Error("USER_ID env var is required. Run seed:user first.");
   }
 
-  const teamId = process.env.TEAM_ID ?? "default-team";
+  const teamId = process.env.TEAM_ID;
   const team = await upsertTeam(db, { userId, teamId });
 
   console.log("Created team");

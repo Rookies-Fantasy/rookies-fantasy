@@ -1,5 +1,5 @@
 import { getAuth } from "@react-native-firebase/auth";
-import { getFunctionBaseUrl } from "@/firebase/config";
+import { getFunctionUrl } from "@/firebase/config";
 import { CallableError, toCallableErrorCode } from "@/utils/errorUtils";
 import { isNil } from "@/utils/jsUtils";
 
@@ -78,7 +78,7 @@ export const callFunction = async <TResult>(
 ): Promise<TResult> => {
   const idToken = await getIdToken(signedOutMessage);
 
-  const response = await fetch(getFunctionBaseUrl(functionName), {
+  const response = await fetch(getFunctionUrl(functionName), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

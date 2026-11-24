@@ -61,11 +61,29 @@ export const upsertUser = async (
     emailVerified: document.emailVerified,
   });
 
-  const userDocument = createUserDoc(email, {
-    ...document,
-    id: authUser.uid,
+  const userRef = db.collection("users").doc(authUser.uid);
+  const providedFields = Object.fromEntries(
+    Object.entries(document).filter(([, value]) => value !== undefined),
+  ) as Partial<UserDoc>;
+
+  const userDocument = await db.runTransaction(async (transaction) => {
+    const existingUser = await transaction.get(userRef);
+    const now = new Date();
+    const updates = {
+      ...providedFields,
+      id: authUser.uid,
+      email,
+      updatedAt: providedFields.updatedAt ?? now,
+    };
+    const nextDocument = existingUser.exists
+      ? ({ ...existingUser.data(), ...updates } as UserDoc)
+      : createUserDoc(email, { createdAt: now, ...updates });
+
+    transaction.set(userRef, existingUser.exists ? updates : nextDocument, {
+      merge: true,
+    });
+    return nextDocument;
   });
-  await db.collection("users").doc(authUser.uid).set(userDocument);
 
   return {
     id: authUser.uid,

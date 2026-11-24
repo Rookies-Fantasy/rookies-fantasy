@@ -1,120 +1,151 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+} from "@react-native-firebase/auth";
+import * as SplashScreen from "expo-splash-screen";
 import { useState, useEffect, ReactNode } from "react";
-import { View } from "react-native";
-import Spinner from "./Spinner";
+import StartupError from "./StartupError";
 import { MatchupController } from "@/controllers/matchupController";
 import { UserController } from "@/controllers/userController";
+import { validateEmulatorSession } from "@/firebase/session";
 import { useAppDispatch } from "@/state/hooks";
+import { clearCurrentLeague } from "@/state/slices/leagueSlice";
 import { setMatchup, clearMatchup } from "@/state/slices/matchupSlice";
-import { setTeam } from "@/state/slices/teamSlice";
+import { setTeam, clearTeam } from "@/state/slices/teamSlice";
 import { setUser, clearUser } from "@/state/slices/userSlice";
 
 type AuthListenerProps = {
   children: ReactNode;
 };
 
-const FIREBASE_ENVIRONMENT_KEY = "firebase-environment";
-
 const AuthListener = ({ children }: AuthListenerProps) => {
-  const [initializing, setInitializing] = useState(true);
+  const [status, setStatus] = useState<
+    "loading" | "ready" | "error" | "retrying"
+  >("loading");
+  const [retryCount, setRetryCount] = useState(0);
   const auth = getAuth();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    let userUnsubscribe: (() => void) | null = null;
-    let environmentChecked = false;
+    let active = true;
+    let cancelSession: (() => void) | undefined;
 
-    const subscriber = onAuthStateChanged(auth, async (user) => {
-      if (!environmentChecked) {
-        environmentChecked = true;
-        const currentEnvironment =
-          process.env.EXPO_PUBLIC_USE_EMULATOR === "true"
-            ? "emulator"
-            : "firebase";
-        const previousEnvironment = await AsyncStorage.getItem(
-          FIREBASE_ENVIRONMENT_KEY,
-        );
+    const clearSession = () => {
+      dispatch(clearUser());
+      dispatch(clearTeam());
+      dispatch(clearMatchup());
+      dispatch(clearCurrentLeague());
+    };
 
-        await AsyncStorage.setItem(
-          FIREBASE_ENVIRONMENT_KEY,
-          currentEnvironment,
-        );
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (!active) return;
+      cancelSession?.();
 
-        // A persisted session from another Firebase environment is not valid
-        // for this one because the environments have different Auth users.
-        if (user && previousEnvironment !== currentEnvironment) {
-          await auth.signOut();
+      // Each Auth event replaces the previous session's work and subscription.
+      let cancelled = false;
+      let userUnsubscribe: (() => void) | null = null;
+      cancelSession = () => {
+        cancelled = true;
+        userUnsubscribe?.();
+        userUnsubscribe = null;
+      };
+
+      if (!user) {
+        clearSession();
+        setStatus("ready");
+        return;
+      }
+
+      try {
+        const valid = await validateEmulatorSession(user);
+        if (cancelled) return;
+
+        if (!valid) {
+          clearSession();
+          await signOut(auth);
+          if (!cancelled) setStatus("ready");
           return;
         }
+      } catch (error: unknown) {
+        if (!cancelled) {
+          console.error("Error restoring emulator session:", error);
+          setStatus("error");
+        }
+        return;
       }
 
-      if (user) {
-        try {
-          const userData = await UserController.getUser(user.uid);
-          dispatch(setUser(userData));
+      try {
+        const userData = await UserController.getUser(user.uid);
+        if (cancelled) return;
+        dispatch(setUser(userData));
 
-          // Subscribe to real-time user updates
-          userUnsubscribe = UserController.subscribeToUser(
-            user.uid,
-            async (updatedUser) => {
-              if (updatedUser) {
-                dispatch(setUser(updatedUser));
+        // Subscribe to real-time user updates
+        userUnsubscribe = UserController.subscribeToUser(
+          user.uid,
+          async (updatedUser) => {
+            if (cancelled) return;
+            if (updatedUser) {
+              dispatch(setUser(updatedUser));
 
-                if (updatedUser.queueStatus === "matched") {
-                  try {
-                    const matchupData = await MatchupController.getUserMatchup(
-                      user.uid,
-                    );
-                    if (matchupData) {
-                      dispatch(setMatchup(matchupData));
-                    }
-                  } catch (error) {
-                    console.error("Error fetching matchup:", error);
+              if (updatedUser.queueStatus === "matched") {
+                try {
+                  const matchupData = await MatchupController.getUserMatchup(
+                    user.uid,
+                  );
+                  if (!cancelled && matchupData) {
+                    dispatch(setMatchup(matchupData));
                   }
+                } catch (error) {
+                  console.error("Error fetching matchup:", error);
                 }
               }
-            },
-          );
-
-          const teams = await UserController.getUserTeams(user.uid);
-          if (teams?.length > 0) {
-            const rankedTeam = teams.find((team) => !team.isLeagueTeam);
-            if (rankedTeam) {
-              const teamData = await UserController.getUserTeam(
-                user.uid,
-                rankedTeam.id,
-              );
-              dispatch(setTeam(teamData));
             }
+          },
+        );
+
+        const teams = await UserController.getUserTeams(user.uid);
+        if (cancelled) return;
+        if (teams?.length > 0) {
+          const rankedTeam = teams.find((team) => !team.isLeagueTeam);
+          if (rankedTeam) {
+            const teamData = await UserController.getUserTeam(
+              user.uid,
+              rankedTeam.id,
+            );
+            if (cancelled) return;
+            dispatch(setTeam(teamData));
           }
-        } catch (error) {
-          console.error("Error fetching user document:", error);
         }
-      } else {
-        dispatch(clearUser());
-        dispatch(clearMatchup());
-        if (userUnsubscribe) {
-          userUnsubscribe();
-          userUnsubscribe = null;
-        }
+      } catch (error) {
+        if (!cancelled) console.error("Error fetching user document:", error);
       }
-      setInitializing(false);
+      if (!cancelled) setStatus("ready");
     });
 
     return () => {
-      subscriber();
-      if (userUnsubscribe) {
-        userUnsubscribe();
-      }
+      active = false;
+      unsubscribeAuth();
+      cancelSession?.();
     };
-  }, [auth, dispatch]);
+  }, [auth, dispatch, retryCount]);
 
-  if (initializing) {
+  useEffect(() => {
+    if (status === "ready" || status === "error") SplashScreen.hide();
+  }, [status]);
+
+  if (status === "loading") return null;
+  if (status === "error" || status === "retrying") {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Spinner />
-      </View>
+      <StartupError
+        isLoading={status === "retrying"}
+        message="Check that the emulators are running and your device can reach them, then try again."
+        onRetry={() => {
+          setStatus("retrying");
+          setRetryCount((previous) => previous + 1);
+        }}
+        title="Unable to restore your session"
+      />
     );
   }
 

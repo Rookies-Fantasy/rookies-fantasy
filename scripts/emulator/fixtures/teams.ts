@@ -4,7 +4,7 @@ import type { TeamDoc } from "../types/firestore.js";
 
 export type UpsertTeamOptions = {
   userId: string;
-  teamId: string;
+  teamId?: string;
   document?: Partial<Omit<TeamDoc, "id">>;
 };
 
@@ -14,10 +14,45 @@ export type SeededTeam = {
   document: TeamDoc;
 };
 
+export const getSelectedTeamId = async (
+  db: Firestore,
+  userId: string,
+  teamId?: string,
+): Promise<string> => {
+  if (teamId) return teamId;
+
+  const user = await db.collection("users").doc(userId).get();
+  const selectedTeamId = user.data()?.teamId;
+  if (typeof selectedTeamId !== "string" || !selectedTeamId) {
+    throw new Error(
+      `User "${userId}" has no selected team. Seed a team first.`,
+    );
+  }
+  return selectedTeamId;
+};
+
+export const resolveSeedTeamId = async (
+  db: Firestore,
+  userId: string,
+  teamId?: string,
+): Promise<string> => {
+  if (teamId) return teamId;
+
+  const userRef = db.collection("users").doc(userId);
+  const teams = userRef.collection("teams");
+  const user = await userRef.get();
+  const selectedTeamId = user.data()?.teamId;
+  if (typeof selectedTeamId === "string" && selectedTeamId) {
+    const team = await teams.doc(selectedTeamId).get();
+    if (team.exists) return team.id;
+  }
+  return teams.doc().id;
+};
+
 export const stageTeam = (
   db: Firestore,
   batch: WriteBatch,
-  options: UpsertTeamOptions,
+  options: UpsertTeamOptions & { teamId: string },
 ): TeamDoc => {
   const teamDocument = createTeamDoc({
     ...options.document,
@@ -38,7 +73,7 @@ export const upsertTeam = async (
   db: Firestore,
   options: UpsertTeamOptions,
 ): Promise<SeededTeam> => {
-  const { userId, teamId, document = {} } = options;
+  const { userId, document = {} } = options;
   const userRef = db.collection("users").doc(userId);
   const userSnap = await userRef.get();
 
@@ -46,6 +81,7 @@ export const upsertTeam = async (
     throw new Error(`User "${userId}" not found.`);
   }
 
+  const teamId = await resolveSeedTeamId(db, userId, options.teamId);
   const teamRef = userRef.collection("teams").doc(teamId);
   const existingTeamSnap = await teamRef.get();
   const existingTeam = existingTeamSnap.exists
