@@ -6,6 +6,7 @@ import {
   QueryDocumentSnapshot,
   Transaction,
 } from "firebase-admin/firestore";
+import { DELETED_USER_STATUS } from "../users/deleteUserData";
 
 // How many of the oldest queued users one run inspects. Invalid entries are
 // moved out of the queue, so a larger window lets one run skip past them.
@@ -51,14 +52,22 @@ const createTeamSnapshot = (
   ...(augmentSnapshot ? { augmentSnapshot } : {}),
 });
 
+// Returns the team a queued user wants to play with, or null when the entry
+// can never be matched: the account was deleted or no team ID is set.
+export const getQueuedTeamId = (user: DocumentData): string | null => {
+  if (user.status === DELETED_USER_STATUS) return null;
+  const teamId = user.teamId;
+  return typeof teamId === "string" && teamId.length > 0 ? teamId : null;
+};
+
 // Validates a queued user. Returns null when the entry can never be matched
-// (no team ID or the team no longer exists).
+// (deleted account, no team ID, or the team no longer exists).
 const readCandidate = async (
   transaction: Transaction,
   userDoc: QueryDocumentSnapshot,
 ): Promise<QueueCandidate | null> => {
-  const teamId = userDoc.data().teamId;
-  if (typeof teamId !== "string" || teamId.length === 0) return null;
+  const teamId = getQueuedTeamId(userDoc.data());
+  if (teamId === null) return null;
 
   const teamDoc = await transaction.get(
     userDoc.ref.collection("teams").doc(teamId),
