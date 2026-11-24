@@ -30,6 +30,13 @@ export const run = async (db: Firestore, auth: Auth): Promise<void> => {
     throw new Error(`Matchup "${matchupId}" not found.`);
   }
 
+  const matchup = matchupSnap.data();
+  if (matchup?.leagueId) {
+    throw new Error(
+      `Matchup "${matchupId}" belongs to league "${matchup.leagueId}". end-matchup only completes ranked matchups.`,
+    );
+  }
+
   const completed = await completeMatchup(db, matchupSnap);
   if (!completed) {
     console.warn(`Matchup "${matchupId}" is already completed. Skipping.`);

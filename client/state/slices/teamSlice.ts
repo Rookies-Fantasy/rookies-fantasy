@@ -282,6 +282,11 @@ const teamSlice = createSlice({
     setAugment: (state, action: PayloadAction<Augment | undefined>) => {
       state.augment = action.payload;
     },
+    // The league budget changed, so the balance is recomputed from the roster
+    // the same way the server recomputes the saved team.
+    setBalance: (state, action: PayloadAction<number>) => {
+      state.balance = action.payload;
+    },
   },
 });
 
@@ -359,6 +364,7 @@ export const {
   resetToSavedTeam,
   saveTeam,
   setAugment,
+  setBalance,
 } = teamSlice.actions;
 
 export default teamSlice.reducer;

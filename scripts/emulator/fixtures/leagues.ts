@@ -28,6 +28,11 @@ export type CreateLeagueOptions = {
   document?: StageLeagueOptions["document"];
 };
 
+export type StagedLeague = {
+  document: LeagueDoc;
+  teams: TeamDoc[];
+};
+
 export type CreateLeagueResult =
   | { created: true; leagueId: string; document: LeagueDoc }
   | { created: false; leagueId: string };
@@ -36,14 +41,14 @@ export const stageLeague = (
   db: Firestore,
   batch: WriteBatch,
   options: StageLeagueOptions,
-): LeagueDoc => {
-  options.members.forEach((member) => {
+): StagedLeague => {
+  const teams = options.members.map((member) =>
     stageTeam(db, batch, {
       userId: member.userId,
       teamId: member.teamId,
       document: { ...member.team, isLeagueTeam: true },
-    });
-  });
+    }),
+  );
 
   const leagueDocument = createLeagueDoc({
     ...options.document,
@@ -55,7 +60,7 @@ export const stageLeague = (
     ),
   });
   batch.set(db.collection("leagues").doc(options.leagueId), leagueDocument);
-  return leagueDocument;
+  return { document: leagueDocument, teams };
 };
 
 export type StageOrphanTeamDeletesOptions = {
@@ -128,7 +133,7 @@ export const createLeague = async (
   }
 
   const batch = db.batch();
-  const document = stageLeague(db, batch, {
+  const { document } = stageLeague(db, batch, {
     leagueId: options.leagueId,
     creatorUserId: options.userId,
     members: [{ userId: options.userId, teamId: options.teamId, team: {} }],

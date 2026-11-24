@@ -10,6 +10,7 @@ import {
   stageLeague,
   stageOrphanLeagueTeamDeletes,
 } from "../fixtures/leagues.js";
+import { stageLeagueMatchup } from "../fixtures/matchups.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
 import { stageNbaTeams } from "../fixtures/nbaTeams.js";
 import { stageTeam } from "../fixtures/teams.js";
@@ -33,6 +34,7 @@ export type LeagueReadyScenarioResult = {
   memberIds: [string, string];
   fullLeagueId: string;
   openLeagueId: string;
+  leagueMatchupId: string;
 };
 
 type LeagueUser = {
@@ -146,10 +148,12 @@ export const createLeagueReadyScenario = async (
     };
   };
 
+  const userLeagueTeamId = `${FULL_LEAGUE_ID}-user`;
+  const opponentLeagueTeamId = `${FULL_LEAGUE_ID}-opponent`;
   // Distinct records so standings has an order, with the user in second.
   const fullLeagueMembers = [
-    toMember(dev, `${FULL_LEAGUE_ID}-user`, { wins: 4, losses: 2, draws: 0 }),
-    toMember(opp, `${FULL_LEAGUE_ID}-opponent`, {
+    toMember(dev, userLeagueTeamId, { wins: 4, losses: 2, draws: 0 }),
+    toMember(opp, opponentLeagueTeamId, {
       wins: 5,
       losses: 1,
       draws: 0,
@@ -182,11 +186,26 @@ export const createLeagueReadyScenario = async (
     keepTeamIds: seededTeamIds,
   });
 
-  stageLeague(db, batch, {
+  const {
+    teams: [userLeagueTeam, opponentLeagueTeam],
+  } = stageLeague(db, batch, {
     leagueId: FULL_LEAGUE_ID,
     creatorUserId: dev.id,
     members: fullLeagueMembers,
     document: { name: "Full League", numberOfTeams: 4 },
+  });
+  const leagueMatchup = stageLeagueMatchup(db, batch, {
+    matchupId: `${FULL_LEAGUE_ID}-week-1-user`,
+    leagueId: FULL_LEAGUE_ID,
+    week: 1,
+    phase: "regular",
+    homeUserId: dev.id,
+    homeTeamId: userLeagueTeamId,
+    homeTeam: userLeagueTeam,
+    awayUserId: opp.id,
+    awayTeamId: opponentLeagueTeamId,
+    awayTeam: opponentLeagueTeam,
+    document: { status: "active" },
   });
   stageLeague(db, batch, {
     leagueId: OPEN_LEAGUE_ID,
@@ -202,5 +221,6 @@ export const createLeagueReadyScenario = async (
     memberIds: [one.id, two.id],
     fullLeagueId: FULL_LEAGUE_ID,
     openLeagueId: OPEN_LEAGUE_ID,
+    leagueMatchupId: leagueMatchup.id,
   };
 };

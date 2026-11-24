@@ -3,8 +3,18 @@ import type {
   Firestore,
   WriteBatch,
 } from "firebase-admin/firestore";
-import { createMatchupDoc } from "../generate/matchup.js";
-import type { MatchupDoc, TeamDoc } from "../types/firestore.js";
+import {
+  createLeagueMatchupDoc,
+  createMatchupDoc,
+  type LeagueMatchupPlacement,
+  type MatchupSides,
+} from "../generate/matchup.js";
+import type {
+  LeagueMatchupDoc,
+  MatchupDoc,
+  RankedMatchupDoc,
+  TeamDoc,
+} from "../types/firestore.js";
 
 export type UpsertActiveMatchupOptions = {
   matchupId?: string;
@@ -12,13 +22,19 @@ export type UpsertActiveMatchupOptions = {
   homeTeamId: string;
   awayUserId: string;
   awayTeamId: string;
-  document?: Partial<MatchupDoc>;
+  document?: Partial<RankedMatchupDoc>;
 };
 
 export type SeededMatchup = {
   id: string;
-  document: MatchupDoc;
+  document: RankedMatchupDoc;
 };
+
+export type StageLeagueMatchupOptions = MatchupSides &
+  LeagueMatchupPlacement & {
+    matchupId: string;
+    document?: Partial<LeagueMatchupDoc>;
+  };
 
 export const getActiveMatchups = async (
   db: Firestore,
@@ -87,17 +103,34 @@ export const stageActiveMatchup = (
     homeTeam: TeamDoc;
     awayTeam: TeamDoc;
   },
-): MatchupDoc => {
+): RankedMatchupDoc => {
   const matchupDocument = createMatchupDoc(
-    options.homeUserId,
-    options.homeTeamId,
-    options.homeTeam,
-    options.awayUserId,
-    options.awayTeamId,
-    options.awayTeam,
+    {
+      homeUserId: options.homeUserId,
+      homeTeamId: options.homeTeamId,
+      homeTeam: options.homeTeam,
+      awayUserId: options.awayUserId,
+      awayTeamId: options.awayTeamId,
+      awayTeam: options.awayTeam,
+    },
     { ...options.document, id: options.matchupId, status: "active" },
   );
   batch.set(db.collection("matchups").doc(options.matchupId), matchupDocument);
+  return matchupDocument;
+};
+
+export const stageLeagueMatchup = (
+  db: Firestore,
+  batch: WriteBatch,
+  options: StageLeagueMatchupOptions,
+): LeagueMatchupDoc => {
+  const { matchupId, leagueId, week, phase, document, ...sides } = options;
+  const matchupDocument = createLeagueMatchupDoc(
+    sides,
+    { leagueId, week, phase },
+    { ...document, id: matchupId },
+  );
+  batch.set(db.collection("matchups").doc(matchupId), matchupDocument);
   return matchupDocument;
 };
 
@@ -139,7 +172,7 @@ export const upsertActiveMatchup = async (
   const matchupRef = db.collection("matchups").doc(matchupId);
   const existingMatchupSnap = await matchupRef.get();
   const existingMatchup = existingMatchupSnap.exists
-    ? (existingMatchupSnap.data() as Partial<MatchupDoc>)
+    ? (existingMatchupSnap.data() as Partial<RankedMatchupDoc>)
     : {};
   const batch = db.batch();
   const now = new Date();
