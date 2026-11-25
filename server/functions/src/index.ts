@@ -1,5 +1,3 @@
-import type { UserRecord } from "firebase-admin/auth";
-import { cleanUpDeletedUser } from "./users/deleteUserData";
 import * as functions from "firebase-functions/v1";
 import {
   EMPTY_PAYLOAD,
@@ -32,51 +30,8 @@ export { weeklyMatchupReset } from "./matchups/weeklyMatchupReset";
 export { getLiveData } from "./players/getLiveData";
 export { updateDailyPlayerData } from "./players/updateDailyPlayerData";
 export { processQueue } from "./ranked/processQueue";
-
-export const createUserInDatabase = functions.auth
-  .user()
-  .onCreate(async (user: UserRecord) => {
-    const { uid, email, emailVerified } = user;
-    const usersRef = admin.firestore().collection("users");
-
-    if (!email?.trim()) {
-      console.error(`${uid} has invalid or missing email`);
-      throw new Error("Email is required for user creation.");
-    }
-
-    try {
-      await usersRef.doc(uid).set({
-        id: uid,
-        email: email,
-        emailVerified: emailVerified,
-        queueStatus: "idle",
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    } catch (error) {
-      console.error("Error creating user in Firestore:", error);
-    }
-  });
-
-// Cleans up a user's data after their auth account is deleted (in-app
-// account deletion, required by App Store guideline 5.1.1(v)).
-export const deleteUserData = functions.auth
-  .user()
-  .onDelete(async (user: UserRecord) => {
-    const { uid } = user;
-
-    try {
-      const result = await cleanUpDeletedUser(admin.firestore(), uid);
-      console.log(
-        `Cleaned up deleted user ${uid}: anonymized=${result.anonymized}, ` +
-          `leaguesRemovedFrom=${result.leaguesRemovedFrom}, ` +
-          `leaguesDeleted=${result.leaguesDeleted}`,
-      );
-    } catch (error) {
-      console.error(`Error cleaning up deleted user ${uid}:`, error);
-      throw error;
-    }
-  });
+export { createUserInDatabase } from "./users/createUserInDatabase";
+export { deleteUserData } from "./users/deleteUserData";
 
 const LEAGUE_COLLECTION = "leagues";
 const USER_COLLECTION = "users";

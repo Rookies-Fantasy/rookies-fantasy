@@ -3,7 +3,7 @@ import type {
   DocumentSnapshot,
   Firestore,
 } from "firebase-admin/firestore";
-import { DELETED_USER_STATUS } from "../users/deleteUserData";
+import { DELETED_USER_STATUS } from "../users/cleanUpDeletedUser";
 
 type ScoreSnapshot = {
   playerSnapshot?: {
