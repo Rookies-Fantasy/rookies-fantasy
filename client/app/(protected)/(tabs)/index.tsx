@@ -37,7 +37,9 @@ import {
 import { selectUserId, clearUser } from "@/state/slices/userSlice";
 import { SlotPosition } from "@/types/team";
 import { QueueStatus } from "@/types/user";
+import { getPacificDateString } from "@/utils/dateUtils";
 import { cn, isNotNil } from "@/utils/jsUtils";
+import { formatRegistrationCloses, isLeagueClosed } from "@/utils/leagueUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
 const QUEUE_ENABLED = getBackendMode() === "emulator";
@@ -164,6 +166,13 @@ const MyTeam = () => {
               INVITE FRIENDS
             </Text>
           </Pressable>
+        )}
+
+      {currentLeague &&
+        !isLeagueClosed(currentLeague, getPacificDateString(new Date())) && (
+          <Text className="pbk-b3 mx-8 mt-2 text-center text-gray-600 dark:text-gray-400">
+            {formatRegistrationCloses(currentLeague.deadline)}
+          </Text>
         )}
 
       <View className="flex-1 gap-6 px-8">

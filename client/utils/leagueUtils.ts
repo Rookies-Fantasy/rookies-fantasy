@@ -6,6 +6,7 @@ import {
   LeagueStatus,
   PlayoffTeams,
 } from "@/types/league";
+import { formatDeadlineDate } from "@/utils/dateUtils";
 import { isNil } from "@/utils/jsUtils";
 
 // League configuration constants. Mirrored server-side in
@@ -30,6 +31,9 @@ export const toLeagueStatus = (value: string): LeagueStatus =>
 // `forming`. Matches `isRegistrationClosed` in the server's league validation.
 export const isLeagueClosed = (league: League, today: string): boolean =>
   league.status !== "forming" || today > league.deadline;
+
+export const formatRegistrationCloses = (deadline: string): string =>
+  `Registration closes ${formatDeadlineDate(deadline)} at midnight PT`;
 
 export const getEffectiveDeadline = (
   pickedDeadline: string,
