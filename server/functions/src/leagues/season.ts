@@ -129,7 +129,7 @@ export const getDeadlineBounds = (
 });
 
 export const resolveDeadline = (
-  requested: string | null,
+  requested: string,
   numberOfTeams: number,
   bounds: LeagueDeadlineBounds,
 ): DeadlineResolution => {
@@ -143,9 +143,7 @@ export const resolveDeadline = (
     };
   }
 
-  const deadline = requested ?? range.default;
-
-  if (deadline < bounds.earliest || deadline > range.latest) {
+  if (requested < bounds.earliest || requested > range.latest) {
     return {
       ok: false,
       reason: "out-of-range",
@@ -153,7 +151,7 @@ export const resolveDeadline = (
     };
   }
 
-  return { ok: true, deadline };
+  return { ok: true, deadline: requested };
 };
 
 export const hasDeadlinePassed = (deadline: string, today: string): boolean =>
