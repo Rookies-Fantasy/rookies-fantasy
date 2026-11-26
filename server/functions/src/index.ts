@@ -37,9 +37,11 @@ import {
   resolveDeadline,
   SeasonConfig,
   todayInPacific,
-  toSeasonConfig,
 } from "./leagues/season";
+import { readSeasonConfig } from "./leagues/seasonConfig";
 import { completeMatchup } from "./matchups/completeMatchup";
+
+export { generateLeagueSchedules } from "./leagues/generateLeagueSchedules";
 
 admin.initializeApp();
 
@@ -1361,22 +1363,12 @@ const isValidISODate = (value: string): boolean => {
 const LEAGUE_COLLECTION = "leagues";
 const USER_COLLECTION = "users";
 const TEAM_SUBCOLLECTION = "teams";
-const CONFIG_COLLECTION = "config";
-const SEASON_CONFIG_DOC = "season";
-
-const readSeasonConfig = async (
+const requireSeasonConfig = async (
   db: FirebaseFirestore.Firestore,
 ): Promise<SeasonConfig> => {
-  const snapshot = await db
-    .collection(CONFIG_COLLECTION)
-    .doc(SEASON_CONFIG_DOC)
-    .get();
-  const season = snapshot.exists
-    ? toSeasonConfig(snapshot.data() ?? EMPTY_PAYLOAD)
-    : null;
+  const season = await readSeasonConfig(db);
 
   if (season === null) {
-    console.error("config/season is missing or has malformed fields");
     throw new functions.https.HttpsError(
       "failed-precondition",
       "Season dates are not configured",
@@ -1454,7 +1446,7 @@ export const getLeagueDeadlineBounds = functions.https.onCall(
       );
     }
 
-    const season = await readSeasonConfig(admin.firestore());
+    const season = await requireSeasonConfig(admin.firestore());
     return getDeadlineBounds(season, todayInPacific(new Date()));
   },
 );
@@ -1481,7 +1473,7 @@ export const createLeague = functions.https.onCall(
 
     const input = validation.input;
     const db = admin.firestore();
-    const season = await readSeasonConfig(db);
+    const season = await requireSeasonConfig(db);
     const resolution = resolveDeadline(
       input.deadline,
       input.numberOfTeams,
@@ -1752,6 +1744,8 @@ const UPDATE_REJECTION_STATUS: Record<
   functions.https.FunctionsErrorCode
 > = {
   "not-league-owner": "permission-denied",
+  "registration-closed": "failed-precondition",
+  "invalid-team-count": "invalid-argument",
   "below-member-count": "failed-precondition",
   "budget-locked": "failed-precondition",
   "roster-over-budget": "failed-precondition",
@@ -1841,7 +1835,12 @@ export const updateLeague = functions.https.onCall(
           throw new functions.https.HttpsError("not-found", "League not found");
         }
 
-        const eligibility = evaluateUpdateEligibility(league, input, uid);
+        const eligibility = evaluateUpdateEligibility(
+          league,
+          input,
+          uid,
+          todayInPacific(new Date()),
+        );
 
         if (!eligibility.allowed) {
           throw new functions.https.HttpsError(
@@ -1854,7 +1853,7 @@ export const updateLeague = functions.https.onCall(
 
         if (newPlayoffTeams !== playoffTeamsFor(league.numberOfTeams)) {
           const latest = latestDeadline(
-            await readSeasonConfig(db),
+            await requireSeasonConfig(db),
             newPlayoffTeams,
           );
 

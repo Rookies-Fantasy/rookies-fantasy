@@ -22,6 +22,7 @@
     "seed:draft-ready": "tsx emulator/index.ts draft-ready",
     "seed:league": "tsx emulator/index.ts league",
     "seed:league-ready": "tsx emulator/index.ts league-ready",
+    "seed:schedule-ready": "tsx emulator/index.ts schedule-ready",
     "seed:queue-ready": "tsx emulator/index.ts queue-ready",
     "queue:opponent": "tsx emulator/index.ts queue-opponent",
     "seed:nba-players": "tsx emulator/index.ts nba-players",

@@ -33,6 +33,7 @@ import {
   getMinEditableTeams,
   getOwnerTeamId,
   isLeagueBudgetLocked,
+  isLeagueOpen,
   isLeagueOwner,
   LeagueSettingsFormData,
 } from "@/utils/leagueUtils";
@@ -55,6 +56,7 @@ const EditLeagueForm = ({
 
   const minTeams = getMinEditableTeams(league);
   const isBudgetLocked = isLeagueBudgetLocked(league);
+  const isRegistrationClosed = !isLeagueOpen(league);
   const schema = useMemo(
     () => buildLeagueSettingsSchema(minTeams, rosterCost),
     [minTeams, rosterCost],
@@ -127,6 +129,7 @@ const EditLeagueForm = ({
             control={control}
             errors={errors}
             isBudgetLocked={isBudgetLocked}
+            isRegistrationClosed={isRegistrationClosed}
             minTeams={minTeams}
             rosterCost={rosterCost}
           />

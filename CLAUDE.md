@@ -16,6 +16,8 @@ From `server/functions/`:
 - Dev: `npm run serve` (builds + starts emulator)
 - Deploy: `npm run deploy`
 - Lint: `npm run lint`
+- Test: `npm test` (`node:test` on compiled output, no test framework dependency)
+- Composite indexes live in `server/firestore.indexes.json`; add one there with any query that needs it. The emulator never enforces indexes, so a missing one fails only in a deployed project. `npm run deploy` ships functions only: deploy indexes with `firebase deploy --only firestore:indexes`, which treats any index absent from the file as one to delete
 - External data: BallDontLie SDK (`@balldontlie/sdk`) for NBA stats
 
 ## Important Notes

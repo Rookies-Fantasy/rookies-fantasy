@@ -21,19 +21,32 @@ type LeagueSettingsFieldsProps<TForm extends LeagueSettingsFormData> = {
   errors: FieldErrors<LeagueSettingsFormData>;
   minTeams?: number;
   isBudgetLocked?: boolean;
+  isRegistrationClosed?: boolean;
   rosterCost?: number;
 };
 
+const REGISTRATION_CLOSED_HINT = "Fixed after the registration deadline";
+
+// A settings value that can't be changed, shown in place of its stepper.
+const LockedValue = ({ label }: { label: string }) => (
+  <View className="mb-2 min-h-14 w-full justify-center rounded-xl border border-gray-920 px-4 py-2">
+    <Text className="pbk-b1 text-gray-400">{label}</Text>
+  </View>
+);
+
 // League name, team count and budget inputs, shared by the create and edit
 // league screens. Generic so the create screen can pass its larger league +
-// team form.
+// team form. Once registration closes, only the name stays editable.
 const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
   control: formControl,
   errors,
   minTeams = MIN_TEAMS,
   isBudgetLocked = false,
+  isRegistrationClosed = false,
   rosterCost = 0,
 }: LeagueSettingsFieldsProps<TForm>) => {
+  const showBudgetLocked = isBudgetLocked || isRegistrationClosed;
+
   // react-hook-form's Control is invariant in its form type, so a form that
   // only adds fields still can't be passed as Control<LeagueSettingsFormData>.
   // TForm is constrained to contain every field used here, so narrowing it
@@ -91,13 +104,17 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
             <Text className="pbk-b2 mb-1.5 text-base-white">
               Number of Teams
             </Text>
-            <StepperInput
-              max={MAX_TEAMS}
-              min={minTeams}
-              onChange={onChange}
-              step={TEAMS_STEP}
-              value={value}
-            />
+            {isRegistrationClosed ? (
+              <LockedValue label={`${value} teams`} />
+            ) : (
+              <StepperInput
+                max={MAX_TEAMS}
+                min={minTeams}
+                onChange={onChange}
+                step={TEAMS_STEP}
+                value={value}
+              />
+            )}
           </>
         )}
       />
@@ -108,9 +125,11 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
           </Text>
         ) : (
           <Text className="pbk-b3 text-gray-600">
-            {minTeams > MIN_TEAMS
-              ? `Can't go below the ${minTeams} spots already needed`
-              : "Minimum teams required to start the league"}
+            {isRegistrationClosed
+              ? REGISTRATION_CLOSED_HINT
+              : minTeams > MIN_TEAMS
+                ? `Can't go below the ${minTeams} spots already needed`
+                : "Minimum teams required to start the league"}
           </Text>
         )}
       </View>
@@ -121,12 +140,8 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
         render={({ field: { onChange, value } }) => (
           <>
             <Text className="pbk-b2 mb-1.5 text-base-white">Team Budget</Text>
-            {isBudgetLocked ? (
-              <View className="mb-2 min-h-14 w-full justify-center rounded-xl border border-gray-920 px-4 py-2">
-                <Text className="pbk-b1 text-gray-400">
-                  {formatBudget(value)}
-                </Text>
-              </View>
+            {showBudgetLocked ? (
+              <LockedValue label={formatBudget(value)} />
             ) : (
               <StepperInput
                 formatValue={formatBudget}
@@ -145,11 +160,13 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
           <Text className="pbk-b3 text-red-600">{errors.budget.message}</Text>
         ) : (
           <Text className="pbk-b3 text-gray-600">
-            {isBudgetLocked
-              ? "Budget can't be changed after other teams have joined"
-              : minBudget > MIN_BUDGET
-                ? `Your roster costs ${formatBudget(rosterCost)}, so the budget can't go below ${formatBudget(minBudget)}`
-                : `Budget range: ${formatBudget(MIN_BUDGET)} - ${formatBudget(MAX_BUDGET)}`}
+            {isRegistrationClosed
+              ? REGISTRATION_CLOSED_HINT
+              : isBudgetLocked
+                ? "Budget can't be changed after other teams have joined"
+                : minBudget > MIN_BUDGET
+                  ? `Your roster costs ${formatBudget(rosterCost)}, so the budget can't go below ${formatBudget(minBudget)}`
+                  : `Budget range: ${formatBudget(MIN_BUDGET)} - ${formatBudget(MAX_BUDGET)}`}
           </Text>
         )}
       </View>

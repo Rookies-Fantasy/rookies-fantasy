@@ -28,6 +28,8 @@ export const playoffTeamsFor = (numberOfTeams: number): PlayoffTeams =>
 export const toLeagueStatus = (value: string): LeagueStatus =>
   LEAGUE_STATUSES.find((status) => status === value) ?? "complete";
 
+// Registration closes when the deadline day ends or once the league has left
+// `forming`. Matches `isRegistrationClosed` in the server's league validation.
 export const isLeagueClosed = (league: League, today: string): boolean =>
   league.status !== "forming" || today > league.deadline;
 
@@ -133,8 +135,9 @@ export const isLeagueOwner = (league: League, userId: string): boolean =>
   userId.length > 0 && league.creatorUserId === userId;
 
 // The budget seeds each team's starting balance, so it is locked once anyone
-// besides the owner has joined. Until then it can still change, but never
-// below what the owner's roster costs (see `getMinEditableBudget`).
+// besides the owner has joined, and registration closing locks it too (see
+// `isLeagueClosed`). Until then it can still change, but never below what the
+// owner's roster costs (see `getMinEditableBudget`).
 export const isLeagueBudgetLocked = (league: League): boolean =>
   getLeagueMembership(league) > 1;
 

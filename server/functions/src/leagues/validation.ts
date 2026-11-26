@@ -206,9 +206,22 @@ const isOnScale = (
 
 type LeagueSettings = Pick<LeagueDocument, "name" | "numberOfTeams" | "budget">;
 
+// "on-scale" is the create rule. Edits use "any-count" because a scheduled league
+// stores its actual (possibly odd) team count, and renaming it must still pass;
+// evaluateUpdateEligibility applies the scale only when the count changes.
+type TeamsRule = "on-scale" | "any-count";
+
+const TEAMS_SCALE_MESSAGE = `Number of teams must be between ${MIN_TEAMS} and ${MAX_TEAMS}, in steps of ${TEAMS_STEP}`;
+
+const isTeamCount = (value: JsonValue, rule: TeamsRule): value is number =>
+  rule === "on-scale"
+    ? isOnScale(value, MIN_TEAMS, MAX_TEAMS, TEAMS_STEP)
+    : isFiniteNumber(value) && Number.isInteger(value) && value > 0;
+
 // The owner-chosen settings shared by `createLeague` and `updateLeague`.
 const validateLeagueSettings = (
   payload: RawPayload,
+  teamsRule: TeamsRule,
 ): InputValidation<LeagueSettings> => {
   const rawName = payload.name;
 
@@ -225,11 +238,8 @@ const validateLeagueSettings = (
   }
 
   const numberOfTeams = payload.numberOfTeams;
-  if (!isOnScale(numberOfTeams, MIN_TEAMS, MAX_TEAMS, TEAMS_STEP)) {
-    return {
-      valid: false,
-      message: `Number of teams must be between ${MIN_TEAMS} and ${MAX_TEAMS}, in steps of ${TEAMS_STEP}`,
-    };
+  if (!isTeamCount(numberOfTeams, teamsRule)) {
+    return { valid: false, message: TEAMS_SCALE_MESSAGE };
   }
 
   const budget = payload.budget;
@@ -249,7 +259,7 @@ const validateLeagueSettings = (
 export const validateCreateLeagueInput = (
   payload: RawPayload,
 ): InputValidation<CreateLeagueInput> => {
-  const settings = validateLeagueSettings(payload);
+  const settings = validateLeagueSettings(payload, "on-scale");
   if (!settings.valid) {
     return settings;
   }
@@ -280,7 +290,7 @@ export const validateUpdateLeagueInput = (
     return { valid: false, message: idErrorMessage("leagueId") };
   }
 
-  const settings = validateLeagueSettings(payload);
+  const settings = validateLeagueSettings(payload, "any-count");
   if (!settings.valid) {
     return settings;
   }
@@ -292,6 +302,11 @@ export const validateUpdateLeagueInput = (
 // whichever is furthest along is how many teams the league holds.
 const membershipOf = (league: LeagueDocument): number =>
   Math.max(league.memberCount, league.teamIds.length, league.userIds.length);
+
+// Registration closes when the deadline day ends (midnight PT) or once the league
+// has left `forming`, whichever comes first.
+const isRegistrationClosed = (league: LeagueDocument, today: string): boolean =>
+  league.status !== "forming" || hasDeadlinePassed(league.deadline, today);
 
 const reject = (code: JoinRejectionCode, message: string): JoinEligibility => ({
   allowed: false,
@@ -317,10 +332,7 @@ export const evaluateJoinEligibility = (
     return reject("user-already-joined", "User already joined");
   }
 
-  if (
-    league.status !== "forming" ||
-    hasDeadlinePassed(league.deadline, today)
-  ) {
+  if (isRegistrationClosed(league, today)) {
     return reject(
       "league-closed",
       "This league is no longer accepting members",
@@ -336,6 +348,8 @@ export const evaluateJoinEligibility = (
 
 export type UpdateRejectionCode =
   | "not-league-owner"
+  | "registration-closed"
+  | "invalid-team-count"
   | "below-member-count"
   | "budget-locked"
   | "roster-over-budget";
@@ -344,20 +358,46 @@ export type UpdateEligibility =
   | { allowed: true }
   | { allowed: false; code: UpdateRejectionCode; message: string };
 
-// Only the creator may edit a league. The team count can't drop below the teams
-// already in it, and the budget is locked once anyone else has joined: each
-// team's balance is copied from the budget when it is created, so changing it
-// afterwards would leave existing teams out of step with new ones.
+// Only the creator may edit a league. Once registration closes, the team count
+// and budget are fixed for the season; only the name can change. Before that, the
+// team count can't drop below the teams already in it, and the budget is locked
+// once anyone else has joined: each team's balance is copied from the budget when
+// it is created, so changing it afterwards would leave existing teams out of step
+// with new ones.
 export const evaluateUpdateEligibility = (
   league: LeagueDocument,
   input: UpdateLeagueInput,
   userId: string,
+  today: string,
 ): UpdateEligibility => {
   if (league.creatorUserId !== userId) {
     return {
       allowed: false,
       code: "not-league-owner",
       message: "Only the league owner can edit this league",
+    };
+  }
+
+  const teamsChanged = input.numberOfTeams !== league.numberOfTeams;
+  const budgetChanged = input.budget !== league.budget;
+
+  if (isRegistrationClosed(league, today) && (teamsChanged || budgetChanged)) {
+    return {
+      allowed: false,
+      code: "registration-closed",
+      message:
+        "Number of teams and budget can't be changed after the registration deadline",
+    };
+  }
+
+  if (
+    teamsChanged &&
+    !isOnScale(input.numberOfTeams, MIN_TEAMS, MAX_TEAMS, TEAMS_STEP)
+  ) {
+    return {
+      allowed: false,
+      code: "invalid-team-count",
+      message: TEAMS_SCALE_MESSAGE,
     };
   }
 
@@ -371,7 +411,7 @@ export const evaluateUpdateEligibility = (
     };
   }
 
-  if (input.budget !== league.budget && membership > 1) {
+  if (budgetChanged && membership > 1) {
     return {
       allowed: false,
       code: "budget-locked",
@@ -392,18 +432,18 @@ export const validateLeagueId = (value: JsonValue): InputValidation<string> => {
   return { valid: true, input: leagueId };
 };
 
-const toStringOrEmpty = (value: JsonValue): string =>
+export const toStringOrEmpty = (value: JsonValue): string =>
   typeof value === "string" ? value : "";
 
 const toCount = (value: JsonValue): number =>
   isFiniteNumber(value) && value >= 0 ? value : 0;
 
-const isPayload = (value: JsonValue): value is RawPayload =>
+export const isPayload = (value: JsonValue): value is RawPayload =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const EMPTY_RECORD: TeamRecord = { wins: 0, losses: 0, draws: 0 };
 
-const toTeamRecord = (value: JsonValue): TeamRecord => {
+export const toTeamRecord = (value: JsonValue): TeamRecord => {
   if (!isPayload(value)) {
     return EMPTY_RECORD;
   }
