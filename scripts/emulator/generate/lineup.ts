@@ -1,4 +1,7 @@
-import type { TeamLineupSlot } from "../../../client/types/team.js";
+import type {
+  PlayerTeamDisplay,
+  TeamLineupSlot,
+} from "../../../client/types/team.js";
 import type { NbaPlayerFixture } from "../fixtures/nbaPlayers.js";
 
 const lineupPositions = [
@@ -12,7 +15,10 @@ const lineupPositions = [
   "UTIL3",
 ] as const;
 
-const toTeamPlayer = (player: NbaPlayerFixture) => ({
+// Matches what the app saves for a lineup player (the client's
+// lineupMapper shape), including averageStats so seeded augments can qualify.
+const toTeamPlayer = (player: NbaPlayerFixture): PlayerTeamDisplay => ({
+  averageStats: player.averageStats,
   id: player.playerId,
   firstName: player.firstName,
   lastName: player.lastName,

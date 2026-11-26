@@ -12,6 +12,7 @@ export type LeagueStatus = (typeof LEAGUE_STATUSES)[number];
 export type League = {
   id: string;
   name: string;
+  creatorUserId: string;
   numberOfTeams: number;
   budget: number;
   memberCount: number;

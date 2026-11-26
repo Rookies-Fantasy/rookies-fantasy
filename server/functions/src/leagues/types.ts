@@ -35,6 +35,10 @@ export type LeagueDocument = {
   playoffTeams: number | null;
   regularSeasonWeeks: number | null;
   playoffStartWeek: number | null;
+  // Team id -> uid of the member who registered it. Team docs live under
+  // users/{uid}/teams, so this is how the server finds a league team without
+  // trusting whichever user happens to hold a doc with that id.
+  teamOwners: Record<string, string>;
 };
 
 export type CreateLeagueInput = {
@@ -45,14 +49,30 @@ export type CreateLeagueInput = {
   deadline: string | null;
 };
 
+// The team the caller is joining with. It does not exist yet: joinLeague
+// creates it in the same transaction that adds it to the league, so a rejected
+// join never leaves a team document behind.
+export type NewLeagueTeam = {
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+};
+
 export type JoinLeagueInput = {
   leagueId: string;
-  teamId: string;
+  team: NewLeagueTeam;
+};
+
+export type UpdateLeagueInput = {
+  leagueId: string;
+  name: string;
+  numberOfTeams: number;
+  budget: number;
 };
 
 // The league rules. These mirror the form constants and yup schema in
-// `client/app/(protected)/createLeague.tsx` so a hand-rolled request can't create
-// a league the UI would never allow.
+// `client/utils/leagueUtils.ts` so a hand-rolled request can't create or edit
+// a league into a state the UI would never allow.
 export const MIN_TEAMS = 4;
 export const MAX_TEAMS = 20;
 export const TEAMS_STEP = 2;
@@ -73,3 +93,9 @@ export type LeagueStandingTeam = {
   logoUrl: string;
   record: TeamRecord;
 };
+
+// The team rules, mirroring the yup schema in
+// `client/app/(protected)/joinLeague.tsx`.
+export const TEAM_ABBREVIATION_LENGTH = 3;
+export const MAX_TEAM_NAME_LENGTH = 50;
+export const MAX_LOGO_URL_LENGTH = 2048;

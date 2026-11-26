@@ -1,3 +1,5 @@
+import { router } from "expo-router";
+import { PencilSimple } from "phosphor-react-native";
 import { Pressable, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import LeagueSummary from "@/components/leaderboard/LeagueSummary";
@@ -11,15 +13,21 @@ import Spinner from "@/components/Spinner";
 import { useLeagueStandings } from "@/hooks/useLeagueStandings";
 import { useAppSelector } from "@/state/hooks";
 import { selectCurrentLeague } from "@/state/slices/leagueSlice";
+import { selectUserId } from "@/state/slices/userSlice";
 import { League } from "@/types/league";
 import { getPacificDateString } from "@/utils/dateUtils";
-import { formatRegistrationCloses, isLeagueClosed } from "@/utils/leagueUtils";
+import {
+  formatRegistrationCloses,
+  isLeagueClosed,
+  isLeagueOwner,
+} from "@/utils/leagueUtils";
 
 type LeagueStandingsProps = {
   league: League;
 };
 
 const LeagueStandings = ({ league }: LeagueStandingsProps) => {
+  const userId = useAppSelector(selectUserId);
   const { standings, isLoading, isError, refetch } = useLeagueStandings(league);
 
   if (isLoading) {
@@ -64,15 +72,26 @@ const LeagueStandings = ({ league }: LeagueStandingsProps) => {
       contentContainerClassName="gap-6 px-6 pb-24 pt-3"
       showsVerticalScrollIndicator={false}
     >
-      <View className="gap-1">
-        <Text className="pbk-h5 text-base-white" numberOfLines={1}>
-          {league.name}
-        </Text>
-        <Text className="pbk-b2 text-gray-400">Standings</Text>
-        {!isLeagueClosed(league, getPacificDateString(new Date())) && (
-          <Text className="pbk-b3 text-primary-400">
-            {formatRegistrationCloses(league.deadline)}
+      <View className="flex-row items-center gap-3">
+        <View className="flex-1 gap-1">
+          <Text className="pbk-h5 text-base-white" numberOfLines={1}>
+            {league.name}
           </Text>
+          <Text className="pbk-b2 text-gray-400">Standings</Text>
+          {!isLeagueClosed(league, getPacificDateString(new Date())) && (
+            <Text className="pbk-b3 text-primary-400">
+              {formatRegistrationCloses(league.deadline)}
+            </Text>
+          )}
+        </View>
+        {isLeagueOwner(league, userId) && (
+          <Pressable
+            accessibilityLabel="Edit league"
+            className="size-10 items-center justify-center rounded-md border border-gray-900"
+            onPress={() => router.push("/(protected)/editLeague")}
+          >
+            <PencilSimple color="white" size={20} weight="bold" />
+          </Pressable>
         )}
       </View>
       <StandingsPodium standings={standings} />

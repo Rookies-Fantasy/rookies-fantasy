@@ -1,23 +1,68 @@
+import { JsonObject, JsonValue } from "@/types/json";
 import {
   DRAW_POINTS,
   EMPTY_RECORD,
+  LeagueStandingTeam,
   LeagueSummaryStats,
   PodiumTile,
   StandingsRow,
   WIN_POINTS,
 } from "@/types/standings";
-import { Team, TeamRecord } from "@/types/team";
+import { TeamRecord } from "@/types/team";
 
 type UnrankedRow = Omit<StandingsRow, "rank">;
 
 const PODIUM_SIZE = 3;
 const NO_VALUE = "—";
 
-// Renders a team's record as a "W-L-D" label, falling back to zeros when a team
-// has no record yet.
-export const formatRecord = (team: Team): string => {
-  const record = team.record ?? EMPTY_RECORD;
-  return `${record.wins}-${record.losses}-${record.draws}`;
+// Renders a team's record as a "W-L-D" label.
+export const formatRecord = ({ record }: LeagueStandingTeam): string =>
+  `${record.wins}-${record.losses}-${record.draws}`;
+
+const isJsonObject = (value: JsonValue): value is JsonObject =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const readString = (value: JsonValue): string =>
+  typeof value === "string" ? value : "";
+
+const readCount = (value: JsonValue): number =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0
+    ? value
+    : 0;
+
+const toTeamRecord = (value: JsonValue): TeamRecord =>
+  isJsonObject(value)
+    ? {
+        wins: readCount(value.wins),
+        losses: readCount(value.losses),
+        draws: readCount(value.draws),
+      }
+    : EMPTY_RECORD;
+
+// Narrows the getLeagueStandings response field by field. A malformed payload
+// throws so the screen shows its error state; a malformed team is skipped.
+export const parseLeagueStandingTeams = (
+  payload: JsonValue,
+): LeagueStandingTeam[] => {
+  if (!isJsonObject(payload) || !Array.isArray(payload.teams)) {
+    throw new Error("Malformed standings response");
+  }
+
+  return payload.teams.flatMap((entry) => {
+    if (!isJsonObject(entry)) return [];
+
+    const id = readString(entry.id);
+    if (id.length === 0) return [];
+
+    return [
+      {
+        id,
+        name: readString(entry.name),
+        logoUrl: readString(entry.logoUrl),
+        record: toTeamRecord(entry.record),
+      },
+    ];
+  });
 };
 
 export const getStandingsPoints = (record: TeamRecord): number =>
@@ -38,17 +83,17 @@ export const formatWinPct = (winPct: number): string =>
 const compareOnMerit = (a: UnrankedRow, b: UnrankedRow): number => {
   if (b.points !== a.points) return b.points - a.points;
   if (b.winPct !== a.winPct) return b.winPct - a.winPct;
-  const aWins = a.team.record?.wins ?? 0;
-  const bWins = b.team.record?.wins ?? 0;
-  return bWins - aWins;
+  return b.team.record.wins - a.team.record.wins;
 };
 
 // Ranks use standard competition ranking: tied teams share the higher rank and
 // the following rank is skipped (1, 1, 3), so the table never invents a winner
 // out of an alphabetical tiebreak.
-export const computeStandings = (teams: Team[]): StandingsRow[] => {
+export const computeStandings = (
+  teams: LeagueStandingTeam[],
+): StandingsRow[] => {
   const rows: UnrankedRow[] = teams.map((team) => {
-    const record = team.record ?? EMPTY_RECORD;
+    const { record } = team;
     const winPct = getWinPct(record);
     return {
       team,
@@ -65,7 +110,7 @@ export const computeStandings = (teams: Team[]): StandingsRow[] => {
   rows.sort((a, b) => {
     const byMerit = compareOnMerit(a, b);
     if (byMerit !== 0) return byMerit;
-    return (a.team.name ?? "").localeCompare(b.team.name ?? "");
+    return a.team.name.localeCompare(b.team.name);
   });
 
   const ranked: StandingsRow[] = [];
@@ -128,6 +173,6 @@ export const getLeagueSummaryStats = (
 
 const getLeaderLabel = (leaders: StandingsRow[]): string => {
   if (leaders.length === 0) return NO_VALUE;
-  if (leaders.length === 1) return leaders[0].team.name ?? NO_VALUE;
+  if (leaders.length === 1) return leaders[0].team.name || NO_VALUE;
   return `${leaders.length}-way tie`;
 };
