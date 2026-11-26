@@ -7,7 +7,7 @@ import {
   PlayoffTeams,
 } from "@/types/league";
 import { Team } from "@/types/team";
-import { formatDeadlineDate } from "@/utils/dateUtils";
+import { formatDeadlineDate, getPacificDateString } from "@/utils/dateUtils";
 import { isNil } from "@/utils/jsUtils";
 
 // League configuration constants. Mirrored server-side in
@@ -22,19 +22,22 @@ export const MAX_LEAGUE_NAME_LENGTH = 50;
 
 const LARGE_LEAGUE_MIN_TEAMS = 10;
 
-export const getPlayoffTeams = (numberOfTeams: number): PlayoffTeams =>
+export const playoffTeamsFor = (numberOfTeams: number): PlayoffTeams =>
   numberOfTeams >= LARGE_LEAGUE_MIN_TEAMS ? 6 : 4;
 
 export const toLeagueStatus = (value: string): LeagueStatus =>
-  LEAGUE_STATUSES.find((status) => status === value) ?? "forming";
+  LEAGUE_STATUSES.find((status) => status === value) ?? "complete";
 
 // Registration closes when the deadline day ends or once the league has left
 // `forming`. Matches `isRegistrationClosed` in the server's league validation.
 export const isLeagueClosed = (league: League, today: string): boolean =>
   league.status !== "forming" || today > league.deadline;
 
+export const isLeagueOpen = (league: League): boolean =>
+  !isLeagueClosed(league, getPacificDateString(new Date()));
+
 export const formatRegistrationCloses = (deadline: string): string =>
-  `Registration closes ${formatDeadlineDate(deadline)} at midnight PT`;
+  `Registration closes end of day ${formatDeadlineDate(deadline)} (PT)`;
 
 export const getEffectiveDeadline = (
   pickedDeadline: string,

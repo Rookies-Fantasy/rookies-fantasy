@@ -31,7 +31,9 @@ import {
 } from "./leagues/validation";
 import {
   getDeadlineBounds,
+  latestDeadline,
   LeagueDeadlineBounds,
+  playoffTeamsFor,
   resolveDeadline,
   SeasonConfig,
   todayInPacific,
@@ -1845,6 +1847,24 @@ export const updateLeague = functions.https.onCall(
             UPDATE_REJECTION_STATUS[eligibility.code],
             eligibility.message,
           );
+        }
+
+        const newPlayoffTeams = playoffTeamsFor(input.numberOfTeams);
+
+        if (newPlayoffTeams !== playoffTeamsFor(league.numberOfTeams)) {
+          const latest = latestDeadline(
+            await requireSeasonConfig(db),
+            newPlayoffTeams,
+          );
+
+          if (latest === null || league.deadline > latest) {
+            throw new functions.https.HttpsError(
+              "invalid-argument",
+              latest === null
+                ? `A league of ${input.numberOfTeams} teams no longer fits in this season`
+                : `This deadline is too late for a league of ${input.numberOfTeams} teams; the latest is ${latest}`,
+            );
+          }
         }
 
         // Each team's balance starts at the budget, so a budget change has to

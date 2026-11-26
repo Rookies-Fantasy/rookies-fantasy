@@ -45,7 +45,7 @@ import { getErrorAlertMessage } from "@/utils/errorUtils";
 import { cn, isNil, isNotNil } from "@/utils/jsUtils";
 import {
   getEffectiveDeadline,
-  getPlayoffTeams,
+  playoffTeamsFor,
   leagueSettingsSchema,
   MIN_BUDGET,
   MIN_TEAMS,
@@ -116,7 +116,7 @@ const CreateLeague = () => {
   const numberOfTeams = useWatch({ control, name: "numberOfTeams" });
   const deadlineRange = isNil(deadlineBounds)
     ? null
-    : deadlineBounds.byPlayoffTeams[getPlayoffTeams(numberOfTeams)];
+    : deadlineBounds.byPlayoffTeams[playoffTeamsFor(numberOfTeams)];
   const isCreationClosed = isNotNil(deadlineBounds) && isNil(deadlineRange);
   const pickedDeadline = useWatch({ control, name: "deadline" });
   const deadline = getEffectiveDeadline(pickedDeadline, deadlineRange);
@@ -175,7 +175,7 @@ const CreateLeague = () => {
 
   const handleNext = async () => {
     const isValid = await trigger(["leagueName", "numberOfTeams", "budget"]);
-    if (isValid && deadline !== "") {
+    if (isValid) {
       gestureTranslateX.value = withTiming(-screenWidth, {
         duration: 300,
         easing: Easing.out(Easing.cubic),
@@ -380,7 +380,7 @@ const CreateLeague = () => {
                       </Text>
                     ) : (
                       <Text className="pbk-b3 text-gray-600">
-                        Registration closes at midnight Pacific Time
+                        Registration closes at the end of the chosen day (PT)
                       </Text>
                     )}
                   </View>

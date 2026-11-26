@@ -269,9 +269,8 @@ export const validateCreateLeagueInput = (
     return { valid: false, message: idErrorMessage("initialTeamId") };
   }
 
-  const rawDeadline = "deadline" in payload ? payload.deadline : null;
-  const deadline = isIsoDate(rawDeadline) ? rawDeadline : null;
-  if (rawDeadline !== null && deadline === null) {
+  const deadline = payload.deadline;
+  if (!isIsoDate(deadline)) {
     return { valid: false, message: "Deadline must be a YYYY-MM-DD date" };
   }
 

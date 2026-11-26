@@ -26,7 +26,6 @@ import {
 import { selectTeam, setBalance } from "@/state/slices/teamSlice";
 import { selectUserId } from "@/state/slices/userSlice";
 import { League } from "@/types/league";
-import { getPacificDateString } from "@/utils/dateUtils";
 import { getErrorAlertMessage } from "@/utils/errorUtils";
 import {
   buildLeagueSettingsSchema,
@@ -34,7 +33,7 @@ import {
   getMinEditableTeams,
   getOwnerTeamId,
   isLeagueBudgetLocked,
-  isLeagueClosed,
+  isLeagueOpen,
   isLeagueOwner,
   LeagueSettingsFormData,
 } from "@/utils/leagueUtils";
@@ -57,10 +56,7 @@ const EditLeagueForm = ({
 
   const minTeams = getMinEditableTeams(league);
   const isBudgetLocked = isLeagueBudgetLocked(league);
-  const isRegistrationClosed = isLeagueClosed(
-    league,
-    getPacificDateString(new Date()),
-  );
+  const isRegistrationClosed = !isLeagueOpen(league);
   const schema = useMemo(
     () => buildLeagueSettingsSchema(minTeams, rosterCost),
     [minTeams, rosterCost],
