@@ -1,3 +1,14 @@
+export const LEAGUE_STATUSES = [
+  "forming",
+  "scheduled",
+  "unscheduled",
+  "active",
+  "playoffs",
+  "complete",
+] as const;
+
+export type LeagueStatus = (typeof LEAGUE_STATUSES)[number];
+
 export type League = {
   id: string;
   name: string;
@@ -7,6 +18,20 @@ export type League = {
   memberCount: number;
   teamIds: string[];
   userIds: string[];
+  deadline: string;
+  status: LeagueStatus;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type PlayoffTeams = 4 | 6;
+
+export type DeadlineWindow = {
+  default: string;
+  latest: string;
+};
+
+export type LeagueDeadlineBounds = {
+  earliest: string;
+  byPlayoffTeams: Record<PlayoffTeams, DeadlineWindow | null>;
 };

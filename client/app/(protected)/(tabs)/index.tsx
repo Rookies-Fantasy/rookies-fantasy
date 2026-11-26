@@ -32,6 +32,7 @@ import { selectUserId } from "@/state/slices/userSlice";
 import { SlotPosition } from "@/types/team";
 import { QueueStatus } from "@/types/user";
 import { cn, isNotNil } from "@/utils/jsUtils";
+import { formatRegistrationCloses, isLeagueOpen } from "@/utils/leagueUtils";
 import { isTeamReadyForQueue } from "@/utils/teamUtils";
 
 const QUEUE_ENABLED = getBackendMode() === "emulator";
@@ -145,6 +146,12 @@ const MyTeam = () => {
             </Text>
           </Pressable>
         )}
+
+      {currentLeague && isLeagueOpen(currentLeague) && (
+        <Text className="pbk-b3 mx-8 mt-2 text-center text-gray-600 dark:text-gray-400">
+          {formatRegistrationCloses(currentLeague.deadline)}
+        </Text>
+      )}
 
       <View className="flex-1 gap-6 px-8">
         {playerCount > 0 || team.hasUserChanges ? (

@@ -1,13 +1,32 @@
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import { getFunctionUrl } from "@/firebase/config";
 import { JsonValue } from "@/types/json";
-import { League } from "@/types/league";
+import { League, LeagueDeadlineBounds } from "@/types/league";
 import { LeagueStandingTeam } from "@/types/standings";
 import { defaultTeam, Team } from "@/types/team";
 import { callFunction, getIdToken } from "@/utils/callableUtils";
+import { toLeagueStatus } from "@/utils/leagueUtils";
 import { parseLeagueStandingTeams } from "@/utils/standingsUtils";
 
 const LEAGUE_COLLECTION = "leagues";
+
+const toLeague = (
+  id: string,
+  data: FirebaseFirestoreTypes.DocumentData,
+): League => ({
+  id,
+  name: data.name,
+  creatorUserId: data.creatorUserId,
+  numberOfTeams: data.numberOfTeams,
+  budget: data.budget,
+  memberCount: data.memberCount,
+  teamIds: data.teamIds ?? [],
+  userIds: data.userIds ?? [],
+  deadline: typeof data.deadline === "string" ? data.deadline : "",
+  status: toLeagueStatus(data.status ?? ""),
+});
 
 const SIGNED_OUT_ERROR = "No authenticated user";
 const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
@@ -22,6 +41,7 @@ export type LeagueSettingsModel = {
 
 export type LeagueEditModel = LeagueSettingsModel & {
   initialTeamId: string;
+  deadline: string;
 };
 
 export type JoinLeagueTeamModel = {
@@ -60,16 +80,7 @@ export class LeagueController {
 
       leagues.docs.forEach((doc) => {
         const data = doc.data();
-        const league: League = {
-          id: doc.id,
-          name: data?.name,
-          creatorUserId: data?.creatorUserId,
-          numberOfTeams: data?.numberOfTeams,
-          budget: data?.budget,
-          memberCount: data?.memberCount,
-          teamIds: data?.teamIds ?? [],
-          userIds: data.userIds ?? [],
-        };
+        const league = toLeague(doc.id, data);
 
         (data?.teamIds ?? []).forEach((teamId: string) => {
           if (teamIds.includes(teamId)) {
@@ -94,17 +105,7 @@ export class LeagueController {
 
       if (!leagueDoc.exists()) return null;
 
-      const data = leagueDoc.data();
-      return {
-        id: leagueDoc.id,
-        name: data?.name,
-        creatorUserId: data?.creatorUserId,
-        numberOfTeams: data?.numberOfTeams,
-        budget: data?.budget,
-        memberCount: data?.memberCount,
-        teamIds: data?.teamIds ?? [],
-        userIds: data?.userIds ?? [],
-      };
+      return toLeague(leagueDoc.id, leagueDoc.data() ?? {});
     } catch (error) {
       console.error("Error fetching league:", error);
       throw error;
@@ -146,6 +147,7 @@ export class LeagueController {
           numberOfTeams: params.numberOfTeams,
           budget: params.budget,
           initialTeamId: params.initialTeamId,
+          deadline: params.deadline,
         },
         CREATE_SIGNED_OUT_ERROR,
       );
@@ -153,6 +155,19 @@ export class LeagueController {
       return league;
     } catch (error) {
       console.error("Error creating league:", error);
+      throw error;
+    }
+  };
+
+  static getLeagueDeadlineBounds = async (): Promise<LeagueDeadlineBounds> => {
+    try {
+      return await callFunction<LeagueDeadlineBounds>(
+        "getLeagueDeadlineBounds",
+        {},
+        CREATE_SIGNED_OUT_ERROR,
+      );
+    } catch (error) {
+      console.error("Error fetching league deadline bounds:", error);
       throw error;
     }
   };

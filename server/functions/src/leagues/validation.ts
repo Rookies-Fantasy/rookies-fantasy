@@ -2,7 +2,9 @@ import {
   CreateLeagueInput,
   JoinLeagueInput,
   JsonValue,
+  LEAGUE_STATUSES,
   LeagueDocument,
+  LeagueStatus,
   LeagueStandingTeam,
   BUDGET_STEP,
   MAX_BUDGET,
@@ -19,6 +21,7 @@ import {
   RawPayload,
   UpdateLeagueInput,
 } from "./types";
+import { hasDeadlinePassed, isIsoDate } from "./season";
 
 export type InputValidation<TInput> =
   | { valid: true; input: TInput }
@@ -27,6 +30,7 @@ export type InputValidation<TInput> =
 export type JoinRejectionCode =
   | "team-already-joined"
   | "user-already-joined"
+  | "league-closed"
   | "league-full";
 
 export type JoinEligibility =
@@ -39,6 +43,11 @@ const isFiniteNumber = (value: JsonValue): value is number =>
 const isStringArray = (value: JsonValue): value is string[] =>
   Array.isArray(value) && value.every((entry) => typeof entry === "string");
 
+const isLeagueStatus = (value: JsonValue): value is LeagueStatus =>
+  LEAGUE_STATUSES.some((status) => status === value);
+
+const isNullableCount = (value: JsonValue): value is number | null =>
+  value === null || isFiniteNumber(value);
 const isStringRecord = (value: JsonValue): value is Record<string, string> =>
   typeof value === "object" &&
   value !== null &&
@@ -57,6 +66,11 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     memberCount,
     teamIds,
     userIds,
+    deadline,
+    status,
+    playoffTeams,
+    regularSeasonWeeks,
+    playoffStartWeek,
     teamOwners,
   } = data;
 
@@ -68,6 +82,11 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     !isFiniteNumber(memberCount) ||
     !isStringArray(teamIds) ||
     !isStringArray(userIds) ||
+    !isIsoDate(deadline) ||
+    !isLeagueStatus(status) ||
+    !isNullableCount(playoffTeams) ||
+    !isNullableCount(regularSeasonWeeks) ||
+    !isNullableCount(playoffStartWeek) ||
     !isStringRecord(teamOwners)
   ) {
     return null;
@@ -81,6 +100,11 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     memberCount,
     teamIds,
     userIds,
+    deadline,
+    status,
+    playoffTeams,
+    regularSeasonWeeks,
+    playoffStartWeek,
     teamOwners,
   };
 };
@@ -235,7 +259,15 @@ export const validateCreateLeagueInput = (
     return { valid: false, message: idErrorMessage("initialTeamId") };
   }
 
-  return { valid: true, input: { ...settings.input, initialTeamId } };
+  const deadline = payload.deadline;
+  if (!isIsoDate(deadline)) {
+    return { valid: false, message: "Deadline must be a YYYY-MM-DD date" };
+  }
+
+  return {
+    valid: true,
+    input: { ...settings.input, initialTeamId, deadline },
+  };
 };
 
 // Validates an `updateLeague` payload. Only the settings are editable; the
@@ -275,6 +307,7 @@ export const evaluateJoinEligibility = (
   league: LeagueDocument,
   teamId: string,
   userId: string,
+  today: string,
 ): JoinEligibility => {
   if (league.teamIds.includes(teamId)) {
     return reject("team-already-joined", "Team already joined");
@@ -282,6 +315,16 @@ export const evaluateJoinEligibility = (
 
   if (league.userIds.includes(userId)) {
     return reject("user-already-joined", "User already joined");
+  }
+
+  if (
+    league.status !== "forming" ||
+    hasDeadlinePassed(league.deadline, today)
+  ) {
+    return reject(
+      "league-closed",
+      "This league is no longer accepting members",
+    );
   }
 
   if (membershipOf(league) >= league.numberOfTeams) {

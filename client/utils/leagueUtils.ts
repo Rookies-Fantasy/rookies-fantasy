@@ -1,6 +1,14 @@
 import * as yup from "yup";
-import { League } from "@/types/league";
+import {
+  DeadlineWindow,
+  League,
+  LEAGUE_STATUSES,
+  LeagueStatus,
+  PlayoffTeams,
+} from "@/types/league";
 import { Team } from "@/types/team";
+import { formatDeadlineDate, getPacificDateString } from "@/utils/dateUtils";
+import { isNil } from "@/utils/jsUtils";
 
 // League configuration constants. Mirrored server-side in
 // `server/functions/src/leagues/types.ts`.
@@ -11,6 +19,32 @@ export const MIN_TEAMS = 4;
 export const MAX_TEAMS = 20;
 export const TEAMS_STEP = 2;
 export const MAX_LEAGUE_NAME_LENGTH = 50;
+
+const LARGE_LEAGUE_MIN_TEAMS = 10;
+
+export const playoffTeamsFor = (numberOfTeams: number): PlayoffTeams =>
+  numberOfTeams >= LARGE_LEAGUE_MIN_TEAMS ? 6 : 4;
+
+export const toLeagueStatus = (value: string): LeagueStatus =>
+  LEAGUE_STATUSES.find((status) => status === value) ?? "complete";
+
+export const isLeagueClosed = (league: League, today: string): boolean =>
+  league.status !== "forming" || today > league.deadline;
+
+export const isLeagueOpen = (league: League): boolean =>
+  !isLeagueClosed(league, getPacificDateString(new Date()));
+
+export const formatRegistrationCloses = (deadline: string): string =>
+  `Registration closes end of day ${formatDeadlineDate(deadline)} (PT)`;
+
+export const getEffectiveDeadline = (
+  pickedDeadline: string,
+  range: DeadlineWindow | null,
+): string => {
+  if (isNil(range)) return "";
+  if (pickedDeadline === "") return range.default;
+  return pickedDeadline > range.latest ? range.latest : pickedDeadline;
+};
 
 export const formatBudget = (value: number): string =>
   `$${(value / 1_000_000).toFixed(0)}M`;

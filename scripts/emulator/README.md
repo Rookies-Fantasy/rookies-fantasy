@@ -117,12 +117,17 @@ update team records, and return participants to idle. It is safe to repeat.
 ### Browse and Join Leagues
 
 `seed:league-ready` creates four users, a complete ranked team for
-`dev@test.com`, and two leagues:
+`dev@test.com`, and three leagues:
 
-| League ID              | Name        | Teams | Creator             | `dev@test.com` |
-| ---------------------- | ----------- | ----- | ------------------- | -------------- |
-| `emulator-league-full` | Full League | 4/4   | `dev@test.com`      | Member         |
-| `emulator-league-open` | Open League | 2/6   | `opponent@test.com` | Not a member   |
+| League ID                | Name          | Teams | Deadline     | Creator             | `dev@test.com` |
+| ------------------------ | ------------- | ----- | ------------ | ------------------- | -------------- |
+| `emulator-league-full`   | Full League   | 4/4   | In 7 days    | `dev@test.com`      | Member         |
+| `emulator-league-open`   | Open League   | 2/6   | In 7 days    | `opponent@test.com` | Not a member   |
+| `emulator-league-closed` | Closed League | 2/6   | Yesterday    | `opponent@test.com` | Not a member   |
+
+Deadlines are Pacific dates relative to the day you seed, and every league is
+`forming`. Every scenario also writes `config/season` with the 2026–27 season
+dates from `scripts/data/season.ts`, which league creation needs.
 
 The other members are `opponent@test.com`, `league1@test.com`, and
 `league2@test.com`. Every member has a complete league team.
@@ -142,7 +147,11 @@ League with the development build's deep link:
 xcrun simctl openurl booted "myapp-development://joinLeague?leagueId=emulator-league-open"
 ```
 
-Re-running the seed command restores both leagues and their teams. It also
+Open Closed League the same way with `leagueId=emulator-league-closed` to see
+the closed state; `joinLeague` rejects it with "This league is no longer
+accepting members".
+
+Re-running the seed command restores the leagues and their teams. It also
 deletes league teams that no other league uses, owned by the seeded users or by
 anyone who joined these leagues, including teams left behind by a failed join.
 

@@ -1,7 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useLocalSearchParams, router } from "expo-router";
 import { WarningCircle } from "phosphor-react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   View,
@@ -28,13 +28,13 @@ import Button from "@/components/Button";
 import { PressableLink } from "@/components/PressableLink";
 import Screen from "@/components/Screen";
 import { LeagueController } from "@/controllers/leagueController";
-import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import {
-  selectCurrentLeague,
-  setCurrentLeague,
-} from "@/state/slices/leagueSlice";
+import { useLeague } from "@/hooks/useLeague";
+import { useAppDispatch } from "@/state/hooks";
+import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { isNil, isNotNil } from "@/utils/jsUtils";
+import { formatRegistrationCloses, isLeagueOpen } from "@/utils/leagueUtils";
 
 const joinLeagueSchema = yup.object({
   // Trimmed and capped to match validateJoinLeagueInput on the server, so the
@@ -74,29 +74,11 @@ const JoinLeague = () => {
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
 
   const { leagueId } = useLocalSearchParams<{ leagueId?: string }>();
-  const currentLeague = useAppSelector(selectCurrentLeague);
-
-  useEffect(() => {
-    if (!leagueId) return;
-
-    const fetchLeague = async () => {
-      try {
-        const league = await LeagueController.getLeague(leagueId);
-
-        if (!league) {
-          Alert.alert("Error", "League not found.");
-          return;
-        }
-
-        dispatch(setCurrentLeague(league));
-      } catch (error) {
-        console.error("Failed to fetch league:", error);
-        Alert.alert("Error", "Failed to load league.");
-      }
-    };
-
-    fetchLeague();
-  }, [dispatch, leagueId]);
+  const {
+    league: invitedLeague,
+    isLoading: isLeagueLoading,
+    isError: isLeagueError,
+  } = useLeague(leagueId ?? "");
 
   // Animation value for sliding
   const gestureTranslateX = useSharedValue(0);
@@ -174,7 +156,7 @@ const JoinLeague = () => {
   };
 
   const handleJoinLeague = async (data: JoinLeagueFormData) => {
-    if (!leagueId || !currentLeague) {
+    if (!leagueId || !invitedLeague) {
       Alert.alert("No league found", "Please try again.");
       return;
     }
@@ -207,6 +189,37 @@ const JoinLeague = () => {
       <Screen>
         <View className="flex-1 items-center justify-center px-6">
           <Text className="pbk-h5 text-base-white">Invalid invite link</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (isLeagueError || (!isLeagueLoading && isNil(invitedLeague))) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="pbk-h5 text-base-white">
+            {isLeagueError ? "Failed to load league" : "League not found"}
+          </Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (isNotNil(invitedLeague) && !isLeagueOpen(invitedLeague)) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="pbk-h5 mb-3 text-center text-base-white">
+            League Closed
+          </Text>
+          <Text className="pbk-b2 mb-8 text-center text-gray-400">
+            This league is no longer accepting members.
+          </Text>
+          <Button
+            label="Back to My Team"
+            onPress={() => router.replace("/(protected)/(tabs)")}
+          />
         </View>
       </Screen>
     );
@@ -252,10 +265,13 @@ const JoinLeague = () => {
                     </Text>
                   </View>
 
-                  {currentLeague && (
+                  {invitedLeague && (
                     <View className="rounded-3xl bg-gray-900 p-6 shadow-lg">
                       <Text className="pbk-h5 mb-1 text-center text-base-white">
-                        {currentLeague.name}
+                        {invitedLeague.name}
+                      </Text>
+                      <Text className="pbk-b2 mb-6 text-center text-primary-400">
+                        {formatRegistrationCloses(invitedLeague.deadline)}
                       </Text>
 
                       <View className="mb-8">
@@ -264,8 +280,8 @@ const JoinLeague = () => {
                             Teams Joined
                           </Text>
                           <Text className="pbk-b1 text-base-white">
-                            {currentLeague.memberCount} /{" "}
-                            {currentLeague.numberOfTeams}
+                            {invitedLeague.memberCount} /{" "}
+                            {invitedLeague.numberOfTeams}
                           </Text>
                         </View>
 
@@ -274,8 +290,8 @@ const JoinLeague = () => {
                             className="h-3 rounded-full bg-white"
                             style={{
                               width: `${
-                                (currentLeague.memberCount /
-                                  currentLeague.numberOfTeams) *
+                                (invitedLeague.memberCount /
+                                  invitedLeague.numberOfTeams) *
                                 100
                               }%`,
                             }}
@@ -289,7 +305,7 @@ const JoinLeague = () => {
                         </Text>
 
                         <Text className="text-4xl font-bold text-base-white">
-                          ${(currentLeague.budget / 1_000_000).toFixed(0)}M
+                          ${(invitedLeague.budget / 1_000_000).toFixed(0)}M
                         </Text>
 
                         <Text className="pbk-b3 mt-2 px-6 text-center text-gray-500">

@@ -54,6 +54,8 @@ const league = (overrides: Partial<League> = {}): League => ({
   memberCount: 1,
   teamIds: ["owner-team"],
   userIds: ["owner"],
+  deadline: "2026-12-01",
+  status: "forming",
   ...overrides,
 });
 

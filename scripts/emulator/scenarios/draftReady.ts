@@ -6,6 +6,7 @@ import { DEFAULT_NBA_PLAYERS } from "../data/nbaPlayers.js";
 import { DEFAULT_NBA_TEAMS } from "../data/nbaTeams.js";
 import { stageAugments } from "../fixtures/augments.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
+import { stageSeasonConfig } from "../fixtures/season.js";
 import { stageNbaTeams } from "../fixtures/nbaTeams.js";
 import { resolveSeedTeamId, stageTeam } from "../fixtures/teams.js";
 import { ensureAuthUser, stageUser } from "../fixtures/users.js";
@@ -37,6 +38,7 @@ export const createDraftReadyScenario = async (
   stageNbaPlayers(db, batch, DEFAULT_NBA_PLAYERS);
   stageNbaTeams(db, batch, DEFAULT_NBA_TEAMS);
   stageAugments(db, batch, DEFAULT_AUGMENTS);
+  stageSeasonConfig(db, batch);
   stageUser(db, batch, options.email, {
     id: user.uid,
     emailVerified: true,

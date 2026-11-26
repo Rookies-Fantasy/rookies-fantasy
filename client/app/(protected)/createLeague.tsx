@@ -1,8 +1,9 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { ArrowLeft, WarningCircle } from "phosphor-react-native";
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import {
   View,
   KeyboardAvoidingView,
@@ -12,6 +13,7 @@ import {
   Image,
   Keyboard,
   Alert,
+  Modal,
   useWindowDimensions,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -29,12 +31,21 @@ import LeagueSettingsFields from "@/components/LeagueSettingsFields";
 import Screen from "@/components/Screen";
 import { LeagueController } from "@/controllers/leagueController";
 import { UserController } from "@/controllers/userController";
+import { useLeagueDeadlineBounds } from "@/hooks/useLeagueDeadlineBounds";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
-import { getErrorAlertMessage } from "@/utils/errorUtils";
 import {
+  formatDeadlineDate,
+  formatLocalDate,
+  parseLocalDate,
+} from "@/utils/dateUtils";
+import { getErrorAlertMessage } from "@/utils/errorUtils";
+import { cn, isNil, isNotNil } from "@/utils/jsUtils";
+import {
+  getEffectiveDeadline,
+  playoffTeamsFor,
   leagueSettingsSchema,
   MIN_BUDGET,
   MIN_TEAMS,
@@ -42,6 +53,7 @@ import {
 
 // Combined schema for league + team
 const createLeagueSchema = leagueSettingsSchema.shape({
+  deadline: yup.string().defined(),
   teamName: yup.string().required("Team Name is required"),
   abbreviation: yup
     .string()
@@ -71,6 +83,13 @@ const CreateLeague = () => {
   const [selectedLogoOption, setSelectedLogoOption] =
     useState<Asset>(defaultTeamLogo);
   const [showBottomDrawer, setShowBottomDrawer] = useState(false);
+  const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
+  const [pickerDate, setPickerDate] = useState(new Date());
+  const {
+    bounds: deadlineBounds,
+    isLoading: isLoadingDeadlineBounds,
+    isError: isDeadlineBoundsError,
+  } = useLeagueDeadlineBounds();
 
   // Animation value for sliding
   const gestureTranslateX = useSharedValue(0);
@@ -86,12 +105,23 @@ const CreateLeague = () => {
       leagueName: "",
       numberOfTeams: MIN_TEAMS,
       budget: MIN_BUDGET,
+      deadline: "",
       teamName: "",
       abbreviation: "",
       logoUrl: "",
     },
     mode: "onSubmit",
   });
+
+  const numberOfTeams = useWatch({ control, name: "numberOfTeams" });
+  const deadlineRange = isNil(deadlineBounds)
+    ? null
+    : deadlineBounds.byPlayoffTeams[playoffTeamsFor(numberOfTeams)];
+  const isCreationClosed = isNotNil(deadlineBounds) && isNil(deadlineRange);
+  const pickedDeadline = useWatch({ control, name: "deadline" });
+  const deadline = getEffectiveDeadline(pickedDeadline, deadlineRange);
+  const isDeadlineClamped =
+    isNotNil(deadlineRange) && pickedDeadline > deadlineRange.latest;
 
   const goToStep1 = () => {
     setCurrentStep(1);
@@ -172,6 +202,7 @@ const CreateLeague = () => {
         numberOfTeams: data.numberOfTeams,
         budget: data.budget,
         initialTeamId: teamId,
+        deadline,
       });
 
       if (teamData) {
@@ -234,7 +265,126 @@ const CreateLeague = () => {
                 className="absolute left-0 right-0 top-0 flex-1"
                 style={step1AnimatedStyle}
               >
-                <LeagueSettingsFields control={control} errors={errors} />
+                <View className="flex-1 flex-col">
+                  <LeagueSettingsFields control={control} errors={errors} />
+
+                  <Controller
+                    control={control}
+                    name="deadline"
+                    render={({ field: { onChange } }) => (
+                      <>
+                        <Text className="pbk-b2 mb-1.5 text-base-white">
+                          Registration Deadline
+                        </Text>
+                        <Pressable
+                          disabled={isNil(deadlineRange)}
+                          onPress={() => {
+                            Keyboard.dismiss();
+                            setPickerDate(parseLocalDate(deadline));
+                            setShowDeadlinePicker(true);
+                          }}
+                        >
+                          <View
+                            className={cn(
+                              "mb-2 min-h-14 w-full flex-row items-center rounded-xl border px-2 py-2",
+                              isCreationClosed
+                                ? "border-red-600"
+                                : "border-gray-920",
+                            )}
+                          >
+                            <TextInput
+                              className="flex-1 text-base-white placeholder:pbk-b1"
+                              editable={false}
+                              placeholder={
+                                isLoadingDeadlineBounds
+                                  ? "Loading dates..."
+                                  : "Choose a date"
+                              }
+                              placeholderTextColor="gray"
+                              pointerEvents="none"
+                              value={
+                                deadline === ""
+                                  ? ""
+                                  : formatDeadlineDate(deadline)
+                              }
+                            />
+                            {isCreationClosed && (
+                              <WarningCircle
+                                color="#dc2626"
+                                size={20}
+                                weight="bold"
+                              />
+                            )}
+                          </View>
+                        </Pressable>
+                        {isNotNil(deadlineBounds) &&
+                          isNotNil(deadlineRange) && (
+                            <Modal
+                              animationType="slide"
+                              onRequestClose={() =>
+                                setShowDeadlinePicker(false)
+                              }
+                              transparent
+                              visible={showDeadlinePicker}
+                            >
+                              <Pressable
+                                className="flex-1"
+                                onPress={() => setShowDeadlinePicker(false)}
+                              >
+                                <View className="flex-1 items-center justify-end">
+                                  <View className="w-full rounded-t-2xl bg-gray-920 p-8">
+                                    <DateTimePicker
+                                      display="spinner"
+                                      maximumDate={parseLocalDate(
+                                        deadlineRange.latest,
+                                      )}
+                                      minimumDate={parseLocalDate(
+                                        deadlineBounds.earliest,
+                                      )}
+                                      mode="date"
+                                      onChange={(_, selectedDate) => {
+                                        if (selectedDate) {
+                                          setPickerDate(selectedDate);
+                                        }
+                                      }}
+                                      themeVariant="dark"
+                                      value={pickerDate}
+                                    />
+                                    <Button
+                                      label="Done"
+                                      onPress={() => {
+                                        onChange(formatLocalDate(pickerDate));
+                                        setShowDeadlinePicker(false);
+                                      }}
+                                    />
+                                  </View>
+                                </View>
+                              </Pressable>
+                            </Modal>
+                          )}
+                      </>
+                    )}
+                  />
+                  <View className="mb-6">
+                    {isCreationClosed ? (
+                      <Text className="pbk-b3 text-red-600">
+                        League creation is closed for this season
+                      </Text>
+                    ) : isDeadlineBoundsError ? (
+                      <Text className="pbk-b3 text-red-600">
+                        Could not load deadline dates
+                      </Text>
+                    ) : isDeadlineClamped ? (
+                      <Text className="pbk-b3 text-yellow-500">
+                        Moved to the latest date allowed for this league size
+                      </Text>
+                    ) : (
+                      <Text className="pbk-b3 text-gray-600">
+                        Registration closes at the end of the chosen day (PT)
+                      </Text>
+                    )}
+                  </View>
+                </View>
               </Animated.View>
 
               <Animated.View
@@ -362,7 +512,11 @@ const CreateLeague = () => {
 
         <View className="justify-end bg-gray-950 px-6">
           {currentStep === 1 ? (
-            <Button label="Next" onPress={handleNext} />
+            <Button
+              disabled={deadline === ""}
+              label="Next"
+              onPress={handleNext}
+            />
           ) : (
             <Button
               isLoading={isLoading}

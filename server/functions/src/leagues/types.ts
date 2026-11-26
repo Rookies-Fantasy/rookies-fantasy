@@ -10,6 +10,17 @@ export type RawPayload = { [key: string]: JsonValue };
 
 export const EMPTY_PAYLOAD: RawPayload = {};
 
+export const LEAGUE_STATUSES = [
+  "forming",
+  "scheduled",
+  "unscheduled",
+  "active",
+  "playoffs",
+  "complete",
+] as const;
+
+export type LeagueStatus = (typeof LEAGUE_STATUSES)[number];
+
 // A league document reduced to the fields the server actually reasons about.
 export type LeagueDocument = {
   name: string;
@@ -19,6 +30,11 @@ export type LeagueDocument = {
   memberCount: number;
   teamIds: string[];
   userIds: string[];
+  deadline: string;
+  status: LeagueStatus;
+  playoffTeams: number | null;
+  regularSeasonWeeks: number | null;
+  playoffStartWeek: number | null;
   // Team id -> uid of the member who registered it. Team docs live under
   // users/{uid}/teams, so this is how the server finds a league team without
   // trusting whichever user happens to hold a doc with that id.
@@ -30,6 +46,7 @@ export type CreateLeagueInput = {
   numberOfTeams: number;
   budget: number;
   initialTeamId: string;
+  deadline: string;
 };
 
 // The team the caller is joining with. It does not exist yet: joinLeague

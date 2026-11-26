@@ -13,12 +13,15 @@ import {
 import { stageLeagueMatchup } from "../fixtures/matchups.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
 import { stageNbaTeams } from "../fixtures/nbaTeams.js";
+import { stageSeasonConfig } from "../fixtures/season.js";
 import { stageTeam } from "../fixtures/teams.js";
 import { ensureAuthUser, stageUser } from "../fixtures/users.js";
+import { pacificDateFromToday } from "../generate/league.js";
 import { buildLineup, getLineupSalary } from "../generate/lineup.js";
 
 export const FULL_LEAGUE_ID = "emulator-league-full";
 export const OPEN_LEAGUE_ID = "emulator-league-open";
+export const CLOSED_LEAGUE_ID = "emulator-league-closed";
 
 export type LeagueReadyScenarioOptions = {
   userEmail: string;
@@ -34,6 +37,7 @@ export type LeagueReadyScenarioResult = {
   memberIds: [string, string];
   fullLeagueId: string;
   openLeagueId: string;
+  closedLeagueId: string;
   leagueMatchupId: string;
 };
 
@@ -95,6 +99,7 @@ export const createLeagueReadyScenario = async (
   stageNbaPlayers(db, batch, DEFAULT_NBA_PLAYERS);
   stageNbaTeams(db, batch, DEFAULT_NBA_TEAMS);
   stageAugments(db, batch, DEFAULT_AUGMENTS);
+  stageSeasonConfig(db, batch);
 
   leagueUsers.forEach((leagueUser, index) => {
     stageUser(db, batch, emails[index], {
@@ -213,6 +218,19 @@ export const createLeagueReadyScenario = async (
     members: openLeagueMembers,
     document: { name: "Open League", numberOfTeams: 6 },
   });
+  stageLeague(db, batch, {
+    leagueId: CLOSED_LEAGUE_ID,
+    creatorUserId: opp.id,
+    members: [
+      toMember(opp, `${CLOSED_LEAGUE_ID}-opponent`),
+      toMember(one, `${CLOSED_LEAGUE_ID}-member-1`),
+    ],
+    document: {
+      name: "Closed League",
+      numberOfTeams: 6,
+      deadline: pacificDateFromToday(-1),
+    },
+  });
   await batch.commit();
 
   return {
@@ -221,6 +239,7 @@ export const createLeagueReadyScenario = async (
     memberIds: [one.id, two.id],
     fullLeagueId: FULL_LEAGUE_ID,
     openLeagueId: OPEN_LEAGUE_ID,
+    closedLeagueId: CLOSED_LEAGUE_ID,
     leagueMatchupId: leagueMatchup.id,
   };
 };

@@ -15,7 +15,11 @@ import { useAppSelector } from "@/state/hooks";
 import { selectCurrentLeague } from "@/state/slices/leagueSlice";
 import { selectUserId } from "@/state/slices/userSlice";
 import { League } from "@/types/league";
-import { isLeagueOwner } from "@/utils/leagueUtils";
+import {
+  formatRegistrationCloses,
+  isLeagueOpen,
+  isLeagueOwner,
+} from "@/utils/leagueUtils";
 
 type LeagueStandingsProps = {
   league: League;
@@ -73,6 +77,11 @@ const LeagueStandings = ({ league }: LeagueStandingsProps) => {
             {league.name}
           </Text>
           <Text className="pbk-b2 text-gray-400">Standings</Text>
+          {isLeagueOpen(league) && (
+            <Text className="pbk-b3 text-primary-400">
+              {formatRegistrationCloses(league.deadline)}
+            </Text>
+          )}
         </View>
         {isLeagueOwner(league, userId) && (
           <Pressable
