@@ -1,11 +1,16 @@
 import { db } from "./firebaseConfig.js";
-import { writeFileSync, mkdirSync, existsSync } from "fs";
+import { writeFileSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const dataDirectory = fileURLToPath(new URL("./data/", import.meta.url));
+const headshotsPath = join(dataDirectory, "nbaPlayerHeadshots.json");
 
 /**
  * Exports headshot URLs from Firestore nbaPlayers collection to nbaPlayerHeadshots.json
  *
  * Prerequisites:
- * 1. Update serviceAccountKey.json to point to your development Firestore
+ * 1. Update scripts/serviceAccountKey.json to point to your development Firestore
  * 2. Ensure development Firestore has headshotURL populated for players
  *
  * Output format:
@@ -56,21 +61,20 @@ async function exportHeadshotsFromFirestore() {
     });
 
     // Create data directory if it doesn't exist
-    if (!existsSync("./data")) {
-      mkdirSync("./data", { recursive: true });
-    }
+    mkdirSync(dataDirectory, { recursive: true });
 
     // Write to JSON file
     writeFileSync(
-      "./data/nbaPlayerHeadshots.json",
+      headshotsPath,
       JSON.stringify(headshotMap, null, 2),
       "utf8"
     );
 
     // Also create a backup with timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const backupPath = join(dataDirectory, `nbaPlayerHeadshots.backup.${timestamp}.json`);
     writeFileSync(
-      `./data/nbaPlayerHeadshots.backup.${timestamp}.json`,
+      backupPath,
       JSON.stringify(headshotMap, null, 2),
       "utf8"
     );
@@ -78,8 +82,8 @@ async function exportHeadshotsFromFirestore() {
     console.log("\n" + "=".repeat(70));
     console.log("✅ Headshots exported successfully!");
     console.log("=".repeat(70));
-    console.log(`📁 Main file: ./data/nbaPlayerHeadshots.json`);
-    console.log(`📁 Backup: ./data/nbaPlayerHeadshots.backup.${timestamp}.json`);
+    console.log(`📁 Main file: ${headshotsPath}`);
+    console.log(`📁 Backup: ${backupPath}`);
     console.log(`\n📊 Statistics:`);
     console.log(`   Total players: ${stats.total}`);
     console.log(`   With headshots: ${stats.withHeadshots} (${((stats.withHeadshots / stats.total) * 100).toFixed(1)}%)`);

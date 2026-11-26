@@ -5,7 +5,7 @@ This is an NBA fantasy sports mobile app. Users can play in leagues or in a comp
 ## Monorepo structure
 - `client/` — Expo React Native app (see `client/CLAUDE.md`)
 - `server/functions/` — Firebase Cloud Functions (TypeScript, Node 22)
-- `scripts/` — One-off Node.js scripts for Firestore data changes
+- `scripts/` — Local Firebase emulator workflows in `emulator/` and hosted Firestore utilities in `hosted/` (see `scripts/README.md`)
 
 ## Conventions
 - Branch: `{type}/eng-{ticket}-{description}` (types: feature, bugfix, docs)
