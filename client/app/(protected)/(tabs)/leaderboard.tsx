@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { PencilSimple } from "phosphor-react-native";
 import { Pressable, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import CancelledLeagueCard from "@/components/leaderboard/CancelledLeagueCard";
 import LeagueSummary from "@/components/leaderboard/LeagueSummary";
 import RankedLeaderboardPlaceholder from "@/components/leaderboard/RankedLeaderboardPlaceholder";
 import StandingsLegend from "@/components/leaderboard/StandingsLegend";
@@ -11,12 +12,14 @@ import YourTeamCallout from "@/components/leaderboard/YourTeamCallout";
 import Screen from "@/components/Screen";
 import Spinner from "@/components/Spinner";
 import { useLeagueStandings } from "@/hooks/useLeagueStandings";
+import { useSyncedLeague } from "@/hooks/useSyncedLeague";
 import { useAppSelector } from "@/state/hooks";
 import { selectCurrentLeague } from "@/state/slices/leagueSlice";
 import { selectUserId } from "@/state/slices/userSlice";
 import { League } from "@/types/league";
 import {
   formatRegistrationCloses,
+  isLeagueCancelled,
   isLeagueOpen,
   isLeagueOwner,
 } from "@/utils/leagueUtils";
@@ -25,7 +28,8 @@ type LeagueStandingsProps = {
   league: League;
 };
 
-const LeagueStandings = ({ league }: LeagueStandingsProps) => {
+const LeagueStandings = ({ league: storedLeague }: LeagueStandingsProps) => {
+  const league = useSyncedLeague(storedLeague);
   const userId = useAppSelector(selectUserId);
   const { standings, isLoading, isError, refetch } = useLeagueStandings(league);
 
@@ -93,6 +97,7 @@ const LeagueStandings = ({ league }: LeagueStandingsProps) => {
           </Pressable>
         )}
       </View>
+      {isLeagueCancelled(league) && <CancelledLeagueCard league={league} />}
       <StandingsPodium standings={standings} />
       <YourTeamCallout standings={standings} />
       <LeagueSummary standings={standings} />

@@ -32,6 +32,7 @@ const SIGNED_OUT_ERROR = "No authenticated user";
 const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
 const JOIN_SIGNED_OUT_ERROR = "You must be signed in to join a league";
 const UPDATE_SIGNED_OUT_ERROR = "You must be signed in to edit a league";
+const DELETE_SIGNED_OUT_ERROR = "You must be signed in to delete a league";
 
 export type LeagueSettingsModel = {
   name: string;
@@ -39,9 +40,12 @@ export type LeagueSettingsModel = {
   budget: number;
 };
 
-export type LeagueEditModel = LeagueSettingsModel & {
-  initialTeamId: string;
+export type LeagueUpdateModel = LeagueSettingsModel & {
   deadline: string;
+};
+
+export type LeagueEditModel = LeagueUpdateModel & {
+  initialTeamId: string;
 };
 
 export type JoinLeagueTeamModel = {
@@ -80,6 +84,8 @@ export class LeagueController {
 
       leagues.docs.forEach((doc) => {
         const data = doc.data();
+        if (data?.status === "deleted") return;
+
         const league = toLeague(doc.id, data);
 
         (data?.teamIds ?? []).forEach((teamId: string) => {
@@ -105,7 +111,10 @@ export class LeagueController {
 
       if (!leagueDoc.exists()) return null;
 
-      return toLeague(leagueDoc.id, leagueDoc.data() ?? {});
+      const data = leagueDoc.data() ?? {};
+      if (data.status === "deleted") return null;
+
+      return toLeague(leagueDoc.id, data);
     } catch (error) {
       console.error("Error fetching league:", error);
       throw error;
@@ -210,7 +219,7 @@ export class LeagueController {
 
   static updateLeague = async (
     leagueId: string,
-    params: LeagueSettingsModel,
+    params: LeagueUpdateModel,
   ): Promise<League> => {
     try {
       const { league } = await callFunction<{ league: League }>(
@@ -220,6 +229,7 @@ export class LeagueController {
           name: params.name,
           numberOfTeams: params.numberOfTeams,
           budget: params.budget,
+          deadline: params.deadline,
         },
         UPDATE_SIGNED_OUT_ERROR,
       );
@@ -227,6 +237,19 @@ export class LeagueController {
       return league;
     } catch (error) {
       console.error("Error updating league:", error);
+      throw error;
+    }
+  };
+
+  static deleteLeague = async (leagueId: string): Promise<void> => {
+    try {
+      await callFunction<{ leagueId: string }>(
+        "deleteLeague",
+        { leagueId },
+        DELETE_SIGNED_OUT_ERROR,
+      );
+    } catch (error) {
+      console.error("Error deleting league:", error);
       throw error;
     }
   };

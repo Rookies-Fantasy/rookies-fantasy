@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, router } from "expo-router";
 import { ArrowLeft } from "phosphor-react-native";
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   ActivityIndicator,
   Alert,
@@ -13,10 +13,15 @@ import {
   Text,
   View,
 } from "react-native";
+import * as yup from "yup";
 import Button from "@/components/Button";
+import LeagueDeadlineField from "@/components/LeagueDeadlineField";
 import LeagueSettingsFields from "@/components/LeagueSettingsFields";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import Screen from "@/components/Screen";
 import { LeagueController } from "@/controllers/leagueController";
+import { useDeleteLeague } from "@/hooks/useDeleteLeague";
+import { useLeagueDeadlineBounds } from "@/hooks/useLeagueDeadlineBounds";
 import { useOwnerRosterCost } from "@/hooks/useOwnerRosterCost";
 import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import {
@@ -27,16 +32,29 @@ import { selectTeam, setBalance } from "@/state/slices/teamSlice";
 import { selectUserId } from "@/state/slices/userSlice";
 import { League } from "@/types/league";
 import { getErrorAlertMessage } from "@/utils/errorUtils";
+import { isNil } from "@/utils/jsUtils";
 import {
   buildLeagueSettingsSchema,
   getBalanceForBudget,
+  getDeadlineRange,
+  getLeagueMembership,
   getMinEditableTeams,
   getOwnerTeamId,
   isLeagueBudgetLocked,
+  isLeagueCancelled,
   isLeagueOpen,
   isLeagueOwner,
-  LeagueSettingsFormData,
+  isLeagueReopenable,
 } from "@/utils/leagueUtils";
+
+const buildEditLeagueSchema = (minTeams: number, rosterCost: number) =>
+  buildLeagueSettingsSchema(minTeams, rosterCost).shape({
+    deadline: yup.string().defined(),
+  });
+
+type EditLeagueFormData = yup.InferType<
+  ReturnType<typeof buildEditLeagueSchema>
+>;
 
 type EditLeagueFormProps = {
   league: League;
@@ -53,12 +71,19 @@ const EditLeagueForm = ({
   const team = useAppSelector(selectTeam);
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
+  const { confirmDelete, isDeleting } = useDeleteLeague();
+  const {
+    bounds: deadlineBounds,
+    isLoading: isLoadingDeadlineBounds,
+    isError: isDeadlineBoundsError,
+  } = useLeagueDeadlineBounds();
 
   const minTeams = getMinEditableTeams(league);
   const isBudgetLocked = isLeagueBudgetLocked(league);
-  const isRegistrationClosed = !isLeagueOpen(league);
+  const isReopenable = isLeagueReopenable(league);
+  const isCancelled = isLeagueCancelled(league);
   const schema = useMemo(
-    () => buildLeagueSettingsSchema(minTeams, rosterCost),
+    () => buildEditLeagueSchema(minTeams, rosterCost),
     [minTeams, rosterCost],
   );
 
@@ -66,26 +91,44 @@ const EditLeagueForm = ({
     control,
     handleSubmit,
     formState: { errors, isDirty },
-  } = useForm<LeagueSettingsFormData>({
+  } = useForm<EditLeagueFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
       leagueName: league.name,
       numberOfTeams: league.numberOfTeams,
       budget: league.budget,
+      deadline: league.deadline,
     },
     mode: "onSubmit",
   });
 
-  const handleSave = async (data: LeagueSettingsFormData) => {
+  const numberOfTeams = useWatch({ control, name: "numberOfTeams" });
+  const pickedDeadline = useWatch({ control, name: "deadline" });
+  const deadlineRange = getDeadlineRange(deadlineBounds, numberOfTeams);
+  const isDeadlineClamped =
+    !isNil(deadlineRange) && pickedDeadline > deadlineRange.latest;
+  const deadline =
+    isNil(deadlineRange) || !isDeadlineClamped
+      ? pickedDeadline
+      : deadlineRange.latest;
+
+  const isSeasonOpen = isNil(deadlineBounds) || !isNil(deadlineRange);
+
+  const isRegistrationClosed =
+    !isLeagueOpen(league) && deadline === league.deadline;
+
+  const handleSave = async (data: EditLeagueFormData) => {
     setIsLoading(true);
     try {
       const updatedLeague = await LeagueController.updateLeague(league.id, {
         name: data.leagueName,
         numberOfTeams: data.numberOfTeams,
         budget: data.budget,
+        deadline,
       });
 
       dispatch(setCurrentLeague(updatedLeague));
+      queryClient.setQueryData(["league", league.id], updatedLeague);
 
       // The server recomputed the owner's saved balance for the new budget, so
       // the team in the builder follows suit, keeping any unsaved changes.
@@ -125,6 +168,19 @@ const EditLeagueForm = ({
           contentContainerClassName="flex-grow"
           keyboardShouldPersistTaps="handled"
         >
+          {isCancelled && (
+            <View className="mb-6 rounded-xl border border-red-600 bg-red-950 p-4">
+              <Text className="pbk-b1 mb-1 text-base-white">
+                League cancelled
+              </Text>
+              <Text className="pbk-b3 text-gray-300">
+                {isSeasonOpen
+                  ? `Only ${getLeagueMembership(league)} of ${league.numberOfTeams} teams joined. Pick a new registration deadline to reopen the league.`
+                  : `Only ${getLeagueMembership(league)} of ${league.numberOfTeams} teams joined, and it's too late in the season to reopen registration.`}
+              </Text>
+            </View>
+          )}
+
           <LeagueSettingsFields
             control={control}
             errors={errors}
@@ -133,17 +189,46 @@ const EditLeagueForm = ({
             minTeams={minTeams}
             rosterCost={rosterCost}
           />
+
+          {isReopenable && (
+            <Controller
+              control={control}
+              name="deadline"
+              render={({ field: { onChange } }) => (
+                <LeagueDeadlineField
+                  bounds={deadlineBounds}
+                  closedMessage="It's too late in the season to move the deadline"
+                  isClamped={isDeadlineClamped}
+                  isError={isDeadlineBoundsError}
+                  isLoading={isLoadingDeadlineBounds}
+                  onChange={onChange}
+                  range={deadlineRange}
+                  value={deadline}
+                />
+              )}
+            />
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <View className="justify-end bg-gray-950 px-6">
+      <View className="gap-3 bg-gray-950 px-6">
         <Button
-          disabled={!isDirty}
+          disabled={!isDirty || isDeleting}
           isLoading={isLoading}
           label="Save Changes"
           onPress={handleSubmit(handleSave)}
         />
+        {isReopenable && (
+          <Button
+            disabled={isLoading}
+            isLoading={isDeleting}
+            label="Delete League"
+            onPress={() => confirmDelete(league)}
+            variant="secondary"
+          />
+        )}
       </View>
+      <LoadingOverlay isVisible={isDeleting} label="Deleting league..." />
     </View>
   );
 };

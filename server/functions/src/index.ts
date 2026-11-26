@@ -13,6 +13,8 @@ import {
   TeamRecord,
 } from "./leagues/types";
 import {
+  DeleteRejectionCode,
+  evaluateDeleteEligibility,
   evaluateJoinEligibility,
   evaluateUpdateEligibility,
   getOwnerTeamId,
@@ -1378,11 +1380,11 @@ const requireSeasonConfig = async (
   return season;
 };
 
-// Reads a league document into its typed shape. Returns null when the document
-// does not exist, which the eligibility rules treat as "League not found".
-// Returns null when the league does not exist. A league that exists but does
-// not parse is corrupt — only the server writes these documents — so it throws
-// rather than letting the caller act on a half-read league.
+// Reads a league document into its typed shape. Returns null when the league
+// does not exist or was deleted, which callers answer with "League not found".
+// A league that exists but does not parse is corrupt — only the server writes
+// these documents — so it throws rather than letting the caller act on a
+// half-read league.
 const readLeagueDocument = (
   snapshot: FirebaseFirestore.DocumentSnapshot,
 ): LeagueDocument | null => {
@@ -1397,7 +1399,7 @@ const readLeagueDocument = (
     throw new functions.https.HttpsError("internal", "League data is invalid");
   }
 
-  return league;
+  return league.status === "deleted" ? null : league;
 };
 
 // The league fields returned to the client. Mirrors `League` in
@@ -1744,6 +1746,9 @@ const UPDATE_REJECTION_STATUS: Record<
   functions.https.FunctionsErrorCode
 > = {
   "not-league-owner": "permission-denied",
+  "deadline-locked": "failed-precondition",
+  "season-closed": "failed-precondition",
+  "invalid-deadline": "invalid-argument",
   "registration-closed": "failed-precondition",
   "invalid-team-count": "invalid-argument",
   "below-member-count": "failed-precondition",
@@ -1824,11 +1829,15 @@ export const updateLeague = functions.https.onCall(
     const input = validation.input;
     const db = admin.firestore();
     const leagueRef = db.collection(LEAGUE_COLLECTION).doc(input.leagueId);
+    const today = todayInPacific(new Date());
+    const season = await requireSeasonConfig(db);
+    const bounds = getDeadlineBounds(season, today);
 
     try {
       return await db.runTransaction(async (transaction) => {
         // Read inside the transaction so a join landing mid-edit can't slip
-        // past the member-count and budget checks.
+        // past the member-count and budget checks, and a deadline move can't
+        // race the scheduler.
         const league = readLeagueDocument(await transaction.get(leagueRef));
 
         if (league === null) {
@@ -1839,7 +1848,8 @@ export const updateLeague = functions.https.onCall(
           league,
           input,
           uid,
-          todayInPacific(new Date()),
+          today,
+          bounds,
         );
 
         if (!eligibility.allowed) {
@@ -1852,12 +1862,9 @@ export const updateLeague = functions.https.onCall(
         const newPlayoffTeams = playoffTeamsFor(input.numberOfTeams);
 
         if (newPlayoffTeams !== playoffTeamsFor(league.numberOfTeams)) {
-          const latest = latestDeadline(
-            await requireSeasonConfig(db),
-            newPlayoffTeams,
-          );
+          const latest = latestDeadline(season, newPlayoffTeams);
 
-          if (latest === null || league.deadline > latest) {
+          if (latest === null || eligibility.deadline > latest) {
             throw new functions.https.HttpsError(
               "invalid-argument",
               latest === null
@@ -1875,10 +1882,16 @@ export const updateLeague = functions.https.onCall(
             ? null
             : await readOwnerTeamBalance(transaction, league, input.budget);
 
-        transaction.update(leagueRef, {
+        const changes = {
           name: input.name,
           numberOfTeams: input.numberOfTeams,
           budget: input.budget,
+          deadline: eligibility.deadline,
+          status: eligibility.status,
+        };
+
+        transaction.update(leagueRef, {
+          ...changes,
           updatedAt: FieldValue.serverTimestamp(),
         });
 
@@ -1890,12 +1903,7 @@ export const updateLeague = functions.https.onCall(
         }
 
         return {
-          league: toLeagueResponse(input.leagueId, {
-            ...league,
-            name: input.name,
-            numberOfTeams: input.numberOfTeams,
-            budget: input.budget,
-          }),
+          league: toLeagueResponse(input.leagueId, { ...league, ...changes }),
         };
       });
     } catch (error) {
@@ -1906,6 +1914,75 @@ export const updateLeague = functions.https.onCall(
       throw new functions.https.HttpsError(
         "internal",
         "Failed to update league",
+      );
+    }
+  },
+);
+
+const DELETE_REJECTION_STATUS: Record<
+  DeleteRejectionCode,
+  functions.https.FunctionsErrorCode
+> = {
+  "not-league-owner": "permission-denied",
+  "league-started": "failed-precondition",
+};
+
+export const deleteLeague = functions.https.onCall(
+  async (data: RawPayload, context): Promise<{ leagueId: string }> => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "You must be signed in to delete a league",
+      );
+    }
+
+    const uid = context.auth.uid;
+    const validation = validateLeagueId((data ?? EMPTY_PAYLOAD).leagueId);
+
+    if (!validation.valid) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        validation.message,
+      );
+    }
+
+    const leagueId = validation.input;
+    const db = admin.firestore();
+    const leagueRef = db.collection(LEAGUE_COLLECTION).doc(leagueId);
+
+    try {
+      return await db.runTransaction(async (transaction) => {
+        const league = readLeagueDocument(await transaction.get(leagueRef));
+
+        if (league === null) {
+          throw new functions.https.HttpsError("not-found", "League not found");
+        }
+
+        const eligibility = evaluateDeleteEligibility(league, uid);
+
+        if (!eligibility.allowed) {
+          throw new functions.https.HttpsError(
+            DELETE_REJECTION_STATUS[eligibility.code],
+            eligibility.message,
+          );
+        }
+
+        transaction.update(leagueRef, {
+          status: "deleted",
+          deletedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        return { leagueId };
+      });
+    } catch (error) {
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      console.error("Error deleting league:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to delete league",
       );
     }
   },

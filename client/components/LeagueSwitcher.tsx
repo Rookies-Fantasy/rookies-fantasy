@@ -17,6 +17,7 @@ import {
 import { setTeam } from "@/state/slices/teamSlice";
 import { selectUserId } from "@/state/slices/userSlice";
 import { Team } from "@/types/team";
+import { isLeagueCancelled } from "@/utils/leagueUtils";
 import { getTeamLogoSource } from "@/utils/teamUtils";
 
 type LeagueSwitcherProps = {
@@ -193,6 +194,9 @@ const LeagueSwitcher = ({ className }: LeagueSwitcherProps) => {
                       <Text className="pbk-b3 text-gray-400">
                         {leagueTeamInfo.team.name}
                       </Text>
+                      {isLeagueCancelled(leagueTeamInfo.league) && (
+                        <Text className="pbk-b3 text-red-600">Cancelled</Text>
+                      )}
                     </View>
                     {isSelected && (
                       <Check color="#6042FF" size={24} weight="bold" />

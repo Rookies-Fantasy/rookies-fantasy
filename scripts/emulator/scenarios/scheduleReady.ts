@@ -1,10 +1,13 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
 import { TEAM_BALANCE } from "../../../client/types/team.js";
+import { DEFAULT_AUGMENTS } from "../data/augments.js";
 import { DEFAULT_NBA_PLAYERS } from "../data/nbaPlayers.js";
+import { stageAugments } from "../fixtures/augments.js";
 import { type LeagueMember, stageLeague } from "../fixtures/leagues.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
 import { stageSeasonConfig } from "../fixtures/season.js";
+import { stageTeam } from "../fixtures/teams.js";
 import { ensureAuthUser, stageUser } from "../fixtures/users.js";
 import { pacificDateFromToday } from "../generate/league.js";
 import { buildLineup, getLineupSalary } from "../generate/lineup.js";
@@ -44,11 +47,19 @@ export const createScheduleReadyScenario = async (
     ),
   );
 
+  const seedAugment = DEFAULT_AUGMENTS[0];
   const batch = db.batch();
   stageNbaPlayers(db, batch, DEFAULT_NBA_PLAYERS);
+  stageAugments(db, batch, DEFAULT_AUGMENTS);
   stageSeasonConfig(db, batch);
 
+  let lineupOffset = 0;
+
   users.forEach((user, index) => {
+    const mainTeamId = `sch${index + 1}-main`;
+    const lineup = buildLineup(playerPool, lineupOffset % playerPool.length);
+    lineupOffset += 1;
+
     stageUser(db, batch, options.memberEmails[index], {
       id: user.uid,
       emailVerified: true,
@@ -56,10 +67,23 @@ export const createScheduleReadyScenario = async (
       dateOfBirth: new Date("1990-01-01"),
       username: `Schedule Member ${index + 1}`,
       queueStatus: "idle",
+      teamId: mainTeamId,
+    });
+    stageTeam(db, batch, {
+      userId: user.uid,
+      teamId: mainTeamId,
+      document: {
+        name: `Sch ${index + 1} Ranked`,
+        abbreviation: `SR${index + 1}`.slice(0, 3),
+        logoUrl: `../assets/images/team/${(index % 6) + 1}.png`,
+        augment: seedAugment,
+        augmentId: seedAugment.id,
+        balance: TEAM_BALANCE - getLineupSalary(lineup),
+        lineup,
+      },
     });
   });
 
-  let lineupOffset = 0;
   const toMember = (leagueId: string, index: number): LeagueMember => {
     const lineup = buildLineup(playerPool, lineupOffset % playerPool.length);
     lineupOffset += 1;

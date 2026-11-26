@@ -5,6 +5,7 @@ export const LEAGUE_STATUSES = [
   "active",
   "playoffs",
   "complete",
+  "deleted",
 ] as const;
 
 export type LeagueStatus = (typeof LEAGUE_STATUSES)[number];

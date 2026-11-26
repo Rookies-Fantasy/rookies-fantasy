@@ -2,6 +2,7 @@ import * as yup from "yup";
 import {
   DeadlineWindow,
   League,
+  LeagueDeadlineBounds,
   LEAGUE_STATUSES,
   LeagueStatus,
   PlayoffTeams,
@@ -32,6 +33,18 @@ export const toLeagueStatus = (value: string): LeagueStatus =>
 // `forming`. Matches `isRegistrationClosed` in the server's league validation.
 export const isLeagueClosed = (league: League, today: string): boolean =>
   league.status !== "forming" || today > league.deadline;
+
+export const isLeagueCancelled = (league: League): boolean =>
+  league.status === "unscheduled";
+
+export const isLeagueReopenable = (league: League): boolean =>
+  league.status === "forming" || league.status === "unscheduled";
+
+export const getDeadlineRange = (
+  bounds: LeagueDeadlineBounds | null,
+  numberOfTeams: number,
+): DeadlineWindow | null =>
+  isNil(bounds) ? null : bounds.byPlayoffTeams[playoffTeamsFor(numberOfTeams)];
 
 export const isLeagueOpen = (league: League): boolean =>
   !isLeagueClosed(league, getPacificDateString(new Date()));

@@ -17,6 +17,7 @@ export const LEAGUE_STATUSES = [
   "active",
   "playoffs",
   "complete",
+  "deleted",
 ] as const;
 
 export type LeagueStatus = (typeof LEAGUE_STATUSES)[number];
@@ -68,6 +69,7 @@ export type UpdateLeagueInput = {
   name: string;
   numberOfTeams: number;
   budget: number;
+  deadline: string | null;
 };
 
 // The league rules. These mirror the form constants and yup schema in
