@@ -1,3 +1,5 @@
+import type { TeamRecord } from "../shared/types";
+
 export type JsonValue =
   | string
   | number
@@ -23,6 +25,19 @@ export type LeagueDocument = {
   // users/{uid}/teams, so this is how the server finds a league team without
   // trusting whichever user happens to hold a doc with that id.
   teamOwners: Record<string, string>;
+};
+
+// The league fields returned to the client. Mirrors `League` in
+// client/types/league.ts.
+export type LeagueResponse = {
+  id: string;
+  name: string;
+  creatorUserId: string;
+  numberOfTeams: number;
+  budget: number;
+  memberCount: number;
+  teamIds: string[];
+  userIds: string[];
 };
 
 export type CreateLeagueInput = {
@@ -63,12 +78,6 @@ export const MIN_BUDGET = 150_000_000;
 export const MAX_BUDGET = 250_000_000;
 export const BUDGET_STEP = 25_000_000;
 export const MAX_LEAGUE_NAME_LENGTH = 50;
-
-export type TeamRecord = {
-  wins: number;
-  losses: number;
-  draws: number;
-};
 
 export type LeagueStandingTeam = {
   id: string;
