@@ -17,7 +17,12 @@ import {
   RawPayload,
   UpdateLeagueInput,
 } from "./types";
-import { hasDeadlinePassed, isIsoDate } from "./season";
+import {
+  hasDeadlinePassed,
+  isIsoDate,
+  LeagueDeadlineBounds,
+  resolveDeadline,
+} from "./season";
 
 export type InputValidation<TInput> =
   | { valid: true; input: TInput }
@@ -192,6 +197,19 @@ const validateLeagueSettings = (
   return { valid: true, input: { name, numberOfTeams, budget } };
 };
 
+const readOptionalDeadline = (
+  payload: RawPayload,
+): InputValidation<string | null> => {
+  const rawDeadline = "deadline" in payload ? payload.deadline : null;
+  if (rawDeadline === null) {
+    return { valid: true, input: null };
+  }
+
+  return isIsoDate(rawDeadline)
+    ? { valid: true, input: rawDeadline }
+    : { valid: false, message: "Deadline must be a YYYY-MM-DD date" };
+};
+
 // Validates a `createLeague` payload. Every field the league document ends up
 // holding is derived from here or from the verified auth context — anything else
 // the caller sends (creatorUserId, userIds, memberCount, ...) is discarded.
@@ -208,20 +226,20 @@ export const validateCreateLeagueInput = (
     return { valid: false, message: idErrorMessage("initialTeamId") };
   }
 
-  const rawDeadline = "deadline" in payload ? payload.deadline : null;
-  const deadline = isIsoDate(rawDeadline) ? rawDeadline : null;
-  if (rawDeadline !== null && deadline === null) {
-    return { valid: false, message: "Deadline must be a YYYY-MM-DD date" };
+  const deadline = readOptionalDeadline(payload);
+  if (!deadline.valid) {
+    return deadline;
   }
 
   return {
     valid: true,
-    input: { ...settings.input, initialTeamId, deadline },
+    input: { ...settings.input, initialTeamId, deadline: deadline.input },
   };
 };
 
-// Validates an `updateLeague` payload. Only the settings are editable; the
-// owner and membership fields can't be changed through this path.
+// Validates an `updateLeague` payload. Only the settings and the registration
+// deadline are editable; the owner and membership fields can't be changed
+// through this path.
 export const validateUpdateLeagueInput = (
   payload: RawPayload,
 ): InputValidation<UpdateLeagueInput> => {
@@ -235,7 +253,15 @@ export const validateUpdateLeagueInput = (
     return settings;
   }
 
-  return { valid: true, input: { leagueId, ...settings.input } };
+  const deadline = readOptionalDeadline(payload);
+  if (!deadline.valid) {
+    return deadline;
+  }
+
+  return {
+    valid: true,
+    input: { leagueId, ...settings.input, deadline: deadline.input },
+  };
 };
 
 // memberCount is only a counter, so the membership arrays are checked too:
@@ -288,16 +314,28 @@ export const evaluateJoinEligibility = (
 
 export type UpdateRejectionCode =
   | "not-league-owner"
+  | "deadline-locked"
+  | "season-closed"
+  | "invalid-deadline"
   | "registration-closed"
   | "invalid-team-count"
   | "below-member-count"
   | "budget-locked";
 
 export type UpdateEligibility =
-  | { allowed: true }
+  | { allowed: true; deadline: string; status: LeagueStatus }
   | { allowed: false; code: UpdateRejectionCode; message: string };
 
-// Only the creator may edit a league. Once registration closes, the team count
+const REOPENABLE_STATUSES: readonly LeagueStatus[] = ["forming", "unscheduled"];
+
+const rejectUpdate = (
+  code: UpdateRejectionCode,
+  message: string,
+): UpdateEligibility => ({ allowed: false, code, message });
+
+// Only the creator may edit a league. The registration deadline can move, within
+// the same bounds as creation, until the league is scheduled; moving it reopens
+// a cancelled (`unscheduled`) league. Once registration closes, the team count
 // and budget are fixed for the season; only the name can change. Before that, the
 // team count can't drop below the teams already in it, and the budget is locked
 // once anyone else has joined: each team's balance is copied from the budget when
@@ -308,53 +346,101 @@ export const evaluateUpdateEligibility = (
   input: UpdateLeagueInput,
   userId: string,
   today: string,
+  bounds: LeagueDeadlineBounds,
 ): UpdateEligibility => {
   if (league.creatorUserId !== userId) {
-    return {
-      allowed: false,
-      code: "not-league-owner",
-      message: "Only the league owner can edit this league",
-    };
+    return rejectUpdate(
+      "not-league-owner",
+      "Only the league owner can edit this league",
+    );
+  }
+
+  let updated: LeagueDocument = league;
+
+  if (input.deadline !== null && input.deadline !== league.deadline) {
+    if (!REOPENABLE_STATUSES.includes(league.status)) {
+      return rejectUpdate(
+        "deadline-locked",
+        "The registration deadline can't be changed once the league is scheduled",
+      );
+    }
+
+    const resolution = resolveDeadline(
+      input.deadline,
+      input.numberOfTeams,
+      bounds,
+    );
+    if (!resolution.ok) {
+      return resolution.reason === "closed"
+        ? rejectUpdate(
+            "season-closed",
+            "It's too late in the season to reopen registration",
+          )
+        : rejectUpdate("invalid-deadline", resolution.message);
+    }
+
+    updated = { ...league, deadline: resolution.deadline, status: "forming" };
   }
 
   const teamsChanged = input.numberOfTeams !== league.numberOfTeams;
   const budgetChanged = input.budget !== league.budget;
 
-  if (isRegistrationClosed(league, today) && (teamsChanged || budgetChanged)) {
-    return {
-      allowed: false,
-      code: "registration-closed",
-      message:
-        "Number of teams and budget can't be changed after the registration deadline",
-    };
+  if (isRegistrationClosed(updated, today) && (teamsChanged || budgetChanged)) {
+    return rejectUpdate(
+      "registration-closed",
+      "Number of teams and budget can't be changed after the registration deadline",
+    );
   }
 
   if (
     teamsChanged &&
     !isOnScale(input.numberOfTeams, MIN_TEAMS, MAX_TEAMS, TEAMS_STEP)
   ) {
-    return {
-      allowed: false,
-      code: "invalid-team-count",
-      message: TEAMS_SCALE_MESSAGE,
-    };
+    return rejectUpdate("invalid-team-count", TEAMS_SCALE_MESSAGE);
   }
 
   const membership = membershipOf(league);
 
   if (input.numberOfTeams < membership) {
-    return {
-      allowed: false,
-      code: "below-member-count",
-      message: `Number of teams can't be lower than the ${membership} teams already in the league`,
-    };
+    return rejectUpdate(
+      "below-member-count",
+      `Number of teams can't be lower than the ${membership} teams already in the league`,
+    );
   }
 
   if (budgetChanged && membership > 1) {
+    return rejectUpdate(
+      "budget-locked",
+      "Budget can't be changed after other teams have joined",
+    );
+  }
+
+  return { allowed: true, deadline: updated.deadline, status: updated.status };
+};
+
+export type DeleteRejectionCode = "not-league-owner" | "league-started";
+
+export type DeleteEligibility =
+  | { allowed: true }
+  | { allowed: false; code: DeleteRejectionCode; message: string };
+
+export const evaluateDeleteEligibility = (
+  league: LeagueDocument,
+  userId: string,
+): DeleteEligibility => {
+  if (league.creatorUserId !== userId) {
     return {
       allowed: false,
-      code: "budget-locked",
-      message: "Budget can't be changed after other teams have joined",
+      code: "not-league-owner",
+      message: "Only the league owner can delete this league",
+    };
+  }
+
+  if (!REOPENABLE_STATUSES.includes(league.status)) {
+    return {
+      allowed: false,
+      code: "league-started",
+      message: "A league can't be deleted once it is scheduled",
     };
   }
 

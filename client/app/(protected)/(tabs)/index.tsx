@@ -1,20 +1,12 @@
 import auth from "@react-native-firebase/auth";
-import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { SignOut } from "phosphor-react-native";
 import { useState } from "react";
-import {
-  Pressable,
-  Text,
-  View,
-  Image,
-  Alert,
-  Share,
-  ScrollView,
-} from "react-native";
+import { Pressable, Text, View, Image, Alert, ScrollView } from "react-native";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import IconButton from "@/components/IconButton";
+import LeagueStatusBanner from "@/components/LeagueStatusBanner";
 import MatchupInfoCard from "@/components/MatchupInfoCard";
 import PlayerRoster from "@/components/PlayerRoster";
 import RosterDrawer from "@/components/RosterDrawer";
@@ -146,25 +138,7 @@ const MyTeam = () => {
         />
       </View>
 
-      {currentLeague &&
-        currentLeague.memberCount < currentLeague.numberOfTeams && (
-          <Pressable
-            className="mx-8 mt-4 rounded-lg bg-primary-500 p-4"
-            onPress={async () => {
-              const baseUrl = Constants.expoConfig?.extra?.baseUrl;
-              const inviteUrl = `${baseUrl}/joinLeague?leagueId=${currentLeague.id}`;
-
-              await Share.share({
-                message: `Join my league on Rookies Fantasy!\n`,
-                url: inviteUrl,
-              });
-            }}
-          >
-            <Text className="pbk-h6 text-center text-base-white">
-              INVITE FRIENDS
-            </Text>
-          </Pressable>
-        )}
+      {currentLeague && <LeagueStatusBanner league={currentLeague} />}
 
       <View className="flex-1 gap-6 px-8">
         {playerCount > 0 || team.hasUserChanges ? (
