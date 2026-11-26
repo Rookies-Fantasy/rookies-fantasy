@@ -20,6 +20,7 @@ const ProtectedLayout = () => {
       <Stack.Screen name="createLeague" />
       <Stack.Screen name="editLeague" />
       <Stack.Screen name="joinLeague" />
+      <Stack.Screen name="settings" />
     </Stack>
   );
 };

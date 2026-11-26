@@ -9,9 +9,13 @@ import {
   BUDGET_STEP,
   MAX_BUDGET,
   MAX_LEAGUE_NAME_LENGTH,
+  MAX_LOGO_URL_LENGTH,
+  MAX_TEAM_NAME_LENGTH,
   MAX_TEAMS,
   MIN_BUDGET,
   MIN_TEAMS,
+  NewLeagueTeam,
+  TEAM_ABBREVIATION_LENGTH,
   TEAMS_STEP,
   TeamRecord,
   RawPayload,
@@ -44,6 +48,11 @@ const isLeagueStatus = (value: JsonValue): value is LeagueStatus =>
 
 const isNullableCount = (value: JsonValue): value is number | null =>
   value === null || isFiniteNumber(value);
+const isStringRecord = (value: JsonValue): value is Record<string, string> =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  Object.values(value).every((entry) => typeof entry === "string");
 
 // Firestore hands back untyped documents. A league doc is written only by the
 // server, so a field that fails to parse means the data is corrupt — returning
@@ -62,6 +71,7 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     playoffTeams,
     regularSeasonWeeks,
     playoffStartWeek,
+    teamOwners,
   } = data;
 
   if (
@@ -76,7 +86,8 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     !isLeagueStatus(status) ||
     !isNullableCount(playoffTeams) ||
     !isNullableCount(regularSeasonWeeks) ||
-    !isNullableCount(playoffStartWeek)
+    !isNullableCount(playoffStartWeek) ||
+    !isStringRecord(teamOwners)
   ) {
     return null;
   }
@@ -94,6 +105,7 @@ export const toLeagueDocument = (data: RawPayload): LeagueDocument | null => {
     playoffTeams,
     regularSeasonWeeks,
     playoffStartWeek,
+    teamOwners,
   };
 };
 
@@ -112,8 +124,57 @@ const readDocumentId = (value: JsonValue): string | null => {
 const idErrorMessage = (field: string): string =>
   `Invalid request: ${field} is missing or malformed`;
 
+// Validates the team fields of a `joinLeague` payload. The team document is
+// written by the server, so these checks are the only thing standing between a
+// hand-rolled request and the stored team.
+const validateNewLeagueTeam = (
+  payload: RawPayload,
+): InputValidation<NewLeagueTeam> => {
+  const { teamName, abbreviation, logoUrl } = payload;
+
+  if (typeof teamName !== "string" || teamName.trim().length === 0) {
+    return { valid: false, message: "Team name is required" };
+  }
+
+  const name = teamName.trim();
+  if (name.length > MAX_TEAM_NAME_LENGTH) {
+    return {
+      valid: false,
+      message: `Team name must be at most ${MAX_TEAM_NAME_LENGTH} characters`,
+    };
+  }
+
+  if (
+    typeof abbreviation !== "string" ||
+    abbreviation.trim().length !== TEAM_ABBREVIATION_LENGTH
+  ) {
+    return {
+      valid: false,
+      message: `Team abbreviation must be exactly ${TEAM_ABBREVIATION_LENGTH} characters`,
+    };
+  }
+
+  if (
+    typeof logoUrl !== "string" ||
+    logoUrl.trim().length === 0 ||
+    logoUrl.length > MAX_LOGO_URL_LENGTH
+  ) {
+    return { valid: false, message: "Team logo is required" };
+  }
+
+  return {
+    valid: true,
+    input: {
+      name,
+      abbreviation: abbreviation.trim(),
+      logoUrl: logoUrl.trim(),
+    },
+  };
+};
+
 // Validates a `joinLeague` payload. Note there is no userId here: the joining
 // user is taken from the verified auth context, never from the request body.
+// There is no teamId either: the team is created by the join itself.
 export const validateJoinLeagueInput = (
   payload: RawPayload,
 ): InputValidation<JoinLeagueInput> => {
@@ -122,12 +183,12 @@ export const validateJoinLeagueInput = (
     return { valid: false, message: idErrorMessage("leagueId") };
   }
 
-  const teamId = readDocumentId(payload.teamId);
-  if (teamId === null) {
-    return { valid: false, message: idErrorMessage("teamId") };
+  const team = validateNewLeagueTeam(payload);
+  if (!team.valid) {
+    return team;
   }
 
-  return { valid: true, input: { leagueId, teamId } };
+  return { valid: true, input: { leagueId, team: team.input } };
 };
 
 // A value the UI could actually have produced: inside the bounds, and landing on
@@ -291,7 +352,8 @@ export type UpdateRejectionCode =
   | "registration-closed"
   | "invalid-team-count"
   | "below-member-count"
-  | "budget-locked";
+  | "budget-locked"
+  | "roster-over-budget";
 
 export type UpdateEligibility =
   | { allowed: true }
@@ -404,7 +466,108 @@ export const toStandingTeam = (
   record: toTeamRecord(data.record),
 });
 
+export type LeagueTeamRef = {
+  teamId: string;
+  ownerId: string;
+};
+
+// Pairs each league team with the member who registered it. A team without a
+// recorded owner, or whose owner is no longer a member, is skipped: standings
+// read users/{ownerId}/teams/{teamId} only, so a doc that another user created
+// under a league team's id is never picked up.
+export const toLeagueTeamRefs = (league: LeagueDocument): LeagueTeamRef[] =>
+  Array.from(new Set(league.teamIds))
+    .slice(0, MAX_TEAMS)
+    .flatMap((teamId) => {
+      const ownerId = Object.prototype.hasOwnProperty.call(
+        league.teamOwners,
+        teamId,
+      )
+        ? league.teamOwners[teamId]
+        : "";
+
+      return league.userIds.includes(ownerId) ? [{ teamId, ownerId }] : [];
+    });
+
 export const isLeagueMember = (
   league: LeagueDocument,
   userId: string,
 ): boolean => userId.length > 0 && league.userIds.includes(userId);
+
+// The team whose balance follows the budget. A budget change is only allowed
+// while the owner is the sole member, so the league's only team is theirs.
+// Returns null when the league has no single team to recompute.
+export const getOwnerTeamId = (league: LeagueDocument): string | null =>
+  league.teamIds.length === 1 ? league.teamIds[0] : null;
+
+// The salary of the player in one lineup or bench slot: 0 for an empty slot,
+// null when the slot or its player is malformed.
+const slotSalary = (slot: JsonValue): number | null => {
+  if (!isPayload(slot)) {
+    return null;
+  }
+
+  const player = slot.player ?? null;
+  if (player === null) {
+    return 0;
+  }
+
+  if (!isPayload(player) || !isFiniteNumber(player.salary)) {
+    return null;
+  }
+
+  return player.salary;
+};
+
+// What a team's players cost: the salaries of everyone in its lineup and on
+// its bench. Mirrors the client's team builder (`addPlayerToLineup` /
+// `removePlayerFromLineup` in client/state/slices/teamSlice.ts), which takes a
+// player's salary out of the balance when they join the lineup and keeps it
+// out while they sit on the bench. Returns null when the roster is malformed,
+// so the caller fails loudly instead of writing a wrong balance.
+export const toRosterCost = (team: RawPayload): number | null => {
+  const lineup = team.lineup ?? [];
+  const bench = team.bench ?? [];
+
+  if (!Array.isArray(lineup) || !Array.isArray(bench)) {
+    return null;
+  }
+
+  let cost = 0;
+  for (const slot of [...lineup, ...bench]) {
+    const salary = slotSalary(slot);
+    if (salary === null) {
+      return null;
+    }
+    cost += salary;
+  }
+
+  return cost;
+};
+
+const formatMillions = (value: number): string =>
+  `$${Math.round(value / 1_000_000)}M`;
+
+export type BalanceRecompute =
+  | { allowed: true; balance: number }
+  | { allowed: false; code: UpdateRejectionCode; message: string };
+
+// The owner's balance under a new budget: what is left after paying for the
+// players they already have. Recomputing from the roster, rather than shifting
+// the old balance by the difference, also corrects a balance that has drifted.
+// A budget the roster doesn't fit in is rejected rather than leaving the team
+// with a negative balance.
+export const recomputeBalance = (
+  budget: number,
+  rosterCost: number,
+): BalanceRecompute => {
+  if (rosterCost > budget) {
+    return {
+      allowed: false,
+      code: "roster-over-budget",
+      message: `Your roster costs ${formatMillions(rosterCost)}, which is more than a ${formatMillions(budget)} budget`,
+    };
+  }
+
+  return { allowed: true, balance: budget - rosterCost };
+};

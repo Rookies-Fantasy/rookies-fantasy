@@ -1,22 +1,27 @@
 import type { UserRecord } from "firebase-admin/auth";
 import * as admin from "firebase-admin";
-import { FieldPath, FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
+import { cleanUpDeletedUser } from "./users/deleteUserData";
 import * as functions from "firebase-functions/v1";
 import { BalldontlieAPI } from "@balldontlie/sdk";
 import {
   EMPTY_PAYLOAD,
+  JsonValue,
   LeagueDocument,
   LeagueStandingTeam,
-  MAX_TEAMS,
   RawPayload,
   TeamRecord,
 } from "./leagues/types";
 import {
   evaluateJoinEligibility,
   evaluateUpdateEligibility,
+  getOwnerTeamId,
   isLeagueMember,
   JoinRejectionCode,
+  recomputeBalance,
   toLeagueDocument,
+  toLeagueTeamRefs,
+  toRosterCost,
   toStandingTeam,
   UpdateRejectionCode,
   validateCreateLeagueInput,
@@ -157,8 +162,6 @@ const getPlayersFromCache = (
   return result;
 };
 
-const dedupe = (values: string[]): string[] => Array.from(new Set(values));
-
 export const getLiveData = functions.https.onRequest(async (req, res) => {
   // Verify Firebase ID token
   const authHeader = req.headers.authorization;
@@ -253,6 +256,8 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
   }
 });
 
+const ALREADY_EXISTS_CODE = 6; // gRPC status code for ALREADY_EXISTS
+
 export const createUserInDatabase = functions.auth
   .user()
   .onCreate(async (user: UserRecord) => {
@@ -265,7 +270,7 @@ export const createUserInDatabase = functions.auth
     }
 
     try {
-      await usersRef.doc(uid).set({
+      await usersRef.doc(uid).create({
         id: uid,
         email: email,
         emailVerified: emailVerified,
@@ -274,7 +279,35 @@ export const createUserInDatabase = functions.auth
         updatedAt: FieldValue.serverTimestamp(),
       });
     } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === ALREADY_EXISTS_CODE
+      ) {
+        console.log(`User doc for ${uid} already exists, skipping create`);
+        return;
+      }
       console.error("Error creating user in Firestore:", error);
+    }
+  });
+
+// Cleans up a user's data after their auth account is deleted (in-app
+// account deletion, required by App Store guideline 5.1.1(v)).
+export const deleteUserData = functions.auth
+  .user()
+  .onDelete(async (user: UserRecord) => {
+    const { uid } = user;
+
+    try {
+      const result = await cleanUpDeletedUser(admin.firestore(), uid);
+      console.log(
+        `Cleaned up deleted user ${uid}: anonymized=${result.anonymized}, ` +
+          `leaguesRemovedFrom=${result.leaguesRemovedFrom}, ` +
+          `leaguesDeleted=${result.leaguesDeleted}`,
+      );
+    } catch (error) {
+      console.error(`Error cleaning up deleted user ${uid}:`, error);
+      throw error;
     }
   });
 
@@ -1484,6 +1517,7 @@ export const createLeague = functions.https.onCall(
       playoffTeams: null,
       regularSeasonWeeks: null,
       playoffStartWeek: null,
+      teamOwners: { [input.initialTeamId]: uid },
     };
 
     try {
@@ -1514,9 +1548,75 @@ const JOIN_REJECTION_STATUS: Record<
   "league-full": "resource-exhausted",
 };
 
-// Adds the caller's team to a league.
+// The team fields returned to the client. The client fills the empty lineup
+// and bench from its own defaults, exactly as it would for a fresh team read.
+type JoinedTeamResponse = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logoUrl: string;
+  balance: number;
+  isLeagueTeam: boolean;
+};
+
+// Finds which of the league's teams belongs to the caller. Team ids are only
+// unique within a user's own subcollection, so each league team id is looked
+// up under the caller's path; at most MAX_TEAMS reads in one round trip.
+// Returns null when none match, e.g. a membership written by an older client
+// whose team was later deleted.
+const findCallerLeagueTeam = async (
+  transaction: FirebaseFirestore.Transaction,
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  leagueTeamIds: string[],
+): Promise<JoinedTeamResponse | null> => {
+  if (leagueTeamIds.length === 0) {
+    return null;
+  }
+
+  const teamsRef = db
+    .collection(USER_COLLECTION)
+    .doc(uid)
+    .collection(TEAM_SUBCOLLECTION);
+  const snapshots = await transaction.getAll(
+    ...leagueTeamIds.map((teamId) => teamsRef.doc(teamId)),
+  );
+  const match = snapshots.find((snapshot) => snapshot.exists) ?? null;
+
+  return match === null ? null : toJoinedTeamResponse(match);
+};
+
+const readString = (value: JsonValue, fallback: string): string =>
+  typeof value === "string" ? value : fallback;
+
+// Team documents can also be written by the client, so every field falls back
+// to a typed default instead of trusting the stored shape.
+const toJoinedTeamResponse = (
+  snapshot: FirebaseFirestore.DocumentSnapshot,
+): JoinedTeamResponse => {
+  const data: RawPayload = snapshot.data() ?? EMPTY_PAYLOAD;
+  const { balance, isLeagueTeam } = data;
+
+  return {
+    id: snapshot.id,
+    name: readString(data.name, ""),
+    abbreviation: readString(data.abbreviation, ""),
+    logoUrl: readString(data.logoUrl, ""),
+    balance:
+      typeof balance === "number" && Number.isFinite(balance) ? balance : 0,
+    isLeagueTeam: typeof isLeagueTeam === "boolean" ? isLeagueTeam : true,
+  };
+};
+
+// Creates the caller's league team and adds it to the league as one
+// transaction. Either both writes land or neither does, so a rejected join
+// (league full, already a member, ...) never leaves an orphaned team document,
+// and a team can never exist half-joined.
 export const joinLeague = functions.https.onCall(
-  async (data: RawPayload, context): Promise<{ league: LeagueResponse }> => {
+  async (
+    data: RawPayload,
+    context,
+  ): Promise<{ league: LeagueResponse; team: JoinedTeamResponse }> => {
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
@@ -1534,40 +1634,48 @@ export const joinLeague = functions.https.onCall(
       );
     }
 
-    const { leagueId, teamId } = validation.input;
+    const { leagueId, team } = validation.input;
     const db = admin.firestore();
     const leagueRef = db.collection(LEAGUE_COLLECTION).doc(leagueId);
+    // Allocating the id is local — nothing is written until the transaction
+    // commits.
     const teamRef = db
       .collection(USER_COLLECTION)
       .doc(uid)
       .collection(TEAM_SUBCOLLECTION)
-      .doc(teamId);
+      .doc();
 
     try {
       return await db.runTransaction(async (transaction) => {
-        // All reads must precede writes inside a Firestore transaction.
-        // getAll fetches both documents in a single round trip.
-        const [leagueSnapshot, teamSnapshot] = await transaction.getAll(
-          leagueRef,
-          teamRef,
-        );
-
-        if (!teamSnapshot.exists) {
-          throw new functions.https.HttpsError(
-            "not-found",
-            "Team not found for the signed-in user",
-          );
-        }
-
-        const league = readLeagueDocument(leagueSnapshot);
+        const league = readLeagueDocument(await transaction.get(leagueRef));
 
         if (league === null) {
           throw new functions.https.HttpsError("not-found", "League not found");
         }
 
+        // A repeat join from a member is answered with their existing team
+        // rather than an error. This is what makes a retry safe when the
+        // response to a committed join was lost: the client gets the same
+        // result it missed, and nothing new is written.
+        if (league.userIds.includes(uid)) {
+          const existingTeam = await findCallerLeagueTeam(
+            transaction,
+            db,
+            uid,
+            league.teamIds,
+          );
+
+          if (existingTeam !== null) {
+            return {
+              league: toLeagueResponse(leagueId, league),
+              team: existingTeam,
+            };
+          }
+        }
+
         const eligibility = evaluateJoinEligibility(
           league,
-          teamId,
+          teamRef.id,
           uid,
           todayInPacific(new Date()),
         );
@@ -1579,10 +1687,25 @@ export const joinLeague = functions.https.onCall(
           );
         }
 
+        // Same shape UserController.addUserTeam writes, except the balance is
+        // the league budget decided here rather than a value the client sends.
+        transaction.create(teamRef, {
+          name: team.name,
+          abbreviation: team.abbreviation,
+          logoUrl: team.logoUrl,
+          balance: league.budget,
+          isLeagueTeam: true,
+          record: { wins: 0, losses: 0, draws: 0 },
+          createdAt: FieldValue.serverTimestamp(),
+        });
+
         transaction.update(leagueRef, {
           memberCount: FieldValue.increment(1),
-          teamIds: FieldValue.arrayUnion(teamId),
+          teamIds: FieldValue.arrayUnion(teamRef.id),
           userIds: FieldValue.arrayUnion(uid),
+          // Auto-generated doc ids never contain ".", so this field path is
+          // always a single key in the map.
+          [`teamOwners.${teamRef.id}`]: uid,
           updatedAt: FieldValue.serverTimestamp(),
         });
 
@@ -1590,9 +1713,18 @@ export const joinLeague = functions.https.onCall(
           league: toLeagueResponse(leagueId, {
             ...league,
             memberCount: league.memberCount + 1,
-            teamIds: [...league.teamIds, teamId],
+            teamIds: [...league.teamIds, teamRef.id],
             userIds: [...league.userIds, uid],
+            teamOwners: { ...league.teamOwners, [teamRef.id]: uid },
           }),
+          team: {
+            id: teamRef.id,
+            name: team.name,
+            abbreviation: team.abbreviation,
+            logoUrl: team.logoUrl,
+            balance: league.budget,
+            isLeagueTeam: true,
+          },
         };
       });
     } catch (error) {
@@ -1614,6 +1746,57 @@ const UPDATE_REJECTION_STATUS: Record<
   "invalid-team-count": "invalid-argument",
   "below-member-count": "failed-precondition",
   "budget-locked": "failed-precondition",
+  "roster-over-budget": "failed-precondition",
+};
+
+type OwnerTeamBalance = {
+  ref: FirebaseFirestore.DocumentReference;
+  balance: number;
+};
+
+// Reads the owner's league team inside the update transaction and works out
+// its balance under the new budget. Throws when the roster costs more than the
+// budget, so neither the league nor the team is written.
+const readOwnerTeamBalance = async (
+  transaction: FirebaseFirestore.Transaction,
+  league: LeagueDocument,
+  budget: number,
+): Promise<OwnerTeamBalance | null> => {
+  const teamId = getOwnerTeamId(league);
+  if (teamId === null) {
+    return null;
+  }
+
+  const teamRef = admin
+    .firestore()
+    .collection(USER_COLLECTION)
+    .doc(league.creatorUserId)
+    .collection(TEAM_SUBCOLLECTION)
+    .doc(teamId);
+  const teamSnapshot = await transaction.get(teamRef);
+
+  if (!teamSnapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      "Your league team was not found",
+    );
+  }
+
+  const rosterCost = toRosterCost(teamSnapshot.data() ?? EMPTY_PAYLOAD);
+  if (rosterCost === null) {
+    console.error(`Team ${teamId} has a malformed lineup or bench`);
+    throw new functions.https.HttpsError("internal", "Team data is invalid");
+  }
+
+  const recompute = recomputeBalance(budget, rosterCost);
+  if (!recompute.allowed) {
+    throw new functions.https.HttpsError(
+      UPDATE_REJECTION_STATUS[recompute.code],
+      recompute.message,
+    );
+  }
+
+  return { ref: teamRef, balance: recompute.balance };
 };
 
 // Updates a league's settings on behalf of its owner.
@@ -1664,12 +1847,27 @@ export const updateLeague = functions.https.onCall(
           );
         }
 
+        // Each team's balance starts at the budget, so a budget change has to
+        // carry over to the owner's team (the only one in the league, since
+        // the budget locks once anyone else joins). Read before any write.
+        const ownerTeam =
+          input.budget === league.budget
+            ? null
+            : await readOwnerTeamBalance(transaction, league, input.budget);
+
         transaction.update(leagueRef, {
           name: input.name,
           numberOfTeams: input.numberOfTeams,
           budget: input.budget,
           updatedAt: FieldValue.serverTimestamp(),
         });
+
+        if (ownerTeam !== null) {
+          transaction.update(ownerTeam.ref, {
+            balance: ownerTeam.balance,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
 
         return {
           league: toLeagueResponse(input.leagueId, {
@@ -1742,25 +1940,23 @@ export const getLeagueStandings = functions.https.onRequest(
         return;
       }
 
-      const teamIds = dedupe(league.teamIds).slice(0, MAX_TEAMS);
-      const memberIds = dedupe(league.userIds).slice(0, MAX_TEAMS);
+      // Each team is read from the member who registered it, so a team doc
+      // another user created under a league team's id is never included.
+      const teamRefs = toLeagueTeamRefs(league).map(({ teamId, ownerId }) =>
+        db
+          .collection(USER_COLLECTION)
+          .doc(ownerId)
+          .collection(TEAM_SUBCOLLECTION)
+          .doc(teamId),
+      );
 
       const snapshots =
-        teamIds.length === 0
-          ? []
-          : await Promise.all(
-              memberIds.map((memberId) =>
-                db
-                  .collection(USER_COLLECTION)
-                  .doc(memberId)
-                  .collection(TEAM_SUBCOLLECTION)
-                  .where(FieldPath.documentId(), "in", teamIds)
-                  .get(),
-              ),
-            );
+        teamRefs.length === 0 ? [] : await db.getAll(...teamRefs);
 
       const teams: LeagueStandingTeam[] = snapshots.flatMap((snapshot) =>
-        snapshot.docs.map((doc) => toStandingTeam(doc.id, doc.data())),
+        snapshot.exists
+          ? [toStandingTeam(snapshot.id, snapshot.data() ?? EMPTY_PAYLOAD)]
+          : [],
       );
 
       res.json({ teams });
