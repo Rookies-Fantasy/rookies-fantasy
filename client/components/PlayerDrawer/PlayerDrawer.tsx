@@ -1,7 +1,8 @@
 import { User, ChartLine } from "phosphor-react-native";
 import { useState, useEffect } from "react";
-import { View, Text, Image, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import BottomSheet from "../BottomSheet";
+import PlayerAvatar from "../PlayerAvatar";
 import Spinner from "../Spinner";
 import Tabs from "../Tabs";
 import PlayerInfo from "./PlayerInfo";
@@ -58,10 +59,11 @@ const PlayerDrawer = ({
           <Spinner />
         ) : isNotNil(player) ? (
           <View className="w-full flex-1 items-center">
-            <Image
-              className="mb-4 h-24 w-24 rounded-full border border-gray-800 bg-gray-950"
-              resizeMode="cover"
-              source={{ uri: player.headshotUrl }}
+            <PlayerAvatar
+              className="mb-4"
+              firstName={player.firstName}
+              lastName={player.lastName}
+              size="xl"
             />
             <Text className="pbk-bl text-center text-base-white">
               {player.firstName} {player.lastName}

@@ -28,6 +28,7 @@ const cancelledLeague = (
   memberCount: 3,
   teamIds: ["t1", "t2", "t3"],
   userIds: [OWNER, "u2", "u3"],
+  teamOwners: { t1: OWNER, t2: "u2", t3: "u3" },
   deadline: "2026-11-21",
   status: "unscheduled",
   playoffTeams: null,

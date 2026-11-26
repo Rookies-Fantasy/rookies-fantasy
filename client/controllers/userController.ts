@@ -1,4 +1,5 @@
 import firestore from "@react-native-firebase/firestore";
+import { toBenchSlots, toLineupSlots } from "@/controllers/lineupMapper";
 import { Augment } from "@/types/augment";
 import { defaultTeam, TeamLineupSlot, Team, TEAM_BALANCE } from "@/types/team";
 import { defaultUser, User } from "@/types/user";
@@ -133,8 +134,8 @@ export class UserController {
             id: team.id,
             logoUrl: team.data()?.logoUrl,
             name: team.data()?.name,
-            lineup: team.data()?.lineup ?? defaultTeam.lineup,
-            bench: team.data()?.bench ?? defaultTeam.bench,
+            lineup: toLineupSlots(team.data()?.lineup),
+            bench: toBenchSlots(team.data()?.bench),
             balance: team.data()?.balance ?? 0,
             record: team.data()?.record ?? defaultTeam.record,
             isLeagueTeam: team.data()?.isLeagueTeam ?? false,
@@ -159,8 +160,8 @@ export class UserController {
         id: team.id,
         logoUrl: team.data()?.logoUrl,
         name: team.data()?.name,
-        lineup: team.data()?.lineup ?? defaultTeam.lineup,
-        bench: team.data()?.bench ?? defaultTeam.bench,
+        lineup: toLineupSlots(team.data()?.lineup),
+        bench: toBenchSlots(team.data()?.bench),
         balance: team.data()?.balance ?? TEAM_BALANCE,
         record: team.data()?.record ?? defaultTeam.record,
         isLeagueTeam: team.data()?.isLeagueTeam ?? false,
@@ -203,6 +204,9 @@ export class UserController {
         .doc(teamId)
         .update({
           ...params,
+          // Write every lineup player in the typed shape so averageStats is
+          // always saved, even for players added without it.
+          ...(params.lineup ? { lineup: toLineupSlots(params.lineup) } : {}),
           updatedAt: new Date(),
         });
     } catch (error) {
@@ -224,7 +228,7 @@ export class UserController {
 
       if (team.exists()) {
         return {
-          lineup: team.data()?.lineup ?? defaultTeam.lineup,
+          lineup: toLineupSlots(team.data()?.lineup),
           balance: team.data()?.balance ?? TEAM_BALANCE,
         };
       }

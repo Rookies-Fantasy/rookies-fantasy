@@ -6,6 +6,7 @@ import { cn } from "@/utils/jsUtils";
 import {
   BUDGET_STEP,
   formatBudget,
+  getMinEditableBudget,
   LeagueSettingsFormData,
   MAX_BUDGET,
   MAX_LEAGUE_NAME_LENGTH,
@@ -21,6 +22,7 @@ type LeagueSettingsFieldsProps<TForm extends LeagueSettingsFormData> = {
   minTeams?: number;
   isBudgetLocked?: boolean;
   isRegistrationClosed?: boolean;
+  rosterCost?: number;
 };
 
 const REGISTRATION_CLOSED_HINT = "Fixed after the registration deadline";
@@ -41,6 +43,7 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
   minTeams = MIN_TEAMS,
   isBudgetLocked = false,
   isRegistrationClosed = false,
+  rosterCost = 0,
 }: LeagueSettingsFieldsProps<TForm>) => {
   const showBudgetLocked = isBudgetLocked || isRegistrationClosed;
 
@@ -49,6 +52,7 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
   // TForm is constrained to contain every field used here, so narrowing it
   // once at this boundary is safe.
   const control = formControl as unknown as Control<LeagueSettingsFormData>;
+  const minBudget = getMinEditableBudget(rosterCost);
 
   return (
     <View className="flex-1 flex-col">
@@ -142,7 +146,7 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
               <StepperInput
                 formatValue={formatBudget}
                 max={MAX_BUDGET}
-                min={MIN_BUDGET}
+                min={minBudget}
                 onChange={onChange}
                 step={BUDGET_STEP}
                 value={value}
@@ -160,7 +164,9 @@ const LeagueSettingsFields = <TForm extends LeagueSettingsFormData>({
               ? REGISTRATION_CLOSED_HINT
               : isBudgetLocked
                 ? "Budget can't be changed after other teams have joined"
-                : `Budget range: ${formatBudget(MIN_BUDGET)} - ${formatBudget(MAX_BUDGET)}`}
+                : minBudget > MIN_BUDGET
+                  ? `Your roster costs ${formatBudget(rosterCost)}, so the budget can't go below ${formatBudget(minBudget)}`
+                  : `Budget range: ${formatBudget(MIN_BUDGET)} - ${formatBudget(MAX_BUDGET)}`}
           </Text>
         )}
       </View>

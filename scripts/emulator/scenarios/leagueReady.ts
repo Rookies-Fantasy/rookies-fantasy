@@ -5,7 +5,11 @@ import { DEFAULT_AUGMENTS } from "../data/augments.js";
 import { DEFAULT_NBA_PLAYERS } from "../data/nbaPlayers.js";
 import { DEFAULT_NBA_TEAMS } from "../data/nbaTeams.js";
 import { stageAugments } from "../fixtures/augments.js";
-import { type LeagueMember, stageLeague } from "../fixtures/leagues.js";
+import {
+  type LeagueMember,
+  stageLeague,
+  stageOrphanLeagueTeamDeletes,
+} from "../fixtures/leagues.js";
 import { stageLeagueMatchup } from "../fixtures/matchups.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
 import { stageNbaTeams } from "../fixtures/nbaTeams.js";
@@ -151,30 +155,48 @@ export const createLeagueReadyScenario = async (
 
   const userLeagueTeamId = `${FULL_LEAGUE_ID}-user`;
   const opponentLeagueTeamId = `${FULL_LEAGUE_ID}-opponent`;
+  // Distinct records so standings has an order, with the user in second.
+  const fullLeagueMembers = [
+    toMember(dev, userLeagueTeamId, { wins: 4, losses: 2, draws: 0 }),
+    toMember(opp, opponentLeagueTeamId, {
+      wins: 5,
+      losses: 1,
+      draws: 0,
+    }),
+    toMember(one, `${FULL_LEAGUE_ID}-member-1`, {
+      wins: 2,
+      losses: 3,
+      draws: 1,
+    }),
+    toMember(two, `${FULL_LEAGUE_ID}-member-2`, {
+      wins: 1,
+      losses: 5,
+      draws: 0,
+    }),
+  ];
+  const openLeagueMembers = [
+    toMember(opp, `${OPEN_LEAGUE_ID}-opponent`),
+    toMember(one, `${OPEN_LEAGUE_ID}-member-1`),
+  ];
+
+  const seededTeamIds = new Set([
+    options.userTeamId,
+    ...[...fullLeagueMembers, ...openLeagueMembers].map(
+      (member) => member.teamId,
+    ),
+  ]);
+  await stageOrphanLeagueTeamDeletes(db, batch, {
+    resetLeagueIds: [FULL_LEAGUE_ID, OPEN_LEAGUE_ID],
+    userIds: leagueUsers.map((leagueUser) => leagueUser.id),
+    keepTeamIds: seededTeamIds,
+  });
+
   const {
     teams: [userLeagueTeam, opponentLeagueTeam],
   } = stageLeague(db, batch, {
     leagueId: FULL_LEAGUE_ID,
     creatorUserId: dev.id,
-    members: [
-      // Distinct records so standings has an order, with the user in second.
-      toMember(dev, userLeagueTeamId, { wins: 4, losses: 2, draws: 0 }),
-      toMember(opp, opponentLeagueTeamId, {
-        wins: 5,
-        losses: 1,
-        draws: 0,
-      }),
-      toMember(one, `${FULL_LEAGUE_ID}-member-1`, {
-        wins: 2,
-        losses: 3,
-        draws: 1,
-      }),
-      toMember(two, `${FULL_LEAGUE_ID}-member-2`, {
-        wins: 1,
-        losses: 5,
-        draws: 0,
-      }),
-    ],
+    members: fullLeagueMembers,
     document: { name: "Full League", numberOfTeams: 4 },
   });
   const leagueMatchup = stageLeagueMatchup(db, batch, {
@@ -193,10 +215,7 @@ export const createLeagueReadyScenario = async (
   stageLeague(db, batch, {
     leagueId: OPEN_LEAGUE_ID,
     creatorUserId: opp.id,
-    members: [
-      toMember(opp, `${OPEN_LEAGUE_ID}-opponent`),
-      toMember(one, `${OPEN_LEAGUE_ID}-member-1`),
-    ],
+    members: openLeagueMembers,
     document: { name: "Open League", numberOfTeams: 6 },
   });
   stageLeague(db, batch, {

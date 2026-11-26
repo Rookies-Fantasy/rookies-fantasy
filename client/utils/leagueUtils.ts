@@ -7,6 +7,7 @@ import {
   LeagueStatus,
   PlayoffTeams,
 } from "@/types/league";
+import { Team } from "@/types/team";
 import { formatDeadlineDate } from "@/utils/dateUtils";
 import { isNil } from "@/utils/jsUtils";
 
@@ -57,10 +58,51 @@ export const getEffectiveDeadline = (
   return pickedDeadline > range.latest ? range.latest : pickedDeadline;
 };
 
+export const formatBudget = (value: number): string =>
+  `$${(value / 1_000_000).toFixed(0)}M`;
+
+// What a team's players cost: every salary in its lineup and on its bench. A
+// player's salary leaves the balance when they join the lineup (see
+// `addPlayerToLineup` in state/slices/teamSlice.ts) and stays out while they
+// sit on the bench. Mirrors `toRosterCost` in the server's league validation.
+export const getRosterCost = (team: Pick<Team, "lineup" | "bench">): number =>
+  [...team.lineup, ...team.bench].reduce(
+    (cost, slot) => cost + (slot.player?.salary ?? 0),
+    0,
+  );
+
+export const isBudgetCoveringRoster = (
+  budget: number,
+  rosterCost: number,
+): boolean => budget >= rosterCost;
+
+export const getRosterOverBudgetMessage = (rosterCost: number): string =>
+  `Your roster costs ${formatBudget(rosterCost)}, so the budget can't be lower than that`;
+
+// The smallest budget the owner can pick: the lowest step on the stepper's
+// scale that still pays for their roster.
+export const getMinEditableBudget = (rosterCost: number): number => {
+  if (rosterCost <= MIN_BUDGET) return MIN_BUDGET;
+
+  const stepsAboveMin = Math.ceil((rosterCost - MIN_BUDGET) / BUDGET_STEP);
+  return Math.min(MAX_BUDGET, MIN_BUDGET + stepsAboveMin * BUDGET_STEP);
+};
+
+// A team's balance under a new budget: what is left after paying for its
+// players. Matches the balance the server writes when the budget changes.
+export const getBalanceForBudget = (
+  budget: number,
+  team: Pick<Team, "lineup" | "bench">,
+): number => budget - getRosterCost(team);
+
 // The owner-chosen league settings, shared by the create and edit screens.
 // Editing passes a higher `minTeams` so the count can't drop below the teams
-// already in the league.
-export const buildLeagueSettingsSchema = (minTeams: number = MIN_TEAMS) =>
+// already in the league, and the owner's `rosterCost` so the budget can't drop
+// below what their players already cost.
+export const buildLeagueSettingsSchema = (
+  minTeams: number = MIN_TEAMS,
+  rosterCost: number = 0,
+) =>
   yup.object({
     leagueName: yup
       .string()
@@ -84,15 +126,15 @@ export const buildLeagueSettingsSchema = (minTeams: number = MIN_TEAMS) =>
         MAX_BUDGET,
         `Budget must be no more than $${MAX_BUDGET / 1_000_000}M`,
       )
+      .test("covers-roster", getRosterOverBudgetMessage(rosterCost), (budget) =>
+        isBudgetCoveringRoster(budget, rosterCost),
+      )
       .typeError("Must be a number"),
   });
 
 export const leagueSettingsSchema = buildLeagueSettingsSchema();
 
 export type LeagueSettingsFormData = yup.InferType<typeof leagueSettingsSchema>;
-
-export const formatBudget = (value: number): string =>
-  `$${(value / 1_000_000).toFixed(0)}M`;
 
 // memberCount is only a counter, so the membership arrays are checked too.
 // Matches `membershipOf` in the server's league validation.
@@ -103,10 +145,17 @@ export const isLeagueOwner = (league: League, userId: string): boolean =>
   userId.length > 0 && league.creatorUserId === userId;
 
 // The budget seeds each team's starting balance, so it is locked once anyone
-// besides the owner has joined. Registration closing locks it too; see
-// `isLeagueClosed`.
+// besides the owner has joined, and registration closing locks it too (see
+// `isLeagueClosed`). Until then it can still change, but never below what the
+// owner's roster costs (see `getMinEditableBudget`).
 export const isLeagueBudgetLocked = (league: League): boolean =>
   getLeagueMembership(league) > 1;
+
+// The team whose balance follows the budget: while the budget is editable the
+// owner is the only member, so the league's only team is theirs. Mirrors
+// `getOwnerTeamId` in the server's league validation.
+export const getOwnerTeamId = (league: League): string | null =>
+  league.teamIds.length === 1 ? league.teamIds[0] : null;
 
 // The smallest team count the league can be edited down to, kept on the
 // stepper's scale so the stepper never offers an invalid value.

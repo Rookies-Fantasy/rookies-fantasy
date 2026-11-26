@@ -34,6 +34,7 @@ export const createLeagueDoc = (
     playoffTeams: overrides.playoffTeams ?? null,
     regularSeasonWeeks: overrides.regularSeasonWeeks ?? null,
     playoffStartWeek: overrides.playoffStartWeek ?? null,
+    teamOwners: overrides.teamOwners ?? {},
     createdAt: overrides.createdAt ?? new Date(),
     updatedAt: overrides.updatedAt ?? new Date(),
   };

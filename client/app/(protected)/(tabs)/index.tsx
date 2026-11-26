@@ -1,6 +1,5 @@
-import auth from "@react-native-firebase/auth";
 import { useRouter } from "expo-router";
-import { SignOut } from "phosphor-react-native";
+import { GearSix } from "phosphor-react-native";
 import { useState } from "react";
 import { Pressable, Text, View, Image, Alert, ScrollView } from "react-native";
 import AugmentStatusCard from "@/components/AugmentStatusCard";
@@ -14,19 +13,14 @@ import Spinner from "@/components/Spinner";
 import TeamActionButtons from "@/components/TeamActionButtons";
 import { UserController } from "@/controllers/userController";
 import { getBackendMode } from "@/firebase/config";
-import { useAppDispatch, useAppSelector } from "@/state/hooks";
-import {
-  clearCurrentLeague,
-  selectCurrentLeague,
-} from "@/state/slices/leagueSlice";
-import { clearMatchup } from "@/state/slices/matchupSlice";
+import { useAppSelector } from "@/state/hooks";
+import { selectCurrentLeague } from "@/state/slices/leagueSlice";
 import {
   selectAugment,
   selectRosterPlayerCount,
-  clearTeam,
   selectTeamLogo,
 } from "@/state/slices/teamSlice";
-import { selectUserId, clearUser } from "@/state/slices/userSlice";
+import { selectUserId } from "@/state/slices/userSlice";
 import { SlotPosition } from "@/types/team";
 import { QueueStatus } from "@/types/user";
 import { getPacificDateString } from "@/utils/dateUtils";
@@ -44,7 +38,6 @@ const MyTeam = () => {
   const augment = useAppSelector(selectAugment);
   const playerCount = useAppSelector(selectRosterPlayerCount);
   const currentLeague = useAppSelector(selectCurrentLeague);
-  const dispatch = useAppDispatch();
 
   const budget = currentLeague?.budget ?? 150000000;
   const budgetInMillions = budget / 1000000;
@@ -71,19 +64,6 @@ const MyTeam = () => {
       Alert.alert("Not able to route to team builder. Please try again.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await auth().signOut();
-      dispatch(clearUser());
-      dispatch(clearTeam());
-      dispatch(clearMatchup());
-      dispatch(clearCurrentLeague());
-      router.replace("/(auth)");
-    } catch (error) {
-      console.log(error);
     }
   };
 
@@ -135,8 +115,8 @@ const MyTeam = () => {
           </View>
         </View>
         <IconButton
-          icon={<SignOut color="#6042FF" size={24} weight="bold" />}
-          onPress={handleLogout}
+          icon={<GearSix color="#6042FF" size={24} weight="bold" />}
+          onPress={() => router.push("/(protected)/settings")}
         />
       </View>
 

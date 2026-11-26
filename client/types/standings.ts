@@ -1,4 +1,4 @@
-import { Team, TeamRecord } from "./team";
+import { TeamRecord } from "./team";
 
 export type LeagueStandingTeam = {
   id: string;
@@ -9,7 +9,7 @@ export type LeagueStandingTeam = {
 
 export type StandingsRow = {
   rank: number;
-  team: Team;
+  team: LeagueStandingTeam;
   wins: number;
   losses: number;
   draws: number;

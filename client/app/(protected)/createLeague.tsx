@@ -35,6 +35,7 @@ import { useAppDispatch, useAppSelector } from "@/state/hooks";
 import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
+import { getErrorAlertMessage } from "@/utils/errorUtils";
 import { isNotNil } from "@/utils/jsUtils";
 import {
   getDeadlineRange,
@@ -213,10 +214,7 @@ const CreateLeague = () => {
       router.replace("/(protected)/(tabs)");
     } catch (error) {
       console.error("Failed to create league:", error);
-
-      const message =
-        error instanceof Error ? error.message : "Something went wrong";
-      Alert.alert("Failed to create league", `${message}. Please try again.`);
+      Alert.alert("Failed to create league", getErrorAlertMessage(error));
     } finally {
       setIsLoading(false);
     }
