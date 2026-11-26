@@ -27,6 +27,19 @@ export type LeagueDocument = {
   teamOwners: Record<string, string>;
 };
 
+// The league fields returned to the client. Mirrors `League` in
+// client/types/league.ts.
+export type LeagueResponse = {
+  id: string;
+  name: string;
+  creatorUserId: string;
+  numberOfTeams: number;
+  budget: number;
+  memberCount: number;
+  teamIds: string[];
+  userIds: string[];
+};
+
 export type CreateLeagueInput = {
   name: string;
   numberOfTeams: number;

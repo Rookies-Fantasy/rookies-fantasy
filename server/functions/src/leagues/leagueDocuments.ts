@@ -1,5 +1,9 @@
 import * as functions from "firebase-functions/v1";
-import { EMPTY_PAYLOAD, type LeagueDocument } from "./types";
+import {
+  EMPTY_PAYLOAD,
+  type LeagueDocument,
+  type LeagueResponse,
+} from "./types";
 import { toLeagueDocument } from "./validation";
 
 export const LEAGUE_COLLECTION = "leagues";
@@ -25,19 +29,6 @@ export const readLeagueDocument = (
   }
 
   return league;
-};
-
-// The league fields returned to the client. Mirrors `League` in
-// client/types/league.ts.
-export type LeagueResponse = {
-  id: string;
-  name: string;
-  creatorUserId: string;
-  numberOfTeams: number;
-  budget: number;
-  memberCount: number;
-  teamIds: string[];
-  userIds: string[];
 };
 
 export const toLeagueResponse = (

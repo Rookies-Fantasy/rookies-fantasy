@@ -2,12 +2,16 @@ import * as functions from "firebase-functions/v1";
 import { admin, FieldValue } from "../shared/admin";
 import {
   LEAGUE_COLLECTION,
-  type LeagueResponse,
   TEAM_SUBCOLLECTION,
   toLeagueResponse,
   USER_COLLECTION,
 } from "./leagueDocuments";
-import { EMPTY_PAYLOAD, type LeagueDocument, type RawPayload } from "./types";
+import {
+  EMPTY_PAYLOAD,
+  type LeagueDocument,
+  type LeagueResponse,
+  type RawPayload,
+} from "./types";
 import { validateCreateLeagueInput } from "./validation";
 
 // Creates a league on behalf of the caller.

@@ -2,13 +2,17 @@ import * as functions from "firebase-functions/v1";
 import { admin, FieldValue } from "../shared/admin";
 import {
   LEAGUE_COLLECTION,
-  type LeagueResponse,
   readLeagueDocument,
   TEAM_SUBCOLLECTION,
   toLeagueResponse,
   USER_COLLECTION,
 } from "./leagueDocuments";
-import { EMPTY_PAYLOAD, type LeagueDocument, type RawPayload } from "./types";
+import {
+  EMPTY_PAYLOAD,
+  type LeagueDocument,
+  type LeagueResponse,
+  type RawPayload,
+} from "./types";
 import {
   evaluateUpdateEligibility,
   getOwnerTeamId,
