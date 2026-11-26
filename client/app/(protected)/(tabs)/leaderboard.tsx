@@ -12,6 +12,8 @@ import { useLeagueStandings } from "@/hooks/useLeagueStandings";
 import { useAppSelector } from "@/state/hooks";
 import { selectCurrentLeague } from "@/state/slices/leagueSlice";
 import { League } from "@/types/league";
+import { getPacificDateString } from "@/utils/dateUtils";
+import { formatRegistrationCloses, isLeagueClosed } from "@/utils/leagueUtils";
 
 type LeagueStandingsProps = {
   league: League;
@@ -67,6 +69,11 @@ const LeagueStandings = ({ league }: LeagueStandingsProps) => {
           {league.name}
         </Text>
         <Text className="pbk-b2 text-gray-400">Standings</Text>
+        {!isLeagueClosed(league, getPacificDateString(new Date())) && (
+          <Text className="pbk-b3 text-primary-400">
+            {formatRegistrationCloses(league.deadline)}
+          </Text>
+        )}
       </View>
       <StandingsPodium standings={standings} />
       <YourTeamCallout standings={standings} />

@@ -5,6 +5,7 @@ import {
   LeagueStatus,
   PlayoffTeams,
 } from "@/types/league";
+import { formatDeadlineDate } from "@/utils/dateUtils";
 import { isNil } from "@/utils/jsUtils";
 
 const LARGE_LEAGUE_MIN_TEAMS = 10;
@@ -17,6 +18,9 @@ export const toLeagueStatus = (value: string): LeagueStatus =>
 
 export const isLeagueClosed = (league: League, today: string): boolean =>
   league.status !== "forming" || today > league.deadline;
+
+export const formatRegistrationCloses = (deadline: string): string =>
+  `Registration closes ${formatDeadlineDate(deadline)} at midnight PT`;
 
 export const getEffectiveDeadline = (
   pickedDeadline: string,
