@@ -36,7 +36,7 @@ import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
 import { getPacificDateString } from "@/utils/dateUtils";
 import { isNil, isNotNil } from "@/utils/jsUtils";
-import { isLeagueClosed } from "@/utils/leagueUtils";
+import { formatRegistrationCloses, isLeagueClosed } from "@/utils/leagueUtils";
 
 const joinLeagueSchema = yup.object({
   teamName: yup.string().required("Team Name is required"),
@@ -284,6 +284,9 @@ const JoinLeague = () => {
                     <View className="rounded-3xl bg-gray-900 p-6 shadow-lg">
                       <Text className="pbk-h5 mb-1 text-center text-base-white">
                         {invitedLeague.name}
+                      </Text>
+                      <Text className="pbk-b2 mb-6 text-center text-primary-400">
+                        {formatRegistrationCloses(invitedLeague.deadline)}
                       </Text>
 
                       <View className="mb-8">

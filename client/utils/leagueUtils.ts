@@ -7,6 +7,7 @@ import {
   LeagueStatus,
   PlayoffTeams,
 } from "@/types/league";
+import { formatDeadlineDate } from "@/utils/dateUtils";
 import { isNil } from "@/utils/jsUtils";
 
 // League configuration constants. Mirrored server-side in
@@ -43,6 +44,9 @@ export const getDeadlineRange = (
   numberOfTeams: number,
 ): DeadlineWindow | null =>
   isNil(bounds) ? null : bounds.byPlayoffTeams[getPlayoffTeams(numberOfTeams)];
+
+export const formatRegistrationCloses = (deadline: string): string =>
+  `Registration closes ${formatDeadlineDate(deadline)} at midnight PT`;
 
 export const getEffectiveDeadline = (
   pickedDeadline: string,
