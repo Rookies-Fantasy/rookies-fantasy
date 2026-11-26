@@ -4,11 +4,10 @@ import { CaretRight, WarningCircle } from "phosphor-react-native";
 import { Pressable, Share, Text, View } from "react-native";
 import { useSyncedLeague } from "@/hooks/useSyncedLeague";
 import { League } from "@/types/league";
-import { getPacificDateString } from "@/utils/dateUtils";
 import {
   getLeagueMembership,
   isLeagueCancelled,
-  isLeagueClosed,
+  isLeagueOpen,
 } from "@/utils/leagueUtils";
 
 const CancelledLeagueNotice = () => (
@@ -63,10 +62,7 @@ const LeagueStatusBanner = ({
   }
 
   const hasOpenSeats = getLeagueMembership(league) < league.numberOfTeams;
-  if (
-    hasOpenSeats &&
-    !isLeagueClosed(league, getPacificDateString(new Date()))
-  ) {
+  if (hasOpenSeats && isLeagueOpen(league)) {
     return <InviteFriendsButton leagueId={league.id} />;
   }
 

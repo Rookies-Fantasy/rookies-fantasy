@@ -31,7 +31,6 @@ import {
 import { selectTeam, setBalance } from "@/state/slices/teamSlice";
 import { selectUserId } from "@/state/slices/userSlice";
 import { League } from "@/types/league";
-import { getPacificDateString } from "@/utils/dateUtils";
 import { getErrorAlertMessage } from "@/utils/errorUtils";
 import { isNil } from "@/utils/jsUtils";
 import {
@@ -43,7 +42,7 @@ import {
   getOwnerTeamId,
   isLeagueBudgetLocked,
   isLeagueCancelled,
-  isLeagueClosed,
+  isLeagueOpen,
   isLeagueOwner,
   isLeagueReopenable,
 } from "@/utils/leagueUtils";
@@ -116,8 +115,7 @@ const EditLeagueForm = ({
   const isSeasonOpen = isNil(deadlineBounds) || !isNil(deadlineRange);
 
   const isRegistrationClosed =
-    isLeagueClosed(league, getPacificDateString(new Date())) &&
-    deadline === league.deadline;
+    !isLeagueOpen(league) && deadline === league.deadline;
 
   const handleSave = async (data: EditLeagueFormData) => {
     setIsLoading(true);

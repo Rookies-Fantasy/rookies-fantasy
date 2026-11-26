@@ -1,4 +1,6 @@
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import { getFunctionUrl } from "@/firebase/config";
 import { JsonValue } from "@/types/json";
 import { League, LeagueDeadlineBounds } from "@/types/league";
@@ -9,6 +11,22 @@ import { toLeagueStatus } from "@/utils/leagueUtils";
 import { parseLeagueStandingTeams } from "@/utils/standingsUtils";
 
 const LEAGUE_COLLECTION = "leagues";
+
+const toLeague = (
+  id: string,
+  data: FirebaseFirestoreTypes.DocumentData,
+): League => ({
+  id,
+  name: data.name,
+  creatorUserId: data.creatorUserId,
+  numberOfTeams: data.numberOfTeams,
+  budget: data.budget,
+  memberCount: data.memberCount,
+  teamIds: data.teamIds ?? [],
+  userIds: data.userIds ?? [],
+  deadline: typeof data.deadline === "string" ? data.deadline : "",
+  status: toLeagueStatus(data.status ?? ""),
+});
 
 const SIGNED_OUT_ERROR = "No authenticated user";
 const CREATE_SIGNED_OUT_ERROR = "You must be signed in to create a league";
@@ -68,21 +86,7 @@ export class LeagueController {
         const data = doc.data();
         if (data?.status === "deleted") return;
 
-        const league: League = {
-          id: doc.id,
-          name: data?.name,
-          creatorUserId: data?.creatorUserId,
-          numberOfTeams: data?.numberOfTeams,
-          budget: data?.budget,
-          memberCount: data?.memberCount,
-          teamIds: data?.teamIds ?? [],
-          userIds: data.userIds ?? [],
-          deadline: typeof data?.deadline === "string" ? data.deadline : "",
-          status: toLeagueStatus(data?.status ?? ""),
-          playoffTeams: data?.playoffTeams ?? null,
-          regularSeasonWeeks: data?.regularSeasonWeeks ?? null,
-          playoffStartWeek: data?.playoffStartWeek ?? null,
-        };
+        const league = toLeague(doc.id, data);
 
         (data?.teamIds ?? []).forEach((teamId: string) => {
           if (teamIds.includes(teamId)) {
@@ -107,24 +111,10 @@ export class LeagueController {
 
       if (!leagueDoc.exists()) return null;
 
-      const data = leagueDoc.data();
-      if (data?.status === "deleted") return null;
+      const data = leagueDoc.data() ?? {};
+      if (data.status === "deleted") return null;
 
-      return {
-        id: leagueDoc.id,
-        name: data?.name,
-        creatorUserId: data?.creatorUserId,
-        numberOfTeams: data?.numberOfTeams,
-        budget: data?.budget,
-        memberCount: data?.memberCount,
-        teamIds: data?.teamIds ?? [],
-        userIds: data?.userIds ?? [],
-        deadline: typeof data?.deadline === "string" ? data.deadline : "",
-        status: toLeagueStatus(data?.status ?? ""),
-        playoffTeams: data?.playoffTeams ?? null,
-        regularSeasonWeeks: data?.regularSeasonWeeks ?? null,
-        playoffStartWeek: data?.playoffStartWeek ?? null,
-      };
+      return toLeague(leagueDoc.id, data);
     } catch (error) {
       console.error("Error fetching league:", error);
       throw error;

@@ -33,9 +33,8 @@ import { useAppDispatch } from "@/state/hooks";
 import { setCurrentLeague } from "@/state/slices/leagueSlice";
 import { setTeam } from "@/state/slices/teamSlice";
 import { Asset, defaultTeamLogo, teamLogoOptions } from "@/types/asset";
-import { getPacificDateString } from "@/utils/dateUtils";
 import { isNil, isNotNil } from "@/utils/jsUtils";
-import { formatRegistrationCloses, isLeagueClosed } from "@/utils/leagueUtils";
+import { formatRegistrationCloses, isLeagueOpen } from "@/utils/leagueUtils";
 
 const joinLeagueSchema = yup.object({
   // Trimmed and capped to match validateJoinLeagueInput on the server, so the
@@ -207,10 +206,7 @@ const JoinLeague = () => {
     );
   }
 
-  if (
-    isNotNil(invitedLeague) &&
-    isLeagueClosed(invitedLeague, getPacificDateString(new Date()))
-  ) {
+  if (isNotNil(invitedLeague) && !isLeagueOpen(invitedLeague)) {
     return (
       <Screen>
         <View className="flex-1 items-center justify-center px-6">

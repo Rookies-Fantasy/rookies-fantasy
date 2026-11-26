@@ -47,7 +47,7 @@ export type CreateLeagueInput = {
   numberOfTeams: number;
   budget: number;
   initialTeamId: string;
-  deadline: string | null;
+  deadline: string;
 };
 
 // The team the caller is joining with. It does not exist yet: joinLeague

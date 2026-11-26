@@ -17,11 +17,10 @@ import { useAppSelector } from "@/state/hooks";
 import { selectCurrentLeague } from "@/state/slices/leagueSlice";
 import { selectUserId } from "@/state/slices/userSlice";
 import { League } from "@/types/league";
-import { getPacificDateString } from "@/utils/dateUtils";
 import {
   formatRegistrationCloses,
   isLeagueCancelled,
-  isLeagueClosed,
+  isLeagueOpen,
   isLeagueOwner,
 } from "@/utils/leagueUtils";
 
@@ -82,7 +81,7 @@ const LeagueStandings = ({ league: storedLeague }: LeagueStandingsProps) => {
             {league.name}
           </Text>
           <Text className="pbk-b2 text-gray-400">Standings</Text>
-          {!isLeagueClosed(league, getPacificDateString(new Date())) && (
+          {isLeagueOpen(league) && (
             <Text className="pbk-b3 text-primary-400">
               {formatRegistrationCloses(league.deadline)}
             </Text>

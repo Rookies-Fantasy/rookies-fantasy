@@ -287,14 +287,14 @@ export const validateCreateLeagueInput = (
     return { valid: false, message: idErrorMessage("initialTeamId") };
   }
 
-  const deadline = readOptionalDeadline(payload);
-  if (!deadline.valid) {
-    return deadline;
+  const deadline = payload.deadline;
+  if (!isIsoDate(deadline)) {
+    return { valid: false, message: "Deadline must be a YYYY-MM-DD date" };
   }
 
   return {
     valid: true,
-    input: { ...settings.input, initialTeamId, deadline: deadline.input },
+    input: { ...settings.input, initialTeamId, deadline },
   };
 };
 

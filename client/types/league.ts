@@ -21,9 +21,6 @@ export type League = {
   userIds: string[];
   deadline: string;
   status: LeagueStatus;
-  playoffTeams: number | null;
-  regularSeasonWeeks: number | null;
-  playoffStartWeek: number | null;
   createdAt?: string;
   updatedAt?: string;
 };

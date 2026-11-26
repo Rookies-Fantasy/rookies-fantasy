@@ -130,7 +130,7 @@ const LeagueDeadlineField = ({
           </Text>
         ) : (
           <Text className="pbk-b3 text-gray-600">
-            Registration closes at midnight Pacific Time
+            Registration closes at the end of the chosen day (PT)
           </Text>
         )}
       </View>

@@ -33,7 +33,9 @@ import {
 } from "./leagues/validation";
 import {
   getDeadlineBounds,
+  latestDeadline,
   LeagueDeadlineBounds,
+  playoffTeamsFor,
   resolveDeadline,
   SeasonConfig,
   todayInPacific,
@@ -1828,7 +1830,8 @@ export const updateLeague = functions.https.onCall(
     const db = admin.firestore();
     const leagueRef = db.collection(LEAGUE_COLLECTION).doc(input.leagueId);
     const today = todayInPacific(new Date());
-    const bounds = getDeadlineBounds(await requireSeasonConfig(db), today);
+    const season = await requireSeasonConfig(db);
+    const bounds = getDeadlineBounds(season, today);
 
     try {
       return await db.runTransaction(async (transaction) => {
@@ -1854,6 +1857,21 @@ export const updateLeague = functions.https.onCall(
             UPDATE_REJECTION_STATUS[eligibility.code],
             eligibility.message,
           );
+        }
+
+        const newPlayoffTeams = playoffTeamsFor(input.numberOfTeams);
+
+        if (newPlayoffTeams !== playoffTeamsFor(league.numberOfTeams)) {
+          const latest = latestDeadline(season, newPlayoffTeams);
+
+          if (latest === null || eligibility.deadline > latest) {
+            throw new functions.https.HttpsError(
+              "invalid-argument",
+              latest === null
+                ? `A league of ${input.numberOfTeams} teams no longer fits in this season`
+                : `This deadline is too late for a league of ${input.numberOfTeams} teams; the latest is ${latest}`,
+            );
+          }
         }
 
         // Each team's balance starts at the budget, so a budget change has to

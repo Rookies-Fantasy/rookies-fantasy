@@ -164,7 +164,7 @@ const CreateLeague = () => {
 
   const handleNext = async () => {
     const isValid = await trigger(["leagueName", "numberOfTeams", "budget"]);
-    if (isValid && deadline !== "") {
+    if (isValid) {
       gestureTranslateX.value = withTiming(-screenWidth, {
         duration: 300,
         easing: Easing.out(Easing.cubic),

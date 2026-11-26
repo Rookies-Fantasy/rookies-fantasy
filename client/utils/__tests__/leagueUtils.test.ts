@@ -56,9 +56,6 @@ const league = (overrides: Partial<League> = {}): League => ({
   userIds: ["owner"],
   deadline: "2026-12-01",
   status: "forming",
-  playoffTeams: null,
-  regularSeasonWeeks: null,
-  playoffStartWeek: null,
   ...overrides,
 });
 
