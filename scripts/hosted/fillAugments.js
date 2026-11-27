@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { db } from "./firebaseConfig.js";
-import augmentsData from "./data/augmentsData.js";
+import { augmentsData } from "./data/augmentsData.js";
 
 /**
  * Calculate the total number of players required for an augment based on prerequisites

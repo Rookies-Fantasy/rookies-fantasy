@@ -3,3 +3,5 @@
 serviceAccountKey.json
 
 node_modules/
+
+hosted/data/nbaPlayerHeadshots.backup.*.json

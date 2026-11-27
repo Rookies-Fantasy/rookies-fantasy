@@ -1,13 +1,15 @@
 import { db } from "./firebaseConfig.js";
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
+
+const headshotsPath = new URL("./data/nbaPlayerHeadshots.json", import.meta.url);
 
 /**
  * Imports headshot URLs from nbaPlayerHeadshots.json into Firestore
  *
  * Prerequisites:
  * 1. Run exportHeadshotsFromFirestore.js on dev database first
- * 2. Update serviceAccountKey.json to point to target Firestore (staging/production)
- * 3. Ensure nbaPlayerHeadshots.json exists in ./data directory
+ * 2. Update scripts/serviceAccountKey.json to point to target Firestore (staging/production)
+ * 3. Ensure nbaPlayerHeadshots.json exists in scripts/hosted/data
  *
  * This script updates the headshotURL field for players in the nbaPlayers collection
  */
@@ -17,7 +19,7 @@ async function importHeadshotsToFirestore() {
 
   let headshotMap;
   try {
-    const fileContent = readFileSync("./data/nbaPlayerHeadshots.json", "utf8");
+    const fileContent = readFileSync(headshotsPath, "utf8");
     headshotMap = JSON.parse(fileContent);
   } catch (error) {
     console.error("❌ Error reading nbaPlayerHeadshots.json:", error.message);
