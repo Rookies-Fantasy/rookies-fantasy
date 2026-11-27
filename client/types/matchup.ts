@@ -45,6 +45,9 @@ export type LineupSnapshotItem = {
   playerSnapshot: PlayerSnapshot;
 };
 
+// Where a matchup's week falls relative to the current week.
+export type MatchupWeekPhase = "upcoming" | "current" | "ended";
+
 type MatchupBase = {
   createdAt: string;
   updatedAt?: string;

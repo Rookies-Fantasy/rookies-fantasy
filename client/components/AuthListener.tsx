@@ -12,8 +12,9 @@ import { validateEmulatorSession } from "@/firebase/session";
 import { useAppDispatch } from "@/state/hooks";
 import { clearCurrentLeague } from "@/state/slices/leagueSlice";
 import { setMatchup, clearMatchup } from "@/state/slices/matchupSlice";
-import { setTeam, clearTeam } from "@/state/slices/teamSlice";
+import { setTeam, clearTeam, setTeamRecord } from "@/state/slices/teamSlice";
 import { setUser, clearUser } from "@/state/slices/userSlice";
+import { QueueStatus } from "@/types/user";
 
 type AuthListenerProps = {
   children: ReactNode;
@@ -80,6 +81,26 @@ const AuthListener = ({ children }: AuthListenerProps) => {
         if (cancelled) return;
         dispatch(setUser(userData));
 
+        let previousQueueStatus = userData.queueStatus;
+        let rankedTeamId: string | null = null;
+
+        // A completed matchup returns the user to idle. Refresh the record the
+        // server just updated without replacing unsaved lineup edits.
+        const refreshTeamRecord = async () => {
+          if (!rankedTeamId) return;
+          try {
+            const teamData = await UserController.getUserTeam(
+              user.uid,
+              rankedTeamId,
+            );
+            if (!cancelled && teamData.record) {
+              dispatch(setTeamRecord(teamData.record));
+            }
+          } catch (error) {
+            console.error("Error refreshing team record:", error);
+          }
+        };
+
         // Subscribe to real-time user updates
         userUnsubscribe = UserController.subscribeToUser(
           user.uid,
@@ -87,8 +108,10 @@ const AuthListener = ({ children }: AuthListenerProps) => {
             if (cancelled) return;
             if (updatedUser) {
               dispatch(setUser(updatedUser));
+              const wasMatched = previousQueueStatus === QueueStatus.Matched;
+              previousQueueStatus = updatedUser.queueStatus;
 
-              if (updatedUser.queueStatus === "matched") {
+              if (updatedUser.queueStatus === QueueStatus.Matched) {
                 try {
                   const matchupData = await MatchupController.getUserMatchup(
                     user.uid,
@@ -99,6 +122,10 @@ const AuthListener = ({ children }: AuthListenerProps) => {
                 } catch (error) {
                   console.error("Error fetching matchup:", error);
                 }
+              } else {
+                // Only matched users have a ranked matchup.
+                dispatch(clearMatchup());
+                if (wasMatched) await refreshTeamRecord();
               }
             }
           },
@@ -109,6 +136,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
         if (teams?.length > 0) {
           const rankedTeam = teams.find((team) => !team.isLeagueTeam);
           if (rankedTeam) {
+            rankedTeamId = rankedTeam.id;
             const teamData = await UserController.getUserTeam(
               user.uid,
               rankedTeam.id,

@@ -1,0 +1,72 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "queueStatus", "order": "ASCENDING" },
+        { "fieldPath": "queuedAt", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "nbaPlayers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "firstName", "order": "ASCENDING" },
+        { "fieldPath": "salary", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "nbaPlayers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "positions", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "salary", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "nbaPlayers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "salary", "order": "DESCENDING" },
+        { "fieldPath": "firstNameLower", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "nbaPlayers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "salary", "order": "DESCENDING" },
+        { "fieldPath": "fullNameLower", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "nbaPlayers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "salary", "order": "DESCENDING" },
+        { "fieldPath": "lastNameLower", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "nbaPlayers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "teamId", "order": "ASCENDING" },
+        { "fieldPath": "positions", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "salary", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "nbaPlayers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "teamId", "order": "ASCENDING" },
+        { "fieldPath": "salary", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -266,9 +266,9 @@ Run `npm run typecheck` from `scripts/` to check the script types.
 
 - **Phone cannot load data:** Check Metro's LAN host and remove any stale
   `EXPO_PUBLIC_EMULATOR_HOST` override, then review the network steps above.
-- **Queue button is missing:** Confirm `EXPO_PUBLIC_USE_EMULATOR=true`,
-  `APP_ENV=development`, and a debug development build. Restart Expo after
-  changing `.env.local`.
+- **Queue button is missing:** The button is hidden while the user is
+  matched or has unsaved lineup changes. Save the lineup, or end the matchup
+  with `npm run seed:end-matchup`.
 - **Users do not match:** Check the Functions log and confirm both users have
   complete teams.
 - **Functions changes are stale:** Run `npm run build` from
