@@ -246,6 +246,8 @@ export const getLiveData = functions.https.onRequest(async (req, res) => {
   }
 });
 
+const ALREADY_EXISTS_CODE = 6; // gRPC status code for ALREADY_EXISTS
+
 export const createUserInDatabase = functions.auth
   .user()
   .onCreate(async (user: UserRecord) => {
@@ -258,7 +260,7 @@ export const createUserInDatabase = functions.auth
     }
 
     try {
-      await usersRef.doc(uid).set({
+      await usersRef.doc(uid).create({
         id: uid,
         email: email,
         emailVerified: emailVerified,
@@ -267,6 +269,14 @@ export const createUserInDatabase = functions.auth
         updatedAt: FieldValue.serverTimestamp(),
       });
     } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === ALREADY_EXISTS_CODE
+      ) {
+        console.log(`User doc for ${uid} already exists, skipping create`);
+        return;
+      }
       console.error("Error creating user in Firestore:", error);
     }
   });
