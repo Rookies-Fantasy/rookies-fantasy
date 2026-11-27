@@ -1,6 +1,6 @@
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
-import { TEAM_BALANCE } from "../../../client/types/team.js";
+import { TEAM_BALANCE, type TeamRecord } from "../../../client/types/team.js";
 import { DEFAULT_AUGMENTS } from "../data/augments.js";
 import { DEFAULT_NBA_PLAYERS } from "../data/nbaPlayers.js";
 import { DEFAULT_NBA_TEAMS } from "../data/nbaTeams.js";
@@ -10,6 +10,7 @@ import {
   stageLeague,
   stageOrphanLeagueTeamDeletes,
 } from "../fixtures/leagues.js";
+import { stageLeagueMatchup } from "../fixtures/matchups.js";
 import { stageNbaPlayers } from "../fixtures/nbaPlayers.js";
 import { stageNbaTeams } from "../fixtures/nbaTeams.js";
 import { stageTeam } from "../fixtures/teams.js";
@@ -33,6 +34,7 @@ export type LeagueReadyScenarioResult = {
   memberIds: [string, string];
   fullLeagueId: string;
   openLeagueId: string;
+  leagueMatchupId: string;
 };
 
 type LeagueUser = {
@@ -122,7 +124,11 @@ export const createLeagueReadyScenario = async (
   });
 
   let lineupOffset = 1;
-  const toMember = (leagueUser: LeagueUser, teamId: string): LeagueMember => {
+  const toMember = (
+    leagueUser: LeagueUser,
+    teamId: string,
+    record: TeamRecord = { wins: 0, losses: 0, draws: 0 },
+  ): LeagueMember => {
     const lineup = buildLineup(playerPool, lineupOffset % playerPool.length);
     lineupOffset += 1;
 
@@ -137,15 +143,31 @@ export const createLeagueReadyScenario = async (
         augmentId: seedAugment.id,
         balance: TEAM_BALANCE - getLineupSalary(lineup),
         lineup,
+        record,
       },
     };
   };
 
+  const userLeagueTeamId = `${FULL_LEAGUE_ID}-user`;
+  const opponentLeagueTeamId = `${FULL_LEAGUE_ID}-opponent`;
+  // Distinct records so standings has an order, with the user in second.
   const fullLeagueMembers = [
-    toMember(dev, `${FULL_LEAGUE_ID}-user`),
-    toMember(opp, `${FULL_LEAGUE_ID}-opponent`),
-    toMember(one, `${FULL_LEAGUE_ID}-member-1`),
-    toMember(two, `${FULL_LEAGUE_ID}-member-2`),
+    toMember(dev, userLeagueTeamId, { wins: 4, losses: 2, draws: 0 }),
+    toMember(opp, opponentLeagueTeamId, {
+      wins: 5,
+      losses: 1,
+      draws: 0,
+    }),
+    toMember(one, `${FULL_LEAGUE_ID}-member-1`, {
+      wins: 2,
+      losses: 3,
+      draws: 1,
+    }),
+    toMember(two, `${FULL_LEAGUE_ID}-member-2`, {
+      wins: 1,
+      losses: 5,
+      draws: 0,
+    }),
   ];
   const openLeagueMembers = [
     toMember(opp, `${OPEN_LEAGUE_ID}-opponent`),
@@ -164,11 +186,26 @@ export const createLeagueReadyScenario = async (
     keepTeamIds: seededTeamIds,
   });
 
-  stageLeague(db, batch, {
+  const {
+    teams: [userLeagueTeam, opponentLeagueTeam],
+  } = stageLeague(db, batch, {
     leagueId: FULL_LEAGUE_ID,
     creatorUserId: dev.id,
     members: fullLeagueMembers,
     document: { name: "Full League", numberOfTeams: 4 },
+  });
+  const leagueMatchup = stageLeagueMatchup(db, batch, {
+    matchupId: `${FULL_LEAGUE_ID}-week-1-user`,
+    leagueId: FULL_LEAGUE_ID,
+    week: 1,
+    phase: "regular",
+    homeUserId: dev.id,
+    homeTeamId: userLeagueTeamId,
+    homeTeam: userLeagueTeam,
+    awayUserId: opp.id,
+    awayTeamId: opponentLeagueTeamId,
+    awayTeam: opponentLeagueTeam,
+    document: { status: "active" },
   });
   stageLeague(db, batch, {
     leagueId: OPEN_LEAGUE_ID,
@@ -184,5 +221,6 @@ export const createLeagueReadyScenario = async (
     memberIds: [one.id, two.id],
     fullLeagueId: FULL_LEAGUE_ID,
     openLeagueId: OPEN_LEAGUE_ID,
+    leagueMatchupId: leagueMatchup.id,
   };
 };

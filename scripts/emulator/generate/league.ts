@@ -14,6 +14,7 @@ export const createLeagueDoc = (
     memberCount: overrides.memberCount ?? userIds.length,
     teamIds: overrides.teamIds ?? [],
     userIds,
+    teamOwners: overrides.teamOwners ?? {},
     createdAt: overrides.createdAt ?? new Date(),
     updatedAt: overrides.updatedAt ?? new Date(),
   };

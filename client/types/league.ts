@@ -1,6 +1,7 @@
 export type League = {
   id: string;
   name: string;
+  creatorUserId: string;
   numberOfTeams: number;
   budget: number;
   memberCount: number;

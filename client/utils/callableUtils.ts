@@ -1,22 +1,36 @@
 import { getAuth } from "@react-native-firebase/auth";
 import { getFunctionUrl } from "@/firebase/config";
+import { CallableError, toCallableErrorCode } from "@/utils/errorUtils";
 import { isNil } from "@/utils/jsUtils";
 
 export type CallablePayload = Record<string, string | number | boolean>;
 
+type CallableErrorBody = { message: string; status: string };
+
 type CallableResponseBody<TResult> = {
   result: TResult | null;
-  error: { message: string } | null;
+  error: CallableErrorBody | null;
+};
+
+// The wire format of a callable response, before it is checked.
+type RawCallableResponseBody<TResult> = {
+  result?: TResult | null;
+  error?: Partial<CallableErrorBody> | null;
 };
 
 const readCallableBody = async <TResult>(
   response: Response,
 ): Promise<CallableResponseBody<TResult>> => {
   try {
-    const parsed: Partial<CallableResponseBody<TResult>> =
-      await response.json();
+    const parsed: RawCallableResponseBody<TResult> = await response.json();
+    const error = parsed.error ?? null;
 
-    return { result: parsed.result ?? null, error: parsed.error ?? null };
+    return {
+      result: parsed.result ?? null,
+      error: isNil(error)
+        ? null
+        : { message: error.message ?? "", status: error.status ?? "" },
+    };
   } catch {
     return { result: null, error: null };
   }
@@ -30,8 +44,12 @@ const unwrapCallableResponse = <TResult>(
 ): TResult => {
   if (status < 200 || status > 299) {
     const message = isNil(body.error) ? "" : body.error.message;
+    const code = toCallableErrorCode(
+      isNil(body.error) ? "" : body.error.status,
+    );
 
-    throw new Error(
+    throw new CallableError(
+      code,
       message.length > 0 ? message : `Request failed with status ${status}`,
     );
   }
@@ -43,7 +61,7 @@ const unwrapCallableResponse = <TResult>(
   return body.result;
 };
 
-const getIdToken = async (signedOutMessage: string): Promise<string> => {
+export const getIdToken = async (signedOutMessage: string): Promise<string> => {
   const currentUser = getAuth().currentUser;
 
   if (isNil(currentUser)) {

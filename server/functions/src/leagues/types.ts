@@ -19,6 +19,10 @@ export type LeagueDocument = {
   memberCount: number;
   teamIds: string[];
   userIds: string[];
+  // Team id -> uid of the member who registered it. Team docs live under
+  // users/{uid}/teams, so this is how the server finds a league team without
+  // trusting whichever user happens to hold a doc with that id.
+  teamOwners: Record<string, string>;
 };
 
 export type CreateLeagueInput = {
@@ -42,9 +46,16 @@ export type JoinLeagueInput = {
   team: NewLeagueTeam;
 };
 
+export type UpdateLeagueInput = {
+  leagueId: string;
+  name: string;
+  numberOfTeams: number;
+  budget: number;
+};
+
 // The league rules. These mirror the form constants and yup schema in
-// `client/app/(protected)/createLeague.tsx` so a hand-rolled request can't create
-// a league the UI would never allow.
+// `client/utils/leagueUtils.ts` so a hand-rolled request can't create or edit
+// a league into a state the UI would never allow.
 export const MIN_TEAMS = 4;
 export const MAX_TEAMS = 20;
 export const TEAMS_STEP = 2;
@@ -52,6 +63,19 @@ export const MIN_BUDGET = 150_000_000;
 export const MAX_BUDGET = 250_000_000;
 export const BUDGET_STEP = 25_000_000;
 export const MAX_LEAGUE_NAME_LENGTH = 50;
+
+export type TeamRecord = {
+  wins: number;
+  losses: number;
+  draws: number;
+};
+
+export type LeagueStandingTeam = {
+  id: string;
+  name: string;
+  logoUrl: string;
+  record: TeamRecord;
+};
 
 // The team rules, mirroring the yup schema in
 // `client/app/(protected)/joinLeague.tsx`.
