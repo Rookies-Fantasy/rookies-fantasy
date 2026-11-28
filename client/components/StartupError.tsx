@@ -1,17 +1,21 @@
 import { Text, View } from "react-native";
 import Button from "./Button";
+import { SignOutAction } from "@/types/auth";
 
 type StartupErrorProps = {
   isLoading?: boolean;
   message?: string;
   onRetry: () => void;
+  // A way out when a saved session can't be restored; null when there is none.
+  signOutAction: SignOutAction | null;
   title?: string;
 };
 
 const StartupError = ({
-  isLoading,
+  isLoading = false,
   message = "Please try again. If this keeps happening, close and reopen the app.",
   onRetry,
+  signOutAction,
   title = "Unable to start the app",
 }: StartupErrorProps) => (
   <View className="flex-1 items-center justify-center bg-gray-950 px-6">
@@ -23,7 +27,21 @@ const StartupError = ({
         {title}
       </Text>
       <Text className="pbk-b2 text-center text-gray-400">{message}</Text>
-      <Button isLoading={isLoading} label="Retry" onPress={onRetry} />
+      <Button
+        disabled={signOutAction !== null && signOutAction.isLoading}
+        isLoading={isLoading}
+        label="Retry"
+        onPress={onRetry}
+      />
+      {signOutAction !== null && (
+        <Button
+          disabled={isLoading}
+          isLoading={signOutAction.isLoading}
+          label="Sign out"
+          onPress={signOutAction.onPress}
+          variant="secondary"
+        />
+      )}
     </View>
   </View>
 );
