@@ -14,15 +14,15 @@ import { clearCurrentLeague } from "@/state/slices/leagueSlice";
 import { setMatchup, clearMatchup } from "@/state/slices/matchupSlice";
 import { setTeam, clearTeam } from "@/state/slices/teamSlice";
 import { setUser, clearUser } from "@/state/slices/userSlice";
+import { AuthStatus } from "@/types/auth";
+import { CaughtError } from "@/types/error";
 
 type AuthListenerProps = {
   children: ReactNode;
 };
 
 const AuthListener = ({ children }: AuthListenerProps) => {
-  const [status, setStatus] = useState<
-    "loading" | "ready" | "error" | "retrying" | "signingOut"
-  >("loading");
+  const [status, setStatus] = useState<AuthStatus>({ phase: "loading" });
   const [retryCount, setRetryCount] = useState(0);
   const auth = getAuth();
   const dispatch = useAppDispatch();
@@ -53,7 +53,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
 
       if (!user) {
         clearSession();
-        setStatus("ready");
+        setStatus({ phase: "ready" });
         return;
       }
 
@@ -64,13 +64,13 @@ const AuthListener = ({ children }: AuthListenerProps) => {
         if (!valid) {
           clearSession();
           await signOut(auth);
-          if (!cancelled) setStatus("ready");
+          if (!cancelled) setStatus({ phase: "ready" });
           return;
         }
       } catch (error: unknown) {
         if (!cancelled) {
           console.error("Error restoring emulator session:", error);
-          setStatus("error");
+          setStatus({ phase: "failed", pending: "none" });
         }
         return;
       }
@@ -120,7 +120,7 @@ const AuthListener = ({ children }: AuthListenerProps) => {
       } catch (error) {
         if (!cancelled) console.error("Error fetching user document:", error);
       }
-      if (!cancelled) setStatus("ready");
+      if (!cancelled) setStatus({ phase: "ready" });
     });
 
     return () => {
@@ -131,28 +131,28 @@ const AuthListener = ({ children }: AuthListenerProps) => {
   }, [auth, dispatch, retryCount]);
 
   useEffect(() => {
-    if (status === "ready" || status === "error") SplashScreen.hide();
-  }, [status]);
+    if (status.phase !== "loading") SplashScreen.hide();
+  }, [status.phase]);
 
-  if (status === "loading") return null;
-  if (status === "error" || status === "retrying" || status === "signingOut") {
+  if (status.phase === "loading") return null;
+  if (status.phase === "failed") {
     return (
       <StartupError
-        isLoading={status === "retrying"}
+        isLoading={status.pending === "retry"}
         message="Check that the emulators are running and your device can reach them, then try again."
         onRetry={() => {
-          setStatus("retrying");
+          setStatus({ phase: "failed", pending: "retry" });
           setRetryCount((previous) => previous + 1);
         }}
         // A failure we can't classify must never leave the user stuck here.
         // Signing out fires onAuthStateChanged(null), which marks us ready.
         signOutAction={{
-          isLoading: status === "signingOut",
+          isLoading: status.pending === "signOut",
           onPress: () => {
-            setStatus("signingOut");
-            signOut(auth).catch((error: unknown) => {
+            setStatus({ phase: "failed", pending: "signOut" });
+            signOut(auth).catch((error: CaughtError) => {
               console.error("Error signing out from startup error:", error);
-              setStatus("error");
+              setStatus({ phase: "failed", pending: "none" });
             });
           },
         }}

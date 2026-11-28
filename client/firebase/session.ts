@@ -1,13 +1,7 @@
 import { FirebaseAuthTypes, getIdToken } from "@react-native-firebase/auth";
 import { getBackendMode } from "./config";
-
-const NETWORK_ERROR_CODE = "auth/network-request-failed";
-
-const isNetworkError = (error: unknown): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  error.code === NETWORK_ERROR_CODE;
+import { CaughtError } from "@/types/error";
+import { getErrorCode, NETWORK_ERROR_CODE } from "@/utils/errorCodes";
 
 /**
  * Force-refreshes the ID token so a session cached from a wiped emulator signs
@@ -23,11 +17,11 @@ export const validateEmulatorSession = async (
 ): Promise<boolean> => {
   if (getBackendMode() !== "emulator") return true;
 
-  try {
-    await getIdToken(user, true);
-    return true;
-  } catch (error: unknown) {
-    if (isNetworkError(error)) throw error;
-    return false;
-  }
+  return getIdToken(user, true).then(
+    () => true,
+    (error: CaughtError) => {
+      if (getErrorCode(error) === NETWORK_ERROR_CODE) throw error;
+      return false;
+    },
+  );
 };

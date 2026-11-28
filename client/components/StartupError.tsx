@@ -1,10 +1,6 @@
 import { Text, View } from "react-native";
 import Button from "./Button";
-
-type SignOutAction = {
-  isLoading: boolean;
-  onPress: () => void;
-};
+import { SignOutAction } from "@/types/auth";
 
 type StartupErrorProps = {
   isLoading?: boolean;

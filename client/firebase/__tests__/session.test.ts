@@ -57,6 +57,15 @@ describe("validateEmulatorSession", () => {
     await expect(validateEmulatorSession(user)).resolves.toBe(false);
   });
 
+  it.each([
+    ["a string", "INVALID_REFRESH_TOKEN"],
+    ["null", null],
+  ])("treats a rejection with %s as a dead session", async (_label, reason) => {
+    mockedGetIdToken.mockRejectedValue(reason);
+
+    await expect(validateEmulatorSession(user)).resolves.toBe(false);
+  });
+
   it("rethrows a network failure", async () => {
     const error = authError("auth/network-request-failed");
     mockedGetIdToken.mockRejectedValue(error);
